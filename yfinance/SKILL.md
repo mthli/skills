@@ -30,6 +30,7 @@ side-effects on the user's system Python.
 | "dividends paid last quarter / year" | `history --summary` | `total_dividends` over period |
 | "show me last N days / weeks", "plot the chart" | `history` (default) | full OHLCV rows |
 | "intraday last 5 days" | `history --interval 1h` (or `5m`/`15m`) | tick-level rows |
+| "after-hours price right now", "pre-market gap after earnings" | `history --interval 5m --prepost` | extended-hours bars |
 
 A single user request can need both. "What's AAPL trading at and how much is
 it up YTD?" → call `fast_info` for the live price, then `history --period ytd
@@ -142,6 +143,9 @@ uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/history.py --period 
 
 # Intraday
 uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/history.py --period 5d --interval 1h AAPL
+
+# Intraday including pre-market + after-hours bars
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/history.py --period 1d --interval 5m --prepost AAPL
 ```
 
 ### CLI arguments
@@ -154,6 +158,12 @@ uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/history.py --period 
 - `--summary` — flag. Output aggregate stats (start/end close, change_abs,
   change_pct, period high/low with dates, avg volume, total dividends, splits)
   instead of full rows.
+- `--prepost` — flag. Include pre-market (04:00–09:30 ET) and after-hours
+  (16:00–20:00 ET) bars. Intraday-only — daily+ intervals ignore it. Use for
+  "what's the after-hours price right now", "where did the stock open
+  pre-market after earnings", or any extended-hours question. Caveats:
+  extended-hours bars have much lower volume and wider spreads, and the bar
+  immediately after the open / before the close may show outsized prints.
 
 ### Output — default mode (full rows)
 
@@ -264,6 +274,14 @@ note the period and interval in the heading.
   for US equities and more for many non-US markets — don't claim real-time.
   `history` daily bars don't have this issue: they're final once the session
   closes.
+- **DST and "ET" labels.** ET / `America/New_York` is DST-aware, so US market
+  wall-clock hours are stable year-round (regular 09:30–16:00 ET, pre-market
+  04:00–09:30 ET, after-hours 16:00–20:00 ET). What shifts is the UTC offset:
+  EST (UTC-5) Nov–Mar, EDT (UTC-4) Mar–Nov. yfinance ISO timestamps include
+  the correct offset automatically — no conversion needed for data. **You
+  only need to think about DST when translating ET to a user's local
+  timezone in prose** (e.g. 09:30 ET = 21:30 Beijing in summer, 22:30 in
+  winter). Check the current ET offset before quoting a local equivalent.
 - **Ticker suffixes for non-US markets.** Hong Kong: `0700.HK`. Shenzhen:
   `000001.SZ`. Shanghai: `600519.SS`. London: `BARC.L`. Tokyo: `7203.T`.
   Korea: `005930.KS`. Frankfurt: `BMW.DE`. If a user gives a bare HK/CN

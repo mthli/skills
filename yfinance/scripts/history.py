@@ -2,7 +2,7 @@
 """Fetch yfinance historical OHLCV for one or more tickers and print as JSON.
 
 Usage:
-    history.py [--period PERIOD] [--interval INTERVAL] [--summary] SYMBOL [SYMBOL ...]
+    history.py [--period PERIOD] [--interval INTERVAL] [--summary] [--prepost] SYMBOL [SYMBOL ...]
 
 Defaults: --period 1mo  --interval 1d
 
@@ -10,6 +10,9 @@ Default mode emits each ticker's full OHLCV rows. With --summary, each ticker
 collapses to one aggregate object: rows_count, start/end date and close,
 change_abs, change_pct, period high/low (with dates), avg_volume,
 total_dividends, splits.
+
+With --prepost, intraday rows include pre-market and after-hours bars (ignored
+for daily+ intervals).
 
 Output: JSON array on stdout, one entry per ticker. Failed tickers carry an
 "error" field instead of data so a single bad symbol does not poison the batch.
@@ -49,11 +52,11 @@ def _fmt_index(ts, intraday: bool) -> str:
     return ts.strftime("%Y-%m-%d")
 
 
-def fetch(symbol: str, period: str, interval: str, summary: bool) -> dict:
+def fetch(symbol: str, period: str, interval: str, summary: bool, prepost: bool) -> dict:
     try:
         df = yf.Ticker(symbol).history(
             period=period, interval=interval,
-            auto_adjust=True, actions=True,
+            auto_adjust=True, actions=True, prepost=prepost,
         )
     except Exception as e:
         return {"symbol": symbol, "error": f"{type(e).__name__}: {e}"}
@@ -143,11 +146,13 @@ def main() -> None:
     ap.add_argument("--interval", default="1d", choices=sorted(VALID_INTERVALS))
     ap.add_argument("--summary", action="store_true",
                     help="Output aggregate stats instead of full rows.")
+    ap.add_argument("--prepost", action="store_true",
+                    help="Include pre-market and after-hours bars (intraday only).")
     ap.add_argument("symbols", nargs="+")
     args = ap.parse_args()
 
     results = [
-        fetch(s.strip().upper(), args.period, args.interval, args.summary)
+        fetch(s.strip().upper(), args.period, args.interval, args.summary, args.prepost)
         for s in args.symbols if s.strip()
     ]
     print(json.dumps(results, indent=2, default=str, ensure_ascii=False))
