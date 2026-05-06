@@ -12,6 +12,7 @@ Output:
 from __future__ import annotations
 
 import json
+import math
 import sys
 
 import yfinance as yf
@@ -35,13 +36,20 @@ FIELDS = [
 ]
 
 
+def _denan(v):
+    """Turn NaN floats into None so the result is valid JSON."""
+    if isinstance(v, float) and math.isnan(v):
+        return None
+    return v
+
+
 def fetch(symbol: str) -> dict:
     try:
         info = yf.Ticker(symbol).fast_info
-        out: dict = {"symbol": symbol}
+        out = {"symbol": symbol}
         for f in FIELDS:
             try:
-                out[f] = info[f]
+                out[f] = _denan(info[f])
             except (KeyError, AttributeError, TypeError):
                 out[f] = None
         if out.get("last_price") is None:
@@ -49,8 +57,8 @@ def fetch(symbol: str) -> dict:
         else:
             prev = out.get("previous_close")
             if prev:
-                out["change_pct"] = round(
-                    (out["last_price"] - prev) / prev * 100, 4)
+                out["change_abs"] = out["last_price"] - prev
+                out["change_pct"] = (out["last_price"] - prev) / prev * 100
         return out
     except Exception as e:
         return {"symbol": symbol, "error": f"{type(e).__name__}: {e}"}
