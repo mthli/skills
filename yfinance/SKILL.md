@@ -75,6 +75,9 @@ as functionality grows.
 | "did X beat last quarter", "earnings surprise" | `earnings --summary` | `last_surprise_pct` (percent; positive = beat) |
 | "X's earnings history", "EPS trend over last N quarters" | `earnings --past-only` | full reported quarters with estimate/actual/surprise |
 | "which of these consistently beats" | `earnings --summary` | `beat_rate_last_4` across multiple tickers |
+| "consensus EPS / revenue forecast", "next quarter estimate", "analyst high / low / # analysts", "FY consensus", "estimate revisions / trend", "stock vs market growth", "long-term growth (LTG)" | `earnings --estimates` | full analyst panel: consensus avg/low/high, 90-day estimate trend, 7d/30d revision counts, broad-market benchmark, LTG. Per-period rows for `0q` / `+1q` / `0y` / `+1y`. ADRs split EPS (USD) and revenue (home ccy) into separate currency fields. See references/earnings.md. |
+| "recent IPO with no past reports", "ticker hasn't reported earnings yet" | `earnings --estimates` | **IPO fall-through.** The same flag also rescues IPOs from the default `not_found`: when the calendar scrape returns empty but the analyst panel has data, the response is success with `earnings_dates: []`, `timezone: null`, and a `coverage_note` explaining the empty calendar. Default `earnings` (without `--estimates`) returns `error_kind: not_found` with a hint pointing at this flag. |
+| "what's the analyst rating / price target on X" | `info` (analyst section) | `info.analyst.target_mean_price`, `recommendation_key` — complementary to `earnings --estimates` (which has the underlying EPS/revenue forecasts; price target is derived from those) |
 | "income statement", "balance sheet", "cash flow", "revenue/FCF trend over N years" | `financials` | per-statement period lists; scope with `--statement income\|balance\|cashflow` |
 | "latest quarter", "QoQ revenue", "TTM trailing twelve months" | `financials --period quarterly\|ttm` | ~5–7 most-recent quarters; `ttm` = 1-row rollup (income + cashflow only) |
 | "compare 3+ tickers' revenue / FCF / margins / growth" | `financials --summary` | flat per-ticker dict + period-over-period growth (`*_growth_yoy`) |
@@ -113,6 +116,8 @@ uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/info.py --summary AA
 # NOTE: earnings.py needs an extra `--with 'lxml'` (the others don't).
 uv run --with 'yfinance>=1.3,<2' --with 'lxml' python <SKILL_DIR>/scripts/earnings.py AAPL                # 12 rows default
 uv run --with 'yfinance>=1.3,<2' --with 'lxml' python <SKILL_DIR>/scripts/earnings.py --summary AAPL MSFT NVDA  # peer beat-rate
+uv run --with 'yfinance>=1.3,<2' --with 'lxml' python <SKILL_DIR>/scripts/earnings.py --estimates AAPL    # + full analyst panel (consensus, trend, revisions, sector, LTG)
+uv run --with 'yfinance>=1.3,<2' --with 'lxml' python <SKILL_DIR>/scripts/earnings.py --summary --estimates AAPL MSFT NVDA  # peer compare incl. consensus_* fields
 uv run --with 'yfinance>=1.3,<2' --with 'lxml' python <SKILL_DIR>/scripts/earnings.py --future-only AAPL  # only upcoming
 
 # financials — income / balance / cashflow statements (see references/financials.md)
@@ -140,7 +145,8 @@ and subtract ~0.5s of uv startup for the network-only delta._
 | `history` (max / 5y intraday) | ~2–4 s | larger payload |
 | `info` | ~1–3 s | multiple internal modules — as of yfinance 1.3.x: `financialData`, `quoteType`, `defaultKeyStatistics`, `assetProfile`, `summaryDetail` |
 | `earnings` (equity) | ~1.5–2.5 s | quote_type pre-check (~0.3s) + HTML scrape (~1–2s) |
-| `earnings` (non-equity) | ~0.3–0.5 s | quote_type pre-check only; scrape skipped via short-circuit |
+| `earnings --estimates` (equity) | ~+1.5–3 s on top of baseline (total ~3–5.5 s) | five Yahoo property reads on a shared Ticker (`earnings_estimate`, `revenue_estimate`, `eps_trend`, `eps_revisions`, `growth_estimates`); equity-only. **Worst case under sustained 429:** each of the 5 sources independently retries up to 3 attempts. `with_retry` sleeps between attempts only — 3 attempts means 2 backoff windows (~0.5 s after attempt 1, ~1.0 s after attempt 2, plus jitter), so per-source max sleep ≈ 2 s. 5 sources × ~2 s = ~10 s of cumulative sleep, plus the 15 actual call attempts, gives a total worst-case of ~10–15 s before failing. Drop batch size to ~3 and pause between calls if you see this pattern. |
+| `earnings` (non-equity) | ~0.3–0.5 s | quote_type pre-check only; scrape skipped via short-circuit (and `--estimates` short-circuits too) |
 | `financials` (equity, any `--statement` value) | ~2 s | quote_type pre-check (~0.3s) + `info["financialCurrency"]` (~1.5s) + statement fetches; yfinance shares the underlying fundamentals payload, so `--statement <one>` and `--statement all` cost the same |
 | `financials` (equity, ADR / cross-listed) | ~3–5 s | same path but `info` round-trip is slower for less-common tickers (verified: TM ~4.8s) |
 | `financials` (non-equity) | ~1 s | quote_type pre-check only; financials fetch skipped, no `info` call |
@@ -230,6 +236,21 @@ matching `references/<mode>.md`. Grouped into three concerns:
     encoding; `0.064` means 6.4%). Disambiguated from `info.revenue_growth`
     (Yahoo TTM-based) by the `_yoy` suffix — both can co-occur with
     different values, see references/financials.md.
+  - `earnings --estimates[*].eps_growth` / `revenue_growth` /
+    `index_growth` → **fractions** (matches `info` and `financials
+    --summary` conventions; `0.2043` means 20.43% YoY). Inside the same
+    `earnings` response the older `earnings_dates.surprise_pct` is still
+    **percent** — see references/earnings.md "Mode-specific caveats"
+    for the rationale. `index_growth` is **the same number for every
+    ticker globally** (verified across US sectors AND HK / Frankfurt /
+    Tokyo / KOSPI / London listings) — it's a Yahoo-internal global
+    benchmark, not locale- or sector-aware. Don't read it as a HK-listed
+    ticker getting Hang Seng growth or as sector-specific.
+  - `earnings --estimates` ADR currency split: `eps_currency` and
+    `revenue_currency` are separate fields, **not** duplicates. For ADRs
+    (TM, PBR) Yahoo reports per-share EPS in the trading currency (USD)
+    but revenue in the home reporting currency (JPY, BRL). Always read
+    both — don't assume one currency for the row.
   - `info` yield-and-fund-return fields are a **mix** (full table in
     references/info.md "Unit landmines"). Percent-encoded:
     `dividend.five_year_avg_dividend_yield`, `fund.ytd_return`.

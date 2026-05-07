@@ -1127,6 +1127,655 @@ except Exception as e:
     traceback.print_exc(file=sys.stderr)
 
 
+# --- earnings --estimates (full Yahoo analyst panel) ---
+section("earnings --estimates")
+try:
+    d = earnings.fetch("AAPL", with_estimates=True)
+    # invariant: estimates is a list with one row per period
+    ests = d.get("estimates")
+    check("AAPL estimates is list",
+          isinstance(ests, list),
+          f"got {type(ests).__name__}")
+    check("AAPL estimates has 4 known periods (canary: liquid name fully covered)",
+          isinstance(ests, list) and len(ests) >= 4,
+          f"got {len(ests) if isinstance(ests, list) else None}")
+
+    # invariant: EVERY row carries the documented schema keys (not just [0]).
+    # Catches the case where a key only populates for the first period.
+    if isinstance(ests, list) and ests:
+        for i, row in enumerate(ests):
+            missing = set(earnings._ESTIMATE_KEYS) - set(row.keys())
+            check(f"AAPL estimates[{i}] has all _ESTIMATE_KEYS",
+                  not missing,
+                  f"missing in row {i} (period={row.get('period')!r}): {sorted(missing)}")
+        # invariant: period codes drawn from documented set
+        bad_periods = [r.get("period") for r in ests
+                       if r.get("period") not in earnings._ESTIMATE_PERIODS]
+        check("AAPL estimates: periods all in 0q/+1q/0y/+1y",
+              not bad_periods,
+              f"unexpected: {bad_periods}")
+        # invariant: eps_growth is fraction-encoded. Bound at < 5 (i.e.
+        # 500%) — a percent-encoded version would be > 5 (e.g., 20.4 for
+        # AAPL or 119 for NVDA), so this still catches the units bug while
+        # tolerating high-growth names whose YoY exceeds 100% as a fraction
+        # (NVDA's 1.19 would fail the old `< 1` bound).
+        eps_growths = [r["eps_growth"] for r in ests
+                       if r.get("eps_growth") is not None]
+        check("AAPL eps_growth is fraction-encoded (canary: |val| < 5)",
+              all(abs(g) < 5 for g in eps_growths),
+              f"got {eps_growths}")
+        # invariant: new analyst-panel fields populated for liquid name.
+        zero_q = next((r for r in ests if r["period"] == "0q"), None)
+        check("AAPL 0q has eps_trend_current (canary)",
+              zero_q is not None and isinstance(zero_q.get("eps_trend_current"), float),
+              f"got {zero_q.get('eps_trend_current') if zero_q else None!r}")
+        check("AAPL 0q has eps_revisions_up_30d as int (canary)",
+              zero_q is not None and isinstance(zero_q.get("eps_revisions_up_30d"), int),
+              f"got {type(zero_q.get('eps_revisions_up_30d')).__name__ if zero_q else None}")
+        check("AAPL 0q has index_growth as fraction (canary: |val| < 5)",
+              zero_q is not None
+              and isinstance(zero_q.get("index_growth"), float)
+              and abs(zero_q["index_growth"]) < 5,
+              f"got {zero_q.get('index_growth') if zero_q else None!r}")
+
+    # invariant: long_term_growth is a {stock, index} dict or absent.
+    # AAPL empirically has stock=None and index populated.
+    ltg = d.get("long_term_growth")
+    check("AAPL long_term_growth is {stock, index} dict",
+          isinstance(ltg, dict) and set(ltg.keys()) == {"stock", "index"},
+          f"got {ltg!r}")
+
+    # Negative assertions: a normal equity --estimates call (with a
+    # populated calendar) must NOT carry `note` or `coverage_note` —
+    # those are reserved for non-equity short-circuit and IPO fall-
+    # through respectively. Catches any future regression where
+    # `--estimates` accidentally always sets a coverage note even when
+    # the calendar succeeded.
+    check("AAPL --estimates: no `note` field (only non-equity sets it)",
+          "note" not in d,
+          f"got note={d.get('note')!r}")
+    check("AAPL --estimates: no `coverage_note` field (only IPO sets it)",
+          "coverage_note" not in d,
+          f"got coverage_note={d.get('coverage_note')!r}")
+
+    # Non-equity short-circuit: estimates: [] (no extra Yahoo calls).
+    d_etf = earnings.fetch("SPY", with_estimates=True)
+    check("SPY estimates: short-circuit empty list",
+          d_etf.get("estimates") == [],
+          f"got {d_etf.get('estimates')!r}")
+    check("SPY no long_term_growth field (non-equity)",
+          "long_term_growth" not in d_etf,
+          f"got {d_etf.get('long_term_growth')!r}")
+
+    # Summary mode projects 0q to flat consensus_* fields (no estimates list).
+    s = earnings._summarize(d)
+    check("--summary --estimates: drops estimates list (projected to consensus_*)",
+          "estimates" not in s,
+          f"got estimates field: {type(s.get('estimates')).__name__}")
+    for k in earnings._CONSENSUS_SUMMARY_KEYS:
+        check(f"--summary --estimates: {k} present",
+              k in s, f"missing {k}")
+    check("--summary --estimates: consensus_eps_avg matches 0q.eps_avg",
+          s.get("consensus_eps_avg")
+          == next(r["eps_avg"] for r in ests if r["period"] == "0q"),
+          f"summary={s.get('consensus_eps_avg')}, "
+          f"0q={next(r['eps_avg'] for r in ests if r['period']=='0q')}")
+    check("--summary --estimates: long_term_growth still passed through",
+          isinstance(s.get("long_term_growth"), dict),
+          f"got {s.get('long_term_growth')!r}")
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"earnings --estimates crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
+# --- earnings --estimates ADR currency split (TM ADR: EPS USD, revenue JPY) ---
+section("earnings --estimates ADR currency split")
+try:
+    # canary: relies on Yahoo continuing to denominate TM EPS in USD and
+    # revenue in JPY. If Yahoo unifies these someday this will fail and
+    # we should re-evaluate the eps_currency / revenue_currency split.
+    d_tm = earnings.fetch("TM", with_estimates=True)
+    ests_tm = d_tm.get("estimates") or []
+    zero_q_tm = next((r for r in ests_tm if r["period"] == "0q"), None)
+    check("TM 0q eps_currency=USD (per-share trading currency)",
+          zero_q_tm is not None and zero_q_tm.get("eps_currency") == "USD",
+          f"got {zero_q_tm.get('eps_currency') if zero_q_tm else None!r}")
+    check("TM 0q revenue_currency=JPY (home reporting currency)",
+          zero_q_tm is not None and zero_q_tm.get("revenue_currency") == "JPY",
+          f"got {zero_q_tm.get('revenue_currency') if zero_q_tm else None!r}")
+    check("TM 0q eps_currency != revenue_currency (ADR split confirmed)",
+          zero_q_tm is not None
+          and zero_q_tm.get("eps_currency") != zero_q_tm.get("revenue_currency"))
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"earnings --estimates ADR crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
+# --- earnings --estimates soft-failure paths (mocked) ---
+section("earnings --estimates soft failure (mocked)")
+try:
+    from unittest.mock import patch
+    import pandas as _pd
+
+    def _make_eps_df():
+        return _pd.DataFrame({
+            "avg": [1.89], "low": [1.83], "high": [1.99],
+            "yearAgoEps": [1.57], "numberOfAnalysts": [30],
+            "growth": [0.20], "currency": ["USD"],
+        }, index=_pd.Index(["0q"], name="period"))
+
+    def _make_rev_df():
+        return _pd.DataFrame({
+            "avg": [1e11], "low": [1e11], "high": [1.1e11],
+            "numberOfAnalysts": [26], "yearAgoRevenue": [9e10],
+            "growth": [0.15], "currency": ["USD"],
+        }, index=_pd.Index(["0q"], name="period"))
+
+    def _make_trend_df():
+        return _pd.DataFrame({
+            "current": [1.89], "7daysAgo": [1.74], "30daysAgo": [1.74],
+            "60daysAgo": [1.72], "90daysAgo": [1.73], "currency": ["USD"],
+        }, index=_pd.Index(["0q"], name="period"))
+
+    def _make_revisions_df():
+        return _pd.DataFrame({
+            "upLast7days": [22], "upLast30days": [22],
+            "downLast30days": [0], "downLast7Days": [0], "currency": ["USD"],
+        }, index=_pd.Index(["0q"], name="period"))
+
+    def _make_growth_df(with_ltg=True):
+        idx = ["0q", "LTG"] if with_ltg else ["0q"]
+        rows = ([{"stockTrend": 0.20, "indexTrend": 0.24}]
+                + ([{"stockTrend": float("nan"), "indexTrend": 0.12}] if with_ltg else []))
+        return _pd.DataFrame(rows, index=_pd.Index(idx, name="period"))
+
+    # Class wrapper rather than MagicMock — MagicMock doesn't support
+    # raise-on-attribute-access without contortions. Each property either
+    # returns a DataFrame or raises an exception, mirroring yfinance's
+    # behavior when Yahoo errors out.
+    class _MockTicker:
+        def __init__(self, **kwargs):
+            self._kwargs = kwargs
+        def _get(self, name):
+            v = self._kwargs.get(name, None)
+            if isinstance(v, Exception):
+                raise v
+            return v
+        @property
+        def earnings_estimate(self): return self._get("eps")
+        @property
+        def revenue_estimate(self):  return self._get("rev")
+        @property
+        def eps_trend(self):         return self._get("trend")
+        @property
+        def eps_revisions(self):     return self._get("revisions")
+        @property
+        def growth_estimates(self):  return self._get("growth")
+
+    # Case 1: only EPS fails, revenue still succeeds. Soft failure: NO
+    # estimates_error (revenue is enough to proceed); EPS columns null.
+    with patch("earnings.yf.Ticker",
+               return_value=_MockTicker(
+                   eps=ConnectionError("429 too many requests"),
+                   rev=_make_rev_df(),
+                   trend=_make_trend_df(),
+                   revisions=_make_revisions_df(),
+                   growth=_make_growth_df())):
+        rows, ltg, attempts, err = earnings._fetch_estimates("FAKE")
+    check("only-EPS-fail: estimates_error is None (revenue succeeded)",
+          err is None, f"got {err!r}")
+    check("only-EPS-fail: rows still emitted",
+          isinstance(rows, list) and len(rows) == 1,
+          f"got {len(rows) if isinstance(rows, list) else None}")
+    check("only-EPS-fail: row eps_avg is None (failed side)",
+          rows and rows[0]["eps_avg"] is None,
+          f"got {rows[0]['eps_avg'] if rows else None}")
+    check("only-EPS-fail: row revenue_avg populated (success side)",
+          rows and rows[0]["revenue_avg"] is not None)
+
+    # Case 2: only revenue fails, EPS succeeds. Mirror of case 1.
+    with patch("earnings.yf.Ticker",
+               return_value=_MockTicker(
+                   eps=_make_eps_df(),
+                   rev=ConnectionError("network blip"),
+                   trend=_make_trend_df(),
+                   revisions=_make_revisions_df(),
+                   growth=_make_growth_df())):
+        rows, ltg, attempts, err = earnings._fetch_estimates("FAKE")
+    check("only-revenue-fail: estimates_error is None",
+          err is None, f"got {err!r}")
+    check("only-revenue-fail: row eps_avg populated",
+          rows and rows[0]["eps_avg"] is not None)
+    check("only-revenue-fail: row revenue_avg is None",
+          rows and rows[0]["revenue_avg"] is None)
+
+    # Case 3: BOTH consensus sources fail. Hard failure: estimates_error
+    # set, rows empty.
+    with patch("earnings.yf.Ticker",
+               return_value=_MockTicker(
+                   eps=ConnectionError("429"),
+                   rev=ConnectionError("429"),
+                   trend=_make_trend_df(),
+                   revisions=_make_revisions_df(),
+                   growth=_make_growth_df())):
+        rows, ltg, attempts, err = earnings._fetch_estimates("FAKE")
+    check("both-consensus-fail: rows empty",
+          rows == [], f"got {rows!r}")
+    check("both-consensus-fail: estimates_error=rate_limit",
+          err == "rate_limit", f"got {err!r}")
+
+    # Case 4: trend / revisions / growth fail; consensus succeeds. Soft —
+    # those columns null silently, NO estimates_error.
+    with patch("earnings.yf.Ticker",
+               return_value=_MockTicker(
+                   eps=_make_eps_df(),
+                   rev=_make_rev_df(),
+                   trend=ConnectionError("blip"),
+                   revisions=ConnectionError("blip"),
+                   growth=ConnectionError("blip"))):
+        rows, ltg, attempts, err = earnings._fetch_estimates("FAKE")
+    check("only-enrichment-fail: estimates_error is None (consensus ok)",
+          err is None, f"got {err!r}")
+    check("only-enrichment-fail: eps_trend_current is None (failed)",
+          rows and rows[0]["eps_trend_current"] is None)
+    check("only-enrichment-fail: eps_revisions_up_7d is None (failed)",
+          rows and rows[0]["eps_revisions_up_7d"] is None)
+    check("only-enrichment-fail: index_growth is None (failed)",
+          rows and rows[0]["index_growth"] is None)
+    check("only-enrichment-fail: long_term_growth is None (growth failed)",
+          ltg is None, f"got {ltg!r}")
+    check("only-enrichment-fail: eps_avg still populated",
+          rows and rows[0]["eps_avg"] is not None)
+
+    # Case 4b: defensive lookup — Yahoo's `downLast7Days` capitalization
+    # quirk. If upstream "fixes" the typo to lowercase (`downLast7days`),
+    # we still want to read it correctly. Mock revisions DataFrame with
+    # only the lowercase variant; `eps_revisions_down_7d` should still
+    # populate.
+    revisions_lowercase = _pd.DataFrame({
+        "upLast7days":     [22],
+        "upLast30days":    [22],
+        "downLast30days":  [0],
+        "downLast7days":   [3],   # lowercase 'd' (hypothetical Yahoo fix)
+        "currency":        ["USD"],
+    }, index=_pd.Index(["0q"], name="period"))
+    with patch("earnings.yf.Ticker",
+               return_value=_MockTicker(eps=_make_eps_df(),
+                                         rev=_make_rev_df(),
+                                         trend=_make_trend_df(),
+                                         revisions=revisions_lowercase,
+                                         growth=_make_growth_df())):
+        rows, _, _, _ = earnings._fetch_estimates("FAKE")
+    check("typo-defense: down_7d reads from `downLast7days` (lowercase fallback)",
+          rows and rows[0].get("eps_revisions_down_7d") == 3,
+          f"got {rows[0].get('eps_revisions_down_7d') if rows else None!r}")
+
+    # Case 5: forward-compat — yfinance returns a future period like '+2q'.
+    eps_extended = _pd.DataFrame({
+        "avg": [1.89, 2.00, 1.85], "low": [1.83, 1.86, 1.80],
+        "high": [1.99, 2.14, 1.92], "yearAgoEps": [1.57, 1.85, 1.75],
+        "numberOfAnalysts": [30, 28, 12], "growth": [0.20, 0.08, 0.06],
+        "currency": ["USD", "USD", "USD"],
+    }, index=_pd.Index(["0q", "+1q", "+2q"], name="period"))
+    with patch("earnings.yf.Ticker",
+               return_value=_MockTicker(eps=eps_extended,
+                                         rev=_make_rev_df(),
+                                         trend=_make_trend_df(),
+                                         revisions=_make_revisions_df(),
+                                         growth=_make_growth_df())):
+        rows, _, _, _ = earnings._fetch_estimates("FAKE")
+    period_codes = [r["period"] for r in rows]
+    check("forward-compat: emits unknown +2q period",
+          "+2q" in period_codes, f"got {period_codes}")
+    check("forward-compat: known periods come first",
+          period_codes[:2] == ["0q", "+1q"]
+          and period_codes[-1] == "+2q",
+          f"got {period_codes}")
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"earnings soft-failure crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
+# --- earnings._assert_note_contract negative tests (offline) ---
+# The contract enforces that `note` and `coverage_note` have non-overlapping
+# semantics: `note` only on non-equity short-circuit, `coverage_note` only on
+# IPO fall-through, and never both. Without these tests, future code could
+# silently delete the helper or violate the contract — these negative cases
+# pin the invariant so any regression breaks at smoke time.
+section("earnings._assert_note_contract (offline)")
+try:
+    # The substring checks below are intentionally strict — the error
+    # messages are part of the invariant contract (operators / log
+    # consumers grep for these phrases to identify the violation kind).
+    # If you legitimately want to rephrase, update the helper AND these
+    # checks together; don't loosen the substring match thinking the
+    # test is fragile.
+
+    # Case A: both note and coverage_note present → must raise.
+    bad_both = {"symbol": "BOTH", "quote_type": "ETF",
+                "note": "non-equity note",
+                "coverage_note": "ipo note"}
+    raised = False
+    try:
+        earnings._assert_note_contract(bad_both)
+    except RuntimeError as e:
+        raised = True
+        msg = str(e)
+    check("contract: note + coverage_note → raises RuntimeError",
+          raised, "expected RuntimeError, none raised")
+    if raised:
+        check("contract: note+coverage_note message mentions mutually exclusive",
+              "mutually exclusive" in msg,
+              f"got {msg!r}")
+        check("contract: note+coverage_note message includes symbol",
+              "BOTH" in msg, f"got {msg!r}")
+
+    # Case B: note set on EQUITY → must raise.
+    bad_equity_note = {"symbol": "EQNOTE", "quote_type": "EQUITY",
+                       "note": "wrong-track note"}
+    raised = False
+    try:
+        earnings._assert_note_contract(bad_equity_note)
+    except RuntimeError as e:
+        raised = True
+        msg = str(e)
+    check("contract: note on EQUITY → raises RuntimeError",
+          raised, "expected RuntimeError, none raised")
+    if raised:
+        check("contract: note-on-equity message mentions reserved-for-non-equity",
+              "non-equity" in msg.lower(),
+              f"got {msg!r}")
+
+    # Case C: legitimate non-equity short-circuit → must NOT raise.
+    good_nonequity = {"symbol": "SPY", "quote_type": "ETF",
+                      "note": "earnings only meaningful for equities; this is ETF",
+                      "earnings_dates": []}
+    earnings._assert_note_contract(good_nonequity)
+    check("contract: non-equity + note (no coverage_note) → no raise",
+          True)
+
+    # Case D: legitimate IPO fall-through → must NOT raise.
+    good_ipo = {"symbol": "IPO", "quote_type": "EQUITY",
+                "coverage_note": "empty calendar (recent IPO ...); analyst panel returned",
+                "earnings_dates": [], "estimates": [{"period": "0q"}]}
+    earnings._assert_note_contract(good_ipo)
+    check("contract: IPO + coverage_note (no note) → no raise", True)
+
+    # Case E: regular equity result with neither note nor coverage_note.
+    good_regular = {"symbol": "AAPL", "quote_type": "EQUITY",
+                    "earnings_dates": [{"date": "2026-01-01"}]}
+    earnings._assert_note_contract(good_regular)
+    check("contract: regular equity (no note fields) → no raise", True)
+
+    # Case F: violating dict missing `symbol` key — message must fall back
+    # to a truncated repr instead of degrading to "(symbol=None)". Covers
+    # the edge case where the helper is invoked outside fetch() (which
+    # would normally set `symbol`).
+    bad_no_symbol = {"quote_type": "EQUITY", "note": "stray note"}
+    raised = False
+    try:
+        earnings._assert_note_contract(bad_no_symbol)
+    except RuntimeError as e:
+        raised = True
+        msg = str(e)
+    check("contract: missing symbol → still raises", raised)
+    if raised:
+        # Fallback should embed `out=...` repr instead of "(symbol=None)".
+        check("contract: missing-symbol message uses out= repr fallback",
+              "out=" in msg and "symbol=None" not in msg,
+              f"got {msg!r}")
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"earnings._assert_note_contract crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
+# --- earnings --estimates falls through empty earnings_dates (recent IPO) ---
+section("earnings --estimates with empty earnings_dates (IPO path)")
+try:
+    from unittest.mock import patch as _patch_ipo
+    import pandas as _pd_ipo
+
+    # Mock fixtures: fast_info → EQUITY (passes pre-check), but
+    # get_earnings_dates returns an empty DataFrame (recent IPO has no
+    # past reports yet on Yahoo's calendar). Estimates DataFrames are
+    # still populated. Without --estimates this should error; with it,
+    # the call succeeds with earnings_dates=[] and estimates populated.
+    class _IPOTicker:
+        def get_earnings_dates(self, limit=12):
+            return _pd_ipo.DataFrame()  # empty
+        @property
+        def fast_info(self):
+            return {"quoteType": "EQUITY"}
+        @property
+        def earnings_estimate(self):
+            return _pd_ipo.DataFrame({
+                "avg": [0.5], "low": [0.4], "high": [0.6],
+                "yearAgoEps": [None], "numberOfAnalysts": [3],
+                "growth": [None], "currency": ["USD"],
+            }, index=_pd_ipo.Index(["0q"], name="period"))
+        @property
+        def revenue_estimate(self):
+            return _pd_ipo.DataFrame({
+                "avg": [1e8], "low": [9e7], "high": [1.1e8],
+                "numberOfAnalysts": [3], "yearAgoRevenue": [None],
+                "growth": [None], "currency": ["USD"],
+            }, index=_pd_ipo.Index(["0q"], name="period"))
+        @property
+        def eps_trend(self):
+            return _pd_ipo.DataFrame({
+                "current": [0.5], "7daysAgo": [0.5], "30daysAgo": [0.5],
+                "60daysAgo": [0.45], "90daysAgo": [0.45], "currency": ["USD"],
+            }, index=_pd_ipo.Index(["0q"], name="period"))
+        @property
+        def eps_revisions(self):
+            return _pd_ipo.DataFrame({
+                "upLast7days": [1], "upLast30days": [2],
+                "downLast30days": [0], "downLast7Days": [0],
+                "currency": ["USD"],
+            }, index=_pd_ipo.Index(["0q"], name="period"))
+        @property
+        def growth_estimates(self):
+            return _pd_ipo.DataFrame(
+                [{"stockTrend": float("nan"), "indexTrend": 0.20}],
+                index=_pd_ipo.Index(["0q"], name="period"))
+
+    # Without --estimates: still error (the user asked for the calendar).
+    with _patch_ipo("earnings.yf.Ticker", return_value=_IPOTicker()):
+        d_no_est = earnings.fetch("IPOFAKE", with_estimates=False)
+    check("IPO no --estimates: error_kind=not_found (preserves prior behavior)",
+          d_no_est.get("error_kind") == "not_found",
+          f"got {d_no_est.get('error_kind')!r}")
+
+    # With --estimates: fall through, earnings_dates=[], estimates populated.
+    with _patch_ipo("earnings.yf.Ticker", return_value=_IPOTicker()):
+        d_ipo = earnings.fetch("IPOFAKE", with_estimates=True)
+    check("IPO with --estimates: no top-level error (estimates path saved it)",
+          "error" not in d_ipo,
+          f"got error={d_ipo.get('error')!r}")
+    check("IPO with --estimates: earnings_dates is empty list (not omitted)",
+          d_ipo.get("earnings_dates") == [],
+          f"got {d_ipo.get('earnings_dates')!r}")
+    check("IPO with --estimates: estimates populated",
+          isinstance(d_ipo.get("estimates"), list)
+          and len(d_ipo["estimates"]) >= 1,
+          f"got {len(d_ipo.get('estimates') or [])}")
+    check("IPO with --estimates: timezone is null (no rows to derive from)",
+          d_ipo.get("timezone") is None,
+          f"got {d_ipo.get('timezone')!r}")
+    # IPO path carries a `coverage_note` (NOT `note`) — the field-name
+    # split keeps the non-equity short-circuit detection unambiguous in
+    # _summarize. Code that filters `if d.get("note"):` should NOT see
+    # IPO equities.
+    check("IPO with --estimates: coverage_note populated",
+          isinstance(d_ipo.get("coverage_note"), str)
+          and "empty calendar" in d_ipo["coverage_note"],
+          f"got {d_ipo.get('coverage_note')!r}")
+    check("IPO with --estimates: regular `note` is absent (reserved for non-equity)",
+          "note" not in d_ipo,
+          f"got note={d_ipo.get('note')!r}")
+    check("IPO coverage_note coexists with quote_type=EQUITY",
+          d_ipo.get("quote_type") == "EQUITY")
+
+    # IPO path with empty estimates too: collapse back to error.
+    class _EmptyAllTicker(_IPOTicker):
+        @property
+        def earnings_estimate(self): return _pd_ipo.DataFrame()
+        @property
+        def revenue_estimate(self):  return _pd_ipo.DataFrame()
+        @property
+        def eps_trend(self):         return _pd_ipo.DataFrame()
+        @property
+        def eps_revisions(self):     return _pd_ipo.DataFrame()
+        @property
+        def growth_estimates(self):  return _pd_ipo.DataFrame()
+
+    with _patch_ipo("earnings.yf.Ticker", return_value=_EmptyAllTicker()):
+        d_nothing = earnings.fetch("NOTHINGFAKE", with_estimates=True)
+    check("empty earnings + empty estimates: collapse to error_kind=not_found",
+          d_nothing.get("error_kind") == "not_found",
+          f"got {d_nothing.get('error_kind')!r}")
+
+    # _summarize must handle the IPO path correctly: earnings_dates empty
+    # (next/last all null) AND estimates populated (consensus_* projected).
+    # The note must NOT trigger the non-equity short-circuit branch (which
+    # would null all consensus_* fields) — the branch discriminates on
+    # quote_type, so EQUITY+note routes to the equity path.
+    s_ipo = earnings._summarize(d_ipo)
+    check("IPO --summary: next_date is null (no earnings_dates)",
+          s_ipo.get("next_date") is None,
+          f"got {s_ipo.get('next_date')!r}")
+    check("IPO --summary: consensus_eps_avg populated (NOT short-circuited to null)",
+          s_ipo.get("consensus_eps_avg") == 0.5,
+          f"got {s_ipo.get('consensus_eps_avg')!r}")
+    check("IPO --summary: consensus_eps_currency=USD",
+          s_ipo.get("consensus_eps_currency") == "USD",
+          f"got {s_ipo.get('consensus_eps_currency')!r}")
+    check("IPO --summary: coverage_note passed through",
+          isinstance(s_ipo.get("coverage_note"), str)
+          and "empty calendar" in s_ipo["coverage_note"],
+          f"got {s_ipo.get('coverage_note')!r}")
+    check("IPO --summary: regular `note` still absent in projection",
+          "note" not in s_ipo or s_ipo.get("note") is None,
+          f"got note={s_ipo.get('note')!r}")
+
+    # IPO + estimates rate-limited: error_kind should be rate_limit (not
+    # not_found) so callers know to retry rather than give up. Surface the
+    # est_err kind in the message.
+    class _IPOEstRateLimit(_IPOTicker):
+        @property
+        def earnings_estimate(self): raise ConnectionError("429 too many requests")
+        @property
+        def revenue_estimate(self):  raise ConnectionError("429 too many requests")
+        @property
+        def eps_trend(self):         raise ConnectionError("429")
+        @property
+        def eps_revisions(self):     raise ConnectionError("429")
+        @property
+        def growth_estimates(self):  raise ConnectionError("429")
+    with _patch_ipo("earnings.yf.Ticker", return_value=_IPOEstRateLimit()):
+        d_ipo_rl = earnings.fetch("IPORL", with_estimates=True)
+    check("IPO + estimates rate-limited: error_kind=rate_limit (not not_found)",
+          d_ipo_rl.get("error_kind") == "rate_limit",
+          f"got {d_ipo_rl.get('error_kind')!r}")
+    check("IPO + estimates rate-limited: message mentions retry",
+          "retry" in (d_ipo_rl.get("error") or "").lower(),
+          f"got {d_ipo_rl.get('error')!r}")
+
+    # IPO + --summary --estimates --format csv: the IPO row must surface
+    # `coverage_note` populated, `note` empty (those are the disjoint
+    # field semantics), earnings cells empty (no calendar data), and
+    # `consensus_*` cells populated (projected from 0q estimates).
+    # Done in-process via _emit so we can use the mocked IPO ticker
+    # without a subprocess dance.
+    import io as _io
+    import csv as _csv2
+    from contextlib import redirect_stdout as _rs
+    s_ipo_for_csv = earnings._summarize(d_ipo)
+    buf = _io.StringIO()
+    with _rs(buf):
+        earnings._emit([s_ipo_for_csv], "csv", summary=True, with_estimates=True)
+    csv_rows = list(_csv2.reader(buf.getvalue().splitlines()))
+    check("IPO summary CSV: header has both note + coverage_note columns",
+          csv_rows
+          and "note" in csv_rows[0]
+          and "coverage_note" in csv_rows[0],
+          f"got header={csv_rows[0] if csv_rows else None}")
+    if csv_rows and len(csv_rows) >= 2:
+        h = csv_rows[0]
+        r = csv_rows[1]
+        idx = {col: i for i, col in enumerate(h)}
+        check("IPO summary CSV: `note` cell is blank (reserved for non-equity)",
+              r[idx["note"]] == "",
+              f"got {r[idx['note']]!r}")
+        check("IPO summary CSV: `coverage_note` cell populated",
+              "empty calendar" in r[idx["coverage_note"]],
+              f"got {r[idx['coverage_note']]!r}")
+        check("IPO summary CSV: `next_date` cell blank (no calendar data)",
+              r[idx["next_date"]] == "",
+              f"got {r[idx['next_date']]!r}")
+        check("IPO summary CSV: `last_surprise_pct` cell blank (no past)",
+              r[idx["last_surprise_pct"]] == "",
+              f"got {r[idx['last_surprise_pct']]!r}")
+        check("IPO summary CSV: `consensus_eps_avg` cell populated",
+              r[idx["consensus_eps_avg"]] != ""
+              and float(r[idx["consensus_eps_avg"]]) == 0.5,
+              f"got {r[idx['consensus_eps_avg']]!r}")
+        check("IPO summary CSV: `consensus_eps_currency` cell = USD",
+              r[idx["consensus_eps_currency"]] == "USD",
+              f"got {r[idx['consensus_eps_currency']]!r}")
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"earnings IPO path crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
+# --- earnings --estimates with --past-only / --future-only filter ---
+section("earnings --estimates × past/future filter (independence)")
+try:
+    # Filter applies to earnings_dates rows only — estimates is forward-
+    # looking analyst data and shouldn't be touched. Verify that
+    # --past-only and --future-only both leave estimates intact and emit
+    # the full per-period list regardless of the filter.
+    d_past = earnings.fetch("AAPL", with_estimates=True, past_only=True)
+    d_future = earnings.fetch("AAPL", with_estimates=True, future_only=True)
+
+    check("--estimates --past-only: only past earnings_dates rows",
+          all(not r["is_future"] for r in d_past.get("earnings_dates", [])),
+          "found a future row in --past-only output")
+    check("--estimates --past-only: estimates list still populated",
+          isinstance(d_past.get("estimates"), list) and len(d_past["estimates"]) >= 1,
+          f"got {len(d_past.get('estimates') or [])}")
+    check("--estimates --past-only: estimates spans all 4 canonical periods",
+          {r["period"] for r in d_past.get("estimates", [])}
+          >= set(earnings._ESTIMATE_PERIODS),
+          f"got {[r['period'] for r in d_past.get('estimates', [])]}")
+
+    check("--estimates --future-only: only future earnings_dates rows",
+          all(r["is_future"] for r in d_future.get("earnings_dates", [])),
+          "found a past row in --future-only output")
+    check("--estimates --future-only: estimates list still populated",
+          isinstance(d_future.get("estimates"), list) and len(d_future["estimates"]) >= 1,
+          f"got {len(d_future.get('estimates') or [])}")
+
+    # Estimates list is byte-for-byte identical between --past-only and
+    # --future-only — proves the filter doesn't accidentally touch them.
+    # (Only checks period codes + eps_avg as a representative sample;
+    # the panel is otherwise the same source DataFrame in both calls.)
+    past_panel = [(r["period"], r.get("eps_avg")) for r in d_past.get("estimates", [])]
+    future_panel = [(r["period"], r.get("eps_avg")) for r in d_future.get("estimates", [])]
+    check("--estimates: panel content identical regardless of past/future filter",
+          past_panel == future_panel,
+          f"past={past_panel}, future={future_panel}")
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"earnings filter-independence crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
 # --- earnings --limit slice behavior (regression: summary mode bypasses) ---
 section("earnings --limit slice (default vs --summary)")
 try:
@@ -1985,6 +2634,7 @@ try:
         ("info.py", ("--summary", "AAPL")),
         ("earnings.py", ("--limit", "5", "AAPL")),
         ("earnings.py", ("--summary", "AAPL")),
+        ("earnings.py", ("--estimates", "AAPL")),
         ("financials.py", ("--statement", "income", "--limit", "2", "AAPL")),
         ("financials.py", ("--summary", "AAPL")),
         ("financials.py", ("--period", "ttm", "AAPL")),
@@ -2026,6 +2676,29 @@ try:
     check("earnings --limit 999: argparse rejects out-of-range (rc=2)",
           out.returncode == 2,
           f"rc={out.returncode}")
+
+    # --estimates + --format csv WITHOUT --summary is a config error: the
+    # default-mode CSV layout is one row per (symbol, earnings_date) and
+    # has nowhere to put a 4-period analyst panel.
+    cmd = [sys.executable, str(SCRIPTS_DIR / "earnings.py"),
+           "--estimates", "--format", "csv", "AAPL"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+    check("earnings --estimates --format csv (no --summary): rejects (rc=2)",
+          out.returncode == 2,
+          f"rc={out.returncode}")
+
+    # WITH --summary, --estimates --format csv works: consensus_* fields
+    # flatten cleanly. Header row should include consensus_* columns.
+    cmd = [sys.executable, str(SCRIPTS_DIR / "earnings.py"),
+           "--summary", "--estimates", "--format", "csv", "AAPL"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    csv_lines = [ln for ln in out.stdout.splitlines() if ln.strip()]
+    check("earnings --summary --estimates --format csv: exits 0 + parses",
+          out.returncode == 0 and len(csv_lines) >= 2,
+          f"rc={out.returncode}, lines={len(csv_lines)}")
+    check("earnings --summary --estimates --format csv: header has consensus_* cols",
+          csv_lines and "consensus_eps_avg" in csv_lines[0],
+          f"got header={csv_lines[0] if csv_lines else None}")
 except Exception as e:
     FAIL += 1
     FAILURES.append(f"CLI sanity crashed: {e}")
