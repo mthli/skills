@@ -16,11 +16,13 @@ Python scripts wrapping [yfinance](https://github.com/ranaroussi/yfinance),
 one per mode — currently `scripts/fast_info.py` (current quote),
 `scripts/history.py` (historical OHLCV; full bars or `--summary`
 aggregates), `scripts/info.py` (profile + fundamentals + analyst; full
-grouped sections or `--summary` flat dict), and `scripts/earnings.py`
-(upcoming + recent earnings dates with EPS estimates / actuals / surprise).
-Shared NaN/Inf-safe converters live in `scripts/helpers.py`. A
-`scripts/smoke.py` test exercises all four wrappers against representative
-tickers — run after editing schema or when yfinance API drift is suspected:
+grouped sections or `--summary` flat dict), `scripts/earnings.py`
+(upcoming + recent earnings dates with EPS estimates / actuals /
+surprise), and `scripts/financials.py` (annual / quarterly / TTM income
+statement, balance sheet, and cash flow). Shared NaN/Inf-safe converters
+live in `scripts/helpers.py`. A `scripts/smoke.py` test exercises all
+five wrappers against representative tickers — run after editing schema
+or when yfinance API drift is suspected:
 `uv run --with 'yfinance>=1.3,<2' --with 'lxml' python <SKILL_DIR>/scripts/smoke.py`
 (the `lxml` extra is needed only by `earnings.py`'s HTML scrape; harmless
 for the others). All scripts use `argparse` (run with `--help` for inline
@@ -39,10 +41,11 @@ as functionality grows.
 > ticker (stocks, ETFs, indexes, crypto, futures, FX). `info` is
 > meaningful only for `quote_type` ∈ {`EQUITY`, `ETF`, `MUTUALFUND`} —
 > for indexes / crypto / futures / FX it returns mostly null, so don't
-> waste the call. `earnings` is **equity-only** (no quarterly EPS for
-> ETFs / indexes / crypto); non-equities short-circuit to an empty
-> list with a `note`. Both `fast_info` and `info` return `quote_type`
-> explicitly when you're unsure.
+> waste the call. `earnings` and `financials` are **equity-only** (no
+> quarterly EPS or income statement for ETFs / indexes / crypto); both
+> short-circuit non-equities to empty lists with a `note`. Both
+> `fast_info` and `info` return `quote_type` explicitly when you're
+> unsure.
 
 | Question shape | Mode | Why |
 |---|---|---|
@@ -72,6 +75,9 @@ as functionality grows.
 | "did X beat last quarter", "earnings surprise" | `earnings --summary` | `last_surprise_pct` (percent; positive = beat) |
 | "X's earnings history", "EPS trend over last N quarters" | `earnings --past-only` | full reported quarters with estimate/actual/surprise |
 | "which of these consistently beats" | `earnings --summary` | `beat_rate_last_4` across multiple tickers |
+| "income statement", "balance sheet", "cash flow", "revenue/FCF trend over N years" | `financials` | per-statement period lists; scope with `--statement income\|balance\|cashflow` |
+| "latest quarter", "QoQ revenue", "TTM trailing twelve months" | `financials --period quarterly\|ttm` | ~5–7 most-recent quarters; `ttm` = 1-row rollup (income + cashflow only) |
+| "compare 3+ tickers' revenue / FCF / margins / growth" | `financials --summary` | flat per-ticker dict + period-over-period growth (`*_growth_yoy`) |
 
 A single user request can need multiple modes. "What's AAPL trading at, how
 much is it up YTD, and what's its P/E?" → `fast_info` for the live price,
@@ -108,6 +114,12 @@ uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/info.py --summary AA
 uv run --with 'yfinance>=1.3,<2' --with 'lxml' python <SKILL_DIR>/scripts/earnings.py AAPL                # 12 rows default
 uv run --with 'yfinance>=1.3,<2' --with 'lxml' python <SKILL_DIR>/scripts/earnings.py --summary AAPL MSFT NVDA  # peer beat-rate
 uv run --with 'yfinance>=1.3,<2' --with 'lxml' python <SKILL_DIR>/scripts/earnings.py --future-only AAPL  # only upcoming
+
+# financials — income / balance / cashflow statements (see references/financials.md)
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/financials.py AAPL                                 # all 3 statements, annual
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/financials.py --period quarterly AAPL              # quarterly statements
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/financials.py --statement income --period ttm AAPL # TTM income only
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/financials.py --summary AAPL MSFT GOOGL            # peer headline + YoY growth
 ```
 
 `<SKILL_DIR>` is the absolute path of the directory containing this
@@ -129,14 +141,28 @@ and subtract ~0.5s of uv startup for the network-only delta._
 | `info` | ~1–3 s | multiple internal modules — as of yfinance 1.3.x: `financialData`, `quoteType`, `defaultKeyStatistics`, `assetProfile`, `summaryDetail` |
 | `earnings` (equity) | ~1.5–2.5 s | quote_type pre-check (~0.3s) + HTML scrape (~1–2s) |
 | `earnings` (non-equity) | ~0.3–0.5 s | quote_type pre-check only; scrape skipped via short-circuit |
+| `financials` (equity, any `--statement` value) | ~2 s | quote_type pre-check (~0.3s) + `info["financialCurrency"]` (~1.5s) + statement fetches; yfinance shares the underlying fundamentals payload, so `--statement <one>` and `--statement all` cost the same |
+| `financials` (equity, ADR / cross-listed) | ~3–5 s | same path but `info` round-trip is slower for less-common tickers (verified: TM ~4.8s) |
+| `financials` (non-equity) | ~1 s | quote_type pre-check only; financials fetch skipped, no `info` call |
+| `financials` (equity, soft-fallback path triggered) | up to +3.5 s | when `info["financialCurrency"]` is unavailable (transient 429 / network / field missing), `_meta` retries via `_trading_currency` with backoff. Worst case (sustained 429 on both `info` and `fast_info`) adds ~1.5–3.5s of retry sleeps to the equity baseline above. Watch for `"trading currency"` substring in `note` to detect this path. |
 
-`fast_info`, `info`, and `earnings` are still serial — total ≈ N × per-ticker
-cost. A 10-ticker `info` batch is ~15–30 s and is the most likely path to
-trigger Yahoo's empty-response / 429 rate-limit. `history` is the
-exception: N ≥ 2 routes through `yf.download` (one HTTP request, threaded),
-so 5–10 tickers cost ~1–2 s total instead of ~5–15 s. When a question is
-answerable by multiple modes, pick the cheapest. Don't call `info` if
-`fast_info` already has the field you need (e.g., `market_cap` is in both).
+`fast_info`, `info`, `earnings`, and `financials` are still serial — total
+≈ N × per-ticker cost. A 10-ticker `info` or `financials` batch is
+~15–30 s and is the most likely path to trigger Yahoo's empty-response /
+429 rate-limit (`financials` actually issues an `info` call internally
+for reporting-currency lookup, so the cost profile is similar to `info`).
+`history` is the exception: N ≥ 2 routes through `yf.download` (one HTTP
+request, threaded), so 5–10 tickers cost ~1–2 s total instead of
+~5–15 s. When a question is answerable by multiple modes, pick the
+cheapest. Don't call `info` if `fast_info` already has the field you
+need (e.g., `market_cap` is in both); don't call `financials` for
+"what's AAPL's P/E" — that's in `info`.
+
+`financials` cost note: `--statement income` does NOT save latency over
+`--statement all` — yfinance shares the underlying fundamentals payload
+across the three statement properties, so all three come back from one
+call. Use `--statement <one>` to save **context tokens** (smaller JSON
+output), not time.
 
 A retried call adds backoff (~0.5–1.5 s per retry, 3 attempts max).
 `fast_info` retry is the worst case: each retry replays all field reads
@@ -145,11 +171,12 @@ from scratch (the first read in a session is ~3 s; subsequent ones
 instead of the nominal 0.3–0.5 s. Watch the `attempts` field in the
 response — it appears whenever a call retried.
 
-`--summary` modes (`history --summary` and `info --summary`) **don't reduce
-latency** — they're post-fetch projections of the same payload, so network
-cost is identical to the default mode. Only the output JSON shrinks (~10×
-for `info --summary`, more for `history --summary` when the period is long).
-Use `--summary` to save context tokens, not to save time.
+`--summary` modes (`history --summary`, `info --summary`, `earnings --summary`,
+`financials --summary`) **don't reduce latency** — they're post-fetch
+projections of the same payload, so network cost is identical to the
+default mode. Only the output JSON shrinks (~10× for `info --summary`
+and `financials --summary`, more for `history --summary` when the period
+is long). Use `--summary` to save context tokens, not to save time.
 
 ## Setup
 
@@ -199,6 +226,10 @@ matching `references/<mode>.md`. Grouped into three concerns:
     (`16.43` means 16.43%).
   - `info` margins / growth / returns / payout ratios → **fractions**
     (`0.272` means 27.2%, multiply ×100 for display).
+  - `financials --summary.*_growth_yoy` → **fractions** (matches `info`'s
+    encoding; `0.064` means 6.4%). Disambiguated from `info.revenue_growth`
+    (Yahoo TTM-based) by the `_yoy` suffix — both can co-occur with
+    different values, see references/financials.md.
   - `info` yield-and-fund-return fields are a **mix** (full table in
     references/info.md "Unit landmines"). Percent-encoded:
     `dividend.five_year_avg_dividend_yield`, `fund.ytd_return`.
@@ -211,6 +242,16 @@ matching `references/<mode>.md`. Grouped into three concerns:
   avg-return < 0.5 is the fraction (CAGR) variant. When in doubt, prefer
   `trailing_annual_dividend_yield` (always fraction) or compute the yield
   yourself from `dividend_rate / current_price`.
+- **Trading currency vs reporting currency.** `fast_info.currency` and
+  `info.currency` return the **trading currency** (the currency you'd
+  buy the stock in — USD for AAPL, USD for ADRs like TM/BABA/PBR, HKD for
+  0700.HK). `financials.currency` returns the **reporting currency**
+  (what the financial statements are denominated in — USD for AAPL but
+  JPY for TM, CNY for BABA/0700.HK, BRL for PBR). For most direct-listed
+  US/EU equities they match; for ADRs and some cross-border listings
+  they don't. When mixing modes, don't assume `fast_info.currency` and
+  `financials.currency` agree — check both. See references/financials.md
+  for the per-ticker examples.
 - **DST.** ET (`America/New_York`) is DST-aware. yfinance ISO timestamps
   carry the correct UTC offset, so data is fine. Only worry about DST when
   translating ET to a user's local timezone in prose (e.g., 09:30 ET =

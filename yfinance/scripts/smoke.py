@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smoke test for the four yfinance wrapper scripts.
+"""Smoke test for the five yfinance wrapper scripts.
 
 Three layers of coverage:
   1. Offline / pure-Python: invariants over pure-Python logic with no
@@ -39,13 +39,15 @@ Run: uv run --with 'yfinance>=1.3,<2' --with 'lxml' python <SKILL_DIR>/scripts/s
 for the others. Without it, all earnings sections fail with error_kind
 'unknown'.) Exits 0 on success, 1 on any failed assertion.
 
-Total runtime: roughly 60-90s (last measured 2026-05: ~70s, US connection).
-Live Yahoo calls dominate; the slowest parts are the two `--period max`
-history fetches (used for the dividend-adjustment semantic check) and the
-prepost-vs-regular intraday pair. Subprocess startup also adds ~5–10s
-overhead per CLI check vs pure-import — that's the cost of catching
-argparse / JSON / exit-code bugs that import-only testing would miss.
-Layer-1 offline checks add ~1s total.
+Total runtime: typically ~80-110s on a US connection. Live Yahoo calls
+dominate; the slowest sections are the two `--period max` history fetches
+(used for the dividend-adjustment semantic check), the prepost-vs-regular
+intraday pair, and the financials suite (each equity fetch includes an
+extra `info["financialCurrency"]` round-trip on top of the per-statement
+fetches — see SKILL.md latency table). Subprocess startup also adds
+~5–10s overhead per CLI check vs pure-import — that's the cost of
+catching argparse / JSON / exit-code bugs that import-only testing would
+miss. Layer-1 offline checks add ~1s total.
 """
 from __future__ import annotations
 
@@ -60,6 +62,7 @@ sys.path.insert(0, str(SCRIPTS_DIR))
 
 import earnings
 import fast_info
+import financials
 import helpers
 import history
 import info
@@ -1206,6 +1209,769 @@ except Exception as e:
     traceback.print_exc(file=sys.stderr)
 
 
+# --- financials default mode (equity, annual) ---
+section("financials default (equity, annual)")
+try:
+    d = financials.fetch("AAPL")
+    # invariant: schema shape — all 3 statements present, no error/note
+    check("AAPL quote_type=EQUITY", d.get("quote_type") == "EQUITY")
+    check("AAPL currency=USD", d.get("currency") == "USD")
+    check("AAPL period=annual", d.get("period") == "annual")
+    check("AAPL has all 3 statement keys",
+          {"income_stmt", "balance_sheet", "cashflow"}.issubset(d.keys()))
+    check("AAPL no error/note (annual all-statements success path)",
+          "error" not in d and "note" not in d)
+    # invariant: each statement returns a list with ≥ 4 periods (yfinance
+    # returns ~5 annual; tolerate down to 4 for thinly-covered names).
+    for s in ("income_stmt", "balance_sheet", "cashflow"):
+        rows = d.get(s) or []
+        check(f"AAPL {s} has >= 4 annual periods",
+              len(rows) >= 4, f"got {len(rows)} rows")
+
+    rows = d["income_stmt"]
+    if rows:
+        r0 = rows[0]
+        # invariant: per-row schema — period_end is YYYY-MM-DD
+        check("income_stmt[0] period_end is YYYY-MM-DD",
+              isinstance(r0.get("period_end"), str) and len(r0["period_end"]) == 10
+              and r0["period_end"][4] == "-",
+              f"got {r0.get('period_end')!r}")
+        # invariant: total_revenue is a positive float (AAPL is profitable;
+        # revenue magnitude well over $300B in recent years).
+        check("AAPL income_stmt[0] total_revenue is float > 1e11 (canary)",
+              isinstance(r0.get("total_revenue"), float)
+              and r0["total_revenue"] > 1e11,
+              f"got {r0.get('total_revenue')!r}")
+        # invariant: net_income is float (sign assumes profitability —
+        # canary; relax if Apple has a loss year)
+        check("AAPL income_stmt[0] net_income is float > 0 (canary)",
+              isinstance(r0.get("net_income"), float) and r0["net_income"] > 0,
+              f"got {r0.get('net_income')!r}")
+        # invariant: diluted_eps is float, plausible range (~$3-$15 for AAPL
+        # in recent years given ~15B shares).
+        eps = r0.get("diluted_eps")
+        check("AAPL income_stmt[0] diluted_eps is float in [1, 50] (canary)",
+              isinstance(eps, float) and 1 < eps < 50,
+              f"got {eps!r}")
+        # invariant: newest-first ordering
+        if len(rows) >= 2:
+            check("income_stmt periods sorted newest-first",
+                  rows[0]["period_end"] > rows[1]["period_end"],
+                  f"got {rows[0]['period_end']!r} vs {rows[1]['period_end']!r}")
+
+    # balance sheet sanity: total_assets > total_liabilities for an equity-
+    # positive company; cash + total_debt populated.
+    b0 = (d.get("balance_sheet") or [{}])[0]
+    if b0:
+        check("AAPL balance_sheet[0] total_assets is float > 1e11 (canary)",
+              isinstance(b0.get("total_assets"), float)
+              and b0["total_assets"] > 1e11,
+              f"got {b0.get('total_assets')!r}")
+        check("AAPL balance_sheet[0] total_debt is float > 0 (canary)",
+              isinstance(b0.get("total_debt"), float)
+              and b0["total_debt"] > 0,
+              f"got {b0.get('total_debt')!r}")
+        check("AAPL balance_sheet[0] stockholders_equity is float (canary)",
+              isinstance(b0.get("stockholders_equity"), float),
+              f"got {b0.get('stockholders_equity')!r}")
+
+    # cashflow sanity: operating_cashflow + free_cashflow populated;
+    # capital_expenditure is negative (cash outflow convention).
+    # Field names use the one-word `cashflow` spelling (not `cash_flow`)
+    # to align with info.py's `free_cashflow` / `operating_cashflow` keys.
+    c0 = (d.get("cashflow") or [{}])[0]
+    if c0:
+        check("AAPL cashflow[0] operating_cashflow is float > 0 (canary)",
+              isinstance(c0.get("operating_cashflow"), float)
+              and c0["operating_cashflow"] > 0,
+              f"got {c0.get('operating_cashflow')!r}")
+        check("AAPL cashflow[0] free_cashflow is float > 0 (canary)",
+              isinstance(c0.get("free_cashflow"), float)
+              and c0["free_cashflow"] > 0,
+              f"got {c0.get('free_cashflow')!r}")
+        # invariant: capex is signed negative (cash outflow). Yahoo's
+        # convention; we don't sign-flip. Regression check for the
+        # documented sign convention in references/financials.md.
+        check("AAPL cashflow[0] capital_expenditure is float < 0 (sign convention)",
+              isinstance(c0.get("capital_expenditure"), float)
+              and c0["capital_expenditure"] < 0,
+              f"got {c0.get('capital_expenditure')!r}")
+        # invariant: rename guardrails — old keys (`free_cash_flow`,
+        # `operating_cash_flow`) must NOT be present. Catches any
+        # half-migration that re-introduces the three-word spelling.
+        check("AAPL cashflow[0] does NOT have OLD `free_cash_flow` key",
+              "free_cash_flow" not in c0,
+              f"got OLD key still present: {c0.get('free_cash_flow')!r}")
+        check("AAPL cashflow[0] does NOT have OLD `operating_cash_flow` key",
+              "operating_cash_flow" not in c0)
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"financials default crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
+# --- financials --period quarterly + --statement single + --limit ---
+section("financials quarterly / single-statement / --limit")
+try:
+    # --statement income only: balance + cashflow keys must NOT appear
+    d = financials.fetch("AAPL", statements=("income",))
+    check("--statement income: only income_stmt key present",
+          "income_stmt" in d
+          and "balance_sheet" not in d
+          and "cashflow" not in d,
+          f"got keys={[k for k in d if k in ('income_stmt','balance_sheet','cashflow')]}")
+
+    # quarterly mode: should have 5+ quarterly periods
+    d = financials.fetch("AAPL", statements=("income",), period="quarterly")
+    rows = d.get("income_stmt") or []
+    check("--period quarterly: >= 4 quarters returned",
+          len(rows) >= 4, f"got {len(rows)} rows")
+    # invariant: quarter periods are 3-month spans — newest two should be
+    # ~3 months apart (calendar-quarter or fiscal-quarter aligned)
+    if len(rows) >= 2:
+        from datetime import datetime as _qd
+        d0 = _qd.fromisoformat(rows[0]["period_end"])
+        d1 = _qd.fromisoformat(rows[1]["period_end"])
+        days = abs((d0 - d1).days)
+        check("quarterly periods ~3 months apart (~85-95 days)",
+              80 <= days <= 100, f"got {days} days between newest two")
+
+    # --limit truncation
+    d = financials.fetch("AAPL", statements=("income",), limit=2)
+    check("--limit 2: exactly 2 income_stmt periods",
+          len(d.get("income_stmt", [])) == 2,
+          f"got {len(d.get('income_stmt', []))}")
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"financials quarterly/single/limit crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
+# --- financials --period ttm (income + cashflow only) ---
+section("financials --period ttm")
+try:
+    # TTM all-statements: balance_sheet must be empty + top-level note
+    d = financials.fetch("AAPL", period="ttm")
+    check("ttm all-statements: balance_sheet is []",
+          d.get("balance_sheet") == [],
+          f"got {d.get('balance_sheet')!r}")
+    check("ttm all-statements: top-level note about balance",
+          isinstance(d.get("note"), str) and "balance" in d["note"].lower(),
+          f"got {d.get('note')!r}")
+    # invariant: income + cashflow each return exactly 1 TTM row
+    check("ttm income_stmt has exactly 1 row",
+          len(d.get("income_stmt", [])) == 1,
+          f"got {len(d.get('income_stmt', []))}")
+    check("ttm cashflow has exactly 1 row",
+          len(d.get("cashflow", [])) == 1,
+          f"got {len(d.get('cashflow', []))}")
+
+    # CLI rejection: --statement balance + --period ttm → argparse exit 2
+    cmd = [sys.executable, str(SCRIPTS_DIR / "financials.py"),
+           "--statement", "balance", "--period", "ttm", "AAPL"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+    check("CLI --statement balance --period ttm: argparse rejects (rc=2)",
+          out.returncode == 2,
+          f"rc={out.returncode}")
+
+    # Programmatic balance+ttm via fetch() must NOT return error_kind.
+    # Regression check for the bug where every-statement-skipped fell
+    # through to the not_found error path. Now: empty list + note + no error.
+    d = financials.fetch("AAPL", statements=("balance",), period="ttm")
+    check("programmatic balance+ttm: no error_kind (legitimate skip, not failure)",
+          "error" not in d and d.get("error_kind") is None,
+          f"got error={d.get('error')!r}, error_kind={d.get('error_kind')!r}")
+    check("programmatic balance+ttm: balance_sheet=[] + balance-ttm note",
+          d.get("balance_sheet") == []
+          and isinstance(d.get("note"), str)
+          and "ttm" in d["note"].lower()
+          and "balance" in d["note"].lower(),
+          f"got balance={d.get('balance_sheet')!r}, note={d.get('note')!r}")
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"financials ttm crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
+# --- financials non-equity short-circuit ---
+section("financials non-equity (SPY)")
+try:
+    d = financials.fetch("SPY")
+    check("SPY no error", "error" not in d)
+    check("SPY has note about equities",
+          isinstance(d.get("note"), str) and "equit" in d["note"].lower(),
+          f"got {d.get('note')!r}")
+    check("SPY all 3 statement lists empty",
+          d.get("income_stmt") == []
+          and d.get("balance_sheet") == []
+          and d.get("cashflow") == [])
+    check("SPY quote_type=ETF", d.get("quote_type") == "ETF")
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"financials non-equity crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
+# --- financials error handling (bogus ticker) ---
+section("financials error handling")
+try:
+    d = financials.fetch("ZZZZNOTREAL")
+    check("bogus ticker returns error dict",
+          "error" in d and "income_stmt" not in d)
+    check("bogus ticker error_kind=not_found",
+          d.get("error_kind") == "not_found",
+          f"got {d.get('error_kind')!r}")
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"financials error crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
+# --- financials reporting currency (info["financialCurrency"]) ---
+# CRITICAL distinction tested here: trading currency (what fast_info /
+# info "currency" exposes) vs reporting currency (info "financialCurrency"
+# — what financials are actually denominated in). For ADRs and some
+# direct-listed cross-border names these differ; financials.py must
+# expose the REPORTING currency or every monetary value gets mislabeled.
+section("financials reporting currency (ADR / cross-listed)")
+try:
+    # 0700.HK: Tencent. Trades in HKD; reports financials in CNY (RMB).
+    # invariant: currency=CNY, NOT HKD. Direct regression test for the
+    # ADR-style mismatch (even though 0700.HK isn't formally an ADR).
+    d = financials.fetch("0700.HK", statements=("income",), limit=1)
+    check("0700.HK reporting currency=CNY (NOT trading currency HKD)",
+          d.get("currency") == "CNY",
+          f"got {d.get('currency')!r} — if this is HKD, "
+          f"info[financialCurrency] lookup regressed")
+    rows = d.get("income_stmt") or []
+    if rows:
+        check("0700.HK income_stmt populated (canary)",
+              isinstance(rows[0].get("total_revenue"), float)
+              and rows[0]["total_revenue"] > 1e10,
+              f"got {rows[0].get('total_revenue')!r}")
+
+    # AAPL: trading currency == reporting currency (both USD). Sanity
+    # check that the new code path doesn't break the common case.
+    d_aapl = financials.fetch("AAPL", statements=("income",), limit=1)
+    check("AAPL reporting currency=USD (common case still works)",
+          d_aapl.get("currency") == "USD",
+          f"got {d_aapl.get('currency')!r}")
+
+    # TM (Toyota ADR): trades USD, reports JPY. Strongest ADR canary.
+    # If this returns USD, the financialCurrency lookup is broken.
+    # NOTE: Yahoo coverage of financialCurrency for ADRs is normally
+    # solid but can lapse — accept JPY (correct) or USD-with-fallback-note
+    # (info() failure path, still safe).
+    import time as _t; _t.sleep(2)
+    d_tm = financials.fetch("TM", statements=("income",), limit=1)
+    cur_tm = d_tm.get("currency")
+    note_tm = d_tm.get("note") or ""
+    check("TM reporting currency=JPY OR fell back with note",
+          cur_tm == "JPY" or (cur_tm == "USD" and "trading currency" in note_tm),
+          f"got currency={cur_tm!r}, note={note_tm!r}")
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"financials currency crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
+# --- financials --summary projection ---
+section("financials --summary")
+try:
+    d = financials.fetch("AAPL")
+    s = financials._summarize(d)
+    # invariant: summary shape — all expected keys present
+    expected_summary_keys = (
+        set(financials.SUMMARY_BASE_KEYS)
+        | {k for k, *_ in financials.SUMMARY_HEADLINES}
+        | {k for k, *_ in financials.SUMMARY_GROWTH}
+    )
+    check("AAPL summary has all expected keys",
+          set(s.keys()) >= expected_summary_keys,
+          f"missing: {expected_summary_keys - set(s.keys())}")
+    # invariant: period_end + prev_period_end populated
+    check("AAPL summary period_end is YYYY-MM-DD",
+          isinstance(s.get("period_end"), str) and len(s["period_end"]) == 10)
+    check("AAPL summary prev_period_end < period_end",
+          isinstance(s.get("prev_period_end"), str)
+          and s["prev_period_end"] < s["period_end"],
+          f"got prev={s.get('prev_period_end')!r}, latest={s.get('period_end')!r}")
+    # invariant: revenue_growth_yoy is a *fraction* — disambiguated from
+    # info.py's revenue_growth (Yahoo TTM-based). AAPL annual growth
+    # empirically in [-0.3, 0.5] range.
+    rg = s.get("revenue_growth_yoy")
+    check("AAPL summary revenue_growth_yoy is fraction (-0.5 < x < 0.5)",
+          isinstance(rg, float) and -0.5 < rg < 0.5,
+          f"got {rg!r}")
+    # invariant: free_cashflow_growth_yoy populated as a fraction. The
+    # _yoy suffix prevents collision with info's growth fields.
+    fcfg = s.get("free_cashflow_growth_yoy")
+    check("AAPL summary free_cashflow_growth_yoy is fraction (-1 < x < 1)",
+          isinstance(fcfg, float) and -1 < fcfg < 1,
+          f"got {fcfg!r}")
+    # invariant: rename guardrails — old keys must NOT be present in summary
+    check("AAPL summary does NOT have OLD `revenue_growth` key (collision avoided)",
+          "revenue_growth" not in s,
+          f"got OLD key still present: {s.get('revenue_growth')!r}")
+    check("AAPL summary does NOT have OLD `free_cash_flow_growth` key",
+          "free_cash_flow_growth" not in s)
+
+    # Non-equity summary: all monetary fields null + note populated
+    s_etf = financials._summarize(financials.fetch("SPY"))
+    check("SPY summary has note + null monetary fields",
+          s_etf.get("note") is not None
+          and s_etf.get("total_revenue") is None
+          and s_etf.get("revenue_growth_yoy") is None,
+          f"note={s_etf.get('note')!r}, rev={s_etf.get('total_revenue')!r}")
+
+    # Error path: bogus ticker summary preserves error_kind, drops data
+    s_err = financials._summarize(financials.fetch("ZZZZNOTREAL"))
+    check("bogus summary preserves error_kind, no period_end",
+          s_err.get("error_kind") == "not_found"
+          and "period_end" not in s_err)
+
+    # --limit 1: only one period available, no prev for growth.
+    # invariant: prev_period_end and all *_growth_yoy fields are null,
+    # but base headline fields still populate.
+    d_one = financials.fetch("AAPL", limit=1)
+    s_one = financials._summarize(d_one)
+    check("--limit 1: prev_period_end is None (no prev period available)",
+          s_one.get("prev_period_end") is None,
+          f"got {s_one.get('prev_period_end')!r}")
+    check("--limit 1: revenue_growth_yoy is None (no prev to compute against)",
+          s_one.get("revenue_growth_yoy") is None,
+          f"got {s_one.get('revenue_growth_yoy')!r}")
+    check("--limit 1: free_cashflow_growth_yoy is None",
+          s_one.get("free_cashflow_growth_yoy") is None)
+    check("--limit 1: base headline fields still populate",
+          isinstance(s_one.get("total_revenue"), float)
+          and isinstance(s_one.get("net_income"), float),
+          f"got revenue={s_one.get('total_revenue')!r}, "
+          f"net_income={s_one.get('net_income')!r}")
+    check("--limit 1: period_end populated (latest period still there)",
+          isinstance(s_one.get("period_end"), str)
+          and len(s_one["period_end"]) == 10)
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"financials --summary crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
+# --- financials currency fallback paths b/c (offline; mock yfinance) ---
+# Live yfinance can't reliably trigger the new in-info fallbacks — Yahoo's
+# financialCurrency coverage for popular tickers is solid. Mock the info
+# dict to surgically exercise:
+#   path (b)  info ok, financialCurrency missing, info[currency] populated
+#   path (c)  info ok, both fields missing → fast_info[currency] used
+#   path (d)  all three sources unavailable → currency=null + note
+#   sentinel  Yahoo "None" string is not treated as a real currency
+section("financials currency fallback paths (offline mock)")
+try:
+    import pandas as _pd
+    import yfinance as _yf
+
+    # Minimal income DataFrame — single line item suffices for these
+    # currency-only tests; we don't care about field coverage here.
+    _min_income = _pd.DataFrame(
+        [[1.0e11]],
+        index=["Total Revenue"],
+        columns=[_pd.Timestamp("2025-09-30")])
+
+    class _CurrencyFastInfo:
+        """Returns quoteType + USD trading currency."""
+        def __getitem__(self, key):
+            if key == "quoteType":
+                return "EQUITY"
+            if key == "currency":
+                return "USD"
+            raise KeyError(key)
+
+    class _NoCurrencyFastInfo:
+        """quoteType only; currency raises KeyError (path-d trigger)."""
+        def __getitem__(self, key):
+            if key == "quoteType":
+                return "EQUITY"
+            raise KeyError(key)
+
+    def _mk_ticker(info_dict, fast_info_cls=_CurrencyFastInfo):
+        """Factory that returns a Ticker class returning the given info."""
+        class _T:
+            def __init__(self, sym):
+                self.fast_info = fast_info_cls()
+            @property
+            def info(self):
+                return info_dict
+            @property
+            def income_stmt(self):
+                return _min_income
+        return _T
+
+    saved = _yf.Ticker
+
+    # --- Path (b): financialCurrency missing, info[currency]=USD ---
+    _yf.Ticker = _mk_ticker({"currency": "USD"})
+    try:
+        d = financials.fetch("MOCK_PATHB", statements=("income",))
+    finally:
+        _yf.Ticker = saved
+
+    check("path b: currency falls back to info[currency]",
+          d.get("currency") == "USD",
+          f"got {d.get('currency')!r}")
+    note_b = d.get("note") or ""
+    check("path b: note mentions financialCurrency missing",
+          "financialCurrency] missing" in note_b,
+          f"got note={note_b!r}")
+    check("path b: note contains 'trading currency' substring (consumer match)",
+          "trading currency" in note_b,
+          f"got note={note_b!r}")
+    check("path b: note clarifies values are in actual reporting currency",
+          "actual reporting currency" in note_b,
+          f"got note={note_b!r}")
+    check("path b: income_stmt still populated (statements fetched normally)",
+          isinstance(d.get("income_stmt"), list) and len(d["income_stmt"]) >= 1)
+
+    # --- Path (c): both info fields missing, fast_info[currency]=USD ---
+    _yf.Ticker = _mk_ticker({"someOtherField": "value"})
+    try:
+        d = financials.fetch("MOCK_PATHC", statements=("income",))
+    finally:
+        _yf.Ticker = saved
+
+    check("path c: currency falls back to fast_info[currency]",
+          d.get("currency") == "USD",
+          f"got {d.get('currency')!r}")
+    note_c = d.get("note") or ""
+    check("path c: note mentions BOTH info fields missing",
+          "both missing" in note_c,
+          f"got note={note_c!r}")
+    check("path c: note contains 'trading currency' substring",
+          "trading currency" in note_c)
+
+    # --- Path (d): all three sources unavailable → currency=null ---
+    _yf.Ticker = _mk_ticker({"someOtherField": "value"},
+                             fast_info_cls=_NoCurrencyFastInfo)
+    try:
+        d = financials.fetch("MOCK_PATHD", statements=("income",))
+    finally:
+        _yf.Ticker = saved
+
+    check("path d: currency is None when all sources fail",
+          d.get("currency") is None,
+          f"got {d.get('currency')!r}")
+    note_d = d.get("note") or ""
+    check("path d: note mentions 'all unavailable' (not lying about source)",
+          "all unavailable" in note_d,
+          f"got note={note_d!r}")
+    check("path d: note still clarifies values come from reporting currency",
+          "actual reporting currency" in note_d,
+          f"got note={note_d!r}")
+    check("path d: income_stmt still populated (statements unaffected by currency miss)",
+          isinstance(d.get("income_stmt"), list) and len(d["income_stmt"]) >= 1)
+
+    # --- Sentinel filter: Yahoo "None" string treated as null ---
+    # Without filtering, financialCurrency="None" would be used as a
+    # literal currency code. With filtering, falls through to path (b).
+    _yf.Ticker = _mk_ticker({"financialCurrency": "None", "currency": "USD"})
+    try:
+        d = financials.fetch("MOCK_NONESTR", statements=("income",))
+    finally:
+        _yf.Ticker = saved
+
+    check("'None' sentinel: NOT used as currency code",
+          d.get("currency") != "None",
+          f"got {d.get('currency')!r}")
+    check("'None' sentinel: falls through to info[currency]",
+          d.get("currency") == "USD",
+          f"got {d.get('currency')!r}")
+    check("'None' sentinel: triggers path-b note (financialCurrency treated as missing)",
+          "financialCurrency] missing" in (d.get("note") or ""),
+          f"got note={d.get('note')!r}")
+
+    # Other sentinels: "n/a", "—", "-" — quick spot-check
+    for sentinel in ("n/a", "N/A", "unknown", "—", "-"):
+        _yf.Ticker = _mk_ticker({"financialCurrency": sentinel, "currency": "USD"})
+        try:
+            d = financials.fetch("MOCK_SENT", statements=("income",))
+        finally:
+            _yf.Ticker = saved
+        check(f"sentinel {sentinel!r} filtered (currency != {sentinel!r})",
+              d.get("currency") != sentinel,
+              f"got {d.get('currency')!r}")
+
+    # --- Sentinel CASCADE: sentinel in BOTH financialCurrency and
+    #     info[currency] must fall through past path (b) to path (c)
+    #     and pick up fast_info[currency]. Catches a regression where
+    #     `_normalize_currency` is removed at the path-(b) lookup but
+    #     kept at path (a)/(c) — a single-point spot-check would still
+    #     pass but the cascade would silently break for ADRs whose info
+    #     dict has sentinels in both fields.
+    _yf.Ticker = _mk_ticker(
+        {"financialCurrency": "None", "currency": "n/a"},
+        fast_info_cls=_CurrencyFastInfo)  # USD
+    try:
+        d = financials.fetch("MOCK_CASCADE_BC", statements=("income",))
+    finally:
+        _yf.Ticker = saved
+    check("cascade b→c: both info fields are sentinels → fast_info used",
+          d.get("currency") == "USD",
+          f"got {d.get('currency')!r} — if 'None' or 'n/a', "
+          f"_normalize_currency at path (b) regressed")
+    check("cascade b→c: note matches path (c) (BOTH missing)",
+          "both missing" in (d.get("note") or ""),
+          f"got note={d.get('note')!r}")
+
+    # --- Sentinel CASCADE all the way to path (d): sentinels in info AND
+    #     fast_info → currency=null. Verifies the filter applies to
+    #     fast_info too (via _trading_currency normalization), not just
+    #     the info-dict lookups. Without normalization at the
+    #     fast_info layer, "None" string would propagate as currency.
+    class _SentinelFastInfo:
+        def __getitem__(self, key):
+            if key == "quoteType":
+                return "EQUITY"
+            if key == "currency":
+                return "None"  # Yahoo sentinel through fast_info
+            raise KeyError(key)
+
+    _yf.Ticker = _mk_ticker(
+        {"financialCurrency": "—", "currency": "unknown"},
+        fast_info_cls=_SentinelFastInfo)
+    try:
+        d = financials.fetch("MOCK_CASCADE_BCD", statements=("income",))
+    finally:
+        _yf.Ticker = saved
+    check("cascade b→c→d: all three sources are sentinels → currency=null",
+          d.get("currency") is None,
+          f"got {d.get('currency')!r} — if non-null, fast_info "
+          f"sentinel filter regressed (_trading_currency must run "
+          f"results through _normalize_currency)")
+    check("cascade b→c→d: note matches path (d) (all unavailable)",
+          "all unavailable" in (d.get("note") or ""),
+          f"got note={d.get('note')!r}")
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"financials currency fallback mock crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
+# --- financials partial_errors (offline; mock yfinance) ---
+# Live Yahoo can't reliably reproduce the partial-success path (one
+# statement fails transient while others succeed) — it requires injecting
+# a per-statement failure. Mock yfinance so a single statement (balance)
+# raises 429 sustained while income + cashflow succeed; assert the
+# partial-success schema. Also covers the all-fail collapse to top-level
+# error_kind. Same pattern as the fast_info retry-surfacing offline test.
+section("financials partial_errors (offline mock)")
+try:
+    import pandas as _pd
+    import yfinance as _yf
+
+    # Minimal yfinance-shaped DataFrames: line items as index, period-end
+    # Timestamp as the single column. _df_to_periods uses
+    # `df.loc[src_key, col]`, so this shape is sufficient.
+    _income_df = _pd.DataFrame(
+        [[1.5e11], [2.5e10], [9.0e10], [3.5e10], [4.5e10], [3.0]],
+        index=["Total Revenue", "Net Income", "Gross Profit",
+               "Operating Income", "EBITDA", "Diluted EPS"],
+        columns=[_pd.Timestamp("2025-09-30")])
+    _cashflow_df = _pd.DataFrame(
+        [[3.0e10], [-5.0e9], [2.5e10]],
+        index=["Operating Cash Flow", "Capital Expenditure", "Free Cash Flow"],
+        columns=[_pd.Timestamp("2025-09-30")])
+
+    class _MockFastInfo:
+        # Only quoteType is reached in this section — info() in every mock
+        # below returns financialCurrency, so _meta's fast_info[currency]
+        # fallback paths are never exercised here. The currency-fallback
+        # mock section further down has its own _MockFastInfo with the
+        # `currency` key handler for those paths.
+        def __getitem__(self, key):
+            if key == "quoteType":
+                return "EQUITY"
+            raise KeyError(key)
+
+    class _PartialFailTicker:
+        """Equity where balance_sheet sustained-429s; income + cashflow ok."""
+        def __init__(self, sym):
+            self.fast_info = _MockFastInfo()
+
+        @property
+        def info(self):
+            return {"financialCurrency": "USD"}
+
+        @property
+        def income_stmt(self):
+            return _income_df
+
+        @property
+        def balance_sheet(self):
+            raise RuntimeError("HTTP 429 Too Many Requests")
+
+        @property
+        def cashflow(self):
+            return _cashflow_df
+
+    saved = _yf.Ticker
+    _yf.Ticker = _PartialFailTicker
+    try:
+        # with_retry adds ~1.5–2s of backoff sleeps for the sustained
+        # 3-attempt 429 on balance_sheet. Acceptable for smoke (one section).
+        d = financials.fetch("MOCKEQ")
+    finally:
+        _yf.Ticker = saved
+
+    # invariant: NOT collapsed to top-level error
+    check("partial: no top-level error (income + cashflow succeeded)",
+          "error" not in d and d.get("error_kind") is None,
+          f"got error={d.get('error')!r}, error_kind={d.get('error_kind')!r}")
+    # invariant: succeeded statements have data
+    check("partial: income_stmt populated",
+          isinstance(d.get("income_stmt"), list) and len(d["income_stmt"]) >= 1
+          and isinstance(d["income_stmt"][0].get("total_revenue"), float),
+          f"got {d.get('income_stmt')!r}")
+    check("partial: cashflow populated",
+          isinstance(d.get("cashflow"), list) and len(d["cashflow"]) >= 1
+          and isinstance(d["cashflow"][0].get("free_cashflow"), float),
+          f"got {d.get('cashflow')!r}")
+    # invariant: failed statement is empty list (NOT absent — schema preserved)
+    check("partial: balance_sheet=[] (failed but schema-present)",
+          d.get("balance_sheet") == [],
+          f"got {d.get('balance_sheet')!r}")
+    # invariant: partial_errors surfaces the per-statement failure
+    pe = d.get("partial_errors")
+    check("partial: partial_errors dict present with balance_sheet entry",
+          isinstance(pe, dict) and "balance_sheet" in pe
+          and pe["balance_sheet"]["error_kind"] == "rate_limit"
+          and pe["balance_sheet"]["attempts"] >= 1,
+          f"got {pe!r}")
+    check("partial: only failed statement in partial_errors (no income/cashflow)",
+          isinstance(pe, dict) and set(pe.keys()) == {"balance_sheet"},
+          f"got keys={list(pe.keys()) if isinstance(pe, dict) else None}")
+    # invariant: top-level note describes which statement failed
+    note = d.get("note")
+    check("partial: note mentions partial fetch failure on balance_sheet",
+          isinstance(note, str)
+          and "partial" in note.lower() and "balance_sheet" in note,
+          f"got {note!r}")
+    # invariant: top-level attempts > 1 (balance retried before giving up)
+    check("partial: top-level attempts > 1 (transient 429 retried)",
+          d.get("attempts", 1) > 1,
+          f"got {d.get('attempts')!r}")
+
+    # --summary projection of a partial-success result preserves
+    # partial_errors and note (caller can detect unreliable fields).
+    s = financials._summarize(d)
+    check("partial summary: partial_errors preserved",
+          isinstance(s.get("partial_errors"), dict)
+          and "balance_sheet" in s["partial_errors"])
+    check("partial summary: note preserved",
+          isinstance(s.get("note"), str) and "partial" in s["note"].lower())
+    # invariant: balance-sourced fields are null in summary (data didn't
+    # come back), but income/cashflow fields populate normally.
+    check("partial summary: total_assets is None (balance failed)",
+          s.get("total_assets") is None)
+    check("partial summary: total_revenue populated (income succeeded)",
+          isinstance(s.get("total_revenue"), float))
+    check("partial summary: free_cashflow populated (cashflow succeeded)",
+          isinstance(s.get("free_cashflow"), float))
+
+    # --- All-fail variant: every statement raises → top-level error,
+    #     error_kind picked by _ERROR_KIND_PRIORITY. Use not_found to
+    #     keep the test fast (with_retry doesn't sleep on not_found).
+    class _AllFailTicker:
+        def __init__(self, sym):
+            self.fast_info = _MockFastInfo()
+
+        @property
+        def info(self):
+            return {"financialCurrency": "USD"}
+
+        @property
+        def income_stmt(self):
+            raise RuntimeError("404 Not Found")
+
+        @property
+        def balance_sheet(self):
+            raise RuntimeError("404 Not Found")
+
+        @property
+        def cashflow(self):
+            raise RuntimeError("404 Not Found")
+
+    _yf.Ticker = _AllFailTicker
+    try:
+        d_all_fail = financials.fetch("MOCKEQ2")
+    finally:
+        _yf.Ticker = saved
+
+    check("all-fail: collapses to top-level error (no partial output)",
+          "error" in d_all_fail and "income_stmt" not in d_all_fail,
+          f"got keys={list(d_all_fail.keys())}")
+    check("all-fail: error_kind=not_found (matches injected exception)",
+          d_all_fail.get("error_kind") == "not_found",
+          f"got {d_all_fail.get('error_kind')!r}")
+
+    # --- Mixed-kinds variant: rate_limit + not_found should collapse to
+    #     rate_limit (priority order: rate_limit > network > unknown >
+    #     not_found). Direct test of _ERROR_KIND_PRIORITY logic.
+    class _MixedFailTicker:
+        def __init__(self, sym):
+            self.fast_info = _MockFastInfo()
+
+        @property
+        def info(self):
+            return {"financialCurrency": "USD"}
+
+        @property
+        def income_stmt(self):
+            raise RuntimeError("HTTP 429 Too Many Requests")
+
+        @property
+        def balance_sheet(self):
+            raise RuntimeError("404 Not Found")
+
+        @property
+        def cashflow(self):
+            raise RuntimeError("HTTP 429 Too Many Requests")
+
+    _yf.Ticker = _MixedFailTicker
+    try:
+        d_mixed = financials.fetch("MOCKEQ3")
+    finally:
+        _yf.Ticker = saved
+
+    check("mixed-fail: error_kind=rate_limit (priority over not_found)",
+          d_mixed.get("error_kind") == "rate_limit",
+          f"got {d_mixed.get('error_kind')!r} — _ERROR_KIND_PRIORITY regressed")
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"financials partial_errors mock crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
+# --- financials --summary --period quarterly: YoY (4-back) prev semantic ---
+section("financials --summary quarterly YoY")
+try:
+    d = financials.fetch("AAPL", period="quarterly")
+    s = financials._summarize(d)
+    # invariant: when ≥5 quarters available, prev_period_end is 4 quarters
+    # back (~365 days), not 1 quarter back (~90 days). Catches a regression
+    # in _pick_prev_index.
+    if s.get("period_end") and s.get("prev_period_end"):
+        from datetime import datetime as _qd
+        d0 = _qd.fromisoformat(s["period_end"])
+        d1 = _qd.fromisoformat(s["prev_period_end"])
+        days = (d0 - d1).days
+        check("quarterly YoY: prev_period_end is ~365 days back (not 90)",
+              330 <= days <= 400,
+              f"got {days} days — expected ~365 (YoY same-quarter)")
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"financials --summary quarterly crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
 # --- CLI sanity: focus on what only subprocess testing covers (argparse,
 #     JSON serialization, exit codes, --help). Schema invariants are
 #     already covered by the import-path sections above; don't re-test.
@@ -1219,6 +1985,9 @@ try:
         ("info.py", ("--summary", "AAPL")),
         ("earnings.py", ("--limit", "5", "AAPL")),
         ("earnings.py", ("--summary", "AAPL")),
+        ("financials.py", ("--statement", "income", "--limit", "2", "AAPL")),
+        ("financials.py", ("--summary", "AAPL")),
+        ("financials.py", ("--period", "ttm", "AAPL")),
     ):
         rc, data = run_cli(script, *args)
         check(f"{script} {' '.join(args)}: exit 0 + valid JSON list",
@@ -1235,7 +2004,8 @@ try:
 
     # --help shouldn't hang or exit non-zero (catches argparse misconfig
     # like `%(default)s` referencing a non-existent default)
-    for script in ("fast_info.py", "history.py", "info.py", "earnings.py"):
+    for script in ("fast_info.py", "history.py", "info.py", "earnings.py",
+                   "financials.py"):
         cmd = [sys.executable, str(SCRIPTS_DIR / script), "--help"]
         out = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
         check(f"{script} --help exits 0",
