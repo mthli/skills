@@ -24,9 +24,10 @@ one per mode:
 - `scripts/holders.py` — insider / institutional ownership rollup + top-10 institutional and mutual-fund holders
 - `scripts/options.py` — option chain (calls + puts for one expiry); pair with `--moneyness` for an ATM-band slice + ATM/PCR summary
 - `scripts/insiders.py` — Form 4 insider transactions (last ~24 mo) + 6-month buy/sell rollup + current roster
+- `scripts/analyst.py` — analyst recommendations time series (0m / -1m / -2m / -3m bucket counts) + per-event grade-change feed with embedded price-target moves
 
 Shared NaN/Inf-safe converters live in `scripts/helpers.py`. A
-`scripts/smoke.py` test exercises all nine wrappers against
+`scripts/smoke.py` test exercises all ten wrappers against
 representative tickers — run after editing schema or when yfinance API
 drift is suspected:
 `uv run --with 'yfinance>=1.3,<2' --with 'lxml' python <SKILL_DIR>/scripts/smoke.py`
@@ -71,9 +72,17 @@ as functionality grows.
 > empty — that's partial Yahoo coverage of non-US per-event filings,
 > not ambiguity, surfaced via a separate `coverage_note` field
 > (mutually exclusive with `note`) so the asymmetry is visible
-> in-band rather than silently shaped like real activity. Both
-> `fast_info` and `info` return `quote_type` explicitly when you're
-> unsure.
+> in-band rather than silently shaped like real activity. `analyst`
+> mirrors the `insiders` shape: ETFs / indexes / crypto / FX / futures
+> / bogus tickers all return both frames empty (success-with-`note`,
+> ambiguous — chain `fast_info` to disambiguate); non-US **primary**
+> listings (verified `0700.HK`, `BMW.DE`) get `recommendations`
+> populated but `upgrades_downgrades` empty (Yahoo's grade-change
+> feed is US-centric) — that's the partial-empty path with
+> `coverage_note` set, mutually exclusive with `note`. **ADRs
+> (verified `TM`) still get full coverage** because they trade on
+> US exchanges. Both `fast_info` and `info` return `quote_type`
+> explicitly when you're unsure.
 
 | Question shape | Mode | Why |
 |---|---|---|
@@ -105,7 +114,9 @@ as functionality grows.
 | "which of these consistently beats" | `earnings --summary` | `beat_rate_last_4` across multiple tickers |
 | "consensus EPS / revenue forecast", "next quarter estimate", "analyst high / low / # analysts", "FY consensus", "estimate revisions / trend", "stock vs market growth", "long-term growth (LTG)" | `earnings --estimates` | full analyst panel: consensus avg/low/high, 90-day estimate trend, 7d/30d revision counts, broad-market benchmark, LTG. Per-period rows for `0q` / `+1q` / `0y` / `+1y`. ADRs split EPS (USD) and revenue (home ccy) into separate currency fields. See references/earnings.md. |
 | "recent IPO with no past reports", "ticker hasn't reported earnings yet" | `earnings --estimates` | **IPO fall-through.** The same flag also rescues IPOs from the default `not_found`: when the calendar scrape returns empty but the analyst panel has data, the response is success with `earnings_dates: []`, `timezone: null`, and a `coverage_note` explaining the empty calendar. Default `earnings` (without `--estimates`) returns `error_kind: not_found` with a hint pointing at this flag. |
-| "what's the analyst rating / price target on X" | `info` (analyst section) | `info.analyst.target_mean_price`, `recommendation_key` — complementary to `earnings --estimates` (which has the underlying EPS/revenue forecasts; price target is derived from those) |
+| "what's the analyst rating / price target on X" | `info` (analyst section) | `info.analyst.target_mean_price`, `recommendation_key` — static current consensus. For **time series** of how consensus has shifted, or per-event grade changes, see `analyst` below |
+| "has consensus shifted on X", "any rating upgrades / downgrades recently", "who upgraded / downgraded X", "did Morgan Stanley raise their target", "consensus drift over last 3 months" | `analyst` | recommendations time series (0m / -1m / -2m / -3m bucket counts) + per-event grade-change feed (`upgrades_downgrades`) with embedded price-target moves (`Raises` / `Lowers`). 977+ rows for major US large-caps going back to ~2012 — use `--limit` or `--summary`. Complements `info.analyst` (static snapshot) and `earnings --estimates` (EPS forecasts). |
+| "compare analyst sentiment across tickers", "rank by % buy / consensus score", "net upgrades last 90d" | `analyst --summary` | flat per-ticker dict: `total_analysts_current`, `buy_pct_current` / `buy_pct_change`, `consensus_score_current` (1=strong_buy ... 5=strong_sell — comparable to `info.recommendation_mean`), 90-day rollups (`upgrades_last_90d`, `target_raises_last_90d`), latest event |
 | "income statement", "balance sheet", "cash flow", "revenue/FCF trend over N years" | `financials` | per-statement period lists; scope with `--statement income\|balance\|cashflow` |
 | "latest quarter", "QoQ revenue", "TTM trailing twelve months" | `financials --period quarterly\|ttm` | ~5–7 most-recent quarters; `ttm` = 1-row rollup (income + cashflow only) |
 | "compare 3+ tickers' revenue / FCF / margins / growth" | `financials --summary` | flat per-ticker dict + period-over-period growth (`*_growth_yoy`) |
@@ -187,6 +198,12 @@ uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/insiders.py AAPL    
 uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/insiders.py --summary AAPL MSFT GOOGL            # peer net-buying rollup
 uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/insiders.py --limit 10 AAPL                      # top 10 transactions / roster rows
 uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/insiders.py --format csv --summary AAPL MSFT     # peer-compare CSV
+
+# analyst — recommendations time series + per-event grade-change feed (see references/analyst.md)
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/analyst.py AAPL                                  # both sections, JSON
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/analyst.py --summary AAPL MSFT NVDA              # peer consensus / 90d rollups
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/analyst.py --limit 20 AAPL                       # top 20 grade-change events
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/analyst.py --format csv --summary AAPL MSFT NVDA # peer-compare CSV
 ```
 
 `<SKILL_DIR>` is the absolute path of the directory containing this
@@ -195,10 +212,16 @@ SKILL.md. Substitute it once when running.
 ## Cost / latency
 
 Rough per-ticker cost: `fast_info` / `news` / `holders` / `insiders` ~0.3–1.5 s,
-`history` ~0.5–4 s, `info` / `earnings` / `financials` / `options`
-~1–5 s. All modes are serial (total ≈ N × per-ticker) **except
-`history`** — it batches N≥2 through `yf.download` in one threaded HTTP
-call, so 10 tickers cost ~1–2 s instead of ~5–15 s. `--summary` does
+`history` ~0.5–4 s, `info` / `earnings` / `financials` / `options` /
+`analyst` ~1–5 s (`analyst` makes **3 HTTP per ticker** —
+`recommendations`, `upgrades_downgrades`, and `fast_info` for
+`quote_type` — each from a different endpoint or module group, so
+none share a backend request; the `fast_info` call is the
+disambiguator that lets the all-empty `note` path be answered inline
+without a follow-up call). All modes are serial (total ≈ N ×
+per-ticker) **except `history`** — it batches N≥2 through
+`yf.download` in one threaded HTTP call, so 10 tickers cost ~1–2 s
+instead of ~5–15 s. `--summary` does
 **not** reduce latency; it's a post-fetch projection that only shrinks
 output JSON (use it to save context tokens, not time). When a question
 is answerable by multiple modes, pick the cheapest — don't call `info`
@@ -221,7 +244,7 @@ explanation, and the version-pin rationale.
 
 ## Cross-cutting caveats
 
-These apply to all eight modes. Mode-specific caveats live in the
+These apply to all ten modes. Mode-specific caveats live in the
 matching `references/<mode>.md`. Grouped into three concerns:
 
 ### Data formats (interpreting the numbers)
@@ -269,6 +292,24 @@ matching `references/<mode>.md`. Grouped into three concerns:
     (rows actually returned in this fetch, ≤ 10). Easy to misread one
     for the other if you skim — see references/holders.md for the
     naming-collision rationale.
+  - `analyst --summary.buy_pct_current` / `buy_pct_oldest` /
+    `buy_pct_change` → **fractions** (matches `info` and `holders`
+    fraction conventions; `0.65` = 65% buy-or-better, multiply ×100
+    for display). `analyst --summary.consensus_score_current` /
+    `consensus_score_oldest` are on **Yahoo's 1-5 Likert scale**
+    (1 = unanimous strong_buy, 5 = unanimous strong_sell, lower is
+    more bullish) — directly comparable to `info.analyst.recommendation_mean`
+    so consumers can swap data sources without converting. Don't
+    accidentally render the Likert scale as a percentage.
+    `analyst.upgrades_downgrades[*].current_price_target` /
+    `prior_price_target` → floats in the **trading currency** (=
+    `fast_info.currency`); USD for AAPL and ADRs (`TM`); 0.0 is
+    Yahoo's "no target" sentinel and projects to null. The two
+    enum fields have **inconsistent case** (Yahoo's quirk):
+    `action ∈ {up, down, main, init, reit}` (lowercase),
+    `price_target_action ∈ {Raises, Lowers, Maintains, Announces,
+    Adjusts}` (capitalized) — exact-match comparisons need to
+    respect both cases.
   - `options[*].change_pct` → **inferred percent** (Yahoo's
     `percentChange` field; sibling `regularMarketChangePercent` in
     the same options API payload is verified percent-encoded, but
@@ -375,19 +416,23 @@ matching `references/<mode>.md`. Grouped into three concerns:
     and `url` columns are deduplicated and shared across `transaction`
     and `roster` rows since both record types semantically have them);
     ✅ `--summary`.
+  - `analyst` — ✅ default (one row per record, with a `record_class`
+    discriminator: `recommendation` / `change`); ✅ `--summary`.
   
   **CSV row shapes split into two families.** Strict "one row per
   ticker": `fast_info` and all `--summary` modes (`history` / `info` /
-  `earnings` / `financials` / `holders` / `options` / `insiders`).
-  "Row-per-event" (with `symbol` column repeating across rows for the
-  same ticker): `history` default (one row per bar), `earnings`
-  default (one row per `earnings_date`), `news` (one row per article),
-  `holders` default (one row per holder, plus one rollup row per
-  ticker tagged `holder_class=summary`), `options` default (one row
-  per contract, tagged `leg=call` / `leg=put`), `insiders` default
-  (one row per record, tagged `record_class=purchases` /
-  `transaction` / `roster`). For `news`, `holders`, `options`, and
-  `insiders` specifically: tickers with no data or an error still
+  `earnings` / `financials` / `holders` / `options` / `insiders` /
+  `analyst`). "Row-per-event" (with `symbol` column repeating across
+  rows for the same ticker): `history` default (one row per bar),
+  `earnings` default (one row per `earnings_date`), `news` (one row
+  per article), `holders` default (one row per holder, plus one
+  rollup row per ticker tagged `holder_class=summary`), `options`
+  default (one row per contract, tagged `leg=call` / `leg=put`),
+  `insiders` default (one row per record, tagged
+  `record_class=purchases` / `transaction` / `roster`), `analyst`
+  default (one row per record, tagged `record_class=recommendation` /
+  `change`). For `news`, `holders`, `options`, `insiders`, and
+  `analyst` specifically: tickers with no data or an error still
   get a single row carrying the symbol + `note` + meta fields so
   they aren't silently dropped.
 - **`note` field convention.** Several modes expose a per-result
@@ -398,12 +443,13 @@ matching `references/<mode>.md`. Grouped into three concerns:
      both appear as columns in the CSVs of modes that emit `note`,
      so neither category gets dropped from tabular output.
   2. **`note` and `coverage_note` are mutually exclusive** in
-     modes that expose both (currently `earnings` and `insiders`
-     — both signal "successful but unusual shape", but with
-     different action implications: `note` = no data / ambiguous
-     cause, chain `fast_info`; `coverage_note` = real data with
-     thin event coverage, the empty fields ARE the answer). Both
-     fields appear as CSV columns in modes that emit them.
+     modes that expose both (currently `earnings`, `insiders`, and
+     `analyst` — all three signal "successful but unusual shape",
+     but with different action implications: `note` = no data /
+     ambiguous cause, chain `fast_info`; `coverage_note` = real
+     data with thin event coverage, the empty fields ARE the
+     answer). Both fields appear as CSV columns in modes that
+     emit them.
   Per-mode semantics differ — see references/<mode>.md for the
   contract:
   - `news.note` — empty Yahoo response (ambiguous: bogus / low
@@ -433,6 +479,15 @@ matching `references/<mode>.md`. Grouped into three concerns:
     references/insiders.md for the full mutually-exclusive contract.
     Both fields appear as columns in default-mode and `--summary`-
     mode CSVs.
+  - `analyst.note` — **both-frames-empty result only**. Same
+    ambiguity shape as `holders` / `insiders` (non-equity / bogus
+    / no-coverage); chain `fast_info` to disambiguate. The
+    partial-empty case (recommendations populated, upgrades_downgrades
+    empty — verified for `0700.HK`, `BMW.DE` non-US primary
+    listings; ADRs like `TM` still get full coverage) is surfaced
+    via a companion field `coverage_note` (mutually exclusive with
+    `note`). Both fields appear as columns in default-mode and
+    `--summary`-mode CSVs.
   - `options.note` — **two distinct empty paths, same `note`
     convention.** (1) **No options listed at all** (`t.options`
     returns `()`): same ambiguity shape as `holders` — non-equity

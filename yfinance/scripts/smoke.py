@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smoke test for the nine yfinance wrapper scripts.
+"""Smoke test for the ten yfinance wrapper scripts.
 
 Three layers of coverage:
   1. Offline / pure-Python: invariants over pure-Python logic with no
@@ -61,6 +61,7 @@ from pathlib import Path
 SCRIPTS_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPTS_DIR))
 
+import analyst
 import earnings
 import fast_info
 import financials
@@ -3707,6 +3708,413 @@ except Exception as e:
     traceback.print_exc(file=sys.stderr)
 
 
+# --- analyst fetch shape ---
+section("analyst fetch")
+try:
+    # Happy path: AAPL — both sections populated.
+    d = analyst.fetch("AAPL")
+    check("analyst AAPL: success has recommendations + upgrades_downgrades",
+          isinstance(d, dict) and d.get("symbol") == "AAPL"
+          and isinstance(d.get("recommendations"), list)
+          and isinstance(d.get("upgrades_downgrades"), list),
+          f"got {list(d.keys())}")
+    # recommendations: typically 4 rows (0m / -1m / -2m / -3m), occasionally 3
+    check("analyst AAPL: recommendations is 3-4 rows",  # canary
+          3 <= len(d.get("recommendations") or []) <= 4,
+          f"got {len(d.get('recommendations') or [])} rows")
+    check("analyst AAPL: upgrades_downgrades non-empty (>= 50)",  # canary: 977 typical
+          len(d.get("upgrades_downgrades") or []) >= 50,
+          f"got {len(d.get('upgrades_downgrades') or [])} rows")
+
+    # recommendations row schema
+    expected_rec = set(analyst._RECOMMENDATIONS_KEYS)
+    if d.get("recommendations"):
+        r0 = d["recommendations"][0]
+        check("analyst AAPL: recommendations[0] has documented field set",
+              set(r0.keys()) == expected_rec,
+              f"diff: missing={expected_rec - set(r0.keys())}, "
+              f"extra={set(r0.keys()) - expected_rec}")
+        # period must be one of the known labels
+        check("analyst AAPL: recommendations[0].period is one of 0m/-1m/-2m/-3m",
+              r0.get("period") in ("0m", "-1m", "-2m", "-3m"),
+              f"got {r0.get('period')!r}")
+        # total must equal sum of buckets when all five are int
+        bucket_keys = ("strong_buy", "buy", "hold", "sell", "strong_sell")
+        if all(isinstance(r0.get(k), int) for k in bucket_keys):
+            expected_total = sum(r0[k] for k in bucket_keys)
+            check("analyst AAPL: recommendations[0].total == sum(buckets)",
+                  r0["total"] == expected_total,
+                  f"got total={r0['total']}, sum={expected_total}")
+
+    # upgrades_downgrades row schema
+    expected_ch = set(analyst._CHANGE_KEYS)
+    if d.get("upgrades_downgrades"):
+        c0 = d["upgrades_downgrades"][0]
+        check("analyst AAPL: upgrades_downgrades[0] has documented field set",
+              set(c0.keys()) == expected_ch,
+              f"diff: missing={expected_ch - set(c0.keys())}, "
+              f"extra={set(c0.keys()) - expected_ch}")
+        # date is ISO 'YYYY-MM-DDTHH:MM:SS' or None
+        dt = c0.get("date")
+        check("analyst AAPL: upgrades_downgrades[0].date is ISO datetime or None",
+              dt is None or (isinstance(dt, str) and len(dt) == 19
+                              and dt[10] == "T"),
+              f"got {type(dt).__name__}={dt!r}")
+        # action is the lowercase enum (verified across AAPL's 977 rows)
+        check("analyst AAPL: upgrades_downgrades[0].action is in known enum",  # canary
+              c0.get("action") in ("up", "down", "main", "init", "reit"),
+              f"got {c0.get('action')!r}")
+        # 0.0 sentinel: current_price_target / prior_price_target must NOT
+        # be 0.0 (the projection should have collapsed those to None).
+        for k in ("current_price_target", "prior_price_target"):
+            v = c0.get(k)
+            check(f"analyst AAPL: upgrades_downgrades[0].{k} != 0.0 "
+                  "(0 sentinel → null projection)",
+                  v != 0.0,
+                  f"got {v!r}")
+
+    # 0-sentinel projection: scan ALL rows. After projection, neither
+    # current_price_target NOR prior_price_target should ever be exactly
+    # 0.0 — Yahoo's 0 means "no target published" and we project to None.
+    # This regression-guards the _safe_target sentinel rule.
+    if d.get("upgrades_downgrades"):
+        zero_targets = [
+            (i, k, c.get(k))
+            for i, c in enumerate(d["upgrades_downgrades"])
+            for k in ("current_price_target", "prior_price_target")
+            if c.get(k) == 0.0
+        ]
+        check("analyst AAPL: NO row has 0.0 in either price-target field "
+              "(0 sentinel → null in _safe_target)",
+              not zero_targets,
+              f"got {len(zero_targets)} rows with 0.0 (sample: {zero_targets[:3]})")
+
+    # Successful response must NOT carry note OR coverage_note
+    check("analyst AAPL (success): no `note` key on the result",
+          "note" not in d, f"unexpected keys={list(d.keys())}")
+    check("analyst AAPL (success): no `coverage_note` key on the result",
+          "coverage_note" not in d, f"unexpected keys={list(d.keys())}")
+
+    # All-empty path: ETF / index / crypto / bogus all return both frames
+    # empty. Must report success-with-note + NO error_kind + NO
+    # coverage_note (mutually exclusive with note).
+    for sym in ("QQQ", "^GSPC", "BTC-USD", "ZZZZNOTREAL"):
+        empty_d = analyst.fetch(sym)
+        check(f"analyst {sym}: all-empty path emits note + no error_kind",
+              empty_d.get("note")
+              and "error_kind" not in empty_d
+              and not empty_d.get("recommendations")
+              and not empty_d.get("upgrades_downgrades"),
+              f"got keys={list(empty_d.keys())}")
+        check(f"analyst {sym}: all-empty does NOT also set coverage_note "
+              "(mutually exclusive)",
+              "coverage_note" not in empty_d,
+              f"unexpected keys={list(empty_d.keys())}")
+
+    # Partial-empty path: 0700.HK (Tencent, HKEX primary) returns
+    # recommendations populated but upgrades_downgrades empty. Yahoo's
+    # grade-change feed is US-centric — verified empirically 2026-05.
+    # Contract: success WITH `coverage_note` (NOT `note`).
+    #
+    # canary: if Yahoo starts indexing HK grade events, this fires —
+    # investigate before treating as a bug.
+    hk = analyst.fetch("0700.HK")
+    check("analyst 0700.HK: partial-empty (recommendations populated, "  # canary
+          "upgrades_downgrades empty)",
+          len(hk.get("recommendations") or []) >= 3
+          and not hk.get("upgrades_downgrades"),
+          f"recs={len(hk.get('recommendations') or [])}, "
+          f"upgrades={len(hk.get('upgrades_downgrades') or [])}")
+    check("analyst 0700.HK: partial-empty emits `coverage_note` "  # canary
+          "(NOT `note`)",
+          "coverage_note" in hk and "note" not in hk,
+          f"unexpected keys={list(hk.keys())}")
+
+    # ADR canary: TM (Toyota ADR on NYSE) has its primary listing on
+    # JPX but ALSO trades on NYSE, so Yahoo's grade-change feed
+    # populates it. This is the contrast case for 0700.HK / BMW.DE
+    # — same kind of non-US issuer but with US-listed ADR access.
+    tm = analyst.fetch("TM")
+    check("analyst TM (ADR): full coverage — both frames populated",  # canary
+          len(tm.get("recommendations") or []) >= 1
+          and len(tm.get("upgrades_downgrades") or []) >= 1,
+          f"recs={len(tm.get('recommendations') or [])}, "
+          f"upgrades={len(tm.get('upgrades_downgrades') or [])}")
+    check("analyst TM: full coverage means neither note nor coverage_note",
+          "note" not in tm and "coverage_note" not in tm,
+          f"unexpected keys={list(tm.keys())}")
+
+    # _apply_limit caps upgrades_downgrades but NOT recommendations
+    capped = analyst._apply_limit(analyst.fetch("AAPL"), 5)
+    check("analyst _apply_limit(5): upgrades_downgrades capped to <= 5",
+          len(capped.get("upgrades_downgrades") or []) <= 5,
+          f"got {len(capped.get('upgrades_downgrades') or [])} rows")
+    check("analyst _apply_limit(5): recommendations unaffected (Yahoo-capped)",
+          len(capped.get("recommendations") or []) >= 3,
+          f"got {len(capped.get('recommendations') or [])} rows")
+
+    # _summarize projection
+    flat = analyst._summarize(d)
+    expected_flat = {"symbol", *analyst._SUMMARY_FLAT_KEYS}
+    check("analyst _summarize(AAPL): has documented flat field set",
+          expected_flat.issubset(set(flat.keys())),
+          f"missing={expected_flat - set(flat.keys())}")
+    # rating_changes_returned must equal the FULL upgrades list length
+    check("analyst _summarize: rating_changes_returned == len(full upgrades)",
+          flat.get("rating_changes_returned") == len(d.get("upgrades_downgrades") or []),
+          f"got {flat.get('rating_changes_returned')!r}, "
+          f"expected {len(d.get('upgrades_downgrades') or [])}")
+    # buy_pct_current is fraction in [0, 1]
+    bp = flat.get("buy_pct_current")
+    check("analyst _summarize: buy_pct_current is fraction in [0, 1]",
+          isinstance(bp, float) and 0.0 <= bp <= 1.0,
+          f"got {type(bp).__name__}={bp!r}")
+    # consensus_score on 1-5 Likert scale
+    cs = flat.get("consensus_score_current")
+    check("analyst _summarize: consensus_score_current is in [1.0, 5.0]",
+          isinstance(cs, float) and 1.0 <= cs <= 5.0,
+          f"got {type(cs).__name__}={cs!r}")
+    # consensus_score_change == current - oldest. Sign is OPPOSITE of
+    # buy_pct_change (consensus uses 1-5 Likert where 1 is most bullish,
+    # so negative delta = consensus moved more bullish). Pin both the
+    # arithmetic and the sign-convention contract.
+    cs_cur = flat.get("consensus_score_current")
+    cs_old = flat.get("consensus_score_oldest")
+    if cs_cur is not None and cs_old is not None:
+        check("analyst _summarize: consensus_score_change == "
+              "current - oldest (Yahoo 1-5 Likert; negative = more bullish)",
+              abs(flat.get("consensus_score_change") - (cs_cur - cs_old)) < 1e-9,
+              f"got {flat.get('consensus_score_change')!r}, "
+              f"expected {cs_cur - cs_old!r}")
+    # Knock-on null discipline: when either snapshot is null,
+    # consensus_score_change must also be null.
+    qqq_flat_for_change = analyst._summarize(analyst.fetch("QQQ"))
+    check("analyst _summarize(QQQ): consensus_score_change is None when "
+          "either snapshot is None",
+          qqq_flat_for_change.get("consensus_score_change") is None,
+          f"got {qqq_flat_for_change.get('consensus_score_change')!r}")
+
+    # consensus_score MAX invariant: must equal the recomputed weighted
+    # mean of the 0m row's distribution (algorithm-independent check).
+    rec_0m = next((r for r in (d.get("recommendations") or [])
+                   if r.get("period") == "0m"), None)
+    if rec_0m and rec_0m.get("total"):
+        expected_cs = sum(
+            i * (rec_0m.get(k) or 0)
+            for i, k in enumerate(("strong_buy", "buy", "hold", "sell",
+                                    "strong_sell"), start=1)
+        ) / rec_0m["total"]
+        check("analyst _summarize: consensus_score_current matches "
+              "1×sb + 2×b + 3×h + 4×s + 5×ss / total at 0m",
+              abs(flat["consensus_score_current"] - expected_cs) < 1e-9,
+              f"got {flat['consensus_score_current']!r}, "
+              f"expected {expected_cs!r}")
+    # latest_event_date matches max(date) — recompute (algorithm-
+    # independent invariant; Yahoo sorts desc but we don't depend on it).
+    dates = [(c.get("date") or "")[:10]
+             for c in (d.get("upgrades_downgrades") or [])
+             if c.get("date")]
+    expected_latest = max(dates) if dates else None
+    check("analyst _summarize: latest_event_date == max(date)",
+          flat.get("latest_event_date") == expected_latest,
+          f"got {flat.get('latest_event_date')!r}, "
+          f"expected {expected_latest!r}")
+    # latest_rating_change_date matches max(date) over the action ∈
+    # {up, down} subset only — pins the filtered-subset semantics.
+    rc_dates = [(c.get("date") or "")[:10]
+                for c in (d.get("upgrades_downgrades") or [])
+                if c.get("date") and c.get("action") in ("up", "down")]
+    expected_rc_latest = max(rc_dates) if rc_dates else None
+    check("analyst _summarize: latest_rating_change_date == "
+          "max(date over action ∈ {up, down})",
+          flat.get("latest_rating_change_date") == expected_rc_latest,
+          f"got {flat.get('latest_rating_change_date')!r}, "
+          f"expected {expected_rc_latest!r}")
+    # Pin: latest_rating_change_action ∈ {up, down} when populated
+    rc_action = flat.get("latest_rating_change_action")
+    check("analyst _summarize: latest_rating_change_action is up/down "
+          "or None (never main/reit/init)",
+          rc_action is None or rc_action in ("up", "down"),
+          f"got {rc_action!r}")
+    # Pin: latest_rating_change_current_price_target equals the target
+    # carried on the rating-change subset's latest event (algorithm-
+    # independent invariant: must match the current_price_target of
+    # the upgrades_downgrades row whose date == latest_rating_change_date
+    # and whose action ∈ {up, down}). Also guards 0→null sentinel:
+    # the value must never be 0.0.
+    if flat.get("latest_rating_change_date"):
+        rc_subset = [c for c in (d.get("upgrades_downgrades") or [])
+                     if c.get("action") in ("up", "down")
+                     and (c.get("date") or "")[:10]
+                     == flat["latest_rating_change_date"]]
+        # rc_subset can have multiple events on the same day from
+        # different firms; the named firm uniquely identifies the row.
+        match = next((c for c in rc_subset
+                      if c.get("firm") == flat.get("latest_rating_change_firm")),
+                     None)
+        if match is not None:
+            check("analyst _summarize: latest_rating_change_current_price_"
+                  "target matches the source row's current_price_target",
+                  flat.get("latest_rating_change_current_price_target")
+                  == match.get("current_price_target"),
+                  f"got {flat.get('latest_rating_change_current_price_target')!r}, "
+                  f"row had {match.get('current_price_target')!r}")
+            check("analyst _summarize: latest_rating_change_current_price_"
+                  "target != 0.0 (0 sentinel filtered)",
+                  flat.get("latest_rating_change_current_price_target") != 0.0,
+                  f"got {flat.get('latest_rating_change_current_price_target')!r}")
+
+    # _summarize on all-empty result must carry `note` through (CSV
+    # would drop it otherwise — same defect class as holders / news).
+    empty_flat = analyst._summarize(analyst.fetch("QQQ"))
+    check("analyst _summarize(QQQ empty): preserves `note` for CSV",
+          "note" in empty_flat and empty_flat.get("note"),
+          f"got keys={list(empty_flat.keys())}")
+    check("analyst _summarize(QQQ empty): does NOT also set coverage_note",
+          "coverage_note" not in empty_flat,
+          f"got keys={list(empty_flat.keys())}")
+
+    # _summarize on partial-empty must carry `coverage_note` through;
+    # AND the *_last_90d count fields must be NULL (not 0) — empty
+    # upgrades list is ambiguous, can't claim "0 events".
+    hk_flat = analyst._summarize(analyst.fetch("0700.HK"))
+    check("analyst _summarize(0700.HK partial): preserves `coverage_note` "  # canary
+          "for CSV (NOT `note`)",
+          "coverage_note" in hk_flat and "note" not in hk_flat,
+          f"got keys={list(hk_flat.keys())}")
+    for k in ("upgrades_last_90d", "downgrades_last_90d",
+              "net_rating_changes_90d", "target_raises_last_90d",
+              "target_lowers_last_90d", "rating_changes_returned"):
+        check(f"analyst _summarize(0700.HK partial): {k} is None (not 0) "
+              "— empty upgrades list is ambiguous",
+              hk_flat.get(k) is None,
+              f"got {hk_flat.get(k)!r}")
+    # But the recommendations-derived fields ARE populated (recommendations
+    # is the populated-side of the partial-empty pair).
+    check("analyst _summarize(0700.HK partial): "  # canary
+          "buy_pct_current still populated from recommendations",
+          isinstance(hk_flat.get("buy_pct_current"), float),
+          f"got {hk_flat.get('buy_pct_current')!r}")
+
+    # _safe_target unit test: 0.0 → None, real values pass through,
+    # NaN/None → None.
+    check("analyst _safe_target(0.0): None (sentinel)",
+          analyst._safe_target(0.0) is None)
+    check("analyst _safe_target(250.0): 250.0",
+          analyst._safe_target(250.0) == 250.0)
+    check("analyst _safe_target(None): None",
+          analyst._safe_target(None) is None)
+    check("analyst _safe_target('250'): 250.0 (string coerce via safe_float)",
+          analyst._safe_target("250") == 250.0)
+
+    # _period_to_int unit test
+    check("analyst _period_to_int('0m'): 0",
+          analyst._period_to_int("0m") == 0)
+    check("analyst _period_to_int('-3m'): -3",
+          analyst._period_to_int("-3m") == -3)
+    check("analyst _period_to_int(None): None",
+          analyst._period_to_int(None) is None)
+    check("analyst _period_to_int('garbage'): None",
+          analyst._period_to_int("garbage") is None)
+
+    # Strict-null `total` derivation: any bucket None → total None
+    # (regression guard for the rule introduced after review feedback;
+    # the prior `sum(non_None)` would silently undercount). Synthetic
+    # row that mocks Yahoo emitting a null bucket.
+    partial_row = {
+        "period": "0m",
+        "strongBuy": 7, "buy": 24, "hold": 15, "sell": 1,
+        "strongSell": None,  # one bucket missing
+    }
+    proj = analyst._project_recommendation_row(partial_row)
+    check("analyst _project_recommendation_row: any-bucket-None → total=None "
+          "(strict null, no partial sums)",
+          proj.get("total") is None,
+          f"got total={proj.get('total')!r}")
+    # The corresponding _consensus_score / _buy_pct must also be None
+    # (knock-on effect of strict null).
+    check("analyst _consensus_score(partial-bucket row): None",
+          analyst._consensus_score(proj) is None,
+          f"got {analyst._consensus_score(proj)!r}")
+    check("analyst _buy_pct(partial-bucket row): None (strict null)",
+          analyst._buy_pct(proj) is None,
+          f"got {analyst._buy_pct(proj)!r}")
+    # And the all-buckets-populated path still works.
+    full_row = dict(partial_row, strongSell=1)
+    proj_full = analyst._project_recommendation_row(full_row)
+    check("analyst _project_recommendation_row: all buckets populated → "
+          "total = sum (control case)",
+          proj_full.get("total") == 7 + 24 + 15 + 1 + 1,
+          f"got total={proj_full.get('total')!r}")
+
+    # Alias pin: `recommendations` and `recommendations_summary` must
+    # return identical DataFrames. Documented as a contract; if Yahoo
+    # ever desynchronizes them, this fires immediately. We only call
+    # `recommendations` in production code, but pin the alias so the
+    # docs / project memory stay accurate.
+    import yfinance as yf
+    aapl_t = yf.Ticker("AAPL")
+    rec_a = aapl_t.recommendations
+    rec_b = aapl_t.recommendations_summary
+    check("analyst yfinance: t.recommendations ≡ t.recommendations_summary "  # canary
+          "(documented alias contract)",
+          rec_a.equals(rec_b),
+          f"shapes a={rec_a.shape} b={rec_b.shape}")
+
+    # Sort-order pin: Yahoo emits upgrades_downgrades sorted desc by
+    # date. _apply_limit silently depends on this (--limit 5 should
+    # yield the newest 5, not the oldest 5). If Yahoo ever flips, this
+    # fires before users notice broken --limit semantics. Canary
+    # because Yahoo's sort isn't a contract — _summarize uses max()
+    # which is order-independent, but --limit is order-dependent.
+    aapl_dates = [c.get("date") for c in d.get("upgrades_downgrades") or []
+                  if c.get("date")]
+    if len(aapl_dates) >= 2:
+        check("analyst AAPL: upgrades_downgrades sorted desc by date "  # canary
+              "(--limit semantics depend on this)",
+              all(aapl_dates[i] >= aapl_dates[i + 1]
+                  for i in range(len(aapl_dates) - 1)),
+              f"first 5 dates: {aapl_dates[:5]}")
+
+    # quote_type field pin: must always be present in the result dict
+    # (None when fast_info crashes; valid Yahoo enum otherwise).
+    check("analyst AAPL (success): quote_type == 'EQUITY'",  # canary
+          d.get("quote_type") == "EQUITY",
+          f"got {d.get('quote_type')!r}")
+    # ETF pin: QQQ should disambiguate to 'ETF' inline so the note
+    # path consumer doesn't need a chained fast_info call.
+    qqq = analyst.fetch("QQQ")
+    check("analyst QQQ (note path): quote_type == 'ETF' "  # canary
+          "(disambiguates inline)",
+          qqq.get("quote_type") == "ETF",
+          f"got {qqq.get('quote_type')!r}")
+    # Bogus ticker: fast_info crashes with AttributeError, projects
+    # to None. Pin the graceful handling.
+    bogus = analyst.fetch("ZZZZNOTREAL")
+    check("analyst ZZZZNOTREAL (bogus): quote_type is None "
+          "(fast_info crash → null, NOT raised)",
+          bogus.get("quote_type") is None,
+          f"got {bogus.get('quote_type')!r}")
+    # Cross-mode: TM (ADR) and 0700.HK (HK primary) both EQUITY
+    tm_qt = analyst.fetch("TM").get("quote_type")
+    hk_qt = analyst.fetch("0700.HK").get("quote_type")
+    check("analyst TM (ADR): quote_type == 'EQUITY'",
+          tm_qt == "EQUITY", f"got {tm_qt!r}")
+    check("analyst 0700.HK (non-US primary): quote_type == 'EQUITY'",
+          hk_qt == "EQUITY", f"got {hk_qt!r}")
+
+    # quote_type passes through _summarize too (peer compare needs it
+    # to filter / group by quote type).
+    qqq_flat = analyst._summarize(qqq)
+    check("analyst _summarize(QQQ): quote_type carried through to summary",
+          qqq_flat.get("quote_type") == "ETF",
+          f"got {qqq_flat.get('quote_type')!r}")
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"analyst fetch crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
 # --- CLI sanity: focus on what only subprocess testing covers (argparse,
 #     JSON serialization, exit codes, --help). Schema invariants are
 #     already covered by the import-path sections above; don't re-test.
@@ -3733,6 +4141,8 @@ try:
         ("options.py", ("--type", "calls", "--moneyness", "5", "--limit", "3", "AAPL")),
         ("options.py", ("--type", "puts", "--moneyness", "5", "--limit", "3", "AAPL")),
         ("options.py", ("--summary", "--moneyness", "5", "AAPL")),
+        ("analyst.py", ("--limit", "3", "AAPL")),
+        ("analyst.py", ("--summary", "AAPL")),
     ):
         rc, data = run_cli(script, *args)
         check(f"{script} {' '.join(args)}: exit 0 + valid JSON list",
@@ -3751,7 +4161,7 @@ try:
     # like `%(default)s` referencing a non-existent default)
     for script in ("fast_info.py", "history.py", "info.py", "earnings.py",
                    "financials.py", "news.py", "holders.py", "options.py",
-                   "insiders.py"):
+                   "insiders.py", "analyst.py"):
         cmd = [sys.executable, str(SCRIPTS_DIR / script), "--help"]
         out = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
         check(f"{script} --help exits 0",
@@ -4077,6 +4487,121 @@ try:
               j1[0].get("latest_transaction_date") == j2[0].get("latest_transaction_date"),
               f"--limit 2 gave {j1[0].get('latest_transaction_date')!r}, "
               f"no-limit gave {j2[0].get('latest_transaction_date')!r}")
+
+    # analyst CSV: row-per-record + record_class discriminator (parallel
+    # to insiders / holders CSV). Mixing AAPL (full coverage), 0700.HK
+    # (partial-empty: recommendations populated, upgrades_downgrades
+    # empty → coverage_note path), and QQQ (note path: both frames
+    # empty) specifically pins:
+    #   - the new top-level `quote_type` column appears in the header
+    #   - `quote_type` is correctly populated per row regardless of
+    #     record class (recommendation vs change vs note-carry)
+    #   - record classes route correctly: recommendation / change
+    #   - empty-result row carries `note` AND quote_type=ETF (the
+    #     in-band disambiguator that lets callers skip a fast_info
+    #     follow-up)
+    cmd = [sys.executable, str(SCRIPTS_DIR / "analyst.py"),
+           "--limit", "2", "--format", "csv", "AAPL", "0700.HK", "QQQ"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=90)
+    csv_lines = [ln for ln in out.stdout.splitlines() if ln.strip()]
+    # AAPL: 4 recommendation rows + 2 change rows = 6
+    # 0700.HK: 4 recommendation rows + 0 change rows = 4 (partial-empty
+    #          path emits data rows with coverage_note in the carry)
+    # QQQ: 1 empty-carry row
+    # + 1 header = 12 lines total
+    check("analyst --format csv mixed batch: header + 11 data rows (12 total)",
+          out.returncode == 0 and len(csv_lines) == 12,
+          f"rc={out.returncode}, lines={len(csv_lines)}")
+    if len(csv_lines) >= 12:
+        header = csv_lines[0]
+        cols = header.split(",")
+        # quote_type column appears exactly once in the header (next to
+        # symbol). Pins the new top-level field shape.
+        check("analyst --format csv: `quote_type` column appears exactly once",
+              cols.count("quote_type") == 1,
+              f"got {cols.count('quote_type')} occurrences; "
+              f"cols starting={cols[:5]}")
+        # Header has the expected schema columns from both record classes.
+        check("analyst --format csv: header has quote_type + record_class + "
+              "recommendation + change + note + coverage_note cols",
+              all(f in header for f in (
+                  "symbol", "quote_type", "record_class",
+                  "period", "strong_buy", "buy", "hold", "sell",
+                  "strong_sell", "total",
+                  "date", "firm", "to_grade", "from_grade", "action",
+                  "price_target_action", "current_price_target",
+                  "prior_price_target",
+                  "note", "coverage_note")),
+              f"got header={header!r}")
+        # Locate quote_type column index for direct cell reads
+        qt_idx = cols.index("quote_type")
+        # AAPL recommendation rows: each carries quote_type=EQUITY +
+        # record_class=recommendation. csv_lines[1..4] are AAPL recs.
+        for i in range(1, 5):
+            row_cols = csv_lines[i].split(",")
+            check(f"analyst --format csv: AAPL row {i} starts AAPL,EQUITY,"
+                  f"recommendation,",
+                  csv_lines[i].startswith("AAPL,EQUITY,recommendation,"),
+                  f"got row[:50]={csv_lines[i][:50]!r}")
+            check(f"analyst --format csv: AAPL row {i} quote_type col == 'EQUITY'",
+                  row_cols[qt_idx] == "EQUITY",
+                  f"got col[{qt_idx}]={row_cols[qt_idx]!r}")
+        # AAPL change rows: csv_lines[5..6]
+        for i in range(5, 7):
+            check(f"analyst --format csv: AAPL row {i} starts AAPL,EQUITY,"
+                  f"change,",
+                  csv_lines[i].startswith("AAPL,EQUITY,change,"),
+                  f"got row[:50]={csv_lines[i][:50]!r}")
+        # 0700.HK recommendation rows (4): partial-empty path. Each
+        # carries quote_type=EQUITY + coverage_note populated.
+        for i in range(7, 11):
+            row_cols = csv_lines[i].split(",")
+            check(f"analyst --format csv: 0700.HK row {i} starts 0700.HK,"
+                  f"EQUITY,recommendation,",
+                  csv_lines[i].startswith("0700.HK,EQUITY,recommendation,"),
+                  f"got row[:50]={csv_lines[i][:50]!r}")
+            check(f"analyst --format csv: 0700.HK row {i} carries "
+                  "coverage_note (partial-empty path)",
+                  "recommendations populated but upgrades_downgrades empty"
+                  in csv_lines[i],
+                  f"got row[-100:]={csv_lines[i][-100:]!r}")
+        # QQQ empty-result row: starts with QQQ,ETF, (note path inline-
+        # disambiguated; no fast_info follow-up needed) and carries
+        # the all-empty `note` text.
+        check("analyst --format csv: QQQ empty row starts with QQQ,ETF,",
+              csv_lines[11].startswith("QQQ,ETF,"),
+              f"got row[:30]={csv_lines[11][:30]!r}")
+        check("analyst --format csv: QQQ empty row carries the `note` field "
+              "(no analyst data...)",
+              "no analyst data" in csv_lines[11],
+              f"got row={csv_lines[11]!r}")
+
+    # analyst --summary CSV: strict one-row-per-ticker, including
+    # quote_type column for peer-compare filtering. Pin that the
+    # summary CSV header has quote_type AND the new
+    # latest_rating_change_current_price_target column.
+    cmd = [sys.executable, str(SCRIPTS_DIR / "analyst.py"),
+           "--summary", "--format", "csv", "AAPL", "QQQ"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    csv_lines = [ln for ln in out.stdout.splitlines() if ln.strip()]
+    check("analyst --summary --format csv: exits 0 + header + 2 rows (3 lines)",
+          out.returncode == 0 and len(csv_lines) == 3,
+          f"rc={out.returncode}, lines={len(csv_lines)}")
+    if len(csv_lines) >= 3:
+        header = csv_lines[0]
+        check("analyst --summary --format csv: header has quote_type + new "
+              "latest_rating_change_current_price_target column",
+              "quote_type" in header
+              and "latest_rating_change_current_price_target" in header,
+              f"got header={header!r}")
+        # AAPL row carries EQUITY in quote_type column
+        check("analyst --summary --format csv: AAPL row carries quote_type=EQUITY",
+              csv_lines[1].startswith("AAPL,EQUITY,"),
+              f"got row[:30]={csv_lines[1][:30]!r}")
+        # QQQ row carries ETF in quote_type column (inline disambiguator)
+        check("analyst --summary --format csv: QQQ row carries quote_type=ETF",
+              csv_lines[2].startswith("QQQ,ETF,"),
+              f"got row[:30]={csv_lines[2][:30]!r}")
 except Exception as e:
     FAIL += 1
     FAILURES.append(f"CLI sanity crashed: {e}")
