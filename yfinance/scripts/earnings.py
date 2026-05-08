@@ -40,22 +40,42 @@ LIMIT_DEFAULT = 12  # yfinance default — typically ~4 future + ~8 past quarter
 # a field requires updating both the dict construction and the relevant
 # *_KEYS / *_CSV_COLS constants.
 #
-# `note` is included as a column in both default and summary CSV layouts so
-# CSV consumers can detect non-equity rows; in JSON it's only present for
-# non-equity (we don't want every equity to carry `note: null`).
+# `note` and `coverage_note` are both included as columns in default and
+# summary CSV layouts so CSV consumers can detect non-equity rows AND IPO
+# fall-through rows. In JSON, each is only present when set (non-equity
+# carries `note`; IPO equity with empty calendar carries `coverage_note`;
+# regular equities carry neither). The two are mutually exclusive at the
+# result level — see `_assert_note_contract` for the runtime invariant.
 # `_BASE_KEYS` is the per-ticker CSV column prefix for default mode — NOT a
-# guarantee of which keys are present in every fetch() dict. `note` is
-# absent from equity-success dicts; CSV emit pulls it via `r.get("note", "")`
-# which returns "" for the missing case. JSON path doesn't reference this
-# constant at all, so equity JSON output stays note-free.
-_BASE_KEYS = ("symbol", "quote_type", "timezone", "note")
+# guarantee of which keys are present in every fetch() dict. CSV emit pulls
+# both via `r.get(<key>, "")` which returns "" for the missing case. JSON
+# path doesn't reference this constant at all, so equity JSON output stays
+# clean of either field.
+#
+# Why `coverage_note` in default-mode CSV (when CLI users can't reach an
+# IPO row there): schema consistency between default and summary layouts
+# + programmatic safety for callers that import `_emit` directly. CLI-wise
+# the path is blocked — argparse rejects `--estimates --format csv`
+# without `--summary` (since the per-row layout has no `consensus_*`
+# columns to land the analyst panel in), and an IPO without `--estimates`
+# becomes `error_kind: not_found` and emits an error row, never a
+# `coverage_note` row. So the column is column-shaped breathing room for
+# (a) future relaxation of that argparse rule, and (b) programmatic test
+# fixtures that drive `_emit` directly with a `coverage_note`-bearing
+# dict (smoke uses this).
+#
+# Backward-compat note: this insertion shifts default-mode CSV columns by
+# +1 from index 4 onward. Anyone parsing default-mode earnings CSV by
+# column NAME is fine; anyone parsing by column INDEX past `note` will
+# need to bump indices by 1.
+_BASE_KEYS = ("symbol", "quote_type", "timezone", "note", "coverage_note")
 _PER_ROW_KEYS = ("date", "is_future", "eps_estimate", "eps_actual",
                  "surprise_pct")
 # Summary-mode dict construction uses these as the leading keys. `timezone`
 # is omitted because each `next_date` / `last_date` ISO string already
 # carries its own offset — a top-level field would be redundant. CSV summary
-# adds `note` as a separate column (see _SUMMARY_CSV_COLS) for the same
-# non-equity-detection reason as default mode.
+# adds `note` AND `coverage_note` as separate columns (see _SUMMARY_CSV_COLS)
+# for the same non-equity-detection / IPO-detection reasons as default mode.
 _SUMMARY_BASE_KEYS = ("symbol", "quote_type")
 _SUMMARY_KEYS = ("next_date", "next_eps_estimate",
                  "last_date", "last_eps_estimate", "last_eps_actual",

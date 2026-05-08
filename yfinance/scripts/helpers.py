@@ -10,6 +10,8 @@ per-call defensive code.
 
   safe_float / safe_int   strict numeric coercion (try/except, NaN/Inf → None)
   safe_str                strip + empty-string → None
+  safe_bool               coerce bool/int/recognized strings → bool; other → None.
+                          See safe_bool docstring for the accepted token sets.
   denan                   pass-through for non-floats; NaN/Inf floats → None
                           (used by fast_info where the .fast_info object
                           returns mixed types)
@@ -43,8 +45,8 @@ Output helpers:
   RESULT_META             ("error", "error_kind", "attempts") — per-result
                           metadata fields shared across all wrapper scripts'
                           CSV emits so adding a meta field flows everywhere.
-  emit_json_or_ndjson     Shared json/ndjson writer for the four wrapper
-                          scripts' --format flag. Returns True if `fmt` is
+  emit_json_or_ndjson     Shared json/ndjson writer for every wrapper
+                          script's --format flag. Returns True if `fmt` is
                           'json' or 'ndjson' (and emits accordingly), False
                           otherwise — caller treats False as the CSV path
                           (the only other value argparse permits).
@@ -97,6 +99,9 @@ def safe_int(v):
       analyst:      numberOfAnalystOpinions
       shares:       sharesOutstanding, floatShares, sharesShort
       fund:         totalAssets
+      holders:      institutions_count (rollup count of distinct filers),
+                    shares (per-holder share count),
+                    value (per-holder USD/local-ccy position value)
 
     Revisit if applied to a field where rounding direction matters
     (e.g., a field that can be a fraction with semantic meaning).
@@ -117,6 +122,48 @@ def safe_str(v):
         return None
     s = str(v).strip()
     return s if s else None
+
+
+# Strings that map to True / False if Yahoo ever serializes a bool as text.
+# Conservative on purpose — only the obvious tokens; anything else
+# ("maybe", "n/a", "  ", arbitrary text) falls through to None rather
+# than guessing. Single-letter forms ("y"/"t"/"n"/"f") are included
+# because they're common in CSV/CLI conventions and equally unambiguous.
+_BOOL_TRUE_STRINGS = frozenset({"true", "1", "yes", "y", "t"})
+_BOOL_FALSE_STRINGS = frozenset({"false", "0", "no", "n", "f"})
+
+
+def safe_bool(v):
+    """Coerce to bool; None or unrecognized → None.
+
+    Accepts:
+      - bool   pass through
+      - int    0 → False, anything else → True
+      - str    case- and whitespace-insensitive match against the
+               accepted token sets:
+                 truthy: "true", "1", "yes", "y", "t"
+                 falsy:  "false", "0", "no", "n", "f"
+
+    Anything else → None. This is stricter than `bool(v)` (which would
+    map arbitrary truthy/falsy values like empty lists or non-zero
+    floats) — the goal is "preserve what Yahoo intended" and refuse to
+    guess on shapes we haven't observed. NB: bool is a subclass of int
+    in Python, so the bool check must precede int.
+    """
+    if v is None:
+        return None
+    if isinstance(v, bool):
+        return v
+    if isinstance(v, int):
+        return bool(v)
+    if isinstance(v, str):
+        s = v.strip().lower()
+        if s in _BOOL_TRUE_STRINGS:
+            return True
+        if s in _BOOL_FALSE_STRINGS:
+            return False
+        return None
+    return None
 
 
 def denan(v):
@@ -295,7 +342,7 @@ RESULT_META = ("error", "error_kind", "attempts")
 
 
 def emit_json_or_ndjson(results: list, fmt: str) -> bool:
-    """Shared JSON / NDJSON output for the three wrapper scripts' --format
+    """Shared JSON / NDJSON output for every wrapper script's --format
     flag. Returns True if `fmt` was handled (json or ndjson), False if it's
     'csv' so the caller can run its own per-mode CSV emit. Keeps the JSON
     paths in one place — only CSV varies per mode.

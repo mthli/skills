@@ -82,11 +82,17 @@ Tickers are positional args.
 - `--format json|ndjson|csv` — output format. `json` (default) is the
   pretty JSON array. `ndjson` emits one JSON record per line. `csv`:
   default mode = one row per `(symbol, earnings_date)` with `symbol`,
-  `quote_type`, `timezone`, `note` prepended; `--summary` mode = one row
-  per ticker, with `note` between `quote_type` and the summary fields.
-  The `note` column is blank for equity rows and populated for non-equity
-  short-circuits — gives CSV consumers the same non-equity signal as
-  JSON without dropping the field.
+  `quote_type`, `timezone`, `note`, `coverage_note` prepended;
+  `--summary` mode = one row per ticker, with `note` and `coverage_note`
+  between `quote_type` and the summary fields. The `note` column is
+  blank for equity rows and populated for non-equity short-circuits;
+  the `coverage_note` column flags IPO fall-through rows in `--summary`
+  mode and is always blank in default-mode CLI use (see "CSV summary
+  gotcha" below for why). **Backward compat:** `coverage_note` was
+  added in a recent revision; default-mode CSV column count is +1
+  vs older skill snapshots, with the new column inserted at index 4
+  (between `note` and `date`). Parse by column NAME, not by index, to
+  stay forward-compatible.
 
 ## Output — default mode (full list)
 
@@ -481,6 +487,18 @@ empty while `consensus_*` columns are populated. This is intentional, not
 a parse error — readers should treat empty cells as null, not as zeros
 or "missing required field". The `coverage_note` column flags the IPO
 case explicitly (and the regular `note` column stays empty for equities).
+
+**Default-mode CSV note (no CLI path).** The default-mode CSV layout
+also carries `note` and `coverage_note` columns (added for schema
+consistency with `--summary` mode), but **no CLI invocation reaches an
+IPO row in default-mode CSV**: argparse rejects `--estimates --format
+csv` without `--summary` (the default layout has nowhere to put the
+analyst panel), and an IPO without `--estimates` becomes
+`error_kind: not_found` (an error row, not a coverage_note row). So
+in CLI use the `coverage_note` column is always blank in default-mode
+CSV; the column exists for programmatic callers that drive `_emit`
+directly with a `coverage_note`-bearing dict (and as future-proofing
+if the argparse rule ever relaxes).
 
 ### Soft-failure handling
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smoke test for the five yfinance wrapper scripts.
+"""Smoke test for the nine yfinance wrapper scripts.
 
 Three layers of coverage:
   1. Offline / pure-Python: invariants over pure-Python logic with no
@@ -52,6 +52,7 @@ miss. Layer-1 offline checks add ~1s total.
 from __future__ import annotations
 
 import json
+import math
 import subprocess
 import sys
 import traceback
@@ -65,7 +66,11 @@ import fast_info
 import financials
 import helpers
 import history
+import holders
 import info
+import insiders
+import news
+import options
 
 
 def run_cli(script: str, *args: str) -> tuple[int, list | None]:
@@ -147,6 +152,53 @@ try:
 except Exception as e:
     FAIL += 1
     FAILURES.append(f"infer_exchange_tz crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
+# --- safe_bool (no Yahoo calls; deterministic) ---
+section("helpers.safe_bool (offline)")
+try:
+    from helpers import safe_bool
+    cases = [
+        # (input, expected)
+        (True, True),
+        (False, False),
+        (None, None),
+        # ints (non-zero truthy, zero falsy)
+        (1, True),
+        (0, False),
+        (-1, True),
+        # accepted strings (case + whitespace insensitive)
+        ("true", True),
+        ("False", False),
+        ("YES", True),
+        ("no", False),
+        (" 1 ", True),
+        ("0", False),
+        # single-letter forms — accepted by the helper, pinning here so
+        # docstring + frozenset + smoke stay in sync.
+        ("y", True),
+        ("Y", True),
+        ("t", True),
+        ("n", False),
+        ("N", False),
+        ("f", False),
+        # rejected (refuses to guess) → None
+        ("maybe", None),
+        ("", None),
+        ("   ", None),
+        (1.5, None),       # floats not in spec
+        ([], None),        # lists not in spec
+        ({}, None),
+    ]
+    for inp, expected in cases:
+        got = safe_bool(inp)
+        check(f"safe_bool({inp!r}) == {expected!r}",
+              got == expected and type(got) is type(expected),
+              f"got {got!r} (type {type(got).__name__})")
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"safe_bool crashed: {e}")
     traceback.print_exc(file=sys.stderr)
 
 
@@ -1727,6 +1779,40 @@ try:
         check("IPO summary CSV: `consensus_eps_currency` cell = USD",
               r[idx["consensus_eps_currency"]] == "USD",
               f"got {r[idx['consensus_eps_currency']]!r}")
+
+    # IPO + default-mode --format csv: parallel to the --summary CSV check
+    # above, but for the DEFAULT layout. Pins the round-4 fix that adds
+    # `coverage_note` to _BASE_KEYS — before the fix, an IPO fall-through
+    # row in default-mode CSV silently dropped the disambiguation signal
+    # (the row would appear with empty next_date/last_date and no marker
+    # explaining why the equity had no events). Same row-shape contract
+    # as the --summary CSV: `coverage_note` populated, `note` empty,
+    # per-row earnings cells (date / is_future / eps_*) all empty since
+    # `earnings_dates: []`.
+    buf = _io.StringIO()
+    with _rs(buf):
+        earnings._emit([d_ipo], "csv", summary=False)
+    csv_rows_default = list(_csv2.reader(buf.getvalue().splitlines()))
+    check("IPO default CSV: header has both note + coverage_note columns "
+          "(round-4 fix)",
+          csv_rows_default
+          and "note" in csv_rows_default[0]
+          and "coverage_note" in csv_rows_default[0],
+          f"got header={csv_rows_default[0] if csv_rows_default else None}")
+    if csv_rows_default and len(csv_rows_default) >= 2:
+        h = csv_rows_default[0]
+        r = csv_rows_default[1]
+        idx = {col: i for i, col in enumerate(h)}
+        check("IPO default CSV: `note` cell is blank (reserved for non-equity)",
+              r[idx["note"]] == "",
+              f"got {r[idx['note']]!r}")
+        check("IPO default CSV: `coverage_note` cell populated "
+              "(was silently dropped pre-round-4)",
+              "empty calendar" in r[idx["coverage_note"]],
+              f"got {r[idx['coverage_note']]!r}")
+        check("IPO default CSV: `date` cell blank (no earnings_dates rows)",
+              r[idx["date"]] == "",
+              f"got {r[idx['date']]!r}")
 except Exception as e:
     FAIL += 1
     FAILURES.append(f"earnings IPO path crashed: {e}")
@@ -2621,6 +2707,1006 @@ except Exception as e:
     traceback.print_exc(file=sys.stderr)
 
 
+# --- news fetch shape ---
+section("news fetch")
+try:
+    # Happy path: AAPL returns articles with the documented field set.
+    d = news.fetch("AAPL", limit=2)
+    check("news AAPL: success shape (count + articles list)",
+          isinstance(d, dict) and d.get("symbol") == "AAPL"
+          and isinstance(d.get("articles"), list)
+          and d.get("count") == len(d["articles"]),
+          f"got {list(d.keys())}")
+    if d.get("articles"):
+        a = d["articles"][0]
+        expected_keys = set(news.ARTICLE_FIELDS)
+        check("news AAPL: article has the documented field set (no extras)",
+              set(a.keys()) == expected_keys,
+              f"diff: missing={expected_keys - set(a.keys())}, "
+              f"extra={set(a.keys()) - expected_keys}")
+        check("news AAPL: article has non-empty title + url",
+              a.get("title") and a.get("url"),
+              f"title={a.get('title')!r}, url={a.get('url')!r}")
+        # ISO 8601 with Z — checks Yahoo hasn't switched to epoch ints
+        # (regression that would silently break presentation guidance).
+        check("news AAPL: pub_date is ISO 8601 with Z",
+              isinstance(a.get("pub_date"), str)
+              and a["pub_date"].endswith("Z")
+              and "T" in a["pub_date"],
+              f"got {a.get('pub_date')!r}")
+        # is_premium / editors_pick must be real bools (or None), not strings
+        # or ints — guards against silent regression if Yahoo ever serializes
+        # these as "true"/"false" or 0/1 and our safe_bool stops getting
+        # applied.
+        for f in ("is_premium", "editors_pick"):
+            v = a.get(f)
+            check(f"news AAPL: {f} is bool or None (not str/int)",
+                  v is None or isinstance(v, bool),
+                  f"got {type(v).__name__}={v!r}")
+    # --limit caps to N (not just plumbed through to fetch()).
+    check("news AAPL --limit 2: returns exactly 2 articles",
+          d.get("count") == 2,
+          f"got count={d.get('count')}")
+
+    # `note` is reserved for the empty-result path. A successful response
+    # (count > 0) must NOT carry it. Pins the design: future refactors
+    # that accidentally always-set `note` would silently leak the empty-
+    # path message into success JSON.
+    check("news AAPL (success): no `note` key on the result",
+          "note" not in d,
+          f"unexpected keys={list(d.keys())}")
+
+    # Empty-result path: bogus ticker returns count=0 + note + NO error_kind.
+    # This pins the design choice ("empty != not_found") so a future
+    # refactor doesn't accidentally promote empty to an error.
+    bogus_result = news.fetch("ZZZZNOTREAL", limit=5)
+    check("news bogus: count=0 + note set + no error_kind",
+          bogus_result.get("count") == 0 and bogus_result.get("note")
+          and "error_kind" not in bogus_result,
+          f"got {list(bogus_result.keys())}")
+
+    # Non-equity coverage: news is NOT equity-only (unlike earnings/financials).
+    # If yfinance ever locks news behind quote_type, this catches it early.
+    crypto_result = news.fetch("BTC-USD", limit=1)
+    check("news BTC-USD: crypto returns articles (news is not equity-only)",
+          crypto_result.get("count", 0) >= 1,
+          f"got count={crypto_result.get('count')}")
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"news fetch crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
+# --- holders fetch shape ---
+section("holders fetch")
+try:
+    # Happy path: AAPL — all three sections populated. fetch() no longer
+    # takes a `limit` param (post-refactor); --limit is applied at the
+    # emit layer so summary metrics see the full Yahoo response.
+    d = holders.fetch("AAPL")
+    check("holders AAPL: success has summary + institutional + mutualfund",
+          isinstance(d, dict) and d.get("symbol") == "AAPL"
+          and isinstance(d.get("summary"), dict)
+          and isinstance(d.get("institutional"), list)
+          and isinstance(d.get("mutualfund"), list),
+          f"got {list(d.keys())}")
+    # fetch() should return Yahoo's full response (typically ~10 rows
+    # each). If this drops below ~5 we're either hitting a low-coverage
+    # path or upstream changed the cap silently.
+    check("holders AAPL: fetch() returns full institutional list (>= 5 rows)",  # canary: ~10 typical
+          len(d.get("institutional") or []) >= 5,
+          f"got {len(d.get('institutional') or [])} rows")
+    check("holders AAPL: fetch() returns full mutualfund list (>= 5 rows)",  # canary
+          len(d.get("mutualfund") or []) >= 5,
+          f"got {len(d.get('mutualfund') or [])} rows")
+
+    # Summary section — all 4 documented keys present (typed correctly).
+    s = d.get("summary") or {}
+    expected_summary = set(holders._SUMMARY_KEYS)
+    check("holders AAPL: summary has the documented field set (no extras)",
+          set(s.keys()) == expected_summary,
+          f"diff: missing={expected_summary - set(s.keys())}, "
+          f"extra={set(s.keys()) - expected_summary}")
+    # Fractions guard: pcts must be in [0, 1] (never percent-encoded).
+    # Pins the unit landmine — if Yahoo flips encoding, this fails first.
+    for k in ("insiders_pct", "institutions_pct", "institutions_float_pct"):
+        v = s.get(k)
+        check(f"holders AAPL summary.{k} is fraction in [0, 1]",
+              v is None or (isinstance(v, float) and 0.0 <= v <= 1.0),
+              f"got {type(v).__name__}={v!r}")
+    # institutions_count is integer count; AAPL has thousands of institutional
+    # holders on file, so this should comfortably exceed 100.
+    check("holders AAPL summary.institutions_count is int >= 100",  # canary: thousands typical
+          isinstance(s.get("institutions_count"), int)
+          and s["institutions_count"] >= 100,
+          f"got {s.get('institutions_count')!r}")
+
+    # Per-holder row schema — both lists share the same shape.
+    expected_holder = set(holders._HOLDER_KEYS)
+    for klass in ("institutional", "mutualfund"):
+        rows = d.get(klass) or []
+        check(f"holders AAPL: {klass} has rows",
+              len(rows) >= 1, f"got {len(rows)} rows")
+        if rows:
+            r = rows[0]
+            check(f"holders AAPL: {klass}[0] has documented field set",
+                  set(r.keys()) == expected_holder,
+                  f"diff: missing={expected_holder - set(r.keys())}, "
+                  f"extra={set(r.keys()) - expected_holder}")
+            # pct_held must be fraction (Vanguard at AAPL is ~10%, well below 1.0).
+            v = r.get("pct_held")
+            check(f"holders AAPL: {klass}[0].pct_held is fraction in [0, 1]",
+                  v is None or (isinstance(v, float) and 0.0 <= v <= 1.0),
+                  f"got {type(v).__name__}={v!r}")
+            # date_reported is YYYY-MM-DD or None — guard against Yahoo
+            # switching to epoch ints (would silently break presentation).
+            dr = r.get("date_reported")
+            check(f"holders AAPL: {klass}[0].date_reported is YYYY-MM-DD or None",
+                  dr is None or (isinstance(dr, str) and len(dr) == 10
+                                  and dr[4] == "-" and dr[7] == "-"),
+                  f"got {type(dr).__name__}={dr!r}")
+            # shares / value are positive ints when present.
+            for f in ("shares", "value"):
+                vv = r.get(f)
+                check(f"holders AAPL: {klass}[0].{f} is positive int",
+                      isinstance(vv, int) and vv > 0,
+                      f"got {type(vv).__name__}={vv!r}")
+
+    # _apply_limit truncates lists in place. After applying limit=2, both
+    # lists must be ≤ 2 — but the ORIGINAL fetch() result remains the
+    # source for summary metrics (separate code path).
+    capped = holders._apply_limit(holders.fetch("AAPL"), 2)
+    check("holders _apply_limit(2): institutional capped to <= 2",
+          len(capped.get("institutional") or []) <= 2,
+          f"got {len(capped.get('institutional') or [])} rows")
+    check("holders _apply_limit(2): mutualfund capped to <= 2",
+          len(capped.get("mutualfund") or []) <= 2,
+          f"got {len(capped.get('mutualfund') or [])} rows")
+
+    # Successful response must NOT carry `note` — pins the design
+    # ("note is reserved for the all-empty path") so a refactor can't
+    # accidentally always-set it.
+    check("holders AAPL (success): no `note` key on the result",
+          "note" not in d,
+          f"unexpected keys={list(d.keys())}")
+
+    # Empty / non-equity path: ETF, index, crypto all return three empty
+    # DataFrames. Bogus tickers also return empty (yfinance logs HTTP 404
+    # but does not raise — verified empirically). All four must report
+    # success-with-note + NO error_kind. Pins the "ambiguous empty" design.
+    for sym in ("QQQ", "^GSPC", "BTC-USD", "ZZZZNOTREAL"):
+        empty_d = holders.fetch(sym)
+        check(f"holders {sym}: all-empty path emits note + no error_kind",
+              empty_d.get("note")
+              and "error_kind" not in empty_d
+              and not empty_d.get("institutional")
+              and not empty_d.get("mutualfund")
+              and all(v is None for v in (empty_d.get("summary") or {}).values()),
+              f"got keys={list(empty_d.keys())}, "
+              f"summary={empty_d.get('summary')}")
+
+    # Non-US ticker happy path (gap from prior pass): 0700.HK has the
+    # asymmetric shape we documented — populated rollup + ~few institutional
+    # rows + ~10 mutualfund rows. Pins the "non-US works" claim from the
+    # reference doc.
+    hk = holders.fetch("0700.HK")
+    check("holders 0700.HK: rollup populated (institutions_pct not None)",
+          (hk.get("summary") or {}).get("institutions_pct") is not None,
+          f"got summary={hk.get('summary')}")
+    check("holders 0700.HK: institutional list non-empty (>= 1 row)",  # canary: ~2 typical
+          len(hk.get("institutional") or []) >= 1,
+          f"got {len(hk.get('institutional') or [])} rows")
+    check("holders 0700.HK: mutualfund list non-empty (>= 5 rows)",  # canary: ~10 typical
+          len(hk.get("mutualfund") or []) >= 5,
+          f"got {len(hk.get('mutualfund') or [])} rows")
+    # 0700.HK pcts are fractions in [0, 1] — same unit-landmine guard
+    # as AAPL but on a non-US ticker (different Yahoo pipeline).
+    hk_top = (hk.get("institutional") or [{}])[0]
+    v = hk_top.get("pct_held")
+    check("holders 0700.HK: institutional[0].pct_held is fraction in [0, 1]",
+          v is None or (isinstance(v, float) and 0.0 <= v <= 1.0),
+          f"got {type(v).__name__}={v!r}")
+
+    # ADR canary: TM (Toyota ADR, USD-traded, JPY home reporting) — verifies
+    # `value` is in TRADING currency (USD), not REPORTING currency (JPY).
+    # If Yahoo ever flips to reporting-currency, value/shares would jump
+    # by ~150x (USD→JPY) and this canary fires. TM ADR price ~$190 in
+    # 2026-05; a 50–500 band tolerates normal price drift in either
+    # direction while catching a 150× currency mistake immediately.
+    tm = holders.fetch("TM")
+    if tm.get("institutional"):
+        r = tm["institutional"][0]
+        if r.get("shares") and r.get("value"):
+            ratio = r["value"] / r["shares"]
+            check("holders TM (ADR): value/shares ~ USD share price (canary 50-500)",  # canary
+                  50 <= ratio <= 500,
+                  f"got ratio={ratio:.1f} (USD ~$190 expected; JPY would be ~14k)")
+
+    # _summarize projection: peer-comparison flat dict carries the rollup +
+    # top picks + top-5 concentration. Must include all _SUMMARY_FLAT_KEYS,
+    # plus the symbol — pins the schema so consumers iterating columns
+    # don't silently lose fields if a refactor renames one.
+    flat = holders._summarize(d)
+    expected_flat = {"symbol", *holders._SUMMARY_FLAT_KEYS}
+    check("holders _summarize(AAPL): has documented flat field set",
+          expected_flat.issubset(set(flat.keys())),
+          f"missing={expected_flat - set(flat.keys())}")
+    # top5 sum: should equal sum of pct_held across the FIRST 5 rows of
+    # the full institutional list (capped at 5; if list is shorter, sum
+    # whatever's there). Recompute to verify the helper isn't double-
+    # counting, skipping, or accidentally slicing post-limit.
+    expected_top5 = sum(r["pct_held"] for r in (d.get("institutional") or [])[:5]
+                       if r.get("pct_held") is not None)
+    actual_top5 = flat.get("top5_institutions_pct")
+    check("holders _summarize: top5_institutions_pct matches sum(pct_held[:5])",
+          (actual_top5 is None and expected_top5 == 0)
+          or (actual_top5 is not None
+              and abs(actual_top5 - expected_top5) < 1e-9),
+          f"got {actual_top5!r}, expected {expected_top5!r}")
+
+    # _summarize on an empty result must carry the `note` through —
+    # otherwise summary CSVs silently drop the disambiguation signal.
+    empty_flat = holders._summarize(holders.fetch("QQQ"))
+    check("holders _summarize(QQQ empty): preserves `note` for CSV",
+          "note" in empty_flat and empty_flat.get("note"),
+          f"got keys={list(empty_flat.keys())}")
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"holders fetch crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
+# --- insiders fetch shape ---
+section("insiders fetch")
+try:
+    # Happy path: AAPL — all three sections populated.
+    d = insiders.fetch("AAPL")
+    check("insiders AAPL: success has purchases_summary + transactions + roster",
+          isinstance(d, dict) and d.get("symbol") == "AAPL"
+          and isinstance(d.get("purchases_summary"), dict)
+          and isinstance(d.get("transactions"), list)
+          and isinstance(d.get("roster"), list),
+          f"got {list(d.keys())}")
+    check("insiders AAPL: transactions list non-empty (>= 5)",  # canary: 70+ typical
+          len(d.get("transactions") or []) >= 5,
+          f"got {len(d.get('transactions') or [])} rows")
+    check("insiders AAPL: roster list non-empty (>= 5)",  # canary: ~10 typical
+          len(d.get("roster") or []) >= 5,
+          f"got {len(d.get('roster') or [])} rows")
+
+    # purchases_summary schema — all 11 documented keys present.
+    p = d.get("purchases_summary") or {}
+    expected_p = set(insiders._PURCHASES_KEYS)
+    check("insiders AAPL: purchases_summary has documented field set (no extras)",
+          set(p.keys()) == expected_p,
+          f"diff: missing={expected_p - set(p.keys())}, "
+          f"extra={set(p.keys()) - expected_p}")
+    # period_label should currently be "Last 6m" — pin the canary so a
+    # Yahoo change to "Last 12m" (or similar) surfaces immediately rather
+    # than getting silently aliased into the same field with different
+    # semantics. Canary because it's allowed to legitimately change.
+    check("insiders AAPL: purchases_summary.period_label is 'Last 6m'",  # canary
+          p.get("period_label") == "Last 6m",
+          f"got {p.get('period_label')!r}")
+    # pct_* are FRACTIONS (verified empirically: net=246332 /
+    # total_held=240872640 ≈ 0.00102 → 0.001). Bound them in [0, 1] —
+    # if Yahoo flips to percent encoding, AAPL's 0.001 becomes 0.1
+    # (still in bounds) but a more egregious case (a 5% net move →
+    # 0.05 fraction or 5.0 percent) would fail this guard.
+    for k in ("pct_net_shares_purchased", "pct_buy_shares", "pct_sell_shares"):
+        v = p.get(k)
+        check(f"insiders AAPL purchases_summary.{k} is fraction in [0, 1] or null",
+              v is None or (isinstance(v, float) and 0.0 <= v <= 1.0),
+              f"got {type(v).__name__}={v!r}")
+    # total_insider_shares_held is integer; AAPL has hundreds of millions
+    # of insider shares on file. Comfortable lower bound: 1M.
+    check("insiders AAPL purchases_summary.total_insider_shares_held is int >= 1M",  # canary
+          isinstance(p.get("total_insider_shares_held"), int)
+          and p["total_insider_shares_held"] >= 1_000_000,
+          f"got {p.get('total_insider_shares_held')!r}")
+    # Algebra check: net_shares_purchased should equal purchases_shares -
+    # sales_shares. Pins that the row-label routing didn't accidentally
+    # cross-map a "Net" row into a "Purchases" / "Sales" slot (the bug
+    # we hit during implementation — % rows had to come first in routing
+    # to avoid the "net shares" substring matching "% Net Shares
+    # Purchased (Sold)").
+    if all(p.get(k) is not None
+           for k in ("purchases_shares", "sales_shares", "net_shares_purchased")):
+        check("insiders AAPL: net_shares_purchased == purchases_shares - sales_shares",
+              p["net_shares_purchased"] == p["purchases_shares"] - p["sales_shares"],
+              f"got net={p['net_shares_purchased']}, "
+              f"purchases - sales = {p['purchases_shares'] - p['sales_shares']}")
+
+    # Per-transaction row schema. transactions[0] is the row Yahoo gave
+    # us first; current responses sort desc but we don't depend on that.
+    expected_tx = set(insiders._TRANSACTION_KEYS)
+    if d.get("transactions"):
+        tx = d["transactions"][0]
+        check("insiders AAPL: transactions[0] has documented field set",
+              set(tx.keys()) == expected_tx,
+              f"diff: missing={expected_tx - set(tx.keys())}, "
+              f"extra={set(tx.keys()) - expected_tx}")
+        # ownership is single-letter D/I (Yahoo's encoding). Pin so a Yahoo
+        # change to "Direct" / "Indirect" surfaces immediately.
+        check("insiders AAPL: transactions[0].ownership is 'D' or 'I'",
+              tx.get("ownership") in ("D", "I"),
+              f"got {tx.get('ownership')!r}")
+        # date is YYYY-MM-DD or None.
+        dr = tx.get("date")
+        check("insiders AAPL: transactions[0].date is YYYY-MM-DD or None",
+              dr is None or (isinstance(dr, str) and len(dr) == 10
+                              and dr[4] == "-" and dr[7] == "-"),
+              f"got {type(dr).__name__}={dr!r}")
+        # shares is positive int when present.
+        sh = tx.get("shares")
+        check("insiders AAPL: transactions[0].shares is positive int",
+              isinstance(sh, int) and sh > 0,
+              f"got {type(sh).__name__}={sh!r}")
+        # value is float-or-None (Yahoo NaN → None for non-monetary events
+        # like option grants). Don't require positive — could be a sale at
+        # any price; require finite if present.
+        v = tx.get("value")
+        check("insiders AAPL: transactions[0].value is float or None",
+              v is None or (isinstance(v, float) and not math.isnan(v)),
+              f"got {type(v).__name__}={v!r}")
+
+    # Per-roster row schema (9 fields incl. the indirect pair, projected
+    # as None when the underlying DataFrame doesn't have those cols).
+    expected_ros = set(insiders._ROSTER_KEYS)
+    if d.get("roster"):
+        ros = d["roster"][0]
+        check("insiders AAPL: roster[0] has documented field set",
+              set(ros.keys()) == expected_ros,
+              f"diff: missing={expected_ros - set(ros.keys())}, "
+              f"extra={set(ros.keys()) - expected_ros}")
+        # AAPL specifically does not expose indirect cols (verified 2026-05),
+        # so every AAPL roster row should have shares_owned_indirectly=None.
+        # This is a canary: if Yahoo starts exposing indirect for AAPL,
+        # we'd want to know — could mean coverage expanded.
+        check("insiders AAPL roster[0]: shares_owned_indirectly is None "  # canary
+              "(AAPL doesn't expose indirect cols in current Yahoo response)",
+              ros.get("shares_owned_indirectly") is None,
+              f"got {ros.get('shares_owned_indirectly')!r}")
+
+    # Successful response must NOT carry `note` OR `coverage_note` —
+    # pins the design (both fields are reserved for the all-empty and
+    # partial-empty paths respectively) so a refactor can't accidentally
+    # always-set either.
+    check("insiders AAPL (success): no `note` key on the result",
+          "note" not in d,
+          f"unexpected keys={list(d.keys())}")
+    check("insiders AAPL (success): no `coverage_note` key on the result",
+          "coverage_note" not in d,
+          f"unexpected keys={list(d.keys())}")
+
+    # All-empty path: ETF / index / crypto / bogus all return three empty
+    # frames + 404 stderr (yfinance doesn't raise). Must report success-
+    # with-note + NO error_kind + NO coverage_note (the two -note fields
+    # are mutually exclusive). Pins the "ambiguous empty" design,
+    # mirroring holders.
+    for sym in ("QQQ", "^GSPC", "BTC-USD", "ZZZZNOTREAL"):
+        empty_d = insiders.fetch(sym)
+        check(f"insiders {sym}: all-empty path emits note + no error_kind",
+              empty_d.get("note")
+              and "error_kind" not in empty_d
+              and not empty_d.get("transactions")
+              and not empty_d.get("roster")
+              and all(v is None
+                      for v in (empty_d.get("purchases_summary") or {}).values()),
+              f"got keys={list(empty_d.keys())}, "
+              f"purchases={empty_d.get('purchases_summary')}")
+        check(f"insiders {sym}: all-empty path does NOT also set coverage_note "
+              "(mutually exclusive with note)",
+              "coverage_note" not in empty_d,
+              f"unexpected keys={list(empty_d.keys())}")
+
+    # Partial-empty path: BMW.DE returns purchases_summary populated but
+    # transactions + roster empty. Contract: success WITH `coverage_note`
+    # (NOT `note`) — the empty event lists ARE the answer, but the
+    # asymmetry is non-obvious so we surface it in-band.
+    #
+    # canary: BMW.DE's exact partial-empty shape is a Yahoo coverage
+    # artifact. If Yahoo starts populating BMW.DE's per-event tables
+    # (totally legitimate change), this fires — investigate before
+    # treating as a bug. Same canary spirit as the "Last 6m"
+    # period_label check.
+    bmw = insiders.fetch("BMW.DE")
+    # Tightened check: require a CONCRETE rollup signal (total_insider_
+    # shares_held > 0) rather than the prior "any non-null field" guard,
+    # which would pass purely on `period_label = "Last 6m"` even if every
+    # numeric field came back null. Catches a regression where Yahoo
+    # would emit an empty rollup but a populated header.
+    bmw_purchases = bmw.get("purchases_summary") or {}
+    check("insiders BMW.DE: partial-empty (rollup has real data, "  # canary
+          "events empty)",
+          isinstance(bmw_purchases.get("total_insider_shares_held"), int)
+          and bmw_purchases["total_insider_shares_held"] > 0
+          and not bmw.get("transactions")
+          and not bmw.get("roster"),
+          f"total_held={bmw_purchases.get('total_insider_shares_held')!r}, "
+          f"tx={len(bmw.get('transactions') or [])}, "
+          f"ros={len(bmw.get('roster') or [])}")
+    check("insiders BMW.DE: partial-empty emits `coverage_note` "  # canary
+          "(NOT `note`)",
+          "coverage_note" in bmw and "note" not in bmw,
+          f"unexpected keys={list(bmw.keys())}")
+
+    # TM (Toyota ADR) canary: `BMW.DE` and `TM` are the two tickers the
+    # docs cite as exemplars of the partial-empty path. BMW.DE has the
+    # canonical shape (real rollup numbers like total_held=304M); TM's
+    # data is degenerate — Yahoo returns the 7-row purchases DataFrame
+    # but with all-zero / null values (verified 2026-05: total_held=0,
+    # all event lists empty). Categorization-wise it's still partial-
+    # empty (purchases_has_data is True because some fields are 0 not
+    # None), so coverage_note still fires — that's what we test here.
+    # Don't check `total_held > 0` for TM (asserts data quality, not
+    # categorization) — that asserts BMW.DE-grade rollup numbers,
+    # which TM's payload doesn't have.
+    #
+    # `period_label` is excluded from the data-presence check: it's
+    # always populated to "Last 6m" because we extract it from the
+    # column header itself (not a row value), so including it in the
+    # `any(...)` would let the check pass purely on column-header
+    # presence — it'd no longer verify Yahoo returns actual rollup
+    # rows. Excluding period_label means this fires if Yahoo strips
+    # all 7 metric rows (the all-empty case) even with the column
+    # header still present.
+    tm = insiders.fetch("TM")
+    tm_purchases = tm.get("purchases_summary") or {}
+    tm_data_fields = {k: v for k, v in tm_purchases.items()
+                      if k != "period_label"}
+    check("insiders TM: in partial-empty branch — purchases dict has "  # canary
+          "at least one non-null DATA field (period_label excluded), "
+          "both event lists empty",
+          any(v is not None for v in tm_data_fields.values())
+          and not tm.get("transactions")
+          and not tm.get("roster"),
+          f"data keys with values: "
+          f"{[k for k, v in tm_data_fields.items() if v is not None]}, "
+          f"tx={len(tm.get('transactions') or [])}, "
+          f"ros={len(tm.get('roster') or [])}")
+    check("insiders TM: partial-empty emits `coverage_note` (NOT `note`)",  # canary
+          "coverage_note" in tm and "note" not in tm,
+          f"unexpected keys={list(tm.keys())}")
+
+    # TSLA canary: indirect cols ARE present (Musk holds via a trust).
+    # Pins the "variable column set" caveat — if a future Yahoo change
+    # drops indirect for TSLA too, we'd want to know.
+    tsla = insiders.fetch("TSLA")
+    if tsla.get("roster"):
+        # At least one roster row should have non-null
+        # shares_owned_indirectly — for TSLA in 2026-05 the count is
+        # 3+ (Gebbia / Murdoch / Musk).
+        with_indirect = [r for r in tsla["roster"]
+                         if r.get("shares_owned_indirectly") is not None]
+        check("insiders TSLA: at least one roster row has "  # canary
+              "shares_owned_indirectly populated",
+              len(with_indirect) >= 1,
+              f"got {len(with_indirect)} rows with indirect holdings")
+
+    # _apply_limit truncates lists in place. After applying limit=2, both
+    # lists must be ≤ 2.
+    capped = insiders._apply_limit(insiders.fetch("AAPL"), 2)
+    check("insiders _apply_limit(2): transactions capped to <= 2",
+          len(capped.get("transactions") or []) <= 2,
+          f"got {len(capped.get('transactions') or [])} rows")
+    check("insiders _apply_limit(2): roster capped to <= 2",
+          len(capped.get("roster") or []) <= 2,
+          f"got {len(capped.get('roster') or [])} rows")
+    # _apply_limit does NOT touch purchases_summary.
+    check("insiders _apply_limit(2): purchases_summary unaffected",
+          isinstance(capped.get("purchases_summary"), dict)
+          and any(v is not None
+                  for v in capped["purchases_summary"].values()),
+          f"got {capped.get('purchases_summary')}")
+
+    # _summarize projection: peer-comparison flat dict.
+    flat = insiders._summarize(d)
+    expected_flat = {"symbol", *insiders._SUMMARY_FLAT_KEYS}
+    check("insiders _summarize(AAPL): has documented flat field set",
+          expected_flat.issubset(set(flat.keys())),
+          f"missing={expected_flat - set(flat.keys())}")
+    # transactions_returned should match the FULL pre-limit list length
+    # (regression guard: if _summarize ever reads from a sliced list,
+    # this drops to the slice size).
+    check("insiders _summarize: transactions_returned == len(full transactions)",
+          flat.get("transactions_returned") == len(d.get("transactions") or []),
+          f"got {flat.get('transactions_returned')!r}, "
+          f"expected {len(d.get('transactions') or [])}")
+    # latest_transaction_date should equal max() of the transaction
+    # dates — recompute to verify the helper isn't picking dates[0] or
+    # similar (Yahoo's order is desc but we don't promise that).
+    dates = [t["date"] for t in (d.get("transactions") or []) if t.get("date")]
+    expected_latest = max(dates) if dates else None
+    check("insiders _summarize: latest_transaction_date == max(dates)",
+          flat.get("latest_transaction_date") == expected_latest,
+          f"got {flat.get('latest_transaction_date')!r}, "
+          f"expected {expected_latest!r}")
+
+    # top_insider_direct_shares contract: it must equal the MAX of all
+    # non-null `shares_owned_directly` values across the roster (algorithm-
+    # independent invariant). Earlier draft recomputed via the same
+    # `max(...)` formula and compared — that tests algorithm-against-itself
+    # and would silently pass a refactor bug; the MAX invariant catches any
+    # implementation that picks something other than the true maximum.
+    #
+    # `>= 0` (not `> 0`) because Yahoo could legitimately emit a roster
+    # row with shares_owned_directly=0 for an insider whose direct
+    # holdings just dropped to zero but who's still on the roster (rare
+    # but plausible). The contract is "max of direct shares", not
+    # "non-zero direct shares".
+    direct_values = [r["shares_owned_directly"]
+                     for r in (d.get("roster") or [])
+                     if r.get("shares_owned_directly") is not None]
+    if direct_values:
+        expected_max = max(direct_values)
+        check("insiders _summarize: top_insider_direct_shares == max("
+              "shares_owned_directly across roster) — MAX invariant, "
+              "algorithm-independent",
+              flat.get("top_insider_direct_shares") == expected_max,
+              f"got {flat.get('top_insider_direct_shares')!r}, "
+              f"expected max={expected_max}")
+        # The name field must point at A roster row whose
+        # shares_owned_directly equals that max (ties broken arbitrarily;
+        # we don't promise which name wins on a tie). Pin name → max
+        # consistency so a refactor that decouples the two fields
+        # surfaces.
+        winner_names = {r["name"] for r in (d.get("roster") or [])
+                        if r.get("shares_owned_directly") == expected_max}
+        check("insiders _summarize: top_insider_by_direct_shares names "
+              "a row whose shares_owned_directly equals the max",
+              flat.get("top_insider_by_direct_shares") in winner_names,
+              f"got name={flat.get('top_insider_by_direct_shares')!r}, "
+              f"max-holders={winner_names}")
+        # Range guard: result must be a non-negative int. `>= 0` (relaxed
+        # from `> 0`) so the rare zero-direct-holdings edge case doesn't
+        # spuriously fail. Indirect holdings are still excluded by the
+        # algorithm (input filter is `is not None` on direct shares).
+        check("insiders _summarize: top_insider_direct_shares is "
+              "non-negative int (direct-only ranking, no indirect leak)",
+              isinstance(flat.get("top_insider_direct_shares"), int)
+              and flat["top_insider_direct_shares"] >= 0,
+              f"got {flat.get('top_insider_direct_shares')!r}")
+
+    # _summarize on an empty result must carry the `note` through.
+    empty_flat = insiders._summarize(insiders.fetch("QQQ"))
+    check("insiders _summarize(QQQ empty): preserves `note` for CSV",
+          "note" in empty_flat and empty_flat.get("note"),
+          f"got keys={list(empty_flat.keys())}")
+    check("insiders _summarize(QQQ empty): does NOT also set coverage_note",
+          "coverage_note" not in empty_flat,
+          f"got keys={list(empty_flat.keys())}")
+
+    # _summarize on a partial-empty result must carry `coverage_note`
+    # through — same rationale as `note` carry-through, otherwise summary
+    # CSVs silently drop the asymmetric-coverage signal.
+    bmw_flat = insiders._summarize(insiders.fetch("BMW.DE"))
+    check("insiders _summarize(BMW.DE partial): preserves `coverage_note` "  # canary
+          "for CSV (NOT `note`)",
+          "coverage_note" in bmw_flat and "note" not in bmw_flat,
+          f"got keys={list(bmw_flat.keys())}")
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"insiders fetch crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
+# --- options fetch shape ---
+section("options fetch")
+try:
+    # Happy path: AAPL nearest expiry. Both legs populated, full
+    # expirations array, spot/currency/quote_type from underlying dict.
+    d = options.fetch("AAPL")
+    check("options AAPL: success has spot + currency + quote_type",
+          isinstance(d, dict) and d.get("symbol") == "AAPL"
+          and isinstance(d.get("spot"), float) and d["spot"] > 0
+          and d.get("currency") == "USD"
+          and d.get("quote_type") == "EQUITY",
+          f"got keys={list(d.keys())}, "
+          f"spot={d.get('spot')}, ccy={d.get('currency')}, "
+          f"qt={d.get('quote_type')}")
+    check("options AAPL: expirations array non-empty (>= 5)",  # canary: ~24 typical
+          isinstance(d.get("expirations"), list)
+          and len(d.get("expirations", [])) >= 5,
+          f"got {len(d.get('expirations') or [])} expirations")
+    # The chosen expiry must come from the expirations array.
+    check("options AAPL: chosen expiry in expirations[]",
+          d.get("expiry") in (d.get("expirations") or []),
+          f"expiry={d.get('expiry')!r}")
+    # Both legs populated (typically 30-60+ rows each on a near-month).
+    check("options AAPL: calls non-empty (>= 5)",  # canary: typically 30+
+          len(d.get("calls") or []) >= 5,
+          f"got {len(d.get('calls') or [])} call rows")
+    check("options AAPL: puts non-empty (>= 5)",  # canary: typically 30+
+          len(d.get("puts") or []) >= 5,
+          f"got {len(d.get('puts') or [])} put rows")
+
+    # Per-contract row schema — calls and puts share the same shape.
+    expected_contract = set(options._CONTRACT_KEYS)
+    for leg in ("calls", "puts"):
+        rows = d.get(leg) or []
+        if rows:
+            r = rows[0]
+            check(f"options AAPL: {leg}[0] has documented field set",
+                  set(r.keys()) == expected_contract,
+                  f"diff: missing={expected_contract - set(r.keys())}, "
+                  f"extra={set(r.keys()) - expected_contract}")
+            # strike must be positive float
+            v = r.get("strike")
+            check(f"options AAPL: {leg}[0].strike is positive float",
+                  isinstance(v, float) and v > 0,
+                  f"got {type(v).__name__}={v!r}")
+            # implied_vol is fraction in [0, 5] — pins the unit landmine
+            # against the percent-encoded sibling change_pct. 5.0 is a
+            # very generous upper bound (= 500% IV); real IVs almost
+            # never exceed 2.0. If Yahoo flips to percent encoding we'd
+            # see 25.0 etc. and this fires.
+            iv = r.get("implied_vol")
+            check(f"options AAPL: {leg}[0].implied_vol is fraction in [0, 5]",
+                  iv is None or (isinstance(iv, float) and 0.0 <= iv <= 5.0),
+                  f"got {type(iv).__name__}={iv!r}")
+            # in_the_money is bool
+            check(f"options AAPL: {leg}[0].in_the_money is bool",
+                  isinstance(r.get("in_the_money"), bool),
+                  f"got {type(r.get('in_the_money')).__name__}")
+            # last_trade_date_iso is ISO string or None — guard against
+            # Yahoo switching to epoch / pandas Timestamp passthrough.
+            ltd = r.get("last_trade_date_iso")
+            check(f"options AAPL: {leg}[0].last_trade_date_iso is ISO str or None",
+                  ltd is None or (isinstance(ltd, str) and "T" in ltd),
+                  f"got {type(ltd).__name__}={ltd!r}")
+
+    # Successful response must NOT carry `note`.
+    check("options AAPL (success): no `note` key",
+          "note" not in d,
+          f"unexpected keys={list(d.keys())}")
+
+    # ITM/OTM consistency with spot — verifies in_the_money is computed
+    # the way we documented (call ITM iff strike < spot; put ITM iff
+    # strike > spot). Sample the first row of each leg.
+    spot = d["spot"]
+    if d.get("calls"):
+        c0 = d["calls"][0]
+        if c0.get("strike") is not None:
+            expected_itm = c0["strike"] < spot
+            check("options AAPL: calls[0].in_the_money matches strike < spot",
+                  c0["in_the_money"] == expected_itm,
+                  f"strike={c0['strike']}, spot={spot}, "
+                  f"itm={c0['in_the_money']}, expected={expected_itm}")
+    if d.get("puts"):
+        p0 = d["puts"][0]
+        if p0.get("strike") is not None:
+            expected_itm = p0["strike"] > spot
+            check("options AAPL: puts[0].in_the_money matches strike > spot",
+                  p0["in_the_money"] == expected_itm,
+                  f"strike={p0['strike']}, spot={spot}, "
+                  f"itm={p0['in_the_money']}, expected={expected_itm}")
+
+    # _apply_moneyness: ±5% band must yield strikes within ±5% of spot.
+    # Use the full leg from fetch and verify strike windowing.
+    win = options._apply_moneyness(d.get("calls") or [], spot, 5.0)
+    band = spot * 0.05
+    check("options _apply_moneyness(5): all strikes within ±5% of spot",
+          all((spot - band) <= r["strike"] <= (spot + band) for r in win),
+          f"got {len(win)} rows; band [{spot - band:.2f}, {spot + band:.2f}]")
+    # The window must be a strict subset of (or equal to) the full ladder.
+    check("options _apply_moneyness(5): result <= full leg size",
+          len(win) <= len(d.get("calls") or []),
+          f"window={len(win)}, full={len(d.get('calls') or [])}")
+
+    # _apply_limit truncates a leg list to N.
+    capped = options._apply_limit(d.get("calls") or [], 3)
+    check("options _apply_limit(3): leg capped to <= 3",
+          len(capped) <= 3, f"got {len(capped)} rows")
+
+    # _atm_row picks the strike closest to spot.
+    atm = options._atm_row(d.get("calls") or [], spot)
+    if atm:
+        # Verify it's actually the minimum-distance row.
+        actual_min_dist = min(abs(r["strike"] - spot)
+                              for r in (d.get("calls") or [])
+                              if r.get("strike") is not None)
+        check("options _atm_row(calls): returns strike closest to spot",
+              abs(atm["strike"] - spot) == actual_min_dist,
+              f"got strike={atm['strike']}, dist={abs(atm['strike'] - spot):.4f}, "
+              f"min_dist={actual_min_dist:.4f}")
+
+    # _summarize projection — peer-comparison flat dict carries spot,
+    # ATM picks per leg, totals, PCRs. Pins schema for stable consumers.
+    flat = options._summarize(d, moneyness=None)
+    expected_flat = {"symbol", *options._SUMMARY_FLAT_KEYS}
+    check("options _summarize(AAPL): has documented flat field set",
+          expected_flat.issubset(set(flat.keys())),
+          f"missing={expected_flat - set(flat.keys())}")
+    check("options _summarize(AAPL): expirations_count matches len(expirations)",
+          flat.get("expirations_count") == len(d.get("expirations") or []),
+          f"got {flat.get('expirations_count')!r}, "
+          f"expected {len(d.get('expirations') or [])!r}")
+
+    # Bad expiry: must classify as not_found with expiry_requested carry.
+    bad = options.fetch("AAPL", expiry="1999-01-01")
+    check("options AAPL --expiry 1999-01-01: error_kind=not_found + expiry_requested",
+          bad.get("error_kind") == "not_found"
+          and bad.get("expiry_requested") == "1999-01-01"
+          and "error" in bad,
+          f"got {bad!r}")
+
+    # Empty / non-options path: index, crypto, FX, future, non-US equity,
+    # bogus all return empty `t.options` tuple. Each must report
+    # success-with-note + no error_kind + empty arrays. Pins the
+    # "ambiguous empty" design (parallel to holders' empty path).
+    for sym in ("^GSPC", "BTC-USD", "EURUSD=X", "ES=F", "0700.HK",
+                "ZZZZNOTREAL"):
+        empty_d = options.fetch(sym)
+        check(f"options {sym}: empty path emits note + no error_kind",
+              empty_d.get("note")
+              and "error_kind" not in empty_d
+              and empty_d.get("expirations") == []
+              and empty_d.get("calls") == []
+              and empty_d.get("puts") == [],
+              f"got keys={list(empty_d.keys())}, "
+              f"exps={empty_d.get('expirations')}, "
+              f"err_kind={empty_d.get('error_kind')}")
+
+    # _summarize on empty must carry `note` through (CSV would drop it
+    # otherwise — same defect class as holders / news).
+    empty_flat = options._summarize(options.fetch("^GSPC"), moneyness=None)
+    check("options _summarize(^GSPC empty): preserves `note` for CSV",
+          "note" in empty_flat and empty_flat.get("note"),
+          f"got keys={list(empty_flat.keys())}")
+
+    # moneyness_pct echo: the user's --moneyness arg must round-trip
+    # into the summary row so a peer-compare CSV mixing filtered and
+    # unfiltered runs stays self-describing. Pins the design.
+    flat_unfiltered = options._summarize(d, moneyness=None)
+    flat_filtered = options._summarize(d, moneyness=5.0)
+    check("options _summarize(moneyness=None): moneyness_pct is None",
+          flat_unfiltered.get("moneyness_pct") is None,
+          f"got {flat_unfiltered.get('moneyness_pct')!r}")
+    check("options _summarize(moneyness=5.0): moneyness_pct is 5.0",
+          flat_filtered.get("moneyness_pct") == 5.0,
+          f"got {flat_filtered.get('moneyness_pct')!r}")
+    # Filtered run must yield strictly fewer (or equal) calls than
+    # unfiltered — sanity check that moneyness=5.0 is actually applied.
+    check("options _summarize: filtered calls_returned <= unfiltered",
+          flat_filtered.get("calls_returned") <= flat_unfiltered.get("calls_returned"),
+          f"filtered={flat_filtered.get('calls_returned')}, "
+          f"unfiltered={flat_unfiltered.get('calls_returned')}")
+
+    # contract_currency rename: the per-contract currency field must
+    # be `contract_currency`, not `currency` (which would collide with
+    # the top-level `currency` column in CSV header). Pins the rename.
+    if d.get("calls"):
+        c0 = d["calls"][0]
+        check("options AAPL: calls[0] has `contract_currency`, not `currency`",
+              "contract_currency" in c0 and "currency" not in c0,
+              f"keys={list(c0.keys())}")
+
+    # OCC-parsed expiry consistency: the `expiry` label must match the
+    # YYMMDD encoded in the first contract's OCC symbol. Pins the
+    # post-#2 fix where `expiry` is derived from chain ground truth
+    # (rather than guessed from `exps[0]`) on the no-`--expiry` path.
+    if d.get("calls"):
+        c0 = d["calls"][0]
+        parsed = options._expiry_from_contract_symbol(c0.get("contract_symbol"))
+        check("options AAPL: expiry matches OCC-parsed first contract symbol",
+              parsed is not None and parsed == d.get("expiry"),
+              f"expiry={d.get('expiry')!r}, parsed_from_symbol={parsed!r}, "
+              f"contract_symbol={c0.get('contract_symbol')!r}")
+
+    # _expiry_from_contract_symbol unit tests (offline — pure regex).
+    # Cover the standard OCC layouts, year boundaries (2000 / 2099),
+    # plus a malformed input.
+    check("options _expiry_from_contract_symbol(AAPL OCC): parses YYMMDD",
+          options._expiry_from_contract_symbol("AAPL260508C00282500")
+          == "2026-05-08",
+          f"got {options._expiry_from_contract_symbol('AAPL260508C00282500')!r}")
+    check("options _expiry_from_contract_symbol(BRKB OCC): handles longer root",
+          options._expiry_from_contract_symbol("BRKB260619P00500000")
+          == "2026-06-19",
+          f"got {options._expiry_from_contract_symbol('BRKB260619P00500000')!r}")
+    # Year-boundary canaries: 00 → 2000, 99 → 2099. Pins the YY → 20YY
+    # hardcoding (documented in _expiry_from_contract_symbol's docstring;
+    # OPRA's longest LEAPS top out ~3 years so 2099 boundary is purely
+    # theoretical, but the assertion costs nothing).
+    check("options _expiry_from_contract_symbol(YY=00): → 2000",
+          options._expiry_from_contract_symbol("X000101C00100000")
+          == "2000-01-01",
+          f"got {options._expiry_from_contract_symbol('X000101C00100000')!r}")
+    check("options _expiry_from_contract_symbol(YY=99): → 2099",
+          options._expiry_from_contract_symbol("X991231P00100000")
+          == "2099-12-31",
+          f"got {options._expiry_from_contract_symbol('X991231P00100000')!r}")
+    check("options _expiry_from_contract_symbol(None): returns None",
+          options._expiry_from_contract_symbol(None) is None)
+    check("options _expiry_from_contract_symbol(garbage): returns None",
+          options._expiry_from_contract_symbol("not-an-occ-symbol") is None)
+
+    # _sum_int None-safe semantics: when every row's value is None,
+    # return None (not 0) — distinguishes "Yahoo didn't populate" from
+    # "every contract had explicit 0 activity". Pure-Python test, no
+    # network. Three cases: empty rows → None; all-None values → None;
+    # mix of values + None → sum of non-None.
+    check("options _sum_int(empty rows): None",
+          options._sum_int([], "volume") is None,
+          f"got {options._sum_int([], 'volume')!r}")
+    check("options _sum_int(all-None values): None (NOT 0)",
+          options._sum_int([{"volume": None}, {"volume": None}], "volume") is None,
+          f"got {options._sum_int([{'volume': None}, {'volume': None}], 'volume')!r}")
+    check("options _sum_int(mix): sum of non-None values",
+          options._sum_int([{"volume": 5}, {"volume": None}, {"volume": 10}], "volume") == 15,
+          f"got {options._sum_int([{'volume': 5}, {'volume': None}, {'volume': 10}], 'volume')!r}")
+    check("options _sum_int(all-zero values): 0 (NOT None)",
+          options._sum_int([{"volume": 0}, {"volume": 0}], "volume") == 0,
+          f"got {options._sum_int([{'volume': 0}, {'volume': 0}], 'volume')!r}")
+
+    # --type filter offline: _filter_legs drops the off-leg list to
+    # `[]` rather than removing the key (schema shape stability). Use
+    # deep copies of `d` so we don't mutate it (downstream tests still
+    # read from `d`) and don't pay extra HTTP for fresh fetches.
+    import copy as _copy
+    calls_only = options._filter_legs(_copy.deepcopy(d),
+                                       leg_filter="calls",
+                                       moneyness=None, limit=2)
+    check("options _filter_legs(--type calls): puts is empty list (not missing)",
+          isinstance(calls_only.get("puts"), list)
+          and len(calls_only["puts"]) == 0,
+          f"got puts={calls_only.get('puts')!r}")
+    check("options _filter_legs(--type calls, limit=2): calls capped to <= 2",
+          len(calls_only.get("calls") or []) <= 2,
+          f"got {len(calls_only.get('calls') or [])} call rows")
+
+    puts_only = options._filter_legs(_copy.deepcopy(d),
+                                      leg_filter="puts",
+                                      moneyness=None, limit=2)
+    check("options _filter_legs(--type puts): calls is empty list (not missing)",
+          isinstance(puts_only.get("calls"), list)
+          and len(puts_only["calls"]) == 0,
+          f"got calls={puts_only.get('calls')!r}")
+
+    # _filter_legs on an error result (no `calls` key) must not crash
+    # — guards the `if "calls" not in result: return` branch.
+    err_in = {"symbol": "X", "error": "bad", "error_kind": "not_found",
+              "attempts": 1}
+    err_out = options._filter_legs(err_in, leg_filter="all",
+                                    moneyness=5, limit=3)
+    check("options _filter_legs(error result): pass-through, no crash",
+          err_out is err_in and "calls" not in err_out,
+          f"got {err_out!r}")
+
+    # _summarize on a synthetic empty-chain-but-valid-expiry result
+    # (the rare _EMPTY_CHAIN_NOTE path). We can't reliably trigger
+    # this live, but the projection must carry the note + return
+    # None for atm/totals (no leg data to summarize).
+    fake_empty_chain = {
+        "symbol": "FAKE",
+        "spot": 100.0,
+        "currency": "USD",
+        "quote_type": "EQUITY",
+        "expirations": ["2026-06-19", "2026-07-17"],
+        "expiry": "2026-06-19",
+        "calls": [],
+        "puts": [],
+        "note": options._EMPTY_CHAIN_NOTE,
+    }
+    flat_empty_chain = options._summarize(fake_empty_chain, moneyness=None)
+    check("options _summarize(empty-chain): carries _EMPTY_CHAIN_NOTE",
+          flat_empty_chain.get("note") == options._EMPTY_CHAIN_NOTE,
+          f"got {flat_empty_chain.get('note')!r}")
+    check("options _summarize(empty-chain): atm_call_strike is None",
+          flat_empty_chain.get("atm_call_strike") is None,
+          f"got {flat_empty_chain.get('atm_call_strike')!r}")
+    check("options _summarize(empty-chain): pcr_volume is None (no legs)",
+          flat_empty_chain.get("pcr_volume") is None,
+          f"got {flat_empty_chain.get('pcr_volume')!r}")
+
+    # End-to-end coverage of fetch()'s _EMPTY_CHAIN_NOTE branch via
+    # a mock yfinance Ticker. This branch (`exps non-empty AND
+    # chain.calls/puts is None`) is what triggers when Yahoo returns
+    # `result[0].options=[]` for a valid date — observable in the
+    # 1-HTTP path with the post-#1 fix, where we no longer collapse
+    # this case into _NO_OPTIONS_NOTE. Hard to reproduce live, so
+    # mock the underlying yf.Ticker and exercise fetch() directly.
+    #
+    # IMPORTANT: yfinance's real behavior on an empty chain is
+    # `Options(calls=None, puts=None, underlying=None)` — all THREE
+    # fields are None because they all derive from the same empty
+    # `_download_options(date)` payload. The mock mirrors that
+    # exactly so the test reflects production semantics (an earlier
+    # version mocked `underlying={...}` populated, which falsely
+    # asserted spot=100.0 — yfinance never produces that combination).
+    from collections import namedtuple as _nt
+    from unittest.mock import patch as _patch
+    _Options = _nt("Options", ["calls", "puts", "underlying"])
+    class _MockTicker:
+        def __init__(self, ticker):
+            self.ticker = ticker
+        @property
+        def options(self):
+            return ("2026-06-19", "2026-07-17")
+        def option_chain(self, date=None):
+            # Realistic: yfinance returns all-None Options on empty payload.
+            return _Options(calls=None, puts=None, underlying=None)
+    with _patch.object(options.yf, "Ticker", _MockTicker):
+        # No --expiry → 1-HTTP path. exps non-empty + chain.calls/puts None
+        # → fetch() should route to _EMPTY_CHAIN_NOTE (NOT _NO_OPTIONS_NOTE).
+        mocked = options.fetch("MOCK")
+    check("options fetch(mocked empty-chain, no --expiry): _EMPTY_CHAIN_NOTE",
+          mocked.get("note") == options._EMPTY_CHAIN_NOTE
+          and mocked.get("expirations") == ["2026-06-19", "2026-07-17"]
+          and mocked.get("expiry") == "2026-06-19"
+          and mocked.get("calls") == []
+          and mocked.get("puts") == []
+          and mocked.get("spot") is None     # underlying=None → spot None
+          and mocked.get("currency") is None
+          and mocked.get("quote_type") is None
+          and "error_kind" not in mocked,
+          f"got {mocked!r}")
+    # Same mock with explicit --expiry → 2-HTTP path. exps non-empty,
+    # expiry valid, chain.calls/puts None → also _EMPTY_CHAIN_NOTE.
+    # Assert the same full set of fields as the no-expiry case for
+    # consistency.
+    with _patch.object(options.yf, "Ticker", _MockTicker):
+        mocked2 = options.fetch("MOCK", expiry="2026-07-17")
+    check("options fetch(mocked empty-chain, --expiry): _EMPTY_CHAIN_NOTE",
+          mocked2.get("note") == options._EMPTY_CHAIN_NOTE
+          and mocked2.get("expirations") == ["2026-06-19", "2026-07-17"]
+          and mocked2.get("expiry") == "2026-07-17"
+          and mocked2.get("calls") == []
+          and mocked2.get("puts") == []
+          and mocked2.get("spot") is None
+          and "error_kind" not in mocked2,
+          f"got {mocked2!r}")
+
+    # OCC fallback path: when chain rows have non-OCC contract symbols,
+    # _expiry_from_chain returns None and fetch() falls back to exps[0].
+    # Pins the OCC-parse-is-best-effort design where exps[0] is the
+    # safety net. Build a mock whose first row's contractSymbol is
+    # non-parseable; expect fetch to label `expiry: exps[0]`.
+    import pandas as _pd
+    class _MockTickerOCCFail:
+        def __init__(self, ticker):
+            self.ticker = ticker
+        @property
+        def options(self):
+            return ("2026-09-19", "2026-10-17")
+        def option_chain(self, date=None):
+            calls = _pd.DataFrame([{
+                "contractSymbol": "BOGUS-NOT-OCC",
+                "lastTradeDate": _pd.Timestamp("2026-05-01", tz="UTC"),
+                "strike": 100.0, "lastPrice": 1.0, "bid": 0.0, "ask": 0.0,
+                "change": 0.0, "percentChange": 0.0, "volume": 0,
+                "openInterest": 0, "impliedVolatility": 0.2,
+                "inTheMoney": False, "contractSize": "REGULAR",
+                "currency": "USD",
+            }])
+            puts = _pd.DataFrame([{
+                "contractSymbol": "ALSO-BOGUS",
+                "lastTradeDate": _pd.Timestamp("2026-05-01", tz="UTC"),
+                "strike": 100.0, "lastPrice": 1.0, "bid": 0.0, "ask": 0.0,
+                "change": 0.0, "percentChange": 0.0, "volume": 0,
+                "openInterest": 0, "impliedVolatility": 0.2,
+                "inTheMoney": False, "contractSize": "REGULAR",
+                "currency": "USD",
+            }])
+            return _Options(calls=calls, puts=puts,
+                            underlying={"regularMarketPrice": 100.0,
+                                        "currency": "USD",
+                                        "quoteType": "EQUITY"})
+    with _patch.object(options.yf, "Ticker", _MockTickerOCCFail):
+        mocked3 = options.fetch("MOCK")
+    check("options fetch(mock OCC parse fails): expiry falls back to exps[0]",
+          mocked3.get("expiry") == "2026-09-19"
+          and mocked3.get("expirations") == ["2026-09-19", "2026-10-17"]
+          and len(mocked3.get("calls") or []) == 1
+          and "note" not in mocked3,
+          f"got {mocked3!r}")
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"options fetch crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
 # --- CLI sanity: focus on what only subprocess testing covers (argparse,
 #     JSON serialization, exit codes, --help). Schema invariants are
 #     already covered by the import-path sections above; don't re-test.
@@ -2638,6 +3724,15 @@ try:
         ("financials.py", ("--statement", "income", "--limit", "2", "AAPL")),
         ("financials.py", ("--summary", "AAPL")),
         ("financials.py", ("--period", "ttm", "AAPL")),
+        ("news.py", ("--limit", "2", "AAPL")),
+        ("holders.py", ("--limit", "3", "AAPL")),
+        ("holders.py", ("--summary", "AAPL")),
+        ("insiders.py", ("--limit", "3", "AAPL")),
+        ("insiders.py", ("--summary", "AAPL")),
+        ("options.py", ("--moneyness", "5", "--limit", "3", "AAPL")),
+        ("options.py", ("--type", "calls", "--moneyness", "5", "--limit", "3", "AAPL")),
+        ("options.py", ("--type", "puts", "--moneyness", "5", "--limit", "3", "AAPL")),
+        ("options.py", ("--summary", "--moneyness", "5", "AAPL")),
     ):
         rc, data = run_cli(script, *args)
         check(f"{script} {' '.join(args)}: exit 0 + valid JSON list",
@@ -2655,7 +3750,8 @@ try:
     # --help shouldn't hang or exit non-zero (catches argparse misconfig
     # like `%(default)s` referencing a non-existent default)
     for script in ("fast_info.py", "history.py", "info.py", "earnings.py",
-                   "financials.py"):
+                   "financials.py", "news.py", "holders.py", "options.py",
+                   "insiders.py"):
         cmd = [sys.executable, str(SCRIPTS_DIR / script), "--help"]
         out = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
         check(f"{script} --help exits 0",
@@ -2699,6 +3795,288 @@ try:
     check("earnings --summary --estimates --format csv: header has consensus_* cols",
           csv_lines and "consensus_eps_avg" in csv_lines[0],
           f"got header={csv_lines[0] if csv_lines else None}")
+
+    # news CSV: novel "one row per ARTICLE" layout (other modes are one
+    # row per ticker). Mixing a bogus ticker (empty result) with a real
+    # one specifically pins:
+    #   - empty-result row carries `note` (not just blanks — past bug)
+    #   - article rows still produce one row per article, symbol repeats
+    cmd = [sys.executable, str(SCRIPTS_DIR / "news.py"),
+           "--limit", "2", "--format", "csv", "ZZZZNOTREAL", "AAPL"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    csv_lines = [ln for ln in out.stdout.splitlines() if ln.strip()]
+    # 1 header + 1 empty-ticker row + 2 AAPL article rows = 4
+    check("news --format csv mixed batch: header + 3 data rows (4 total)",
+          out.returncode == 0 and len(csv_lines) == 4,
+          f"rc={out.returncode}, lines={len(csv_lines)}")
+    if len(csv_lines) >= 4:
+        header = csv_lines[0]
+        check("news --format csv: header contains documented article cols + note",
+              all(f in header for f in ("title", "summary", "pub_date",
+                                         "provider", "url",
+                                         "is_premium", "editors_pick", "note")),
+              f"got header={header!r}")
+        # empty-result row: must start with the bogus symbol AND carry the
+        # `note` payload (not just be `ZZZZNOTREAL,,,,,,,,,...` blanks —
+        # past bug where an empty-result row had zero signal in CSV).
+        check("news --format csv empty-result row: starts with bogus symbol",
+              csv_lines[1].startswith("ZZZZNOTREAL,"),
+              f"got row={csv_lines[1][:40]!r}")
+        check("news --format csv empty-result row: carries the note field "
+              "(not all-blank past the symbol)",
+              "no news returned" in csv_lines[1],
+              f"got row={csv_lines[1]!r}")
+        # article rows: both must start with AAPL (symbol repeats per article)
+        check("news --format csv: each article row starts with the symbol",
+              csv_lines[2].startswith("AAPL,") and csv_lines[3].startswith("AAPL,"),
+              f"row1={csv_lines[2][:30]!r}, row2={csv_lines[3][:30]!r}")
+
+    # holders CSV: novel "row-per-holder + holder_class discriminator" layout.
+    # Mixing AAPL (full data) with QQQ (empty / non-equity) specifically pins:
+    #   - row classes: 1 summary + N institutional + N mutualfund per ticker
+    #   - empty-result row carries `note` (not just blanks)
+    #   - holder_class column populated correctly
+    cmd = [sys.executable, str(SCRIPTS_DIR / "holders.py"),
+           "--limit", "2", "--format", "csv", "AAPL", "QQQ"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    csv_lines = [ln for ln in out.stdout.splitlines() if ln.strip()]
+    # AAPL: 1 summary + 2 institutional + 2 mutualfund = 5 rows
+    # QQQ: 1 empty-carry row
+    # + 1 header = 7 lines total
+    check("holders --format csv mixed batch: header + 6 data rows (7 total)",
+          out.returncode == 0 and len(csv_lines) == 7,
+          f"rc={out.returncode}, lines={len(csv_lines)}")
+    if len(csv_lines) >= 7:
+        header = csv_lines[0]
+        check("holders --format csv: header has holder_class + summary + holder cols + note",
+              all(f in header for f in (
+                  "symbol", "holder_class",
+                  "insiders_pct", "institutions_pct", "institutions_count",
+                  "date_reported", "holder", "pct_held", "shares", "value",
+                  "pct_change", "note")),
+              f"got header={header!r}")
+        # AAPL summary row: holder_class='summary', rollup pcts populated.
+        check("holders --format csv: AAPL summary row classed as 'summary'",
+              csv_lines[1].startswith("AAPL,summary,"),
+              f"got row={csv_lines[1][:60]!r}")
+        # AAPL institutional + mutualfund rows: holder_class set accordingly.
+        check("holders --format csv: AAPL institutional rows classed correctly",
+              csv_lines[2].startswith("AAPL,institutional,")
+              and csv_lines[3].startswith("AAPL,institutional,"),
+              f"row2={csv_lines[2][:40]!r}, row3={csv_lines[3][:40]!r}")
+        check("holders --format csv: AAPL mutualfund rows classed correctly",
+              csv_lines[4].startswith("AAPL,mutualfund,")
+              and csv_lines[5].startswith("AAPL,mutualfund,"),
+              f"row4={csv_lines[4][:40]!r}, row5={csv_lines[5][:40]!r}")
+        # QQQ empty-result row: must carry the `note` payload (not be all-blank
+        # past the symbol — same defensive shape as news's empty-row test).
+        check("holders --format csv: QQQ empty row starts with the symbol",
+              csv_lines[6].startswith("QQQ,"),
+              f"got row={csv_lines[6][:40]!r}")
+        check("holders --format csv: QQQ empty row carries the `note` field",
+              "no holder data" in csv_lines[6],
+              f"got row={csv_lines[6]!r}")
+
+    # holders --summary CSV header: pin the renamed columns
+    # (institutional_rows_returned / mutualfund_rows_returned) so a future
+    # rename can't silently drop them from CSV output. Default-mode CSV
+    # header is checked above; summary-mode header was a gap.
+    cmd = [sys.executable, str(SCRIPTS_DIR / "holders.py"),
+           "--summary", "--format", "csv", "AAPL"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+    csv_lines = [ln for ln in out.stdout.splitlines() if ln.strip()]
+    check("holders --summary --format csv: exits 0 + at least header + 1 row",
+          out.returncode == 0 and len(csv_lines) >= 2,
+          f"rc={out.returncode}, lines={len(csv_lines)}")
+    if csv_lines:
+        header = csv_lines[0]
+        check("holders --summary --format csv: header has documented top picks + rows_returned cols",
+              all(f in header for f in (
+                  "symbol",
+                  "insiders_pct", "institutions_pct", "institutions_count",
+                  "top_institution", "top_institution_pct",
+                  "top5_institutions_pct", "institutional_rows_returned",
+                  "top_mutualfund", "top_mutualfund_pct",
+                  "top5_mutualfunds_pct", "mutualfund_rows_returned",
+                  "note")),
+              f"got header={header!r}")
+
+    # holders --summary --limit invariance (regression test for a past bug
+    # where _summarize sliced the post-limit list — top5_institutions_pct
+    # silently became top<limit>_institutions_pct when limit < 5, and
+    # *_rows_returned reported display-knob count instead of Yahoo's
+    # actual response size). Pins the contract: --summary metrics
+    # describe Yahoo's response, NOT the user's display preference.
+    rc1, j1 = run_cli("holders.py", "--summary", "--limit", "2", "AAPL")
+    rc2, j2 = run_cli("holders.py", "--summary", "AAPL")
+    check("holders --summary: both invocations succeed",
+          rc1 == 0 and rc2 == 0 and isinstance(j1, list) and isinstance(j2, list)
+          and len(j1) == 1 and len(j2) == 1,
+          f"rc1={rc1}, rc2={rc2}")
+    if rc1 == 0 and rc2 == 0 and j1 and j2:
+        check("holders --summary: top5_institutions_pct invariant under --limit "
+              "(was post-limit pre-fix)",
+              j1[0].get("top5_institutions_pct") == j2[0].get("top5_institutions_pct"),
+              f"--limit 2 gave {j1[0].get('top5_institutions_pct')!r}, "
+              f"no-limit gave {j2[0].get('top5_institutions_pct')!r}")
+        check("holders --summary: top5_mutualfunds_pct invariant under --limit",
+              j1[0].get("top5_mutualfunds_pct") == j2[0].get("top5_mutualfunds_pct"),
+              f"--limit 2 gave {j1[0].get('top5_mutualfunds_pct')!r}, "
+              f"no-limit gave {j2[0].get('top5_mutualfunds_pct')!r}")
+        check("holders --summary: institutional_rows_returned invariant under --limit",
+              j1[0].get("institutional_rows_returned") == j2[0].get("institutional_rows_returned"),
+              f"--limit 2 gave {j1[0].get('institutional_rows_returned')!r}, "
+              f"no-limit gave {j2[0].get('institutional_rows_returned')!r}")
+        check("holders --summary: mutualfund_rows_returned invariant under --limit",
+              j1[0].get("mutualfund_rows_returned") == j2[0].get("mutualfund_rows_returned"),
+              f"--limit 2 gave {j1[0].get('mutualfund_rows_returned')!r}, "
+              f"no-limit gave {j2[0].get('mutualfund_rows_returned')!r}")
+
+    # insiders CSV: row-per-record + record_class discriminator (parallel
+    # to holders CSV). Mixing AAPL (full data) with QQQ (empty / non-equity)
+    # specifically pins:
+    #   - row classes: 1 purchases + N transaction + N roster per ticker
+    #   - empty-result row carries `note` (not just blanks)
+    #   - record_class column populated correctly
+    #   - position / url columns deduplicated (regression: pre-dedupe
+    #     header had two `position` and two `url` columns)
+    cmd = [sys.executable, str(SCRIPTS_DIR / "insiders.py"),
+           "--limit", "2", "--format", "csv", "AAPL", "QQQ"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    csv_lines = [ln for ln in out.stdout.splitlines() if ln.strip()]
+    # AAPL: 1 purchases + 2 transaction + 2 roster = 5 rows
+    # QQQ: 1 empty-carry row
+    # + 1 header = 7 lines total
+    check("insiders --format csv mixed batch: header + 6 data rows (7 total)",
+          out.returncode == 0 and len(csv_lines) == 7,
+          f"rc={out.returncode}, lines={len(csv_lines)}")
+    if len(csv_lines) >= 7:
+        header = csv_lines[0]
+        # Header dedup: `position` and `url` must each appear EXACTLY once
+        # (regression test for the pre-dedupe bug where both appeared twice
+        # because they're in both _TRANSACTION_KEYS and _ROSTER_KEYS).
+        cols = header.split(",")
+        check("insiders --format csv: `position` column appears exactly once "
+              "(deduplicated across transaction + roster)",
+              cols.count("position") == 1,
+              f"got {cols.count('position')} occurrences; cols={cols}")
+        check("insiders --format csv: `url` column appears exactly once",
+              cols.count("url") == 1,
+              f"got {cols.count('url')} occurrences")
+        check("insiders --format csv: header has record_class + purchases + "
+              "transaction + roster + note + coverage_note cols",
+              all(f in header for f in (
+                  "symbol", "record_class",
+                  "period_label", "purchases_shares", "pct_net_shares_purchased",
+                  "date", "insider", "ownership", "shares", "value",
+                  "transaction_text", "transaction_code",
+                  "name", "most_recent_transaction", "shares_owned_directly",
+                  "shares_owned_indirectly", "note", "coverage_note")),
+              f"got header={header!r}")
+        # Pin: header must NOT contain a bare `transaction` column —
+        # that name was renamed to `transaction_code` to remove
+        # ambiguity vs `transaction_text`. Word-boundary check via
+        # split() so substrings like `transaction_text` /
+        # `transaction_code` don't false-positive.
+        check("insiders --format csv: bare `transaction` column was "
+              "renamed to `transaction_code` (no bare column remains)",
+              "transaction" not in cols,
+              f"got cols containing 'transaction': "
+              f"{[c for c in cols if 'transaction' in c]}")
+        # AAPL purchases row: record_class='purchases', rollup populated.
+        check("insiders --format csv: AAPL purchases row classed as 'purchases'",
+              csv_lines[1].startswith("AAPL,purchases,"),
+              f"got row={csv_lines[1][:60]!r}")
+        # AAPL transaction rows.
+        check("insiders --format csv: AAPL transaction rows classed correctly",
+              csv_lines[2].startswith("AAPL,transaction,")
+              and csv_lines[3].startswith("AAPL,transaction,"),
+              f"row2={csv_lines[2][:40]!r}, row3={csv_lines[3][:40]!r}")
+        # AAPL roster rows.
+        check("insiders --format csv: AAPL roster rows classed correctly",
+              csv_lines[4].startswith("AAPL,roster,")
+              and csv_lines[5].startswith("AAPL,roster,"),
+              f"row4={csv_lines[4][:40]!r}, row5={csv_lines[5][:40]!r}")
+        # QQQ empty-result row carries the `note` payload.
+        check("insiders --format csv: QQQ empty row starts with the symbol",
+              csv_lines[6].startswith("QQQ,"),
+              f"got row={csv_lines[6][:40]!r}")
+        check("insiders --format csv: QQQ empty row carries the `note` field",
+              "no insider data" in csv_lines[6],
+              f"got row={csv_lines[6]!r}")
+
+    # End-to-end CSV verification for BMW.DE partial-empty path: confirm
+    # the `coverage_note` column actually contains the note string in the
+    # purchases data row (not just that the column exists in the header,
+    # not just that fetch() / _summarize set the field — pin the full
+    # chain). Done in default mode where the partial-empty ticker
+    # produces 1 purchases row (transactions + roster empty).
+    cmd = [sys.executable, str(SCRIPTS_DIR / "insiders.py"),
+           "--format", "csv", "BMW.DE"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    csv_lines = [ln for ln in out.stdout.splitlines() if ln.strip()]
+    # Expected: 1 header + 1 purchases row = 2 lines
+    check("insiders --format csv BMW.DE: header + 1 purchases row "  # canary
+          "(partial-empty: no transaction/roster rows)",
+          out.returncode == 0 and len(csv_lines) == 2,
+          f"rc={out.returncode}, lines={len(csv_lines)}")
+    if len(csv_lines) >= 2:
+        header_cols = csv_lines[0].split(",")
+        check("insiders --format csv BMW.DE: header has `coverage_note` "
+              "column",
+              "coverage_note" in header_cols,
+              f"got header={csv_lines[0]!r}")
+        # Locate coverage_note column index, then confirm BMW.DE's
+        # purchases data row carries the note text in that column.
+        # Robust against column reorder — look up by name.
+        if "coverage_note" in header_cols:
+            cn_idx = header_cols.index("coverage_note")
+            # Use csv module to parse properly (the note string contains
+            # commas + em dashes that would confuse a naive split).
+            import csv as _csv
+            from io import StringIO
+            reader = _csv.reader(StringIO(csv_lines[1]))
+            data_row = next(reader)
+            check("insiders --format csv BMW.DE: data row's coverage_note "  # canary
+                  "column carries the partial-empty note string",
+                  cn_idx < len(data_row)
+                  and "purchases_summary populated but transactions" in data_row[cn_idx],
+                  f"got data_row[{cn_idx}]="
+                  f"{data_row[cn_idx][:80] if cn_idx < len(data_row) else '<OOB>'!r}")
+            # Symmetric pin: BMW.DE's `note` column must be EMPTY in the
+            # CSV (mutually exclusive with coverage_note). If a regression
+            # ever sets both, this fires.
+            if "note" in header_cols:
+                n_idx = header_cols.index("note")
+                check("insiders --format csv BMW.DE: data row's `note` "
+                      "column is empty (mutually exclusive with coverage_note)",
+                      n_idx < len(data_row) and data_row[n_idx] == "",
+                      f"got data_row[{n_idx}]="
+                      f"{data_row[n_idx] if n_idx < len(data_row) else '<OOB>'!r}")
+
+    # insiders --summary --limit invariance (parallel to holders): metrics
+    # describe Yahoo's response, NOT the display knob. transactions_returned
+    # in particular would silently report `min(limit, true_count)` if
+    # _summarize ever read from the post-limit list.
+    rc1, j1 = run_cli("insiders.py", "--summary", "--limit", "2", "AAPL")
+    rc2, j2 = run_cli("insiders.py", "--summary", "AAPL")
+    check("insiders --summary: both invocations succeed",
+          rc1 == 0 and rc2 == 0 and isinstance(j1, list) and isinstance(j2, list)
+          and len(j1) == 1 and len(j2) == 1,
+          f"rc1={rc1}, rc2={rc2}")
+    if rc1 == 0 and rc2 == 0 and j1 and j2:
+        check("insiders --summary: transactions_returned invariant under --limit",
+              j1[0].get("transactions_returned") == j2[0].get("transactions_returned"),
+              f"--limit 2 gave {j1[0].get('transactions_returned')!r}, "
+              f"no-limit gave {j2[0].get('transactions_returned')!r}")
+        check("insiders --summary: roster_returned invariant under --limit",
+              j1[0].get("roster_returned") == j2[0].get("roster_returned"),
+              f"--limit 2 gave {j1[0].get('roster_returned')!r}, "
+              f"no-limit gave {j2[0].get('roster_returned')!r}")
+        check("insiders --summary: latest_transaction_date invariant under --limit",
+              j1[0].get("latest_transaction_date") == j2[0].get("latest_transaction_date"),
+              f"--limit 2 gave {j1[0].get('latest_transaction_date')!r}, "
+              f"no-limit gave {j2[0].get('latest_transaction_date')!r}")
 except Exception as e:
     FAIL += 1
     FAILURES.append(f"CLI sanity crashed: {e}")

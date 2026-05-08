@@ -7,22 +7,28 @@ description: >
   fundamentals (P/E, dividend yield, sector, analyst targets, AUM, etc.).
   Triggers include "current price", "YTD performance", "N-year chart",
   "P/E ratio", "compare/rank tickers", "what does X do", and non-US
-  tickers like 0700.HK or BMW.DE. See SKILL.md for the per-mode router.
+  tickers like 0700.HK or BMW.DE.
 ---
 
 # yfinance
 
 Python scripts wrapping [yfinance](https://github.com/ranaroussi/yfinance),
-one per mode — currently `scripts/fast_info.py` (current quote),
-`scripts/history.py` (historical OHLCV; full bars or `--summary`
-aggregates), `scripts/info.py` (profile + fundamentals + analyst; full
-grouped sections or `--summary` flat dict), `scripts/earnings.py`
-(upcoming + recent earnings dates with EPS estimates / actuals /
-surprise), and `scripts/financials.py` (annual / quarterly / TTM income
-statement, balance sheet, and cash flow). Shared NaN/Inf-safe converters
-live in `scripts/helpers.py`. A `scripts/smoke.py` test exercises all
-five wrappers against representative tickers — run after editing schema
-or when yfinance API drift is suspected:
+one per mode:
+
+- `scripts/fast_info.py` — current quote
+- `scripts/history.py` — historical OHLCV; full bars or `--summary` aggregates
+- `scripts/info.py` — profile + fundamentals + analyst; full grouped sections or `--summary` flat dict
+- `scripts/earnings.py` — upcoming + recent earnings dates with EPS estimates / actuals / surprise
+- `scripts/financials.py` — annual / quarterly / TTM income statement, balance sheet, and cash flow
+- `scripts/news.py` — recent Yahoo Finance news headlines per ticker
+- `scripts/holders.py` — insider / institutional ownership rollup + top-10 institutional and mutual-fund holders
+- `scripts/options.py` — option chain (calls + puts for one expiry); pair with `--moneyness` for an ATM-band slice + ATM/PCR summary
+- `scripts/insiders.py` — Form 4 insider transactions (last ~24 mo) + 6-month buy/sell rollup + current roster
+
+Shared NaN/Inf-safe converters live in `scripts/helpers.py`. A
+`scripts/smoke.py` test exercises all nine wrappers against
+representative tickers — run after editing schema or when yfinance API
+drift is suspected:
 `uv run --with 'yfinance>=1.3,<2' --with 'lxml' python <SKILL_DIR>/scripts/smoke.py`
 (the `lxml` extra is needed only by `earnings.py`'s HTML scrape; harmless
 for the others). All scripts use `argparse` (run with `--help` for inline
@@ -37,13 +43,35 @@ as functionality grows.
 
 ## When to use which mode
 
-> **Quote-type precondition:** `fast_info` and `history` work for any
-> ticker (stocks, ETFs, indexes, crypto, futures, FX). `info` is
+> **Quote-type precondition:** `fast_info`, `history`, and `news` work
+> for any ticker (stocks, ETFs, indexes, crypto, futures, FX). `info` is
 > meaningful only for `quote_type` ∈ {`EQUITY`, `ETF`, `MUTUALFUND`} —
 > for indexes / crypto / futures / FX it returns mostly null, so don't
 > waste the call. `earnings` and `financials` are **equity-only** (no
 > quarterly EPS or income statement for ETFs / indexes / crypto); both
-> short-circuit non-equities to empty lists with a `note`. Both
+> short-circuit non-equities to empty lists with a `note`. `holders` is
+> also effectively equity-only (Yahoo's holders endpoint covers
+> operating companies; ETFs / indexes / crypto / FX / futures all
+> return three empty DataFrames), but unlike earnings / financials it
+> doesn't pre-screen — it returns success-with-`note` for the empty
+> case (the empty result is **ambiguous**: non-equity / bogus /
+> low-coverage equity all look identical). `options` mirrors the
+> `holders` shape: equity / ETF / a subset of US-listed ADRs only;
+> indexes / crypto / FX / futures / non-US primary listings / mutual
+> funds all return success-with-`note` and an empty `expirations`
+> array — same ambiguity, same `fast_info` chain to disambiguate.
+> A second, rarer `note` covers the case where `expirations` is
+> populated but Yahoo returned an empty chain for the requested date
+> (try a different expiry from the array). `insiders` mirrors the
+> `holders` shape with one twist: ETFs / indexes / crypto / FX /
+> futures / bogus tickers all return three empty frames
+> (success-with-`note` — same ambiguity, same `fast_info` chain to
+> disambiguate), but a few real equities (verified `BMW.DE`, `TM`)
+> return `purchases_summary` populated and `transactions` + `roster`
+> empty — that's partial Yahoo coverage of non-US per-event filings,
+> not ambiguity, surfaced via a separate `coverage_note` field
+> (mutually exclusive with `note`) so the asymmetry is visible
+> in-band rather than silently shaped like real activity. Both
 > `fast_info` and `info` return `quote_type` explicitly when you're
 > unsure.
 
@@ -81,6 +109,16 @@ as functionality grows.
 | "income statement", "balance sheet", "cash flow", "revenue/FCF trend over N years" | `financials` | per-statement period lists; scope with `--statement income\|balance\|cashflow` |
 | "latest quarter", "QoQ revenue", "TTM trailing twelve months" | `financials --period quarterly\|ttm` | ~5–7 most-recent quarters; `ttm` = 1-row rollup (income + cashflow only) |
 | "compare 3+ tickers' revenue / FCF / margins / growth" | `financials --summary` | flat per-ticker dict + period-over-period growth (`*_growth_yoy`) |
+| "what's the latest news on X", "recent headlines", "what's driving X today" | `news` | up to ~10 articles per ticker; works for all quote types; use `--limit` to tighten |
+| "who owns X", "top institutional holders", "% insider / institution ownership" | `holders` | rollup pcts + top-10 institutional + top-10 mutualfund holders, one Yahoo call total |
+| "compare ownership concentration across tickers", "top-5 institutional %" | `holders --summary` | flat per-ticker dict + `top5_institutions_pct` concentration signal |
+| "top mutual-fund holders of X", "which Vanguard / iShares funds hold X" | `holders` | mutualfund section. Mostly broad index trackers; specialist active funds rarely surface |
+| "is the CEO buying / selling", "did insiders buy this dip", "Form 4 activity", "current insider holdings", "how many shares does the CEO own" | `insiders` | three sections in one HTTP: 6-month buy/sell rollup (`purchases_summary`, all `pct_*` are FRACTIONS), per-event Form 4 transactions (`transactions`, last ~24 months, name / position / shares / value / date), current roster (`roster`, with direct + indirect holdings — sort by `shares_owned_directly` desc to rank) |
+| "net insider buying across tickers", "rank by insider sentiment", "who's the largest insider holder" | `insiders --summary` | flat per-ticker peer compare: `net_shares_purchased` / `pct_net_shares_purchased`, `latest_transaction_date` (recency), `top_insider_by_direct_shares` + `top_insider_direct_shares` |
+| "AAPL options chain", "TSLA puts near-the-money", "NVDA implied vol" | `options --moneyness 5` | nearest expiry's calls + puts, strikes within ±5% of spot. Default fetch is 1 HTTP per ticker (cheap) — cost doubles when you pin `--expiry` |
+| "AAPL call options expiring 2026-06-19", "TSLA Jan 2027 puts" | `options --expiry YYYY-MM-DD` | specific expiry; bad date returns `error_kind: not_found` with available list to pick from |
+| "compare ATM IV across NVDA / AMD / AVGO", "put-call ratio", "options sentiment" | `options --summary --moneyness 5` | flat per-ticker dict: ATM call/put IV, total volume, PCR by volume and OI; `moneyness_pct` echoed for self-describing output |
+| "what expirations does X have" | `options` | the `expirations` array is always populated on success; default fetch is the nearest expiry |
 
 A single user request can need multiple modes. "What's AAPL trading at, how
 much is it up YTD, and what's its P/E?" → `fast_info` for the live price,
@@ -125,6 +163,30 @@ uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/financials.py AAPL  
 uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/financials.py --period quarterly AAPL              # quarterly statements
 uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/financials.py --statement income --period ttm AAPL # TTM income only
 uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/financials.py --summary AAPL MSFT GOOGL            # peer headline + YoY growth
+
+# news — recent Yahoo Finance headlines (see references/news.md)
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/news.py AAPL                              # ~10 articles, JSON
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/news.py --limit 3 AAPL MSFT TSLA           # tight scan
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/news.py --format csv --limit 5 AAPL MSFT   # one row per article
+
+# holders — ownership rollup + top institutional / mutual-fund holders (see references/holders.md)
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/holders.py AAPL                                  # all 3 sections, JSON
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/holders.py --summary AAPL MSFT GOOGL             # peer ownership rollup
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/holders.py --limit 5 AAPL                        # top-5 in each list
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/holders.py --format csv --summary AAPL MSFT GOOGL  # peer-compare CSV
+
+# options — option chain (calls + puts, ONE expiry) (see references/options.md)
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/options.py --moneyness 5 AAPL                    # nearest expiry, ±5% ATM (recommended default)
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/options.py AAPL                                  # nearest expiry, FULL ladder (often 30-200 rows/leg)
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/options.py --expiry 2026-06-19 AAPL              # specific expiry (2 HTTP)
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/options.py --summary --moneyness 5 NVDA AMD AVGO # peer ATM IV / PCR
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/options.py --format csv --moneyness 5 AAPL MSFT  # CSV: row per contract
+
+# insiders — Form 4 transactions + 6-month buy/sell rollup + current roster (see references/insiders.md)
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/insiders.py AAPL                                 # all 3 sections, JSON
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/insiders.py --summary AAPL MSFT GOOGL            # peer net-buying rollup
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/insiders.py --limit 10 AAPL                      # top 10 transactions / roster rows
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/insiders.py --format csv --summary AAPL MSFT     # peer-compare CSV
 ```
 
 `<SKILL_DIR>` is the absolute path of the directory containing this
@@ -132,96 +194,34 @@ SKILL.md. Substitute it once when running.
 
 ## Cost / latency
 
-_Last measured: 2026-05 (US connection, US daytime). Re-measure if numbers
-feel off — yfinance/Yahoo backends drift. Run
-`time uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/info.py AAPL`
-and subtract ~0.5s of uv startup for the network-only delta._
+Rough per-ticker cost: `fast_info` / `news` / `holders` / `insiders` ~0.3–1.5 s,
+`history` ~0.5–4 s, `info` / `earnings` / `financials` / `options`
+~1–5 s. All modes are serial (total ≈ N × per-ticker) **except
+`history`** — it batches N≥2 through `yf.download` in one threaded HTTP
+call, so 10 tickers cost ~1–2 s instead of ~5–15 s. `--summary` does
+**not** reduce latency; it's a post-fetch projection that only shrinks
+output JSON (use it to save context tokens, not time). When a question
+is answerable by multiple modes, pick the cheapest — don't call `info`
+for a field already in `fast_info` (e.g. `market_cap`); don't call
+`financials` for AAPL's P/E (that's in `info`).
 
-| Mode | Latency | Why |
-|---|---|---|
-| `fast_info` | ~0.3–0.5 s | one Yahoo call, small payload |
-| `history` (≤1y daily, 1 ticker) | ~0.5–1.5 s | one call, ~252 rows for 1y |
-| `history` (≤1y daily, N tickers) | ~0.7 s for 5, ~1.5–2.5 s for 10 | yf.download batches N≥2 in one request, threaded |
-| `history` (max / 5y intraday) | ~2–4 s | larger payload |
-| `info` | ~1–3 s | multiple internal modules — as of yfinance 1.3.x: `financialData`, `quoteType`, `defaultKeyStatistics`, `assetProfile`, `summaryDetail` |
-| `earnings` (equity) | ~1.5–2.5 s | quote_type pre-check (~0.3s) + HTML scrape (~1–2s) |
-| `earnings --estimates` (equity) | ~+1.5–3 s on top of baseline (total ~3–5.5 s) | five Yahoo property reads on a shared Ticker (`earnings_estimate`, `revenue_estimate`, `eps_trend`, `eps_revisions`, `growth_estimates`); equity-only. **Worst case under sustained 429:** each of the 5 sources independently retries up to 3 attempts. `with_retry` sleeps between attempts only — 3 attempts means 2 backoff windows (~0.5 s after attempt 1, ~1.0 s after attempt 2, plus jitter), so per-source max sleep ≈ 2 s. 5 sources × ~2 s = ~10 s of cumulative sleep, plus the 15 actual call attempts, gives a total worst-case of ~10–15 s before failing. Drop batch size to ~3 and pause between calls if you see this pattern. |
-| `earnings` (non-equity) | ~0.3–0.5 s | quote_type pre-check only; scrape skipped via short-circuit (and `--estimates` short-circuits too) |
-| `financials` (equity, any `--statement` value) | ~2 s | quote_type pre-check (~0.3s) + `info["financialCurrency"]` (~1.5s) + statement fetches; yfinance shares the underlying fundamentals payload, so `--statement <one>` and `--statement all` cost the same |
-| `financials` (equity, ADR / cross-listed) | ~3–5 s | same path but `info` round-trip is slower for less-common tickers (verified: TM ~4.8s) |
-| `financials` (non-equity) | ~1 s | quote_type pre-check only; financials fetch skipped, no `info` call |
-| `financials` (equity, soft-fallback path triggered) | up to +3.5 s | when `info["financialCurrency"]` is unavailable (transient 429 / network / field missing), `_meta` retries via `_trading_currency` with backoff. Worst case (sustained 429 on both `info` and `fast_info`) adds ~1.5–3.5s of retry sleeps to the equity baseline above. Watch for `"trading currency"` substring in `note` to detect this path. |
-
-`fast_info`, `info`, `earnings`, and `financials` are still serial — total
-≈ N × per-ticker cost. A 10-ticker `info` or `financials` batch is
-~15–30 s and is the most likely path to trigger Yahoo's empty-response /
-429 rate-limit (`financials` actually issues an `info` call internally
-for reporting-currency lookup, so the cost profile is similar to `info`).
-`history` is the exception: N ≥ 2 routes through `yf.download` (one HTTP
-request, threaded), so 5–10 tickers cost ~1–2 s total instead of
-~5–15 s. When a question is answerable by multiple modes, pick the
-cheapest. Don't call `info` if `fast_info` already has the field you
-need (e.g., `market_cap` is in both); don't call `financials` for
-"what's AAPL's P/E" — that's in `info`.
-
-`financials` cost note: `--statement income` does NOT save latency over
-`--statement all` — yfinance shares the underlying fundamentals payload
-across the three statement properties, so all three come back from one
-call. Use `--statement <one>` to save **context tokens** (smaller JSON
-output), not time.
-
-A retried call adds backoff (~0.5–1.5 s per retry, 3 attempts max).
-`fast_info` retry is the worst case: each retry replays all field reads
-from scratch (the first read in a session is ~3 s; subsequent ones
-~150 ms cached), so a single retried `fast_info` call can total ~5–7 s
-instead of the nominal 0.3–0.5 s. Watch the `attempts` field in the
-response — it appears whenever a call retried.
-
-`--summary` modes (`history --summary`, `info --summary`, `earnings --summary`,
-`financials --summary`) **don't reduce latency** — they're post-fetch
-projections of the same payload, so network cost is identical to the
-default mode. Only the output JSON shrinks (~10× for `info --summary`
-and `financials --summary`, more for `history --summary` when the period
-is long). Use `--summary` to save context tokens, not to save time.
+A 10-ticker `info` / `financials` / `earnings` batch (~15–30 s) is the
+most common path to trip Yahoo's 429 rate-limit. Drop batch size to ~5
+and pause between calls if you see retries — `attempts > 1` on a result
+flags a retry happened. **For the full per-mode latency table, retry
+worst-cases, the `earnings --estimates` cumulative-sleep math, and
+`options` 1-HTTP vs 2-HTTP rules, see references/performance.md.**
 
 ## Setup
 
-**Python 3.9+ required** (the helpers use PEP 604 unions and lowercase
-`tuple[]` subscripts). `uv run` picks a recent Python automatically; if
-you bypass `uv` and run scripts directly under an older interpreter,
-helpers.py will refuse to import with a clear message.
-
-```bash
-if ! command -v uv >/dev/null 2>&1; then
-  curl -LsSf https://astral.sh/uv/install.sh | sh
-  export PATH="$HOME/.local/bin:$PATH"
-fi
-```
-
-`uv` is Astral's Rust-based Python package manager. The official installer
-drops the binary in `~/.local/bin`, which may not yet be on `PATH` in the
-current shell — the `export` line covers that case.
-
-`uv run --with 'yfinance>=1.3,<2'` resolves and caches yfinance in an
-ephemeral env:
-- First call on a fresh machine takes ~5–15 s while uv downloads wheels
-- Subsequent calls are nearly instant (uv reuses the cache)
-- No `pip install` side-effects on the user's global Python
-- The version pin guards against yfinance's not-infrequent breaking changes;
-  bump the upper bound deliberately, not by accident
-
-**`earnings.py` needs an extra `--with 'lxml'`** — yfinance scrapes earnings
-from Yahoo's HTML calendar via `pandas.read_html`, which requires `lxml`.
-yfinance documents the requirement in a comment but doesn't pin it as a hard
-dependency, so without `--with 'lxml'` every earnings fetch fails with
-`error_kind: unknown` and a misleading "Missing optional dependency 'lxml'"
-log line. The other three modes (`fast_info`, `history`, `info`) hit Yahoo's
-JSON API and don't need it. `smoke.py` also needs lxml because it imports
-`earnings`. Use `--with 'yfinance>=1.3,<2' --with 'lxml'` for those two.
+Scripts run under `uv run` (Python 3.9+ required, no global pip
+install). `earnings.py` and `smoke.py` additionally need `--with 'lxml'`.
+See references/setup.md for the `uv` install one-liner, the lxml
+explanation, and the version-pin rationale.
 
 ## Cross-cutting caveats
 
-These apply to all four modes. Mode-specific caveats live in the
+These apply to all eight modes. Mode-specific caveats live in the
 matching `references/<mode>.md`. Grouped into three concerns:
 
 ### Data formats (interpreting the numbers)
@@ -251,6 +251,48 @@ matching `references/<mode>.md`. Grouped into three concerns:
     (TM, PBR) Yahoo reports per-share EPS in the trading currency (USD)
     but revenue in the home reporting currency (JPY, BRL). Always read
     both — don't assume one currency for the row.
+  - `holders.summary` (`insiders_pct`, `institutions_pct`,
+    `institutions_float_pct`) and per-holder `pct_held` / `pct_change`
+    → **fractions** (matches `info`'s fraction-encoded margins;
+    `0.0971` = 9.71% of shares held). Easy mistake to make when sliding
+    from a percent-encoded mode (`fast_info`, `history --summary`).
+    `insiders.purchases_summary.pct_net_shares_purchased` /
+    `pct_buy_shares` / `pct_sell_shares` follow the SAME fraction
+    convention (`0.001` = 0.1%, verified empirically: AAPL net=246332 /
+    total_held=240872640 ≈ 0.00102) — easy to misread because the row
+    label in Yahoo's source carries a `%` sigil that looks like
+    "already percent". Multiply ×100 for display.
+    `holders.summary.institutions_count` is an **integer count**
+    (thousands to tens of thousands for US large-caps; present in both
+    default-mode JSON and `--summary` flat dict), distinct from
+    `--summary`-mode-only `institutional_rows_returned` / `mutualfund_rows_returned`
+    (rows actually returned in this fetch, ≤ 10). Easy to misread one
+    for the other if you skim — see references/holders.md for the
+    naming-collision rationale.
+  - `options[*].change_pct` → **inferred percent** (Yahoo's
+    `percentChange` field; sibling `regularMarketChangePercent` in
+    the same options API payload is verified percent-encoded, but
+    per-contract values are uniformly 0.0 off-hours so direct
+    confirmation is pending — see references/options.md "Mode-specific
+    caveats" for the verification status). `options[*].implied_vol`
+    and `options --summary`'s `atm_call_iv` / `atm_put_iv` →
+    **fractions** (`0.25` = 25% IV, verified). Two unit conventions
+    in one row — easy to swap. Cheat sheet: `change_pct: 5.2` ≈ 5.2%
+    daily move; `implied_vol: 0.25` ≈ 25% annualized IV. `pcr_volume`
+    / `pcr_oi` are dimensionless ratios (>1 = more put activity than
+    call). **`options.currency` (top-level)** is the underlying /
+    trading currency (= `fast_info.currency`); per-contract
+    `contract_currency` is renamed from Yahoo's `currency` field to
+    avoid a CSV header collision — in observed payloads the two
+    always match. **`options --summary.moneyness_pct`** echoes the
+    user's `--moneyness` arg (None when unset), so a peer-compare
+    CSV mixing filtered and unfiltered runs stays self-describing.
+    **Sentinel values:** any `implied_vol < 1e-3` is Yahoo's
+    "couldn't compute" placeholder (treat as missing, not 0.1%);
+    `bid: 0.0`, `ask: 0.0`, and `open_interest: 0` across an entire
+    chain are off-hours sentinels (Yahoo zeroes them when US market
+    is closed); `total_*_volume` / `total_*_oi` are `null` (not 0)
+    when every row's value is None — see references/options.md.
   - `info` yield-and-fund-return fields are a **mix** (full table in
     references/info.md "Unit landmines"). Percent-encoded:
     `dividend.five_year_avg_dividend_yield`, `fund.ytd_return`.
@@ -288,37 +330,22 @@ matching `references/<mode>.md`. Grouped into three concerns:
   `000001.SZ`. Shanghai: `600519.SS`. London: `BARC.L`. Tokyo: `7203.T`.
   Korea: `005930.KS`. Frankfurt: `BMW.DE`. If a user gives a bare HK/CN
   ticker, ask or guess the suffix.
-- **`exchange` codes are short Yahoo identifiers, not human names.** Decode
-  before showing to the user — render "AAPL (Nasdaq)" not "AAPL (NMS)":
-
-  | Code | Exchange | Code | Exchange |
-  |---|---|---|---|
-  | `NMS` | Nasdaq | `HKG` | HKEX (Hong Kong) |
-  | `NYQ` | NYSE | `SHH` | Shanghai |
-  | `ASE` | NYSE American | `SHZ` | Shenzhen |
-  | `PCX` | NYSE Arca (most ETFs) | `TYO` / `JPX` | Tokyo |
-  | `BATS` | Cboe BZX | `KSC` | KOSPI / KRX |
-  | `TOR` | TSX (Toronto) | `LSE` | London |
-  | `ASX` | ASX (Australia) | `GER` | Xetra (Frankfurt) |
-  | `NSI` | NSE (India) | `EBS` | SIX Swiss |
-  | `BOM` | BSE (India) | `MIL` | Borsa Italiana |
-
-  Don't infer exchange from the ticker suffix — both `fast_info` and `info`
-  return it explicitly. `0700.HK` → `HKG`, `BMW.DE` → `GER`, `7203.T` → `JPX`.
+- **`exchange` codes are short Yahoo identifiers, not human names.** `NMS`
+  → Nasdaq, `NYQ` → NYSE, `PCX` → NYSE Arca, `HKG` → HKEX, `JPX` → Tokyo,
+  `LSE` → London, `GER` → Xetra (Frankfurt). Decode before showing to the
+  user — render "AAPL (Nasdaq)" not "AAPL (NMS)". Full code table (TSX /
+  ASX / KRX / NSE / BSE / SIX / Borsa / Shanghai / Shenzhen / Cboe BZX) in
+  references/exchanges.md. Don't infer from ticker suffix — both
+  `fast_info` and `info` return `exchange` explicitly.
 
 ### Calling conventions (errors, retries, output)
 
-- **Rate limits & retry.** Yahoo will start returning empty / 429 if you
-  hammer it. Each script wraps its Yahoo call with exponential backoff
-  + jitter (3 attempts, base ~0.5s) on `rate_limit` and `network`
-  failures, but won't retry `not_found` (delisted / wrong suffix). For
-  `fast_info` / `info` / `earnings` (which loop per ticker), querying
-  many tickers means N independent Yahoo calls — call in smaller groups
-  (~5) and pause between calls; retry helps with transient 429s, not
-  sustained throttling. **`history` is the exception**: N≥2 routes
-  through `yf.download` (one batched request, threaded internally), so
-  a single call of 5–10 tickers is normal and triggers fewer 429s than
-  the equivalent serial loop.
+- **Retry semantics.** Each script wraps its Yahoo call with
+  exponential backoff + jitter (3 attempts, base ~0.5s) on
+  `rate_limit` and `network` errors only — `not_found` (delisted /
+  wrong suffix) never retries. Per-mode latency, batching guidance,
+  `options --expiry` 2-HTTP doubling, the `history` batched exception,
+  and sustained-429 worst cases all live in references/performance.md.
 - **`error_kind` and `attempts` on results.** Failed tickers carry
   `error`, `error_kind` ∈ {`rate_limit`, `not_found`, `network`,
   `unknown`}, and `attempts` (how many tries before giving up). Use
@@ -329,11 +356,96 @@ matching `references/<mode>.md`. Grouped into three concerns:
   for spotting tickers that took a retry to succeed.
 - **Output formats.** Every script accepts `--format json|ndjson|csv`.
   Default `json` is pretty-printed for human reading; `ndjson` (one
-  JSON object per line) is friendliest for streaming/parse-by-line;
-  `csv` is the most compact but only works on flat outputs (`fast_info`,
-  `history` rows or summary, `info --summary`). `info` default mode
-  refuses `--format csv` because the nested sections don't flatten.
+  JSON object per line) is friendliest for streaming/parse-by-line.
   CSV output uses `\n` line endings (not `\r\n`) so Unix tools work.
+  CSV support per mode:
+  - `fast_info` — ✅ default.
+  - `history` — ✅ default rows; ✅ `--summary`.
+  - `info` — ❌ default (nested sections); ✅ `--summary`.
+  - `earnings` — ✅ default (one row per `earnings_date`); ✅ `--summary`.
+  - `financials` — ❌ default (nested per-statement period lists); ✅ `--summary`.
+  - `news` — ✅ default (no `--summary` mode).
+  - `holders` — ✅ default (one row per holder, with a `holder_class`
+    discriminator: `summary` / `institutional` / `mutualfund`); ✅ `--summary`.
+  - `options` — ✅ default (one row per contract, with a `leg`
+    discriminator: `call` / `put`; symbol / spot / expiry repeat
+    across a ticker's rows); ✅ `--summary`.
+  - `insiders` — ✅ default (one row per record, with a `record_class`
+    discriminator: `purchases` / `transaction` / `roster`; `position`
+    and `url` columns are deduplicated and shared across `transaction`
+    and `roster` rows since both record types semantically have them);
+    ✅ `--summary`.
+  
+  **CSV row shapes split into two families.** Strict "one row per
+  ticker": `fast_info` and all `--summary` modes (`history` / `info` /
+  `earnings` / `financials` / `holders` / `options` / `insiders`).
+  "Row-per-event" (with `symbol` column repeating across rows for the
+  same ticker): `history` default (one row per bar), `earnings`
+  default (one row per `earnings_date`), `news` (one row per article),
+  `holders` default (one row per holder, plus one rollup row per
+  ticker tagged `holder_class=summary`), `options` default (one row
+  per contract, tagged `leg=call` / `leg=put`), `insiders` default
+  (one row per record, tagged `record_class=purchases` /
+  `transaction` / `roster`). For `news`, `holders`, `options`, and
+  `insiders` specifically: tickers with no data or an error still
+  get a single row carrying the symbol + `note` + meta fields so
+  they aren't silently dropped.
+- **`note` field convention.** Several modes expose a per-result
+  `note` string carrying **ambiguous-but-successful** state, distinct
+  from `error` (which only appears on failure). Two cross-mode
+  invariants:
+  1. **`note` and `error` never co-occur** in one result dict;
+     both appear as columns in the CSVs of modes that emit `note`,
+     so neither category gets dropped from tabular output.
+  2. **`note` and `coverage_note` are mutually exclusive** in
+     modes that expose both (currently `earnings` and `insiders`
+     — both signal "successful but unusual shape", but with
+     different action implications: `note` = no data / ambiguous
+     cause, chain `fast_info`; `coverage_note` = real data with
+     thin event coverage, the empty fields ARE the answer). Both
+     fields appear as CSV columns in modes that emit them.
+  Per-mode semantics differ — see references/<mode>.md for the
+  contract:
+  - `news.note` — empty Yahoo response (ambiguous: bogus / low
+    coverage / transient gap).
+  - `earnings.note` — **non-equity short-circuit only** (contract-
+    asserted: never set on EQUITY). Earnings has a companion field
+    `earnings.coverage_note` for the IPO fall-through case (equity
+    with empty calendar but populated estimates) — mutually exclusive
+    with `note`. Both fields appear as columns in default-mode AND
+    `--summary`-mode CSVs, so an IPO fall-through row carries the
+    disambiguation signal in either layout.
+  - `financials.note` — non-equity short-circuit, partial fetch
+    failure (one or two of three statements failed), or reporting-
+    currency-fallback path. Looser semantics than earnings.
+  - `holders.note` — **all-empty result**, regardless of cause. Three
+    causes Yahoo doesn't disambiguate: non-equity (ETF / index /
+    crypto / FX / future / mutual fund), bogus / delisted ticker, or
+    real but very low-coverage equity. Unlike `earnings` / `financials`
+    we don't pre-screen on `quote_type` (no benefit — the holders call
+    is the cheap fast path). Caller can chain `fast_info` to
+    disambiguate. See references/holders.md "All-empty is ambiguous".
+  - `insiders.note` — **all-three-empty result only**, regardless
+    of cause. Same ambiguity shape as `holders` (non-equity /
+    bogus / low-coverage); chain `fast_info` to disambiguate. The
+    partial-empty case (purchases rollup populated, events empty)
+    is surfaced via a companion field `coverage_note` instead — see
+    references/insiders.md for the full mutually-exclusive contract.
+    Both fields appear as columns in default-mode and `--summary`-
+    mode CSVs.
+  - `options.note` — **two distinct empty paths, same `note`
+    convention.** (1) **No options listed at all** (`t.options`
+    returns `()`): same ambiguity shape as `holders` — non-equity
+    (index / crypto / FX / future / mutual fund / non-US equity),
+    bogus ticker, or real equity too small / illiquid for option
+    listing. Caller can chain `fast_info` to disambiguate. (2)
+    **Empty chain on a valid expiry** (rare): `expirations` is
+    populated but Yahoo returned `{}` for the requested date —
+    user can retry with a different date from the array. The two
+    paths use different note strings so the action implication is
+    explicit; both have empty `calls` / `puts` arrays + no
+    `error_kind`. See references/options.md "Empty / non-applicable
+    result" for the exact texts.
 - **Unofficial.** yfinance is unaffiliated with Yahoo and its endpoints
   can break at any time. If a script returns nothing for a ticker that
   should exist, the upstream API may have changed — don't keep retrying.
