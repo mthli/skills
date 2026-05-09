@@ -23,12 +23,13 @@ and subtract ~0.5s of uv startup for the network-only delta._
 | `financials` (equity, soft-fallback path triggered) | up to +3.5 s | when `info["financialCurrency"]` is unavailable (transient 429 / network / field missing), `_meta` retries via `_trading_currency` with backoff. Worst case (sustained 429 on both `info` and `fast_info`) adds ~1.5–3.5s of retry sleeps to the equity baseline above. Watch for `"trading currency"` substring in `note` to detect this path. |
 | `news` | ~0.3–0.5 s | one Yahoo call, payload of up to ~10 articles. Per-ticker serial loop (no batching). Cold-start adds ~2 s on the first call of a session (yfinance crumb-cookie init — see the `fast_info` retry paragraph below for the same pattern in retry context). |
 | `holders` | ~0.3–0.7 s | the three properties (`major_holders` / `institutional_holders` / `mutualfund_holders`) appear to share a single `quoteSummary` HTTP request — observed timing: first read ~120 ms warm, next two ~0 ms (could be module batching at the yfinance layer or just session-cookie HTTP cache; not source-confirmed, but either way cost is single-call). Per-ticker serial loop. Same cold-start pattern as `news`. Empty-result tickers (ETFs / FX / futures / indexes / crypto / bogus — all verified empty) cost the same — Yahoo doesn't short-circuit on its end. |
+| `fund_holdings` | ~0.7–1.5 s | One Yahoo `/v10/finance/quoteSummary` call per ticker, fetching 4 modules at once (`quoteType`, `summaryProfile`, `topHoldings`, `fundProfile`). Verified by reading upstream `yfinance/scrapers/funds.py:_fetch_and_parse` (2026-05). All 9 properties (`description`, `fund_overview`, `operations`, `asset_classes`, `sector_weightings`, `bond_ratings`, `equity_metrics`, `bond_metrics`, `top_holdings`) are populated as a side effect of this single call and cached on the `FundsData` instance — subsequent property reads are free. Per-ticker serial loop (no batching). Non-fund tickers (equity / index / crypto / FX / future) raise `YFDataException` AFTER the parser has already run and populated `_quote_type`, so they cost the same as a fund — we capture the resolved quote_type from the parser state at no extra HTTP cost. Bogus tickers raise `HTTPError 404` at the network layer (parser never runs); they're slightly faster (~0.3–0.5 s) since Yahoo bails immediately. |
 | `options` | ~0.3–1.0 s | One or two HTTP calls per ticker depending on `--expiry`. **No `--expiry` (1 HTTP):** `option_chain()` no-arg returns the default-expiry chain AND fills the expirations list in a single call (verified empirically AAPL/SPY/NVDA/TM 2026-05). **With `--expiry` (1–2 HTTP):** `t.options` first to pre-validate the date (so a bad date routes to clean `error_kind: not_found` instead of yfinance's hard-to-classify ValueError), then `t.option_chain(date)` for the chain. The second HTTP **only fires for tickers with listed options** — empty-result tickers (`^GSPC`, `BTC-USD`, `0700.HK`, etc.) short-circuit after `t.options=()` whether or not `--expiry` was passed, so they cost 1 HTTP either way. One expiry per call by design — fetching all 24 of AAPL's expirations would be 24 HTTP calls. **Retry replays the full path**, so a 3-attempt retry of the 2-HTTP path can hit Yahoo up to 6 times; the 1-HTTP path's worst case is 3 (half that). Per-ticker serial loop. |
 
 ## Serial vs batched
 
-`fast_info`, `info`, `earnings`, `financials`, `news`, `holders`, and
-`options` are all serial — total ≈ N × per-ticker cost. A 10-ticker `info` or
+`fast_info`, `info`, `earnings`, `financials`, `news`, `holders`,
+`options`, and `fund_holdings` are all serial — total ≈ N × per-ticker cost. A 10-ticker `info` or
 `financials` batch is ~15–30 s and is the most likely path to trigger
 Yahoo's empty-response / 429 rate-limit (`financials` actually issues an
 `info` call internally for reporting-currency lookup, so the cost
@@ -57,7 +58,8 @@ response — it appears whenever a call retried.
 ## `--summary` is post-fetch projection, not a network optimization
 
 `--summary` modes (`history --summary`, `info --summary`, `earnings --summary`,
-`financials --summary`, `holders --summary`, `options --summary`) **don't reduce latency** —
+`financials --summary`, `holders --summary`, `options --summary`,
+`fund_holdings --summary`) **don't reduce latency** —
 they're post-fetch projections of the same payload, so network cost is
 identical to the default mode. Only the output JSON shrinks (~10× for
 `info --summary`, `financials --summary`, and `holders --summary`, more

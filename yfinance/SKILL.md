@@ -25,9 +25,11 @@ one per mode:
 - `scripts/options.py` — option chain (calls + puts for one expiry); pair with `--moneyness` for an ATM-band slice + ATM/PCR summary
 - `scripts/insiders.py` — Form 4 insider transactions (last ~24 mo) + 6-month buy/sell rollup + current roster
 - `scripts/analyst.py` — analyst recommendations time series (0m / -1m / -2m / -3m bucket counts) + per-event grade-change feed with embedded price-target moves
+- `scripts/screener.py` — market-wide discovery. Run a Yahoo predefined screen (`day_gainers`, `undervalued_growth_stocks`, `top_etfs_us`, …) or a custom AND/OR query over fields like `intradaymarketcap`, `peratio.lasttwelvemonths`, `epsgrowth.lasttwelvemonths`. Returns up to 250 quotes per call. **Only mode that produces tickers from a filter rather than starting from a known ticker.**
+- `scripts/fund_holdings.py` — ETF / mutual-fund holdings. Top-10 positions, sector / asset / bond-rating weightings, expense ratio + AUM, fund-level P/E / P/B / duration. **Fund-only** (equity / index / crypto / FX / future return success-with-note carrying the resolved `quote_type` — no follow-up `fast_info` chain needed). One HTTP per ticker covers all 9 sections.
 
 Shared NaN/Inf-safe converters live in `scripts/helpers.py`. A
-`scripts/smoke.py` test exercises all ten wrappers against
+`scripts/smoke.py` test exercises all twelve wrappers against
 representative tickers — run after editing schema or when yfinance API
 drift is suspected:
 `uv run --with 'yfinance>=1.3,<2' --with 'lxml' python <SKILL_DIR>/scripts/smoke.py`
@@ -82,7 +84,24 @@ as functionality grows.
 > `coverage_note` set, mutually exclusive with `note`. **ADRs
 > (verified `TM`) still get full coverage** because they trade on
 > US exchanges. Both `fast_info` and `info` return `quote_type`
-> explicitly when you're unsure.
+> explicitly when you're unsure. `fund_holdings` is the **inverse-shape
+> sibling** of `holders` / `insiders` / `analyst`: it's **fund-only**
+> (ETF / MUTUALFUND). Equity / index / crypto / FX / futures all raise
+> `YFDataException` inside yfinance and surface as success-with-`note`
+> here — but unlike `holders` / `insiders` / `analyst` (which leave
+> the caller to chain `fast_info` for disambiguation), `fund_holdings`
+> captures the resolved `quote_type` from yfinance's parser state and
+> includes it inline on the note response. There's no `coverage_note`
+> partial-empty path because the endpoint is binary (you're a fund or
+> you're not). Bogus tickers route through the standard `error_kind:
+> not_found` path (HTTP 404 at the network layer, before the parser
+> sees the response — so `quote_type` is null on that path).
+>
+> **`screener` doesn't take a ticker** — it's the inverse direction
+> (filter spec → ticker list). The `--quote-type {equity,fund,etf}`
+> flag picks the **target set** the screen filters against (Yahoo's
+> `quoteType` for custom queries; predefined screens have it baked
+> in). Chain into per-ticker modes via `--format symbols | xargs`.
 
 | Question shape | Mode | Why |
 |---|---|---|
@@ -130,10 +149,23 @@ as functionality grows.
 | "AAPL call options expiring 2026-06-19", "TSLA Jan 2027 puts" | `options --expiry YYYY-MM-DD` | specific expiry; bad date returns `error_kind: not_found` with available list to pick from |
 | "compare ATM IV across NVDA / AMD / AVGO", "put-call ratio", "options sentiment" | `options --summary --moneyness 5` | flat per-ticker dict: ATM call/put IV, total volume, PCR by volume and OI; `moneyness_pct` echoed for self-describing output |
 | "what expirations does X have" | `options` | the `expirations` array is always populated on success; default fetch is the nearest expiry |
+| "what does SPY hold", "top holdings of QQQ", "what stocks are in VTI" | `fund_holdings` | top 10 positions with weights — the unique capability vs `info` (which has no holdings detail). ETF / mutual fund only; equity / index / crypto / FX / future return success-with-note carrying the resolved `quote_type`. Use `--limit N` for top-N |
+| "what's the expense ratio of X", "AUM of SPY", "category of QQQ" | `fund_holdings` | `operations` (expense ratio, turnover, AUM in MILLIONS of fund-reporting currency) + `fund_overview` (category / family / legal type). `info` has a leaner `fund` section nominally covering the same headline fields, but its coverage is patchier — verified 2026-05: `info.fund.expense_ratio` is `null` for SPY while `fund_holdings.operations.expense_ratio` returns `0.000945`. **Prefer `fund_holdings` for fund metadata**; reach for `info` only if you already need other `info` sections. **Cross-mode warning**: `info.fund.total_assets` is in WHOLE units, `fund_holdings.operations.total_net_assets_millions` in MILLIONS — 1e6× scale difference for the same metric (see references/fund_holdings.md "Cross-mode AUM unit drift") |
+| "ETF sector breakdown", "asset mix of VFIAX", "stock vs bond %" | `fund_holdings` | `sector_weightings` + `asset_classes` (both fractions). Pure bond funds return `sector_weightings: {}` — use `bond_metrics` (duration / maturity) and `bond_ratings` (per-credit-rating %) instead. `info` has none of these — `fund_holdings` is the only path |
+| "P/E of SPY's holdings", "fund-level P/E / P/B", "duration of AGG" | `fund_holdings` | `equity_metrics` (PE / PB / PS / PCF — **inverted from Yahoo's raw `1/ratio` encoding**, surfaced as conventional ratios) + `bond_metrics` (duration / maturity in years). NB: this is fund-level aggregation, NOT a single stock's P/E (use `info` for that) |
+| "compare 3 ETFs side by side", "rank ETFs by expense / AUM / concentration" | `fund_holdings --summary` | flat per-fund dict: expense ratio, AUM, top holding + weight, `holdings_concentration` (sum of weights across `holdings_returned` rows — read together; for bond ETFs returning 0–1 rows it's NOT "top-10 concentration"), top sector, P/E, P/B, duration |
+| "find me stocks where X", "top gainers / losers today", "undervalued growth stocks", "best ETFs", "screen by P/E + dividend + sector" | `screener` | **only discovery mode** — every other mode starts from a known ticker. Two paths: `--predefined NAME` (19 Yahoo saved screens like `day_gainers`, `undervalued_growth_stocks`, `top_etfs_us`) or `--query JSON` (custom AND/OR tree). Discovery flags: `--list-predefined` (catalog with descriptions), `--list-fields equity\|fund\|etf` (valid fields for custom queries). Output: default JSON envelope, or `--format symbols` for `xargs`-friendly ticker lists, or `--full` for the raw Yahoo payload (~60-85 fields per quote) |
 
 A single user request can need multiple modes. "What's AAPL trading at, how
 much is it up YTD, and what's its P/E?" → `fast_info` for the live price,
 `history --period ytd --summary` for the YTD return, `info` for the P/E.
+
+**Discovery → details two-step.** When the user wants to find tickers
+by criteria *and* drill in, run `screener` first to produce the ticker
+list, then chain a per-ticker mode (`info` / `financials` / `analyst`
+/ etc.) over the result. `screener` projects ~28 fields per quote —
+plenty for ranking and selection, but not the full per-ticker depth.
+Treat screener as the funnel, not the destination.
 
 **Catch-all rule.** If the user is open-ended ("tell me about NVDA",
 "what's up with TSLA?") and you can't pin them to a row above, default
@@ -141,6 +173,11 @@ to `fast_info` first — it's the cheapest and answers "where is it
 trading, how big is it, what's the recent range" in one call. Add `info`
 only if the user follows up about sector / fundamentals / analyst views,
 or if the original question already mentions those.
+
+If the user asks "find me X" / "screen for X" / "top movers" / "best
+ETFs" and you don't yet have a ticker list, jump to `screener`
+(predefined or custom) — none of the other modes can answer the
+discovery shape.
 
 ## Invocations
 
@@ -204,6 +241,25 @@ uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/analyst.py AAPL     
 uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/analyst.py --summary AAPL MSFT NVDA              # peer consensus / 90d rollups
 uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/analyst.py --limit 20 AAPL                       # top 20 grade-change events
 uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/analyst.py --format csv --summary AAPL MSFT NVDA # peer-compare CSV
+
+# screener — market-wide discovery (see references/screener.md)
+# Single-call API: emits ONE envelope dict (not per-ticker array). Up to 250 quotes per call.
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/screener.py --predefined day_gainers --count 10                      # top intraday US gainers
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/screener.py --predefined undervalued_growth_stocks --count 25         # PE<20 + PEG<1 + EPS growth
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/screener.py --predefined top_etfs_us --count 10                       # top US ETFs
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/screener.py --list-predefined                                         # catalog of 19 saved screens
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/screener.py --list-fields equity                                      # valid fields for custom queries
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/screener.py --query '{"operator":"and","operands":[{"operator":"eq","operands":["region","us"]},{"operator":"gt","operands":["intradaymarketcap",1e10]},{"operator":"lt","operands":["peratio.lasttwelvemonths",15]}]}' --sort-field intradaymarketcap --count 25  # custom AND/OR tree
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/screener.py --query @my_query.json --quote-type equity                # custom query from file
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/screener.py --predefined undervalued_growth_stocks --count 25 --format csv  # CSV: row per quote
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/screener.py --predefined day_gainers --count 50 --format symbols           # tickers only — pipe into other modes
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/screener.py --predefined day_gainers --count 1 --full                       # raw Yahoo payload (~60-85 fields)
+
+# fund_holdings — ETF / mutual-fund holdings (see references/fund_holdings.md)
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/fund_holdings.py SPY                                # all 9 sections, JSON
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/fund_holdings.py --summary SPY VTI QQQ              # peer compare
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/fund_holdings.py --limit 5 SPY                      # top 5 holdings only
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/fund_holdings.py --format csv --summary SPY VTI QQQ # peer-compare CSV
 ```
 
 `<SKILL_DIR>` is the absolute path of the directory containing this
@@ -211,9 +267,13 @@ SKILL.md. Substitute it once when running.
 
 ## Cost / latency
 
-Rough per-ticker cost: `fast_info` / `news` / `holders` / `insiders` ~0.3–1.5 s,
-`history` ~0.5–4 s, `info` / `earnings` / `financials` / `options` /
-`analyst` ~1–5 s (`analyst` makes **3 HTTP per ticker** —
+Rough per-ticker cost: `fast_info` / `news` / `holders` / `insiders`
+~0.3–1.5 s, `fund_holdings` ~0.7–1.5 s (single quoteSummary call but
+fetches 4 modules at once — see references/performance.md), `history`
+~0.5–4 s, `info` / `earnings` / `financials` / `options` / `analyst`
+~1–5 s. **`screener` is per-call, not per-ticker** —
+1 HTTP returns ≤ 250 quotes (~1–3 s typical), so the marginal cost
+of a wider screen is ~0. (`analyst` makes **3 HTTP per ticker** —
 `recommendations`, `upgrades_downgrades`, and `fast_info` for
 `quote_type` — each from a different endpoint or module group, so
 none share a backend request; the `fast_info` call is the
@@ -244,7 +304,7 @@ explanation, and the version-pin rationale.
 
 ## Cross-cutting caveats
 
-These apply to all ten modes. Mode-specific caveats live in the
+These apply to all twelve modes. Mode-specific caveats live in the
 matching `references/<mode>.md`. Grouped into three concerns:
 
 ### Data formats (interpreting the numbers)
@@ -341,6 +401,32 @@ matching `references/<mode>.md`. Grouped into three concerns:
     `fund.three_year_avg_return`, `fund.five_year_avg_return` (CAGR).
     (Yahoo's percent-encoded `dividend_yield` was the worst offender —
     we drop it from the schema entirely; use `trailing_annual_dividend_yield`.)
+  - `fund_holdings` exposes a **mixed unit zoo** that the script
+    normalizes for callers — read references/fund_holdings.md "Units"
+    before consuming raw values:
+    - `equity_metrics.pe_ratio` / `pb_ratio` / `ps_ratio` / `pcf_ratio`
+      (and their `_category_avg` companions) → conventional multiples
+      (we **invert Yahoo's raw `1/ratio`** encoding; verified SPY P/E
+      raw 0.03706 → 26.98).
+    - `equity_metrics.median_market_cap` (and `_category_avg`) →
+      **MILLIONS** of fund-reporting currency (verified VFIAX = 404537
+      ≈ \$404B), `safe_int`-coerced.
+    - `equity_metrics.earnings_growth_3y` (and `_category_avg`) →
+      **FRACTION** (we **divide Yahoo's raw percent by 100**; verified
+      VFIAX raw 18.03 → 0.1803). Matches `info.fund.three_year_avg_return`
+      / `financials --summary.*_growth_yoy` conventions.
+    - `bond_metrics.duration_years` / `maturity_years` (and
+      `_category_avg`) → years.
+    - `operations.expense_ratio` / `turnover` /
+      `asset_classes.*_pct` / `sector_weightings.*` / `bond_ratings.*`
+      / `top_holdings[*].weight` → fractions.
+    - `operations.total_net_assets_millions` → **MILLIONS** of
+      fund-reporting currency. **Cross-mode landmine**:
+      `info.fund.total_assets` reports the same metric in **whole
+      units, not millions** (verified SPY: info = 735060819968 ≈
+      \$735B vs fund_holdings = 479387.62 millions ≈ \$479B; values
+      can also drift between modes due to different snapshots). Pick
+      one mode and stick with it; if mixing, normalize explicitly.
 
   Sanity heuristic: any yield > 1.0 is the percent variant; any 3y/5y
   avg-return < 0.5 is the fraction (CAGR) variant. When in doubt, prefer
@@ -418,23 +504,52 @@ matching `references/<mode>.md`. Grouped into three concerns:
     ✅ `--summary`.
   - `analyst` — ✅ default (one row per record, with a `record_class`
     discriminator: `recommendation` / `change`); ✅ `--summary`.
+  - `screener` — ✅ default (one row per quote; envelope metadata
+    `total` / `predefined` / `title` is JSON-only — not projected
+    to CSV). No `--summary` mode (default output is already flat).
+  - `fund_holdings` — ✅ default (one row per record, with a
+    `record_class` discriminator: `meta` / `operations` /
+    `asset_class` / `sector` / `bond_rating` / `equity_metric` /
+    `bond_metric` / `holding`); ✅ `--summary`.
+
+  **`screener` shape note.** Screener is the only mode that emits a
+  **single envelope dict** (one screener call → one result), not a
+  list of per-ticker records. JSON output wraps the quotes in
+  `total` / `returned` / `predefined` / `title` metadata. NDJSON
+  drops the envelope and emits one quote per line. CSV emits one
+  row per quote (no envelope columns). On error / no-match,
+  NDJSON / CSV emit a single envelope-summary line / row instead
+  of empty stdout.
   
   **CSV row shapes split into two families.** Strict "one row per
   ticker": `fast_info` and all `--summary` modes (`history` / `info` /
   `earnings` / `financials` / `holders` / `options` / `insiders` /
-  `analyst`). "Row-per-event" (with `symbol` column repeating across
-  rows for the same ticker): `history` default (one row per bar),
-  `earnings` default (one row per `earnings_date`), `news` (one row
-  per article), `holders` default (one row per holder, plus one
-  rollup row per ticker tagged `holder_class=summary`), `options`
-  default (one row per contract, tagged `leg=call` / `leg=put`),
-  `insiders` default (one row per record, tagged
+  `analyst` / `fund_holdings`). "Row-per-event" (with `symbol` column
+  repeating across rows for the same ticker): `history` default (one
+  row per bar), `earnings` default (one row per `earnings_date`),
+  `news` (one row per article), `holders` default (one row per
+  holder, plus one rollup row per ticker tagged `holder_class=summary`),
+  `options` default (one row per contract, tagged `leg=call` /
+  `leg=put`), `insiders` default (one row per record, tagged
   `record_class=purchases` / `transaction` / `roster`), `analyst`
   default (one row per record, tagged `record_class=recommendation` /
-  `change`). For `news`, `holders`, `options`, `insiders`, and
-  `analyst` specifically: tickers with no data or an error still
+  `change`), `fund_holdings` default (one row per record, tagged
+  `record_class=meta` / `operations` / `asset_class` / `sector` /
+  `bond_rating` / `equity_metric` / `bond_metric` / `holding`).
+  For `news`, `holders`, `options`, `insiders`, `analyst`, and
+  `fund_holdings` specifically: tickers with no data or an error still
   get a single row carrying the symbol + `note` + meta fields so
   they aren't silently dropped.
+
+  **`screener` is its own family — single envelope, row-per-quote.**
+  Unlike the per-ticker modes which iterate N tickers and emit N
+  records, screener is one screen call → one set of quotes. Default
+  CSV emits one row per quote (no `symbol` repeats — each row is a
+  unique ticker), envelope metadata (`total` / `predefined` / `title`)
+  is not projected to CSV. On error / no-match it emits a single
+  carry row with `note` / meta cols populated. Plus a `symbols`
+  format (one ticker per line, no header) for piping into per-ticker
+  modes via xargs.
 - **`note` field convention.** Several modes expose a per-result
   `note` string carrying **ambiguous-but-successful** state, distinct
   from `error` (which only appears on failure). Two cross-mode
@@ -488,6 +603,21 @@ matching `references/<mode>.md`. Grouped into three concerns:
     via a companion field `coverage_note` (mutually exclusive with
     `note`). Both fields appear as columns in default-mode and
     `--summary`-mode CSVs.
+  - `screener.note` — **zero matches** (predefined screen returned
+    no rows in current market state, or custom query is too
+    restrictive). No `error_kind` is set; the empty `quotes` array
+    IS the answer. CSV / NDJSON emit a single carrying row / line.
+  - `fund_holdings.note` — **non-fund symbol** (`YFDataException`
+    caught from yfinance: equity / index / crypto / FX / future). The
+    response carries `symbol` + `quote_type` + `note`; no data
+    sections. The `quote_type` is captured from yfinance's parser
+    state (set BEFORE the parse error raised), so callers know what
+    they got back without a follow-up `fast_info` chain — distinct
+    from `holders` / `insiders` / `analyst` which all defer
+    disambiguation to the caller. No `coverage_note` partial-empty
+    path either (Yahoo's funds endpoint is binary). Bogus / delisted
+    tickers route through `error_kind: not_found` instead, and in
+    that path `quote_type` is null because the parser never ran.
   - `options.note` — **two distinct empty paths, same `note`
     convention.** (1) **No options listed at all** (`t.options`
     returns `()`): same ambiguity shape as `holders` — non-equity

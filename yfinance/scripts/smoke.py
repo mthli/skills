@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smoke test for the ten yfinance wrapper scripts.
+"""Smoke test for the twelve yfinance wrapper scripts.
 
 Three layers of coverage:
   1. Offline / pure-Python: invariants over pure-Python logic with no
@@ -65,6 +65,7 @@ import analyst
 import earnings
 import fast_info
 import financials
+import fund_holdings
 import helpers
 import history
 import holders
@@ -72,6 +73,7 @@ import info
 import insiders
 import news
 import options
+import screener
 
 
 def run_cli(script: str, *args: str) -> tuple[int, list | None]:
@@ -377,6 +379,62 @@ try:
 except Exception as e:
     FAIL += 1
     FAILURES.append(f"fetch retry-surfacing crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
+# --- fund_holdings unit transforms (offline; no Yahoo calls) ---
+# `_invert_or_none` and `_to_fraction` are pure-Python helpers that
+# normalize Yahoo's quirky encodings into conventional units. Pinning
+# their boundaries here catches a regression faster than the end-to-end
+# SPY/VFIAX canaries can: those exercise *one* concrete value per call,
+# while these probe the sentinel / NaN / type paths that Yahoo flips
+# into less predictably.
+section("fund_holdings unit transforms (offline)")
+try:
+    from fund_holdings import _invert_or_none, _to_fraction
+    # _invert_or_none: real inversion, sentinel handling, NaN-safety.
+    invert_cases = [
+        # (input, expected) — expected None means "produces None"
+        (0.04,    25.0),                  # canonical: 1/0.04 = 25
+        (0.03706, 1.0 / 0.03706),         # SPY P/E raw (≈ 26.98)
+        (0.5,     2.0),                   # mid-range
+        (1.0,     1.0),                   # identity
+        (0.0,     None),                  # bond-ETF sentinel — must NOT be inf
+        (None,    None),
+        (float("nan"), None),
+        ("not a number", None),
+    ]
+    for inp, expected in invert_cases:
+        got = _invert_or_none(inp)
+        if expected is None:
+            ok = got is None
+        else:
+            ok = got is not None and abs(got - expected) < 1e-9
+        check(f"_invert_or_none({inp!r}) → {expected!r}",
+              ok, f"got {got!r}")
+
+    # _to_fraction: percent → fraction, NaN-safe, identity-on-zero.
+    fraction_cases = [
+        (18.03,  0.1803),                 # VFIAX 3y growth raw → fraction
+        (21.25,  0.2125),                 # VFIAX category_avg
+        (0.0,    0.0),                    # zero → zero (NOT None — distinct
+                                          # from inversion's div-by-zero guard)
+        (-5.0,   -0.05),                  # negative growth (real case)
+        (None,   None),
+        (float("nan"), None),
+        ("not a number", None),
+    ]
+    for inp, expected in fraction_cases:
+        got = _to_fraction(inp)
+        if expected is None:
+            ok = got is None
+        else:
+            ok = got is not None and abs(got - expected) < 1e-9
+        check(f"_to_fraction({inp!r}) → {expected!r}",
+              ok, f"got {got!r}")
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"fund_holdings unit transforms crashed: {e}")
     traceback.print_exc(file=sys.stderr)
 
 
@@ -4115,6 +4173,654 @@ except Exception as e:
     traceback.print_exc(file=sys.stderr)
 
 
+# --- screener fetch shape ---
+section("screener fetch")
+try:
+    # --list-predefined: pure-Python (reads yf.PREDEFINED_SCREENER_QUERIES).
+    # Returns a flat list of screen-row dicts (one per predefined).
+    cat = screener._list_predefined()
+    check("screener _list_predefined: returns flat list of rows",
+          isinstance(cat, list) and all(isinstance(r, dict) for r in cat),
+          f"got {type(cat).__name__}, len={len(cat) if isinstance(cat, list) else '?'}")
+    # canary: yfinance ships ~19 predefined screens (9 EQUITY + 6 MUTUALFUND + 4 ETF).
+    # Fail soft on count drift; fail hard if categories disappear.
+    check("screener _list_predefined: ~19 saved screens (yfinance 1.3.x)",  # canary
+          15 <= len(cat) <= 30,
+          f"got count={len(cat)}")
+    qts = {p.get("quote_type") for p in cat}
+    check("screener _list_predefined: covers EQUITY / MUTUALFUND / ETF",
+          qts == {"EQUITY", "MUTUALFUND", "ETF"},
+          f"got {qts}")
+    names = {p["name"] for p in cat}
+    check("screener _list_predefined: includes 'day_gainers'",
+          "day_gainers" in names,
+          f"got names sample: {sorted(names)[:5]}")
+    # Every row has a description (we curated 19; drift would surface
+    # null descriptions for new screens).
+    rows_no_desc = [r["name"] for r in cat if not r.get("description")]
+    check("screener _list_predefined: every row has a description",
+          not rows_no_desc,
+          f"missing descriptions: {rows_no_desc}")
+
+    # --list-fields equity: pure-Python (instantiates EquityQuery).
+    fields_doc = screener._list_fields("equity")
+    check("screener _list_fields(equity): returns expected envelope",
+          fields_doc.get("quote_type") == "EQUITY"
+          and isinstance(fields_doc.get("fields_by_category"), dict)
+          and isinstance(fields_doc.get("valid_values"), dict),
+          f"got keys={list(fields_doc.keys())}")
+    # 'region' should be in valid_values (universal value-restricted field).
+    check("screener _list_fields(equity): valid_values includes 'region'",
+          "region" in fields_doc.get("valid_values", {}),
+          f"got value-restricted keys: "
+          f"{sorted(fields_doc.get('valid_values', {}).keys())[:8]}")
+
+    # --list-fields fund and etf: regression for the per-class
+    # _make_sample fix (was crashing because 'region' isn't a valid
+    # FundQuery field). Both should return non-empty schemas.
+    fund_doc = screener._list_fields("fund")
+    check("screener _list_fields(fund): non-empty fields_by_category",
+          fund_doc.get("quote_type") == "FUND"
+          and any(fund_doc.get("fields_by_category", {}).values()),
+          f"got categories: {list(fund_doc.get('fields_by_category', {}).keys())}")
+    # Fund-only field should appear in fund schema, NOT in equity schema.
+    fund_fields = set().union(
+        *(set(v) for v in fund_doc.get("fields_by_category", {}).values())
+    )
+    equity_fields = set().union(
+        *(set(v) for v in fields_doc.get("fields_by_category", {}).values())
+    )
+    check("screener _list_fields(fund): includes 'categoryname' "
+          "(fund-specific)",
+          "categoryname" in fund_fields,
+          f"fund_fields sample: {sorted(fund_fields)[:8]}")
+    check("screener _list_fields(equity): excludes 'categoryname' "
+          "(fund/ETF-only field)",
+          "categoryname" not in equity_fields,
+          f"equity_fields contains it? {('categoryname' in equity_fields)}")
+
+    etf_doc = screener._list_fields("etf")
+    check("screener _list_fields(etf): non-empty fields_by_category",
+          etf_doc.get("quote_type") == "ETF"
+          and any(etf_doc.get("fields_by_category", {}).values()),
+          f"got categories: {list(etf_doc.get('fields_by_category', {}).keys())}")
+
+    # Unknown predefined name: preempted (doesn't even hit Yahoo).
+    bad = screener.fetch(predefined="not_a_real_screen")
+    check("screener fetch(bad predefined): error_kind not_found, attempts 0",
+          bad.get("error_kind") == "not_found" and bad.get("attempts") == 0
+          and bad.get("predefined") == "not_a_real_screen",
+          f"got {bad}")
+
+    # Invalid query: bogus field caught client-side by EquityQuery validator.
+    bad_q = screener.fetch(
+        query_dict={"operator": "and", "operands": [
+            {"operator": "eq", "operands": ["bogus_field_xyz", "us"]},
+        ]},
+        quote_type="equity",
+    )
+    check("screener fetch(bad query field): error_kind not_found",
+          bad_q.get("error_kind") == "not_found"
+          and "invalid query" in (bad_q.get("error") or "").lower(),
+          f"got {bad_q}")
+
+    # Happy path: day_gainers — predefined screen always has hits intraday
+    # AND outside US market hours (Yahoo backfills with overnight movers).
+    d = screener.fetch(predefined="day_gainers", count=3)
+    check("screener day_gainers: success has total + quotes list",
+          isinstance(d, dict) and isinstance(d.get("quotes"), list)
+          and isinstance(d.get("total"), int)
+          and d.get("predefined") == "day_gainers"
+          and d.get("title") and d.get("description"),
+          f"got keys={list(d.keys())}")
+    check("screener day_gainers: returned <= count requested",
+          d.get("returned") <= 3,
+          f"got returned={d.get('returned')}")
+    check("screener day_gainers: at least 1 quote returned",  # canary
+          d.get("returned", 0) >= 1,
+          f"got returned={d.get('returned')}")
+
+    # Quote schema: every projected key present (None acceptable).
+    expected_quote_keys = set(screener.QUOTE_FIELDS)
+    if d.get("quotes"):
+        q0 = d["quotes"][0]
+        check("screener day_gainers: quote[0] has full QUOTE_FIELDS key set",
+              set(q0.keys()) == expected_quote_keys,
+              f"diff: missing={expected_quote_keys - set(q0.keys())}, "
+              f"extra={set(q0.keys()) - expected_quote_keys}")
+        # day_gainers is equity-only → quote_type must be EQUITY.
+        check("screener day_gainers: quote_type == EQUITY",
+              q0.get("quote_type") == "EQUITY",
+              f"got {q0.get('quote_type')!r}")
+        # Equity-only fields populated (market_cap, eps_ttm); ETF-only fields null.
+        check("screener day_gainers: equity quote has market_cap populated",  # canary
+              isinstance(q0.get("market_cap"), int) and q0.get("market_cap") > 0,
+              f"got {q0.get('market_cap')!r}")
+        check("screener day_gainers: equity quote has net_assets null",
+              q0.get("net_assets") is None,
+              f"got {q0.get('net_assets')!r}")
+        # change_pct should be > 3 (predefined filters on percentchange > 3).
+        check("screener day_gainers: change_pct > 3 (predefined filter)",  # canary
+              isinstance(q0.get("change_pct"), (int, float))
+              and q0["change_pct"] > 3,
+              f"got change_pct={q0.get('change_pct')!r}")
+
+    # Happy path: top_etfs_us — verifies ETF-side fields populate
+    # (net_assets, expense_ratio_pct) and equity-only ones are null.
+    e = screener.fetch(predefined="top_etfs_us", count=3)
+    check("screener top_etfs_us: returns ETF quotes",
+          isinstance(e.get("quotes"), list) and e.get("returned", 0) >= 1,
+          f"got returned={e.get('returned')}")
+    if e.get("quotes"):
+        q0 = e["quotes"][0]
+        check("screener top_etfs_us: quote_type == ETF",
+              q0.get("quote_type") == "ETF",
+              f"got {q0.get('quote_type')!r}")
+        check("screener top_etfs_us: ETF quote has net_assets populated",  # canary
+              isinstance(q0.get("net_assets"), int) and q0["net_assets"] > 0,
+              f"got {q0.get('net_assets')!r}")
+        check("screener top_etfs_us: ETF quote has market_cap null "
+              "(equity-only field)",
+              q0.get("market_cap") is None,
+              f"got {q0.get('market_cap')!r}")
+        check("screener top_etfs_us: ETF quote has expense_ratio_pct populated",  # canary
+              isinstance(q0.get("expense_ratio_pct"), (int, float))
+              and q0["expense_ratio_pct"] >= 0,
+              f"got {q0.get('expense_ratio_pct')!r}")
+
+    # Custom query happy path: large US tech (AAPL/MSFT/etc territory).
+    c = screener.fetch(
+        query_dict={"operator": "and", "operands": [
+            {"operator": "eq", "operands": ["region", "us"]},
+            {"operator": "gt", "operands": ["intradaymarketcap", 5e11]},
+        ]},
+        quote_type="equity",
+        count=3,
+    )
+    check("screener custom query: returns quote_type_filter=EQUITY",
+          c.get("quote_type_filter") == "EQUITY"
+          and isinstance(c.get("quotes"), list),
+          f"got {list(c.keys())}")
+    check("screener custom query: all returned quotes have market_cap > 5e11",  # canary
+          all(isinstance(q.get("market_cap"), int)
+              and q["market_cap"] > 5e11
+              for q in (c.get("quotes") or [])),
+          f"got market_caps={[q.get('market_cap') for q in (c.get('quotes') or [])]}")
+
+    # CLI subprocess: predefined → exits 0, stdout parses as DICT
+    # (note: the CLI sanity loop below assumes list-shaped output, so
+    # screener gets its own check here).
+    cmd = [sys.executable, str(SCRIPTS_DIR / "screener.py"),
+           "--predefined", "day_gainers", "--count", "2"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    parsed = None
+    try:
+        parsed = json.loads(out.stdout) if out.returncode == 0 else None
+    except json.JSONDecodeError:
+        parsed = None
+    check("screener.py CLI predefined: exits 0 + stdout is single dict envelope",
+          out.returncode == 0 and isinstance(parsed, dict)
+          and parsed.get("predefined") == "day_gainers"
+          and isinstance(parsed.get("quotes"), list),
+          f"rc={out.returncode}, "
+          f"type={type(parsed).__name__ if parsed is not None else 'None'}")
+
+    # CLI subprocess: --list-predefined → exits 0 (offline; no Yahoo call).
+    # New shape: flat JSON list of screen rows.
+    cmd = [sys.executable, str(SCRIPTS_DIR / "screener.py"), "--list-predefined"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+    try:
+        parsed = json.loads(out.stdout) if out.returncode == 0 else None
+    except json.JSONDecodeError:
+        parsed = None
+    check("screener.py CLI --list-predefined: exits 0 + flat list of rows",
+          out.returncode == 0 and isinstance(parsed, list)
+          and len(parsed) >= 15
+          and all(isinstance(r, dict) and "name" in r and "description" in r
+                  for r in parsed),
+          f"rc={out.returncode}, "
+          f"type={type(parsed).__name__ if parsed is not None else 'None'}")
+
+    # CLI subprocess: --list-predefined --format csv → exits 0 with headers + N rows
+    cmd = [sys.executable, str(SCRIPTS_DIR / "screener.py"),
+           "--list-predefined", "--format", "csv"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+    csv_lines = [ln for ln in out.stdout.splitlines() if ln.strip()]
+    check("screener.py CLI --list-predefined --format csv: exits 0 + header + 19 rows",
+          out.returncode == 0 and len(csv_lines) >= 16  # header + 15 minimum
+          and csv_lines[0].startswith("name,quote_type,sort_field,"),
+          f"rc={out.returncode}, lines={len(csv_lines)}, "
+          f"head[:60]={csv_lines[0][:60] if csv_lines else '?'!r}")
+
+    # CLI subprocess: --list-fields equity --format <non-json> → rejected
+    # for csv, ndjson, AND symbols (all three should fail since the field
+    # schema is nested).
+    for bad_fmt in ("csv", "ndjson", "symbols"):
+        cmd = [sys.executable, str(SCRIPTS_DIR / "screener.py"),
+               "--list-fields", "equity", "--format", bad_fmt]
+        out = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+        check(f"screener.py CLI --list-fields --format {bad_fmt}: "
+              f"argparse rejects (rc=2)",
+              out.returncode == 2,
+              f"rc={out.returncode}, stderr={out.stderr[-100:]!r}")
+
+    # CLI subprocess: --list-predefined --format symbols → rejected
+    # (symbols means tickers; catalog has screen names instead).
+    cmd = [sys.executable, str(SCRIPTS_DIR / "screener.py"),
+           "--list-predefined", "--format", "symbols"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+    check("screener.py CLI --list-predefined --format symbols: rejected (rc=2)",
+          out.returncode == 2 and "screen names" in out.stderr,
+          f"rc={out.returncode}, stderr={out.stderr[-150:]!r}")
+
+    # CLI subprocess: --full --format csv → rejected (incompatible combo).
+    cmd = [sys.executable, str(SCRIPTS_DIR / "screener.py"),
+           "--predefined", "day_gainers", "--full", "--format", "csv",
+           "--count", "1"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+    check("screener.py CLI --full + --format csv: argparse rejects (rc=2)",
+          out.returncode == 2 and "incompatible" in out.stderr.lower(),
+          f"rc={out.returncode}, stderr={out.stderr[-150:]!r}")
+
+    # CLI subprocess: --full --format ndjson → succeeds; first line should
+    # have raw Yahoo keys (longName, regularMarketPrice) not projected ones.
+    cmd = [sys.executable, str(SCRIPTS_DIR / "screener.py"),
+           "--predefined", "day_gainers", "--full", "--format", "ndjson",
+           "--count", "1"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    first_line = out.stdout.splitlines()[0] if out.stdout.strip() else ""
+    parsed = None
+    if first_line:
+        try:
+            parsed = json.loads(first_line)
+        except json.JSONDecodeError:
+            parsed = None
+    check("screener.py CLI --full --format ndjson: rc=0 + raw keys "
+          "(regularMarketPrice) on first line",
+          out.returncode == 0 and isinstance(parsed, dict)
+          and "regularMarketPrice" in parsed,
+          f"rc={out.returncode}, "
+          f"first-line keys: {sorted((parsed or {}).keys())[:5]}")
+
+    # CLI subprocess: --format symbols on a bad predefined → empty stdout
+    # but error MUST surface on stderr (the whole point of the stderr
+    # rescue is so pipelines don't silently no-op on failure).
+    cmd = [sys.executable, str(SCRIPTS_DIR / "screener.py"),
+           "--predefined", "definitely_not_real",
+           "--format", "symbols"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+    check("screener.py CLI --format symbols on error: empty stdout + "
+          "error visible on stderr",
+          out.returncode == 0
+          and out.stdout.strip() == ""
+          and "screener:" in out.stderr
+          and "error_kind=not_found" in out.stderr,
+          f"rc={out.returncode}, stdout={out.stdout!r}, "
+          f"stderr={out.stderr[:200]!r}")
+
+    # CLI subprocess: --quote-type matching the predefined's actual type
+    # should NOT trigger the warning (passes the narrowing check).
+    cmd = [sys.executable, str(SCRIPTS_DIR / "screener.py"),
+           "--predefined", "day_gainers", "--quote-type", "equity",
+           "--count", "1"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    check("screener.py CLI --predefined day_gainers --quote-type equity: "
+          "no warning (matching type is silent)",
+          out.returncode == 0 and "warning:" not in out.stderr,
+          f"rc={out.returncode}, stderr={out.stderr[:200]!r}")
+
+    # CLI subprocess: --predefined --quote-type fund → warns to stderr
+    # (silently ignored upstream; we surface the no-op).
+    cmd = [sys.executable, str(SCRIPTS_DIR / "screener.py"),
+           "--predefined", "day_gainers", "--quote-type", "fund", "--count", "1"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    check("screener.py CLI --predefined + --quote-type: stderr warns of no-op",
+          out.returncode == 0
+          and "warning: --quote-type fund ignored with --predefined"
+              in out.stderr,
+          f"rc={out.returncode}, stderr={out.stderr[:120]!r}")
+
+    # CLI subprocess: --format symbols → one ticker per line, no header
+    cmd = [sys.executable, str(SCRIPTS_DIR / "screener.py"),
+           "--predefined", "day_gainers", "--count", "3", "--format", "symbols"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    sym_lines = [ln for ln in out.stdout.splitlines() if ln.strip()]
+    check("screener.py CLI --format symbols: exits 0 + 3 ticker lines (no header)",
+          out.returncode == 0 and len(sym_lines) == 3
+          and all(ln.replace("-", "").replace(".", "").isalnum()
+                  and ln == ln.upper() for ln in sym_lines),
+          f"rc={out.returncode}, lines={sym_lines!r}")
+
+    # CLI subprocess: --full → raw Yahoo payload passes through; the JSON
+    # quote dict should have raw keys (regularMarketPrice, longName, …)
+    # rather than projected ones (price, name, …).
+    cmd = [sys.executable, str(SCRIPTS_DIR / "screener.py"),
+           "--predefined", "day_gainers", "--count", "1", "--full"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    try:
+        parsed = json.loads(out.stdout) if out.returncode == 0 else None
+    except json.JSONDecodeError:
+        parsed = None
+    check("screener.py CLI --full: raw quote keys present (regularMarketPrice)",
+          out.returncode == 0 and isinstance(parsed, dict)
+          and parsed.get("quotes")
+          and "regularMarketPrice" in (parsed["quotes"][0] or {}),
+          f"rc={out.returncode}, "
+          f"first quote keys: "
+          f"{sorted((parsed.get('quotes') or [{}])[0].keys())[:5] if parsed else '?'}")
+
+    # Custom query with field valid for FundQuery but used with EquityQuery:
+    # error message should hint at correct --quote-type.
+    bad_qt = screener.fetch(
+        query_dict={"operator": "and", "operands": [
+            {"operator": "eq", "operands": ["categoryname", "Large Growth"]},
+        ]},
+        quote_type="equity",  # categoryname is fund-only
+    )
+    check("screener fetch(equity field='categoryname'): hints at --quote-type fund",
+          bad_qt.get("error_kind") == "not_found"
+          and "fund" in (bad_qt.get("error") or "").lower(),
+          f"got error={bad_qt.get('error')!r}")
+
+    # forward_pe clamp: synthetic raw payload with the bogus -199000 value
+    # that we observed for RKLB in real Yahoo data. The projection should
+    # collapse it to None, not pass through.
+    fake_quote = {
+        "symbol": "FAKE", "longName": "Fake Corp",
+        "quoteType": "EQUITY", "regularMarketPrice": 100.0,
+        "trailingPE": 25.0,
+        "forwardPE": -199000.0,  # nonsense
+    }
+    proj = screener._project_quote(fake_quote)
+    check("screener _project_quote: forward_pe clamps |v|>1000 to None",
+          proj["forward_pe"] is None and proj["trailing_pe"] == 25.0,
+          f"got forward_pe={proj['forward_pe']!r}, trailing_pe={proj['trailing_pe']!r}")
+    fake_quote["forwardPE"] = 50000.0
+    proj = screener._project_quote(fake_quote)
+    check("screener _project_quote: forward_pe=50000 also clamps",
+          proj["forward_pe"] is None,
+          f"got forward_pe={proj['forward_pe']!r}")
+    fake_quote["forwardPE"] = 35.0  # normal
+    proj = screener._project_quote(fake_quote)
+    check("screener _project_quote: forward_pe=35 passes through",
+          proj["forward_pe"] == 35.0,
+          f"got forward_pe={proj['forward_pe']!r}")
+
+    # CLI subprocess CSV: header + N quote rows
+    cmd = [sys.executable, str(SCRIPTS_DIR / "screener.py"),
+           "--predefined", "day_gainers", "--count", "2", "--format", "csv"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    csv_lines = [ln for ln in out.stdout.splitlines() if ln.strip()]
+    check("screener.py CLI --format csv: exits 0 + header + 2 rows (3 lines)",
+          out.returncode == 0 and len(csv_lines) == 3,
+          f"rc={out.returncode}, lines={len(csv_lines)}")
+    if len(csv_lines) >= 1:
+        # Schema-stable header start
+        check("screener.py CLI --format csv: header starts with 'symbol,name,quote_type,'",
+              csv_lines[0].startswith("symbol,name,quote_type,"),
+              f"got {csv_lines[0][:60]!r}")
+
+    # CLI subprocess: bad predefined → exits 0 + error envelope (preempted)
+    cmd = [sys.executable, str(SCRIPTS_DIR / "screener.py"),
+           "--predefined", "definitely_not_real_screen"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+    try:
+        parsed = json.loads(out.stdout) if out.returncode == 0 else None
+    except json.JSONDecodeError:
+        parsed = None
+    check("screener.py CLI bad predefined: exits 0 + error_kind=not_found "
+          "(no yfinance stdout leak)",
+          out.returncode == 0 and isinstance(parsed, dict)
+          and parsed.get("error_kind") == "not_found",
+          f"rc={out.returncode}, parsed={parsed!r}")
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"screener fetch crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
+# --- fund_holdings fetch shape ---
+section("fund_holdings fetch")
+try:
+    # Happy path: SPY — all 9 sections populated (description as a top-
+    # level field counts as a section per the reference doc). Single HTTP
+    # call covers all properties (yfinance caches on FundsData instance).
+    d = fund_holdings.fetch("SPY")
+    expected_top_keys = {"symbol", "quote_type", "description", "fund_overview",
+                         "operations", "asset_classes", "sector_weightings",
+                         "bond_ratings", "equity_metrics", "bond_metrics",
+                         "top_holdings"}
+    check("fund_holdings SPY: success has all 9 sections + top-level fields",
+          isinstance(d, dict) and expected_top_keys.issubset(set(d.keys())),
+          f"missing={expected_top_keys - set(d.keys() if isinstance(d, dict) else [])}")
+    check("fund_holdings SPY: quote_type == ETF",
+          d.get("quote_type") == "ETF",
+          f"got {d.get('quote_type')!r}")
+
+    # operations: expense_ratio is a fraction in (0, 0.05) — SPY at 9.45 bps
+    # = 0.000945 is well below 0.05 (5%, an absurdly expensive ETF). Pins
+    # the FRACTION encoding.
+    ops = d.get("operations") or {}
+    er = ops.get("expense_ratio")
+    check("fund_holdings SPY: expense_ratio is fraction in (0, 0.05)",
+          isinstance(er, float) and 0.0 < er < 0.05,
+          f"got {er!r}")
+    # AUM in MILLIONS — SPY ~ \$479B = 479000 millions. Canary band wide
+    # enough to absorb fund flows but tight enough to flag a unit flip
+    # (whole-currency would be ~5e11, basis-points would be ~5e9).
+    aum = ops.get("total_net_assets_millions")
+    check("fund_holdings SPY: total_net_assets_millions in 100k-1M range "  # canary: ~480k typical
+          "(MILLIONS unit pinned)",
+          aum is None or (isinstance(aum, float) and 100_000 < aum < 1_000_000),
+          f"got {aum!r}")
+
+    # asset_classes: stock_pct + bond_pct + cash_pct + ... ≈ 1.0 (allow
+    # negative cash for leveraged funds, generous tolerance).
+    ac = d.get("asset_classes") or {}
+    expected_asset = set(fund_holdings._ASSET_KEYS)
+    check("fund_holdings SPY: asset_classes has documented field set",
+          set(ac.keys()) == expected_asset,
+          f"diff: missing={expected_asset - set(ac.keys())}, "
+          f"extra={set(ac.keys()) - expected_asset}")
+    # SPY is ~99.94% stocks — pin the FRACTION unit.
+    sp = ac.get("stock_pct")
+    check("fund_holdings SPY: stock_pct is fraction in (0.9, 1.01)",
+          isinstance(sp, float) and 0.9 < sp <= 1.01,
+          f"got {sp!r}")
+
+    # equity_metrics: pe_ratio inverted from Yahoo's raw 1/ratio. SPY P/E
+    # is ~25-35; if we ever stop inverting it'd land at ~0.03-0.04 and
+    # this canary fires immediately. Most important guard in this section.
+    em = d.get("equity_metrics") or {}
+    pe = em.get("pe_ratio")
+    check("fund_holdings SPY: pe_ratio inverted (10 < pe < 60) — pins "  # canary: ~27 typical
+          "Yahoo's 1/ratio inversion",
+          isinstance(pe, float) and 10.0 < pe < 60.0,
+          f"got {pe!r} (raw 1/ratio would be ~0.03)")
+
+    # top_holdings non-empty + correctly shaped.
+    th = d.get("top_holdings") or []
+    check("fund_holdings SPY: top_holdings populated (>= 5 rows)",  # canary: 10 typical
+          len(th) >= 5, f"got {len(th)} rows")
+    if th:
+        h = th[0]
+        expected_h = set(fund_holdings._HOLDING_KEYS)
+        check("fund_holdings SPY: top_holdings[0] has documented field set",
+              set(h.keys()) == expected_h,
+              f"diff: missing={expected_h - set(h.keys())}, "
+              f"extra={set(h.keys()) - expected_h}")
+        w = h.get("weight")
+        check("fund_holdings SPY: top_holdings[0].weight is fraction in (0, 0.5)",
+              isinstance(w, float) and 0.0 < w < 0.5,
+              f"got {w!r}")
+
+    # Successful response must NOT carry `note` — pins the design.
+    check("fund_holdings SPY (success): no `note` key on the result",
+          "note" not in d,
+          f"unexpected keys={list(d.keys())}")
+
+    # Bond ETF path: AGG has duration_years populated, equity_metrics nulled.
+    agg = fund_holdings.fetch("AGG")
+    bm = agg.get("bond_metrics") or {}
+    dur = bm.get("duration_years")
+    check("fund_holdings AGG: duration_years populated (1 < dur < 30)",  # canary: ~3.79 typical
+          isinstance(dur, float) and 1.0 < dur < 30.0,
+          f"got {dur!r}")
+    em_agg = agg.get("equity_metrics") or {}
+    check("fund_holdings AGG: pe_ratio is None (bond fund, raw 0.0 → null)",
+          em_agg.get("pe_ratio") is None,
+          f"got {em_agg.get('pe_ratio')!r}")
+    # Bond fund: sector_weightings empty, bond_ratings has full ladder.
+    check("fund_holdings AGG: sector_weightings empty (bond fund)",
+          agg.get("sector_weightings") == {},
+          f"got {agg.get('sector_weightings')!r}")
+    br = agg.get("bond_ratings") or {}
+    check("fund_holdings AGG: bond_ratings has multiple buckets (>= 5)",
+          len(br) >= 5,
+          f"got {list(br.keys())}")
+
+    # Mutual fund path: VFIAX — deeper check than just quote_type so a
+    # regression that nukes mutual-fund handling shows up. VFIAX is
+    # Vanguard's S&P 500 mutual fund: equity-heavy, populated holdings,
+    # populated equity_metrics. Yahoo returns turnover / total_net_assets
+    # as null for VFIAX (verified) so we don't pin those.
+    vfiax = fund_holdings.fetch("VFIAX")
+    check("fund_holdings VFIAX: quote_type == MUTUALFUND",
+          vfiax.get("quote_type") == "MUTUALFUND",
+          f"got {vfiax.get('quote_type')!r}")
+    check("fund_holdings VFIAX: expense_ratio populated (mutual fund happy path)",
+          isinstance((vfiax.get("operations") or {}).get("expense_ratio"), float)
+          and 0.0 < vfiax["operations"]["expense_ratio"] < 0.05,
+          f"got {(vfiax.get('operations') or {}).get('expense_ratio')!r}")
+    check("fund_holdings VFIAX: top_holdings has rows (>= 5)",  # canary: 10 typical
+          len(vfiax.get("top_holdings") or []) >= 5,
+          f"got {len(vfiax.get('top_holdings') or [])} rows")
+    check("fund_holdings VFIAX: pe_ratio populated (S&P 500 fund) and inverted",  # canary
+          isinstance((vfiax.get("equity_metrics") or {}).get("pe_ratio"), float)
+          and 10.0 < vfiax["equity_metrics"]["pe_ratio"] < 60.0,
+          f"got {(vfiax.get('equity_metrics') or {}).get('pe_ratio')!r}")
+    # earnings_growth_3y is now a FRACTION (we divide Yahoo's raw percent
+    # by 100). VFIAX's S&P 500 3y trailing EPS growth ~18% → 0.18. Pin
+    # the conversion: a regression that drops the divide leaves 18.03,
+    # which would fail the 0 < x < 1 fraction guard immediately.
+    em = vfiax.get("equity_metrics") or {}
+    eg = em.get("earnings_growth_3y")
+    check("fund_holdings VFIAX: earnings_growth_3y is fraction in (0, 1) — "
+          "pins percent → fraction conversion",
+          isinstance(eg, float) and 0.0 < eg < 1.0,  # canary: ~0.18 typical
+          f"got {eg!r} (raw percent would be ~18; missed conversion)")
+    # median_market_cap empirically populated for VFIAX (Yahoo emits in
+    # millions). 404537 ≈ \$404B median market cap fits an S&P 500 fund
+    # (mega-cap-weighted). Pin the MILLIONS unit explicitly.
+    mmc = em.get("median_market_cap")
+    check("fund_holdings VFIAX: median_market_cap populated as int in "
+          "MILLIONS (10k-10M range pins the unit)",
+          isinstance(mmc, int) and 10_000 < mmc < 10_000_000,  # canary: ~400k typical
+          f"got {mmc!r} (whole-currency would be ~5e11)")
+    # Category-average companions populated for VFIAX. Pins the
+    # _project_two_col handler — it must run on BOTH the fund column AND
+    # "Category Average" column. If a future refactor drops one side,
+    # this fires immediately.
+    check("fund_holdings VFIAX: pe_ratio_category_avg populated and inverted",  # canary
+          isinstance(em.get("pe_ratio_category_avg"), float)
+          and 10.0 < em["pe_ratio_category_avg"] < 60.0,
+          f"got {em.get('pe_ratio_category_avg')!r}")
+    check("fund_holdings VFIAX: median_market_cap_category_avg populated as int",
+          isinstance(em.get("median_market_cap_category_avg"), int)
+          and em["median_market_cap_category_avg"] > 1000,
+          f"got {em.get('median_market_cap_category_avg')!r}")
+    # Bond category_avg is the interesting one for an equity fund:
+    # VFIAX has duration_years=null but Yahoo still gives the bond-fund
+    # CATEGORY-mean duration (~4.6y for the Large Blend category).
+    bm = vfiax.get("bond_metrics") or {}
+    check("fund_holdings VFIAX: bond_metrics duration_years_category_avg populated",  # canary
+          isinstance(bm.get("duration_years_category_avg"), float)
+          and 0.5 < bm["duration_years_category_avg"] < 30.0,
+          f"got {bm.get('duration_years_category_avg')!r}")
+
+    # Non-US ETF: IWDA.L (iShares Core MSCI World UCITS) — verifies the
+    # script handles non-US listed ETFs. Empirically (2026-05) returns
+    # populated holdings + sectors + asset_classes but description="".
+    # Pins the "non-US ETF works" claim from the reference doc.
+    iwda = fund_holdings.fetch("IWDA.L")
+    check("fund_holdings IWDA.L: quote_type == ETF (non-US listing)",
+          iwda.get("quote_type") == "ETF",
+          f"got {iwda.get('quote_type')!r}")
+    check("fund_holdings IWDA.L: top_holdings populated (>= 5 rows)",  # canary
+          len(iwda.get("top_holdings") or []) >= 5,
+          f"got {len(iwda.get('top_holdings') or [])} rows")
+    check("fund_holdings IWDA.L: sector_weightings non-empty (equity ETF)",
+          len(iwda.get("sector_weightings") or {}) >= 5,
+          f"got {len(iwda.get('sector_weightings') or {})} keys")
+
+    # Non-fund path: AAPL / ^GSPC / BTC-USD all hit YFDataException →
+    # success-with-note + captured quote_type (NEW: post-refactor we
+    # surface the quote_type yfinance resolved before the parse error).
+    expected_qt = {"AAPL": "EQUITY", "^GSPC": "INDEX", "BTC-USD": "CRYPTOCURRENCY"}
+    for sym, qt in expected_qt.items():
+        nf = fund_holdings.fetch(sym)
+        check(f"fund_holdings {sym}: non-fund path emits note + no error_kind + no data",
+              nf.get("note")
+              and "error_kind" not in nf
+              and "fund_overview" not in nf
+              and "top_holdings" not in nf,
+              f"got keys={list(nf.keys())}")
+        check(f"fund_holdings {sym}: non-fund path captures quote_type='{qt}'",
+              nf.get("quote_type") == qt,
+              f"got quote_type={nf.get('quote_type')!r}")
+
+    # Bogus path: HTTP 404 → standard error_kind=not_found path. quote_type
+    # is unrecoverable here because the parser never ran, so it's null.
+    bogus = fund_holdings.fetch("ZZZZNOTREAL")
+    check("fund_holdings ZZZZNOTREAL: error_kind=not_found (HTTP 404 path)",
+          bogus.get("error_kind") == "not_found",
+          f"got {bogus.get('error_kind')!r}")
+    check("fund_holdings ZZZZNOTREAL: no quote_type (parser never ran)",
+          bogus.get("quote_type") is None,
+          f"got quote_type={bogus.get('quote_type')!r}")
+
+    # _apply_limit truncates top_holdings IN PLACE. After applying limit=2
+    # the list must be ≤ 2; other sections untouched. Pins the function
+    # contract (matches holders.py's _apply_limit smoke check).
+    capped = fund_holdings._apply_limit(fund_holdings.fetch("SPY"), 2)
+    check("fund_holdings _apply_limit(2): top_holdings capped to <= 2",
+          len(capped.get("top_holdings") or []) <= 2,
+          f"got {len(capped.get('top_holdings') or [])} rows")
+    check("fund_holdings _apply_limit(2): operations / asset_classes / sectors untouched",
+          len(capped.get("asset_classes") or {}) == 6
+          and len(capped.get("sector_weightings") or {}) >= 5,
+          f"asset={len(capped.get('asset_classes') or {})}, "
+          f"sectors={len(capped.get('sector_weightings') or {})}")
+
+    # _summarize projection: peer-comparison flat dict carries the
+    # documented field set + symbol. Pins schema for CSV column drift.
+    flat = fund_holdings._summarize(d)
+    expected_flat = {"symbol", *fund_holdings._SUMMARY_FLAT_KEYS}
+    check("fund_holdings _summarize(SPY): has documented flat field set",
+          expected_flat.issubset(set(flat.keys())),
+          f"missing={expected_flat - set(flat.keys())}")
+    # holdings_concentration must equal sum(weights) of returned holdings.
+    expected_conc = sum(h["weight"] for h in (d.get("top_holdings") or [])
+                        if h.get("weight") is not None)
+    actual_conc = flat.get("holdings_concentration")
+    check("fund_holdings _summarize: holdings_concentration matches sum(weights)",
+          actual_conc is None or abs(actual_conc - expected_conc) < 1e-9,
+          f"got {actual_conc!r}, expected {expected_conc!r}")
+    # _summarize on non-fund must carry the `note` AND `quote_type` through
+    # for CSV (so peer-compare tables don't lose the disambiguation signal).
+    nf_flat = fund_holdings._summarize(fund_holdings.fetch("AAPL"))
+    check("fund_holdings _summarize(AAPL non-fund): preserves `note` for CSV",
+          "note" in nf_flat and nf_flat.get("note"),
+          f"got keys={list(nf_flat.keys())}")
+    check("fund_holdings _summarize(AAPL non-fund): preserves `quote_type` for CSV",
+          nf_flat.get("quote_type") == "EQUITY",
+          f"got quote_type={nf_flat.get('quote_type')!r}")
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"fund_holdings fetch crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
 # --- CLI sanity: focus on what only subprocess testing covers (argparse,
 #     JSON serialization, exit codes, --help). Schema invariants are
 #     already covered by the import-path sections above; don't re-test.
@@ -4143,6 +4849,8 @@ try:
         ("options.py", ("--summary", "--moneyness", "5", "AAPL")),
         ("analyst.py", ("--limit", "3", "AAPL")),
         ("analyst.py", ("--summary", "AAPL")),
+        ("fund_holdings.py", ("--limit", "3", "SPY")),
+        ("fund_holdings.py", ("--summary", "SPY", "VTI")),
     ):
         rc, data = run_cli(script, *args)
         check(f"{script} {' '.join(args)}: exit 0 + valid JSON list",
@@ -4161,7 +4869,8 @@ try:
     # like `%(default)s` referencing a non-existent default)
     for script in ("fast_info.py", "history.py", "info.py", "earnings.py",
                    "financials.py", "news.py", "holders.py", "options.py",
-                   "insiders.py", "analyst.py"):
+                   "insiders.py", "analyst.py", "screener.py",
+                   "fund_holdings.py"):
         cmd = [sys.executable, str(SCRIPTS_DIR / script), "--help"]
         out = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
         check(f"{script} --help exits 0",
@@ -4602,6 +5311,132 @@ try:
         check("analyst --summary --format csv: QQQ row carries quote_type=ETF",
               csv_lines[2].startswith("QQQ,ETF,"),
               f"got row[:30]={csv_lines[2][:30]!r}")
+
+    # fund_holdings CSV: novel "row-per-record + record_class discriminator"
+    # layout with quote_type repeated on every row. SPY (full data) + AAPL
+    # (non-fund note row, quote_type=EQUITY) + ZZZZNOTREAL (error row, no
+    # quote_type) specifically pins:
+    #   - 8 record classes (meta/operations/asset_class/sector/bond_rating/
+    #     equity_metric/bond_metric/holding) emit when populated
+    #     (bond_metric is skipped for SPY — equity ETF — so 7 classes here)
+    #   - quote_type column populated on every fund row (ETF) AND on the
+    #     non-fund note row (EQUITY)
+    #   - error row leaves quote_type empty (parser never ran)
+    cmd = [sys.executable, str(SCRIPTS_DIR / "fund_holdings.py"),
+           "--limit", "2", "--format", "csv", "SPY", "AAPL", "ZZZZNOTREAL"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    csv_lines = [ln for ln in out.stdout.splitlines() if ln.strip()]
+    check("fund_holdings --format csv mixed batch: nonzero output, exit 0",
+          out.returncode == 0 and len(csv_lines) >= 5,
+          f"rc={out.returncode}, lines={len(csv_lines)}")
+    if csv_lines:
+        header = csv_lines[0]
+        check("fund_holdings --format csv: header has quote_type + record_class "
+              "+ all section cols + category_avg companions + note + error",
+              all(f in header for f in (
+                  "symbol", "quote_type", "record_class",
+                  "category", "family", "legal_type", "description",
+                  "expense_ratio", "expense_ratio_category_avg",
+                  "total_net_assets_millions",
+                  "total_net_assets_category_avg_millions",
+                  "bucket", "weight",
+                  "pe_ratio", "pe_ratio_category_avg",
+                  "pb_ratio", "pb_ratio_category_avg",
+                  "median_market_cap", "median_market_cap_category_avg",
+                  "earnings_growth_3y", "earnings_growth_3y_category_avg",
+                  "duration_years", "duration_years_category_avg",
+                  "maturity_years", "maturity_years_category_avg",
+                  "credit_quality", "credit_quality_category_avg",
+                  "holding_symbol", "holding_name",
+                  "note", "error", "error_kind", "attempts")),
+              f"got header={header!r}")
+        # Find the SPY rows by class. SPY emits 7 classes (no bond_metric):
+        # meta + operations + 6 asset_class + ~11 sector + 1 bond_rating
+        # + equity_metric + 2 holding. The exact count varies (sectors
+        # depends on Yahoo), so we just spot-check one row of each class.
+        spy_rows = [ln for ln in csv_lines[1:] if ln.startswith("SPY,ETF,")]
+        check("fund_holdings --format csv: SPY rows all carry quote_type=ETF",
+              len(spy_rows) >= 10,  # canary: ~22 typical
+              f"got {len(spy_rows)} SPY,ETF rows")
+        spy_classes = {ln.split(",", 3)[2] for ln in spy_rows}
+        check("fund_holdings --format csv: SPY emits all expected record classes",
+              {"meta", "operations", "asset_class", "sector",
+               "equity_metric", "holding"}.issubset(spy_classes),
+              f"got classes={spy_classes}")
+        # AAPL non-fund row: quote_type=EQUITY, carries note text
+        aapl_rows = [ln for ln in csv_lines[1:] if ln.startswith("AAPL,")]
+        check("fund_holdings --format csv: AAPL non-fund row exists (1 row)",
+              len(aapl_rows) == 1,
+              f"got {len(aapl_rows)} AAPL rows")
+        if aapl_rows:
+            check("fund_holdings --format csv: AAPL non-fund row starts with AAPL,EQUITY,",
+                  aapl_rows[0].startswith("AAPL,EQUITY,"),
+                  f"got row[:40]={aapl_rows[0][:40]!r}")
+            check("fund_holdings --format csv: AAPL non-fund row carries `note` text",
+                  "no fund data" in aapl_rows[0],
+                  f"got row={aapl_rows[0]!r}")
+        # ZZZZNOTREAL error row: quote_type empty (parser never ran),
+        # error_kind=not_found populated.
+        bogus_rows = [ln for ln in csv_lines[1:] if ln.startswith("ZZZZNOTREAL,")]
+        check("fund_holdings --format csv: error row exists (1 row)",
+              len(bogus_rows) == 1,
+              f"got {len(bogus_rows)} bogus rows")
+        if bogus_rows:
+            check("fund_holdings --format csv: error row has empty quote_type "
+                  "(starts ZZZZNOTREAL,,)",
+                  bogus_rows[0].startswith("ZZZZNOTREAL,,"),
+                  f"got row[:40]={bogus_rows[0][:40]!r}")
+            check("fund_holdings --format csv: error row carries error_kind=not_found",
+                  "not_found" in bogus_rows[0],
+                  f"got row={bogus_rows[0]!r}")
+
+    # fund_holdings --summary CSV header: pin documented column set so
+    # a future rename can't silently drop one (regression guard for
+    # holdings_concentration / holdings_returned / quote_type / etc.).
+    # Mix SPY (success) + AAPL (non-fund w/ quote_type) + bogus
+    # (error path, quote_type column should be empty since the parser
+    # never ran) to pin all three response shapes inline.
+    cmd = [sys.executable, str(SCRIPTS_DIR / "fund_holdings.py"),
+           "--summary", "--format", "csv", "SPY", "AAPL", "ZZZZNOTREAL"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    csv_lines = [ln for ln in out.stdout.splitlines() if ln.strip()]
+    check("fund_holdings --summary --format csv: header + 3 rows "
+          "(SPY + AAPL non-fund + bogus error)",
+          out.returncode == 0 and len(csv_lines) == 4,
+          f"rc={out.returncode}, lines={len(csv_lines)}")
+    if csv_lines:
+        header = csv_lines[0]
+        check("fund_holdings --summary --format csv: header has documented flat cols",
+              all(f in header for f in (
+                  "symbol", "quote_type",
+                  "category", "family",
+                  "expense_ratio", "turnover", "total_net_assets_millions",
+                  "stock_pct", "bond_pct", "cash_pct",
+                  "top_holding_symbol", "top_holding_weight",
+                  "holdings_concentration", "holdings_returned",
+                  "top_sector", "top_sector_weight",
+                  "pe_ratio", "pb_ratio", "duration_years",
+                  "earnings_growth_3y",
+                  "note")),
+              f"got header={header!r}")
+    if len(csv_lines) >= 4:
+        check("fund_holdings --summary --format csv: SPY row carries quote_type=ETF",
+              csv_lines[1].startswith("SPY,ETF,"),
+              f"got row[:30]={csv_lines[1][:30]!r}")
+        check("fund_holdings --summary --format csv: AAPL non-fund row carries quote_type=EQUITY",
+              csv_lines[2].startswith("AAPL,EQUITY,"),
+              f"got row[:30]={csv_lines[2][:30]!r}")
+        # Bogus error row: quote_type is empty (parser never ran), so the
+        # row starts `ZZZZNOTREAL,,...`. Pins the contract that error path
+        # leaves quote_type blank in CSV (for ndjson / json it's absent).
+        check("fund_holdings --summary --format csv: bogus row has empty "
+              "quote_type (starts ZZZZNOTREAL,,)",
+              csv_lines[3].startswith("ZZZZNOTREAL,,"),
+              f"got row[:30]={csv_lines[3][:30]!r}")
+        check("fund_holdings --summary --format csv: bogus row carries "
+              "error_kind=not_found",
+              "not_found" in csv_lines[3],
+              f"got row={csv_lines[3]!r}")
 except Exception as e:
     FAIL += 1
     FAILURES.append(f"CLI sanity crashed: {e}")
