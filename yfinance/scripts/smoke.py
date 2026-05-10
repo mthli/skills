@@ -59,10 +59,13 @@ import traceback
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+import pandas as pd
+
 SCRIPTS_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPTS_DIR))
 
 import analyst
+import calendars
 import earnings
 import fast_info
 import financials
@@ -5362,6 +5365,638 @@ try:
 except Exception as e:
     FAIL += 1
     FAILURES.append(f"fund_holdings fetch crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
+# --- calendars fetch shape (market-wide, not per-ticker) ---
+# Same envelope shape as screener: one HTTP, one result. Schema
+# differs per --type so we test all four. Also covers multi-type,
+# --full, --summary, --past-days, and the new strict date validation.
+section("calendars fetch")
+try:
+    today = datetime.now(timezone.utc).date()
+    start = today.isoformat()
+    end = (today + timedelta(days=7)).isoformat()
+
+    # --- _resolve_dates pure-Python invariants (offline) ---
+    s, e = calendars._resolve_dates(None, None, None, None)
+    check("calendars _resolve_dates(no args): defaults to today + 7",
+          s == start and e == end,
+          f"got start={s}, end={e}")
+    s, e = calendars._resolve_dates("2026-06-01", None, 14, None)
+    check("calendars _resolve_dates(start, days=14): end = start + 14",
+          s == "2026-06-01" and e == "2026-06-15",
+          f"got start={s}, end={e}")
+    s, e = calendars._resolve_dates("2026-06-01", "2026-06-30", None, None)
+    check("calendars _resolve_dates(start, end): end honored",
+          s == "2026-06-01" and e == "2026-06-30",
+          f"got start={s}, end={e}")
+    s, e = calendars._resolve_dates(None, None, None, 7)
+    expect_start = (today - timedelta(days=7)).isoformat()
+    check("calendars _resolve_dates(past_days=7): today-7 → today",
+          s == expect_start and e == today.isoformat(),
+          f"got start={s}, end={e}")
+
+    # --- _infer_unit (offline; no Yahoo calls) ---
+    check("calendars _infer_unit('GDP YY*') → percent (rate-of-change suffix)",
+          calendars._infer_unit("GDP YY*") == "percent",
+          f"got {calendars._infer_unit('GDP YY*')!r}")
+    check("calendars _infer_unit('PMI Composite') → index_level",
+          calendars._infer_unit("PMI Composite") == "index_level",
+          f"got {calendars._infer_unit('PMI Composite')!r}")
+    check("calendars _infer_unit('Non-Farm Payrolls') → thousands",
+          calendars._infer_unit("Non-Farm Payrolls") == "thousands",
+          f"got {calendars._infer_unit('Non-Farm Payrolls')!r}")
+    check("calendars _infer_unit('Trade Balance') → currency",
+          calendars._infer_unit("Trade Balance") == "currency",
+          f"got {calendars._infer_unit('Trade Balance')!r}")
+    check("calendars _infer_unit(None) → None",
+          calendars._infer_unit(None) is None)
+    check("calendars _infer_unit('Some Unknown Indicator') → None",
+          calendars._infer_unit("Some Unknown Indicator") is None,
+          f"got {calendars._infer_unit('Some Unknown Indicator')!r}")
+    # Extra _infer_unit edge cases.
+    check("calendars _infer_unit('Retail Sales YY*') → percent "
+          "(YY suffix not blocked by trailing *)",
+          calendars._infer_unit("Retail Sales YY*") == "percent",
+          f"got {calendars._infer_unit('Retail Sales YY*')!r}")
+    check("calendars _infer_unit('M2 Money Supply') → currency "
+          "(M\\d pattern in currency rule)",
+          calendars._infer_unit("M2 Money Supply") == "currency",
+          f"got {calendars._infer_unit('M2 Money Supply')!r}")
+    check("calendars _infer_unit('Manheim Used Vehicle Index') → index_level",
+          calendars._infer_unit("Manheim Used Vehicle Index") == "index_level",
+          f"got {calendars._infer_unit('Manheim Used Vehicle Index')!r}")
+    check("calendars _infer_unit('Fed Funds Rate Decision') → percent",
+          calendars._infer_unit("Fed Funds Rate Decision") == "percent",
+          f"got {calendars._infer_unit('Fed Funds Rate Decision')!r}")
+
+    # _first() defensive-coverage tests (offline). Was missing
+    # empty-string and pd.NA fallthrough before this round.
+    check("calendars _first: skips empty string",
+          calendars._first({"a": "", "b": "real"}, "a", "b") == "real",
+          "should fall through empty string")
+    check("calendars _first: skips whitespace-only string",
+          calendars._first({"a": "   ", "b": "real"}, "a", "b") == "real",
+          "should fall through whitespace-only string")
+    check("calendars _first: skips NaN float",
+          calendars._first({"a": float("nan"), "b": 5.0}, "a", "b") == 5.0,
+          "should fall through NaN")
+    check("calendars _first: skips Inf float",
+          calendars._first({"a": float("inf"), "b": 5.0}, "a", "b") == 5.0,
+          "should fall through Inf")
+    check("calendars _first: skips pd.NA",
+          calendars._first({"a": pd.NA, "b": 5.0}, "a", "b") == 5.0,
+          "should fall through pd.NA")
+    check("calendars _first: skips None",
+          calendars._first({"a": None, "b": "real"}, "a", "b") == "real")
+    check("calendars _first: returns first valid (no fallthrough needed)",
+          calendars._first({"a": "real", "b": "fallback"}, "a", "b") == "real")
+    check("calendars _first: all missing → None",
+          calendars._first({"a": None, "b": ""}, "a", "b") is None)
+    check("calendars _first: bool False is valid (not missing)",
+          calendars._first({"a": False, "b": True}, "a", "b") is False)
+
+    # _iso_dt() defensive-coverage tests (offline). Was falling
+    # through to safe_str on unknown types — could turn an epoch
+    # int into a number-as-string. Now strict.
+    check("calendars _iso_dt(None) → None",
+          calendars._iso_dt(None) is None)
+    check("calendars _iso_dt(pd.NaT) → None",
+          calendars._iso_dt(pd.NaT) is None)
+    check("calendars _iso_dt(pd.NA) → None",
+          calendars._iso_dt(pd.NA) is None)
+    ts = pd.Timestamp("2026-05-15 04:00:00", tz="UTC")
+    check("calendars _iso_dt(pd.Timestamp): ISO with offset",
+          calendars._iso_dt(ts) == "2026-05-15T04:00:00+00:00",
+          f"got {calendars._iso_dt(ts)!r}")
+    check("calendars _iso_dt(empty string) → None",
+          calendars._iso_dt("") is None)
+    check("calendars _iso_dt('2026-05-15T04:00:00+00:00') → passthrough",
+          calendars._iso_dt("2026-05-15T04:00:00+00:00")
+          == "2026-05-15T04:00:00+00:00")
+    # Epoch fallback (Yahoo doesn't currently emit, but defense).
+    # 1700000000 = 2023-11-14 UTC — pin to a known fixed epoch + value
+    # so the test isn't sensitive to my epoch arithmetic.
+    res = calendars._iso_dt(1700000000)
+    check("calendars _iso_dt(epoch int): YYYY-MM-DD via epoch_to_date "
+          "(defensive fallback for hypothetical Yahoo drift)",
+          res == "2023-11-14",
+          f"got {res!r}")
+    # Unknown type returns None (not safe_str-coerced)
+    check("calendars _iso_dt(arbitrary obj) → None (not stringified)",
+          calendars._iso_dt(object()) is None)
+
+    # --- _snake (offline; --full key normalization) ---
+    check("calendars _snake('Event Start Date') → event_start_date",
+          calendars._snake("Event Start Date") == "event_start_date")
+    check("calendars _snake('Surprise(%)') → surprise_pct",
+          calendars._snake("Surprise(%)") == "surprise_pct")
+    check("calendars _snake('Optionable?') → optionable",
+          calendars._snake("Optionable?") == "optionable")
+
+    # --- earnings ---
+    er = calendars.fetch(
+        cal_type="earnings", start=start, end=end, limit=5, offset=0,
+        market_cap=None, filter_most_active=True,
+    )
+    check("calendars earnings: envelope has type/start/end/results "
+          "(no `total` field — dropped as misleading)",
+          er.get("type") == "earnings"
+          and er.get("start") == start
+          and er.get("end") == end
+          and isinstance(er.get("results"), list)
+          and "total" not in er,
+          f"got keys={list(er.keys())}")
+    check("calendars earnings: filter_most_active reflected",
+          er.get("filter_most_active") is True)
+    if er.get("results"):
+        row = er["results"][0]
+        expected = set(calendars.EARNINGS_KEYS)
+        check("calendars earnings: row schema matches EARNINGS_KEYS",
+              set(row.keys()) == expected,
+              f"diff +{set(row.keys()) - expected} -{expected - set(row.keys())}")
+        check("calendars earnings: market_cap is int or None",
+              row.get("market_cap") is None or isinstance(row.get("market_cap"), int))
+
+    # Earnings with --no-most-active (filter off) — surfaces wider set
+    er_off = calendars.fetch(
+        cal_type="earnings", start=start, end=end, limit=5, offset=0,
+        market_cap=None, filter_most_active=False,
+    )
+    check("calendars earnings (filter_most_active=False): envelope reflects",
+          er_off.get("filter_most_active") is False)
+    # Earnings with offset > 0 silently disables filter_most_active
+    er_off2 = calendars.fetch(
+        cal_type="earnings", start=start, end=end, limit=5, offset=5,
+        market_cap=None, filter_most_active=True,
+    )
+    check("calendars earnings (offset>0): filter_most_active silently False "
+          "(yfinance limitation, surfaced in envelope)",
+          er_off2.get("filter_most_active") is False)
+
+    # --- ipo ---
+    ip = calendars.fetch(
+        cal_type="ipo", start=start, end=(today + timedelta(days=30)).isoformat(),
+        limit=5, offset=0, market_cap=None, filter_most_active=False,
+    )
+    check("calendars ipo: envelope no filter_most_active key (earnings-only)",
+          "filter_most_active" not in ip)
+    if ip.get("results"):
+        row = ip["results"][0]
+        expected = set(calendars.IPO_KEYS)
+        check("calendars ipo: row schema matches IPO_KEYS (with new "
+              "_datetime field names)",
+              set(row.keys()) == expected,
+              f"diff +{set(row.keys()) - expected} -{expected - set(row.keys())}")
+        # ipo_datetime is now full ISO datetime, not YYYY-MM-DD truncation
+        if row.get("ipo_datetime"):
+            check("calendars ipo: ipo_datetime is full ISO with offset "
+                  "(not truncated to date — fixes seasonal off-by-one risk)",
+                  isinstance(row["ipo_datetime"], str)
+                  and "T" in row["ipo_datetime"]
+                  and ("+" in row["ipo_datetime"] or "Z" in row["ipo_datetime"]),
+                  f"got {row.get('ipo_datetime')!r}")
+
+    # --- splits ---
+    sp = calendars.fetch(
+        cal_type="splits", start=start, end=end, limit=5, offset=0,
+        market_cap=None, filter_most_active=False,
+    )
+    if sp.get("results"):
+        row = sp["results"][0]
+        expected = set(calendars.SPLITS_KEYS)
+        check("calendars splits: row schema matches SPLITS_KEYS "
+              "(now includes `direction`)",
+              set(row.keys()) == expected,
+              f"diff +{set(row.keys()) - expected} -{expected - set(row.keys())}")
+        check("calendars splits: optionable is bool or None",
+              row.get("optionable") is None or isinstance(row.get("optionable"), bool))
+        # direction derivation: forward when new>old, reverse when new<old
+        if row.get("old_ratio") is not None and row.get("new_ratio") is not None:
+            old, new = row["old_ratio"], row["new_ratio"]
+            expect_dir = ("forward" if new > old
+                          else "reverse" if new < old
+                          else "even")
+            check(f"calendars splits: direction derived correctly "
+                  f"(old={old}, new={new}, direction={row.get('direction')})",
+                  row.get("direction") == expect_dir,
+                  f"expected {expect_dir}, got {row.get('direction')!r}")
+
+    # --- economic ---
+    ec = calendars.fetch(
+        cal_type="economic", start=start, end=end, limit=10, offset=0,
+        market_cap=None, filter_most_active=False,
+    )
+    if ec.get("results"):
+        row = ec["results"][0]
+        expected = set(calendars.ECONOMIC_KEYS)
+        check("calendars economic: row schema matches ECONOMIC_KEYS "
+              "(now includes `unit`)",
+              set(row.keys()) == expected,
+              f"diff +{set(row.keys()) - expected} -{expected - set(row.keys())}")
+        check("calendars economic: row.event is non-empty str",
+              isinstance(row.get("event"), str) and row["event"])
+        # `unit` is best-effort — most rows in a typical batch should
+        # match a rule (most economic releases ARE percent / index /
+        # currency / thousands).
+        with_unit = sum(1 for r in ec["results"] if r.get("unit"))
+        check(f"calendars economic: most rows get a unit inference "
+              f"({with_unit}/{len(ec['results'])} populated)",  # canary
+              with_unit >= max(1, len(ec["results"]) // 2),
+              f"got {with_unit}/{len(ec['results'])} with unit")
+
+    # --- --full path ---
+    sp_full = calendars.fetch(
+        cal_type="splits", start=start, end=end, limit=2, offset=0,
+        market_cap=None, filter_most_active=False, full=True,
+    )
+    if sp_full.get("results"):
+        row = sp_full["results"][0]
+        # Raw Yahoo keys snake_cased — the projection-only field
+        # `direction` should NOT be present in --full output.
+        check("calendars splits --full: emits raw snake_cased Yahoo keys "
+              "(symbol/payable_on/old_share_worth/share_worth)",
+              "old_share_worth" in row and "share_worth" in row
+              and "payable_on" in row,
+              f"got keys={list(row.keys())}")
+        check("calendars splits --full: NO derived fields like `direction`",
+              "direction" not in row,
+              f"got keys={list(row.keys())}")
+
+    # --- summarize() projections ---
+    er_sum = calendars.summarize(er) if er.get("results") else None
+    if er_sum:
+        s = er_sum.get("summary") or {}
+        check("calendars summarize(earnings): has count + count_by_timing dict",
+              "count" in s and isinstance(s.get("count_by_timing"), dict))
+        check("calendars summarize(earnings): preserves envelope metadata "
+              "(type/start/end)",
+              er_sum.get("type") == "earnings"
+              and er_sum.get("start") == start
+              and "results" not in er_sum,
+              f"got keys={list(er_sum.keys())}")
+
+    if sp.get("results"):
+        sp_sum = calendars.summarize(sp).get("summary") or {}
+        rows = sp.get("results") or []
+        expect_fwd = sum(1 for r in rows if r.get("direction") == "forward")
+        expect_rev = sum(1 for r in rows if r.get("direction") == "reverse")
+        check("calendars summarize(splits): count_forward/reverse match rows",
+              sp_sum.get("count_forward") == expect_fwd
+              and sp_sum.get("count_reverse") == expect_rev,
+              f"got fwd={sp_sum.get('count_forward')}, rev={sp_sum.get('count_reverse')}; "
+              f"expected fwd={expect_fwd}, rev={expect_rev}")
+
+    # --- empty path: pick a window that's likely to be empty for splits ---
+    # Splits in a 1-day window starting on a deep-past Saturday should
+    # rarely have anything. But tests need to be deterministic — instead,
+    # use a far-future window where Yahoo doesn't have splits scheduled.
+    far_start = "2030-12-25"
+    far_end = "2030-12-26"
+    em = calendars.fetch(
+        cal_type="splits", start=far_start, end=far_end, limit=5, offset=0,
+        market_cap=None, filter_most_active=False,
+    )
+    check("calendars splits (empty window): success-with-note path "
+          "(no error_kind, populated note, empty results)",
+          em.get("error_kind") is None
+          and em.get("note")
+          and em.get("results") == [],
+          f"got note={em.get('note')!r}, results={em.get('results')}, "
+          f"error_kind={em.get('error_kind')!r}")
+
+    # --- error path: mock with_retry to simulate network failure ---
+    # Calendars doesn't take tickers, so there's no "bogus ticker"
+    # path. Use a yfinance.Calendars subclass-monkey to force the
+    # error path.
+    import unittest.mock as _mock
+    with _mock.patch("calendars.with_retry",
+                     return_value=(None, "rate_limit", 3)):
+        err = calendars.fetch(
+            cal_type="earnings", start=start, end=end, limit=5, offset=0,
+            market_cap=None, filter_most_active=True,
+        )
+    check("calendars error path (mocked rate_limit): error/error_kind/attempts "
+          "populated, no results",
+          err.get("error_kind") == "rate_limit"
+          and err.get("attempts") == 3
+          and err.get("error")
+          and "results" not in err,
+          f"got {err!r}")
+
+    # --- CLI subprocess: single dict envelope (single --type) ---
+    cmd = [sys.executable, str(SCRIPTS_DIR / "calendars.py"),
+           "--type", "earnings", "--limit", "3"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    parsed = None
+    try:
+        parsed = json.loads(out.stdout) if out.returncode == 0 else None
+    except json.JSONDecodeError:
+        parsed = None
+    check("calendars.py CLI single --type: exits 0 + stdout is single dict envelope",
+          out.returncode == 0 and isinstance(parsed, dict)
+          and parsed.get("type") == "earnings"
+          and isinstance(parsed.get("results"), list),
+          f"rc={out.returncode}")
+
+    # --- CLI: case-insensitive --type (NEW: was case-sensitive before) ---
+    cmd = [sys.executable, str(SCRIPTS_DIR / "calendars.py"),
+           "--type", "SPLITS", "--limit", "2"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    parsed = json.loads(out.stdout) if out.returncode == 0 else None
+    check("calendars.py CLI --type SPLITS (uppercase): accepted, "
+          "envelope.type == 'splits'",
+          out.returncode == 0 and isinstance(parsed, dict)
+          and parsed.get("type") == "splits",
+          f"rc={out.returncode}")
+
+    # --- CLI: multi-type --type earnings,splits emits LIST envelope ---
+    cmd = [sys.executable, str(SCRIPTS_DIR / "calendars.py"),
+           "--type", "earnings,splits", "--limit", "2"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    parsed = json.loads(out.stdout) if out.returncode == 0 else None
+    check("calendars.py CLI --type earnings,splits: emits LIST of "
+          "2 envelopes (multi-type) in input order",
+          out.returncode == 0 and isinstance(parsed, list)
+          and len(parsed) == 2
+          and parsed[0].get("type") == "earnings"
+          and parsed[1].get("type") == "splits",
+          f"rc={out.returncode}, type={type(parsed).__name__}")
+
+    # --- CLI: --type all alias ---
+    cmd = [sys.executable, str(SCRIPTS_DIR / "calendars.py"),
+           "--type", "all", "--limit", "1"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+    parsed = json.loads(out.stdout) if out.returncode == 0 else None
+    check("calendars.py CLI --type all: 4 envelopes "
+          "(earnings/ipo/splits/economic)",
+          out.returncode == 0 and isinstance(parsed, list)
+          and len(parsed) == 4
+          and {e.get("type") for e in parsed}
+              == {"earnings", "ipo", "splits", "economic"},
+          f"rc={out.returncode}")
+
+    # --- CLI: --type all --format ndjson tags each row with record_class ---
+    cmd = [sys.executable, str(SCRIPTS_DIR / "calendars.py"),
+           "--type", "all", "--limit", "1", "--format", "ndjson"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+    nd_lines = [json.loads(ln) for ln in out.stdout.splitlines() if ln.strip()]
+    check("calendars.py CLI --type all --format ndjson: every record "
+          "has `record_class`",
+          out.returncode == 0
+          and len(nd_lines) >= 4  # at least 1 per type
+          and all("record_class" in r for r in nd_lines)
+          and {r["record_class"] for r in nd_lines}
+              <= {"earnings", "ipo", "splits", "economic"},
+          f"rc={out.returncode}, line_count={len(nd_lines)}")
+
+    # --- CLI: --summary on single type ---
+    cmd = [sys.executable, str(SCRIPTS_DIR / "calendars.py"),
+           "--type", "earnings", "--limit", "5", "--summary"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    parsed = json.loads(out.stdout) if out.returncode == 0 else None
+    check("calendars.py CLI --summary (single): envelope has `summary` "
+          "dict, NO `results` array",
+          out.returncode == 0 and isinstance(parsed, dict)
+          and isinstance(parsed.get("summary"), dict)
+          and "results" not in parsed,
+          f"rc={out.returncode}")
+
+    # --- CLI: --summary multi-type ---
+    cmd = [sys.executable, str(SCRIPTS_DIR / "calendars.py"),
+           "--type", "earnings,splits", "--limit", "5", "--summary"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    parsed = json.loads(out.stdout) if out.returncode == 0 else None
+    check("calendars.py CLI --summary multi: emits list of summary envelopes",
+          out.returncode == 0 and isinstance(parsed, list)
+          and len(parsed) == 2
+          and all("summary" in p for p in parsed),
+          f"rc={out.returncode}")
+
+    # --- CLI: --past-days subprocess ---
+    cmd = [sys.executable, str(SCRIPTS_DIR / "calendars.py"),
+           "--type", "economic", "--past-days", "3", "--limit", "2"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    parsed = json.loads(out.stdout) if out.returncode == 0 else None
+    if parsed:
+        expect_start = (today - timedelta(days=3)).isoformat()
+        check("calendars.py CLI --past-days 3: envelope.start = today-3, "
+              "envelope.end = today",
+              parsed.get("start") == expect_start
+              and parsed.get("end") == today.isoformat(),
+              f"got start={parsed.get('start')}, end={parsed.get('end')}")
+
+    # --- CLI: --days subprocess (verifies envelope.end matches start+N) ---
+    cmd = [sys.executable, str(SCRIPTS_DIR / "calendars.py"),
+           "--type", "ipo", "--start", "2026-06-01", "--days", "14",
+           "--limit", "1"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    parsed = json.loads(out.stdout) if out.returncode == 0 else None
+    check("calendars.py CLI --start + --days 14: envelope.end = start+14",
+          out.returncode == 0 and isinstance(parsed, dict)
+          and parsed.get("start") == "2026-06-01"
+          and parsed.get("end") == "2026-06-15",
+          f"rc={out.returncode}, parsed={parsed}")
+
+    # --- CLI: --type with invalid value rejected ---
+    cmd = [sys.executable, str(SCRIPTS_DIR / "calendars.py"),
+           "--type", "foobar"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+    check("calendars.py CLI --type foobar: rc=2 (rejected with helpful error)",
+          out.returncode == 2
+          and "unknown calendar type" in out.stderr.lower(),
+          f"rc={out.returncode}, stderr={out.stderr[:200]!r}")
+
+    # --- CLI: --no-most-active warning when paired with non-earnings type ---
+    cmd = [sys.executable, str(SCRIPTS_DIR / "calendars.py"),
+           "--type", "splits", "--no-most-active", "--limit", "1"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    check("calendars.py --type splits --no-most-active: stderr warns "
+          "(earnings-only flag)",
+          "warning" in out.stderr.lower() and "--no-most-active" in out.stderr,
+          f"got stderr={out.stderr!r}")
+
+    # --- CLI: --no-most-active does NOT warn when type list contains earnings ---
+    cmd = [sys.executable, str(SCRIPTS_DIR / "calendars.py"),
+           "--type", "earnings,splits", "--no-most-active", "--limit", "1"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+    check("calendars.py --type earnings,splits --no-most-active: no warning "
+          "(earnings is in the list)",
+          out.returncode == 0
+          and "warning" not in out.stderr.lower(),
+          f"rc={out.returncode}, stderr={out.stderr!r}")
+
+    # --- CLI: --start / --end strict format validation ---
+    for bad in ("2026/06/01", "2026-06-01T12:00:00", "06-01-2026", "Jun 1 2026"):
+        cmd = [sys.executable, str(SCRIPTS_DIR / "calendars.py"),
+               "--start", bad]
+        out = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+        check(f"calendars.py --start {bad!r}: rc=2 (strict YYYY-MM-DD)",
+              out.returncode == 2 and "must be YYYY-MM-DD" in out.stderr,
+              f"rc={out.returncode}")
+
+    # --- CLI: --end / --days / --past-days mutually exclusive ---
+    for combo in (
+        ("--end", "2026-06-15", "--days", "7"),
+        ("--end", "2026-06-15", "--past-days", "7"),
+        ("--days", "7", "--past-days", "7"),
+    ):
+        cmd = [sys.executable, str(SCRIPTS_DIR / "calendars.py"), *combo]
+        out = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+        check(f"calendars.py {' '.join(combo)}: rc=2 (mutually exclusive)",
+              out.returncode == 2,
+              f"rc={out.returncode}")
+
+    # --- CLI: --past-days + --start rejected ---
+    cmd = [sys.executable, str(SCRIPTS_DIR / "calendars.py"),
+           "--past-days", "7", "--start", "2026-01-01"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+    check("calendars.py --past-days + --start: rc=2 "
+          "(--past-days starts the window at today-N)",
+          out.returncode == 2
+          and "--past-days cannot be combined with --start" in out.stderr,
+          f"rc={out.returncode}")
+
+    # --- CLI: --full + --format csv rejected ---
+    cmd = [sys.executable, str(SCRIPTS_DIR / "calendars.py"),
+           "--full", "--format", "csv"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+    check("calendars.py --full + --format csv: rc=2 (incompatible)",
+          out.returncode == 2,
+          f"rc={out.returncode}")
+
+    # --- CLI: --summary + --full rejected ---
+    cmd = [sys.executable, str(SCRIPTS_DIR / "calendars.py"),
+           "--summary", "--full"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+    check("calendars.py --summary + --full: rc=2 (mutually exclusive)",
+          out.returncode == 2,
+          f"rc={out.returncode}")
+
+    # --- CSV format: header has type-specific cols (all 4 types) ---
+    for cal_type, keys in (
+        ("earnings", calendars.EARNINGS_KEYS),
+        ("ipo",      calendars.IPO_KEYS),
+        ("splits",   calendars.SPLITS_KEYS),
+        ("economic", calendars.ECONOMIC_KEYS),
+    ):
+        cmd = [sys.executable, str(SCRIPTS_DIR / "calendars.py"),
+               "--type", cal_type, "--limit", "2", "--format", "csv"]
+        out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+        csv_lines = [ln for ln in out.stdout.splitlines() if ln.strip()]
+        check(f"calendars.py --type {cal_type} --format csv: rc=0 + header",
+              out.returncode == 0 and len(csv_lines) >= 1,
+              f"rc={out.returncode}, lines={len(csv_lines)}")
+        if csv_lines:
+            header = csv_lines[0]
+            check(f"calendars.py --format csv ({cal_type}): header has "
+                  f"{cal_type.upper()}_KEYS + note + meta",
+                  all(c in header for c in keys)
+                  and "note" in header and "error_kind" in header,
+                  f"got header={header!r}")
+
+    # --- CSV multi-type: union schema with record_class discriminator ---
+    cmd = [sys.executable, str(SCRIPTS_DIR / "calendars.py"),
+           "--type", "earnings,splits", "--limit", "2", "--format", "csv"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    csv_lines = [ln for ln in out.stdout.splitlines() if ln.strip()]
+    if csv_lines:
+        header = csv_lines[0]
+        check("calendars.py multi-type --format csv: header starts with "
+              "record_class then union of cols from both types",
+              header.startswith("record_class,")
+              and "symbol" in header and "direction" in header
+              and "event_name" in header,
+              f"got header={header!r}")
+
+    # --- --full multi-type works (each envelope projected raw) ---
+    cmd = [sys.executable, str(SCRIPTS_DIR / "calendars.py"),
+           "--type", "all", "--full", "--limit", "1", "--format", "ndjson"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+    nd_lines = [json.loads(ln) for ln in out.stdout.splitlines() if ln.strip()]
+    check("calendars.py --type all --full --format ndjson: each row "
+          "has record_class + raw Yahoo keys (no derived `direction` "
+          "or `unit` even on splits / economic)",
+          out.returncode == 0 and len(nd_lines) >= 4
+          and all("record_class" in r for r in nd_lines)
+          and not any("direction" in r for r in nd_lines
+                      if r.get("record_class") == "splits")
+          and not any("unit" in r for r in nd_lines
+                      if r.get("record_class") == "economic"),
+          f"rc={out.returncode}, lines={len(nd_lines)}")
+
+    # --- --summary --format csv (single type): nested dict cells
+    #     JSON-encoded into single columns ---
+    cmd = [sys.executable, str(SCRIPTS_DIR / "calendars.py"),
+           "--type", "earnings", "--summary", "--limit", "5", "--format", "csv"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    csv_lines = [ln for ln in out.stdout.splitlines() if ln.strip()]
+    check("calendars.py --type earnings --summary --format csv: rc=0 "
+          "+ header + 1 data row",
+          out.returncode == 0 and len(csv_lines) == 2,
+          f"rc={out.returncode}, lines={len(csv_lines)}")
+    if len(csv_lines) >= 2:
+        header = csv_lines[0]
+        check("calendars.py --summary --format csv (earnings): header has "
+              "type + count + count_by_timing + avg_market_cap",
+              "type" in header and "count" in header
+              and "count_by_timing" in header and "avg_market_cap" in header,
+              f"got header={header!r}")
+
+    # --- --summary --format csv (multi-type): one row per type ---
+    cmd = [sys.executable, str(SCRIPTS_DIR / "calendars.py"),
+           "--type", "earnings,splits", "--summary", "--limit", "5",
+           "--format", "csv"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    csv_lines = [ln for ln in out.stdout.splitlines() if ln.strip()]
+    check("calendars.py multi-type --summary --format csv: header + "
+          "2 data rows (one per type)",
+          out.returncode == 0 and len(csv_lines) == 3,
+          f"rc={out.returncode}, lines={len(csv_lines)}")
+
+    # --- --type all --summary: 4 envelopes, each with `summary` ---
+    cmd = [sys.executable, str(SCRIPTS_DIR / "calendars.py"),
+           "--type", "all", "--summary", "--limit", "5"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+    parsed = json.loads(out.stdout) if out.returncode == 0 else None
+    check("calendars.py --type all --summary: 4 envelopes, each has summary",
+          out.returncode == 0 and isinstance(parsed, list)
+          and len(parsed) == 4
+          and all(isinstance(p.get("summary"), dict) for p in parsed),
+          f"rc={out.returncode}, len={len(parsed) if parsed else 'None'}")
+
+    # --- summarize() on error envelope: produces sensible shape, no crash ---
+    err_env = {
+        "type": "earnings",
+        "start": "2026-05-10",
+        "end": "2026-05-17",
+        "filter_most_active": True,
+        "market_cap_floor": None,
+        "error": "fetch failed (rate_limit, after 3 attempt(s))",
+        "error_kind": "rate_limit",
+        "attempts": 3,
+    }  # NB: no `results` key — error path
+    rolled = calendars.summarize(err_env)
+    check("calendars summarize(error envelope): preserves error fields, "
+          "summary={count: 0, ...}",
+          rolled.get("error_kind") == "rate_limit"
+          and isinstance(rolled.get("summary"), dict)
+          and rolled["summary"].get("count") == 0
+          and "results" not in rolled,
+          f"got {rolled!r}")
+
+    # --- count_by_region renamed (was count_by_region_top10) ---
+    if ec.get("results"):
+        ec_sum = calendars.summarize(ec).get("summary") or {}
+        check("calendars summarize(economic): rollup uses `count_by_region` "
+              "(NOT count_by_region_top10 — name fixed)",
+              "count_by_region" in ec_sum
+              and "count_by_region_top10" not in ec_sum,
+              f"got keys={list(ec_sum.keys())}")
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"calendars fetch crashed: {e}")
     traceback.print_exc(file=sys.stderr)
 
 

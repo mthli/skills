@@ -28,9 +28,10 @@ one per mode:
 - `scripts/screener.py` — market-wide discovery. Run a Yahoo predefined screen (`day_gainers`, `undervalued_growth_stocks`, `top_etfs_us`, …) or a custom AND/OR query over fields like `intradaymarketcap`, `peratio.lasttwelvemonths`, `epsgrowth.lasttwelvemonths`. Returns up to 250 quotes per call. **Only mode that produces tickers from a filter rather than starting from a known ticker.**
 - `scripts/fund_holdings.py` — ETF / mutual-fund holdings. Top-10 positions, sector / asset / bond-rating weightings, expense ratio + AUM, fund-level P/E / P/B / duration. **Fund-only** (equity / index / crypto / FX / future return success-with-note carrying the resolved `quote_type` — no follow-up `fast_info` chain needed). One HTTP per ticker covers all 9 sections.
 - `scripts/sec_filings.py` — SEC filings list (10-K / 10-Q / 8-K / DEF 14A / 20-F / 6-K / SC 13G/A / etc.) with date, type, title, primary doc URL, and exhibits dict. Up to ~75–120 filings going back ~3 years per ticker. Coverage is **SEC-registered securities only**: US-listed equities and ADRs (TM = 6-K + 20-F) get full data; non-US primary listings (BMW.DE, 0700.HK), ETFs, mutual funds, indexes, crypto, FX, futures, and bogus tickers all return success-with-note (ambiguous — chain `fast_info` to disambiguate). No `coverage_note` partial-empty path — the SEC-filings endpoint is binary.
+- `scripts/calendars.py` — market-wide event calendars (earnings / IPO / splits / economic) over a date window. **Single envelope per call** (or **list of envelopes** for multi-type), NOT per-ticker — same shape as `screener`. Multi-type via comma-separated `--type earnings,ipo` or `--type all`. Per-type rollup via `--summary`. Retrospective scan via `--past-days N`. Raw Yahoo payload via `--full`. One HTTP per type (earnings with default most-active filter is 2 HTTP). Default window today + 7 days. Discovery mode for "what's happening this week" — distinct from per-ticker `earnings.py`.
 
 Shared NaN/Inf-safe converters live in `scripts/helpers.py`. A
-`scripts/smoke.py` test exercises all thirteen wrappers against
+`scripts/smoke.py` test exercises all fourteen wrappers against
 representative tickers — run after editing schema or when yfinance API
 drift is suspected:
 `uv run --with 'yfinance>=1.3,<2' --with 'lxml' python <SKILL_DIR>/scripts/smoke.py`
@@ -112,6 +113,14 @@ as functionality grows.
 > flag picks the **target set** the screen filters against (Yahoo's
 > `quoteType` for custom queries; predefined screens have it baked
 > in). Chain into per-ticker modes via `--format symbols | xargs`.
+>
+> **`calendars` doesn't take a ticker either** — it's market-wide
+> event discovery (earnings / IPO / splits / economic) over a date
+> window. Single envelope per call (one HTTP, one result), NOT a
+> per-ticker array. Distinct from per-ticker `earnings.py`: that
+> answers "AAPL's earnings history"; `calendars` answers "who's
+> reporting this week". Each `--type` has its own schema — see
+> references/calendars.md.
 
 | Question shape | Mode | Why |
 |---|---|---|
@@ -169,6 +178,13 @@ as functionality grows.
 | "P/E of SPY's holdings", "fund-level P/E / P/B", "duration of AGG" | `fund_holdings` | `equity_metrics` (PE / PB / PS / PCF — **inverted from Yahoo's raw `1/ratio` encoding**, surfaced as conventional ratios) + `bond_metrics` (duration / maturity in years). NB: this is fund-level aggregation, NOT a single stock's P/E (use `info` for that) |
 | "compare 3 ETFs side by side", "rank ETFs by expense / AUM / concentration" | `fund_holdings --summary` | flat per-fund dict: expense ratio, AUM, top holding + weight, `holdings_concentration` (sum of weights across `holdings_returned` rows — read together; for bond ETFs returning 0–1 rows it's NOT "top-10 concentration"), top sector, P/E, P/B, duration |
 | "find me stocks where X", "top gainers / losers today", "undervalued growth stocks", "best ETFs", "screen by P/E + dividend + sector" | `screener` | **only discovery mode** — every other mode starts from a known ticker. Two paths: `--predefined NAME` (19 Yahoo saved screens like `day_gainers`, `undervalued_growth_stocks`, `top_etfs_us`) or `--query JSON` (custom AND/OR tree). Discovery flags: `--list-predefined` (catalog with descriptions), `--list-fields equity\|fund\|etf` (valid fields for custom queries). Output: default JSON envelope, or `--format symbols` for `xargs`-friendly ticker lists, or `--full` for the raw Yahoo payload (~60-85 fields per quote) |
+| "who's reporting earnings this week", "earnings calendar next 14 days", "upcoming earnings, large caps only" | `calendars --type earnings` | market-wide earnings calendar (default window: today + 7). Defaults to Yahoo's most-active filter (~200 most-active US tickers); pass `--no-most-active` for the firehose, `--market-cap 1e10` for large caps only. Distinct from per-ticker `earnings.py` (which needs a ticker). One HTTP (or 2 with default filter) |
+| "upcoming IPOs", "IPO calendar this month", "what's pricing this week" | `calendars --type ipo --days 30` | IPO calendar with filing / pricing / amendment dates (full ISO datetime preserved — Yahoo's `04:00 UTC` encoding can be off-by-one in EST winter, so we don't truncate), price range, share count, and `action` status (`Expected` / `Priced` / `Postponed` / `Withdrawn`) |
+| "stock splits this week", "any reverse splits coming up" | `calendars --type splits` | Splits calendar (forward and reverse) with **derived `direction` field** (`forward` / `reverse` / `even`) — no need to compare ratios manually. Empirically dominated by Korean reverse splits — filter consumer-side if you want US only |
+| "economic events this week", "CPI / FOMC / GDP calendar", "macro releases next 7 days" | `calendars --type economic` | Macro calendar (CPI, FOMC, GDP, jobs, etc.) with consensus / actual / prior + **best-effort `unit` field** (`percent` / `index_level` / `thousands` / `currency`). ~48% of events have real intraday `event_time`; the rest fall back to midnight UTC (date-of-release). Country code in `region` |
+| "what's happening this week", "all market events", "earnings + IPOs + splits in one query" | `calendars --type all` | Multi-type fetch in one invocation. Each type is a separate HTTP call; output is a list of envelopes (JSON) or per-record `record_class`-tagged rows (NDJSON / CSV). Pair with `--summary` for a digest |
+| "who reported last week", "IPOs in the past 30 days", "macro releases I missed" | `calendars --past-days N` | Retrospective scan: window = (today − N) → today. Mutually exclusive with `--start` / `--end` / `--days` |
+| "summary of this week's events", "rollup count of earnings / IPOs / splits" | `calendars --summary` | Per-type counts and aggregates (count_by_timing, count_by_action, count_forward / count_reverse, count_by_region_top10, ...) instead of full event lists. Pairs with `--type all` for cross-type peer compare |
 
 A single user request can need multiple modes. "What's AAPL trading at, how
 much is it up YTD, and what's its P/E?" → `fast_info` for the live price,
@@ -192,6 +208,13 @@ If the user asks "find me X" / "screen for X" / "top movers" / "best
 ETFs" and you don't yet have a ticker list, jump to `screener`
 (predefined or custom) — none of the other modes can answer the
 discovery shape.
+
+If the user asks "what's happening this week" / "who's reporting" /
+"earnings calendar" / "upcoming IPOs" / "macro events" — that's
+**market-wide event discovery**, jump to `calendars --type
+earnings|ipo|splits|economic`. Per-ticker `earnings.py` can't answer
+this without a ticker list (no inverse direction); `calendars` is
+date-bounded and ticker-free.
 
 ## Invocations
 
@@ -284,6 +307,22 @@ uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/sec_filings.py --sin
 uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/sec_filings.py --days 30 --type 8-K AAPL TSLA NVDA  # 8-Ks in last 30 days
 uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/sec_filings.py --summary AAPL MSFT NVDA             # peer rollup (latest_10k_date, latest_proxy_date, filings_last_90d, ...)
 uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/sec_filings.py --format csv --limit 5 AAPL          # CSV: row per filing (exhibits dict dropped, exhibit_keys preserved)
+
+# calendars — market-wide event calendar (see references/calendars.md)
+# Single-call API per --type: emits ONE envelope dict, OR a LIST of envelopes for multi-type. NOT a per-ticker mode.
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/calendars.py                                                       # earnings this week (default — most-active filter ON, today + 7, --limit 25)
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/calendars.py --days 14 --market-cap 10e9 --limit 50                # large-cap earnings, next 14 days
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/calendars.py --no-most-active --limit 100                          # full earnings firehose
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/calendars.py --type ipo --days 30 --limit 50                       # upcoming IPOs, next 30 days
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/calendars.py --type splits                                         # stock splits this week (with derived `direction`)
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/calendars.py --type economic --limit 50                            # macro events with `unit` heuristic
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/calendars.py --type all --limit 25 --format ndjson                 # MULTI-TYPE: all 4 types, one record per line, record_class discriminator
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/calendars.py --type earnings,ipo --days 14                         # multi-type subset
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/calendars.py --past-days 7 --type all                              # RETROSPECTIVE: window = (today-7) → today
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/calendars.py --type all --summary --limit 100                      # SUMMARY: per-type rollup counts/aggregates
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/calendars.py --type splits --full --limit 5                        # FULL: raw Yahoo column names (no projection)
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/calendars.py --start 2026-06-01 --end 2026-06-15                   # explicit date window
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/calendars.py --type earnings --format csv --days 7                 # CSV: row per event, type-specific cols
 ```
 
 `<SKILL_DIR>` is the absolute path of the directory containing this
@@ -296,9 +335,12 @@ Rough per-ticker cost: `fast_info` / `news` / `holders` / `insiders` /
 similar shape to news), `fund_holdings` ~0.7–1.5 s (single quoteSummary
 call but fetches 4 modules at once — see references/performance.md),
 `history` ~0.5–4 s, `info` / `earnings` / `financials` / `options` /
-`analyst` ~1–5 s. **`screener` is per-call, not per-ticker** —
-1 HTTP returns ≤ 250 quotes (~1–3 s typical), so the marginal cost
-of a wider screen is ~0. (`analyst` makes **3 HTTP per ticker** —
+`analyst` ~1–5 s. **`screener` and `calendars` are per-call, not
+per-ticker** — `screener` is 1 HTTP returning ≤ 250 quotes (~1–3 s
+typical), so the marginal cost of a wider screen is ~0. `calendars`
+is 1 HTTP per call (~1–2 s) **except** earnings with the default
+most-active filter, which costs 2 HTTP (the prescreen for the
+most-active list runs first). (`analyst` makes **3 HTTP per ticker** —
 `recommendations`, `upgrades_downgrades`, and `fast_info` for
 `quote_type` — each from a different endpoint or module group, so
 none share a backend request; the `fast_info` call is the
@@ -329,7 +371,7 @@ explanation, and the version-pin rationale.
 
 ## Cross-cutting caveats
 
-These apply to all thirteen modes. Mode-specific caveats live in the
+These apply to all fourteen modes. Mode-specific caveats live in the
 matching `references/<mode>.md`. Grouped into three concerns:
 
 ### Data formats (interpreting the numbers)
@@ -539,15 +581,24 @@ matching `references/<mode>.md`. Grouped into three concerns:
   - `sec_filings` — ✅ default (one row per filing; the nested
     `exhibits` dict is dropped from CSV — `primary_url` +
     `exhibit_count` carry the headline signals); ✅ `--summary`.
+  - `calendars` — ✅ default (one row per event; type-specific
+    columns — earnings has 9 fields, ipo 12, splits 7 incl.
+    `direction`, economic 9 incl. `unit`; plus `note` + meta).
+    Multi-type CSV: union of all type cols + `record_class`
+    discriminator. ✅ `--summary` (one row per type; nested counts
+    dicts JSON-encoded into a single cell). ❌ CSV with `--full`
+    (raw Yahoo keys break column stability — argparse rejects
+    the combo; use `--format ndjson --full`).
 
-  **`screener` shape note.** Screener is the only mode that emits a
-  **single envelope dict** (one screener call → one result), not a
-  list of per-ticker records. JSON output wraps the quotes in
-  `total` / `returned` / `predefined` / `title` metadata. NDJSON
-  drops the envelope and emits one quote per line. CSV emits one
-  row per quote (no envelope columns). On error / no-match,
-  NDJSON / CSV emit a single envelope-summary line / row instead
-  of empty stdout.
+  **`screener` and `calendars` shape note.** Both emit a **single
+  envelope dict** (one call → one result), not a list of per-ticker
+  records. `screener`'s envelope wraps quotes in `total` / `returned`
+  / `predefined` / `title` metadata; `calendars` wraps records in
+  `type` / `start` / `end` / `total` / `returned` (and earnings adds
+  `filter_most_active` / `market_cap_floor`). NDJSON drops the
+  envelope and emits one record per line. CSV emits one row per
+  record (no envelope columns). On error / no-match, NDJSON / CSV
+  emit a single envelope-summary line / row instead of empty stdout.
   
   **CSV row shapes split into two families.** Strict "one row per
   ticker": `fast_info` and all `--summary` modes (`history` / `info` /
@@ -581,6 +632,20 @@ matching `references/<mode>.md`. Grouped into three concerns:
   carry row with `note` / meta cols populated. Plus a `symbols`
   format (one ticker per line, no header) for piping into per-ticker
   modes via xargs.
+
+  **`calendars` is the same shape, but supports both single AND
+  multi envelopes.** Single `--type` → one envelope per call (same
+  as screener). Multi `--type earnings,ipo` or `--type all` → list
+  of envelopes (JSON) or per-record `record_class`-tagged rows
+  (NDJSON / CSV). No `total` field in the envelope (Yahoo doesn't
+  return one). Default CSV emits one row per event with
+  type-specific columns; multi-type CSV uses the union of all type
+  cols with empty cells where N/A. No `symbol` column on `--type
+  economic` (events aren't ticker-bound). On error / no-match it
+  emits a single carry row with `note` / meta cols populated. No
+  `symbols` format. `--summary` projects the `results` list down to
+  a per-type rollup dict (counts / aggregates) — useful for
+  cross-type digest under `--type all --summary`.
 - **`note` field convention.** Several modes expose a per-result
   `note` string carrying **ambiguous-but-successful** state, distinct
   from `error` (which only appears on failure). Two cross-mode
@@ -638,6 +703,12 @@ matching `references/<mode>.md`. Grouped into three concerns:
     no rows in current market state, or custom query is too
     restrictive). No `error_kind` is set; the empty `quotes` array
     IS the answer. CSV / NDJSON emit a single carrying row / line.
+  - `calendars.note` — **zero events in window** (date range too
+    narrow, or filters too restrictive — e.g. `--days 1` on a
+    weekend, `--market-cap 1e12` on earnings). No `error_kind` is
+    set; the empty `results` array IS the answer. CSV / NDJSON
+    emit a single carrying row / line. Same shape contract as
+    `screener.note`.
   - `fund_holdings.note` — **non-fund symbol** (`YFDataException`
     caught from yfinance: equity / index / crypto / FX / future). The
     response carries `symbol` + `quote_type` + `note`; no data
