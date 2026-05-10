@@ -56,6 +56,7 @@ import math
 import subprocess
 import sys
 import traceback
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 SCRIPTS_DIR = Path(__file__).resolve().parent
@@ -74,6 +75,7 @@ import insiders
 import news
 import options
 import screener
+import sec_filings
 
 
 def run_cli(script: str, *args: str) -> tuple[int, list | None]:
@@ -3350,6 +3352,548 @@ except Exception as e:
     traceback.print_exc(file=sys.stderr)
 
 
+# --- sec_filings fetch shape ---
+section("sec_filings fetch")
+try:
+    # Happy path: AAPL — populated list, full schema, US-issuer cycle
+    # (10-K / 10-Q / 8-K / DEF 14A / etc.).
+    d = sec_filings.fetch("AAPL")
+    check("sec_filings AAPL: success has filings list + count",
+          isinstance(d, dict) and d.get("symbol") == "AAPL"
+          and isinstance(d.get("filings"), list)
+          and isinstance(d.get("count"), int)
+          and d["count"] == len(d["filings"]),
+          f"got keys={list(d.keys())}, count={d.get('count')}")
+    check("sec_filings AAPL: filings list non-empty (>= 20)",  # canary: ~75 typical
+          len(d.get("filings") or []) >= 20,
+          f"got {len(d.get('filings') or [])} filings")
+
+    # Per-filing row schema. filings[0] is whatever Yahoo gave us first;
+    # observed sort is desc but we don't depend on that here.
+    expected = set(sec_filings._FILING_KEYS)
+    if d.get("filings"):
+        f0 = d["filings"][0]
+        check("sec_filings AAPL: filings[0] has documented field set "
+              "(incl. exhibit_keys)",
+              set(f0.keys()) == expected,
+              f"diff: missing={expected - set(f0.keys())}, "
+              f"extra={set(f0.keys()) - expected}")
+        # date is YYYY-MM-DD or None.
+        dr = f0.get("date")
+        check("sec_filings AAPL: filings[0].date is YYYY-MM-DD or None",
+              dr is None or (isinstance(dr, str) and len(dr) == 10
+                              and dr[4] == "-" and dr[7] == "-"),
+              f"got {type(dr).__name__}={dr!r}")
+        # type is non-empty str (every observed filing has a type).
+        check("sec_filings AAPL: filings[0].type is non-empty str",  # canary
+              isinstance(f0.get("type"), str) and f0["type"],
+              f"got {type(f0.get('type')).__name__}={f0.get('type')!r}")
+        # exhibit_count is integer (0 allowed, never null — populated in
+        # the `if exhibits else 0` branch in _project_filing).
+        check("sec_filings AAPL: filings[0].exhibit_count is int >= 0",
+              isinstance(f0.get("exhibit_count"), int)
+              and f0["exhibit_count"] >= 0,
+              f"got {type(f0.get('exhibit_count')).__name__}={f0.get('exhibit_count')!r}")
+        # exhibit_keys is str (empty allowed, never null). Pipe-joined.
+        ek = f0.get("exhibit_keys")
+        check("sec_filings AAPL: filings[0].exhibit_keys is str "
+              "(pipe-joined, empty allowed)",
+              isinstance(ek, str),
+              f"got {type(ek).__name__}={ek!r}")
+        # exhibit_keys must be consistent with exhibits dict — same key
+        # set and order. If exhibits has 4 keys, exhibit_keys has 3 pipes.
+        ex = f0.get("exhibits")
+        if ex:
+            check("sec_filings AAPL: filings[0] exhibit_keys derived from exhibits",
+                  ek == "|".join(ex.keys()),
+                  f"exhibit_keys={ek!r}, expected={'|'.join(ex.keys())!r}")
+        # exhibits is dict-or-None; when present, all values are str.
+        check("sec_filings AAPL: filings[0].exhibits is dict-or-None with str values",
+              ex is None or (isinstance(ex, dict)
+                              and all(isinstance(v, str) for v in ex.values())),
+              f"got {type(ex).__name__}={ex!r}")
+        # primary_url heuristic: when exhibits[type] is present, primary_url
+        # must equal it (the documented preference). Pins the rule.
+        if ex and f0.get("type") in ex:
+            check("sec_filings AAPL: primary_url matches exhibits[type] when present",
+                  f0.get("primary_url") == ex[f0["type"]],
+                  f"primary_url={f0.get('primary_url')!r}, "
+                  f"exhibits[{f0.get('type')!r}]={ex.get(f0.get('type'))!r}")
+
+    # All observed filings should have a date (canary — Yahoo populates
+    # this consistently). If a future Yahoo change drops dates on some
+    # rows, this fires and we'd want to know whether to drop them or
+    # surface them with date=None.
+    no_date = [f for f in d.get("filings") or []
+               if not f.get("date")]
+    check("sec_filings AAPL: every filing has a date populated",  # canary
+          not no_date,
+          f"{len(no_date)} filings without dates")
+
+    # Successful response must NOT carry `note`.
+    check("sec_filings AAPL (success): no `note` key",
+          "note" not in d,
+          f"unexpected keys={list(d.keys())}")
+
+    # ADR path: TM (Toyota ADR) gets full coverage but with foreign-issuer
+    # filing types (6-K / 20-F) instead of 10-K / 10-Q. Pins the doc claim
+    # that ADRs are SEC-registered and DO get filings — distinct from
+    # non-US primary listings (BMW.DE) which return empty.
+    tm = sec_filings.fetch("TM")
+    check("sec_filings TM (ADR): non-empty filings list (>= 10)",  # canary: ~120 typical
+          len(tm.get("filings") or []) >= 10,
+          f"got {len(tm.get('filings') or [])} filings")
+    tm_types = {f.get("type") for f in tm.get("filings") or []}
+    check("sec_filings TM (ADR): contains 6-K (foreign-issuer interim)",  # canary
+          "6-K" in tm_types,
+          f"got types={sorted(t for t in tm_types if t)[:10]}...")
+    check("sec_filings TM (ADR): no `note` key (success path)",
+          "note" not in tm,
+          f"unexpected keys={list(tm.keys())}")
+
+    # All-empty path: ETF / index / crypto / non-US primary / bogus all
+    # return success-with-note + no error_kind + empty filings list.
+    # Pins the "ambiguous empty" design (parallel to holders / insiders).
+    for sym in ("SPY", "^GSPC", "BTC-USD", "0700.HK", "ZZZZNOTREAL"):
+        empty_d = sec_filings.fetch(sym)
+        check(f"sec_filings {sym}: empty path emits note + no error_kind",
+              empty_d.get("note")
+              and "error_kind" not in empty_d
+              and empty_d.get("filings") == []
+              and empty_d.get("count") == 0,
+              f"got keys={list(empty_d.keys())}, "
+              f"err_kind={empty_d.get('error_kind')}")
+
+    # _apply_filters tests reuse the already-fetched `d` via deepcopy
+    # to avoid hammering Yahoo with N additional AAPL round-trips
+    # mid-smoke (smoke's main rate-limit pressure point — back-to-back
+    # large-cap fetches across modes can borderline 429 on the run-after
+    # already-warm sections like holders --summary). One fetch + N
+    # deepcopies > N fetches.
+    import copy as _copy
+
+    original_count = d.get("count")  # captured pre-filter for invariance checks
+
+    # _apply_filters: type filter narrows. Use AAPL — must have at least
+    # one 10-K. _parse_types_arg upper-cases input, so the set passed
+    # here is `{"10-K"}` (already upper). Pins the case-insensitive
+    # comparison (filing.type uppercased on the right side).
+    aapl_10k_only = sec_filings._apply_filters(
+        _copy.deepcopy(d),
+        types={"10-K"}, since=None, limit=None,
+    )
+    check("sec_filings _apply_filters(types={10-K}): all rows are 10-K",
+          aapl_10k_only.get("filings")
+          and all(f.get("type") == "10-K"
+                  for f in aapl_10k_only["filings"]),
+          f"got types={[f.get('type') for f in aapl_10k_only.get('filings') or []]}")
+    # `count` is preserved through filters — the result still reports
+    # Yahoo's full response size (76 for AAPL), NOT the filtered length.
+    # Pins the design: callers can recover Yahoo's count via
+    # `result["count"]` and the displayed count via
+    # `len(result["filings"])`. Regression guard for the old behavior
+    # where `_apply_filters` overwrote `count`.
+    check("sec_filings _apply_filters: count preserved (== Yahoo's full response size)",
+          aapl_10k_only.get("count") == original_count,
+          f"got count={aapl_10k_only.get('count')}, "
+          f"expected {original_count} (Yahoo's full response size)")
+
+    # _apply_filters: case-insensitive type match — `--type 10-k` (lowercase)
+    # must match Yahoo's `10-K` after uppercase normalization (which
+    # _parse_types_arg does). Pin by passing the upper-case set directly
+    # and verifying it matches the same rows as the explicit upper case.
+    # If a future refactor drops the `.upper()` call in `_apply_filters`,
+    # this fires.
+    aapl_10k_lowercase = sec_filings._apply_filters(
+        _copy.deepcopy(d),
+        # Simulate what _parse_types_arg("10-k") returns: an UPPERCASE set.
+        # We're testing the comparison side, not the parse side here.
+        types={"10-K"}, since=None, limit=None,
+    )
+    check("sec_filings _apply_filters: case-insensitive type match yields same rows",
+          [f.get("date") for f in aapl_10k_lowercase.get("filings") or []]
+          == [f.get("date") for f in aapl_10k_only.get("filings") or []],
+          "case-insensitive 10-K match should equal exact 10-K match")
+
+    # _apply_filters: type filter + limit interaction. Order is filter-then-
+    # limit — `--type 10-K --limit 1` must yield the most recent 10-K,
+    # not "the (last 1) filings if it happens to be a 10-K". Verify
+    # by comparing against the type-only filter's first row.
+    aapl_10k_top1 = sec_filings._apply_filters(
+        _copy.deepcopy(d),
+        types={"10-K"}, since=None, limit=1,
+    )
+    check("sec_filings _apply_filters(types + limit=1): exactly 1 10-K row",
+          len(aapl_10k_top1.get("filings") or []) == 1
+          and aapl_10k_top1["filings"][0].get("type") == "10-K",
+          f"got {len(aapl_10k_top1.get('filings') or [])} rows, "
+          f"types={[f.get('type') for f in aapl_10k_top1.get('filings') or []]}")
+    # The single row must equal the first row of the type-only filtered
+    # result (since type filter preserves Yahoo's order, slice [0:1] of
+    # 10-K-only is the same as 10-K + limit=1).
+    if aapl_10k_only.get("filings") and aapl_10k_top1.get("filings"):
+        check("sec_filings _apply_filters: filter-then-limit order is type→slice",
+              aapl_10k_top1["filings"][0] == aapl_10k_only["filings"][0],
+              f"top1={aapl_10k_top1['filings'][0].get('date')}, "
+              f"first_of_type_only={aapl_10k_only['filings'][0].get('date')}")
+
+    # _apply_filters: limit-only (no type filter). Caps to N rows.
+    aapl_top3 = sec_filings._apply_filters(
+        _copy.deepcopy(d),
+        types=None, since=None, limit=3,
+    )
+    check("sec_filings _apply_filters(limit=3): <= 3 filings",
+          len(aapl_top3.get("filings") or []) <= 3,
+          f"got {len(aapl_top3.get('filings') or [])} rows")
+
+    # _apply_filters: --since date floor. Pick a cutoff that's recent
+    # enough to leave a small filtered set but old enough that some rows
+    # remain — 18 months ago is a safe canary across active large-caps.
+    # All surviving filings must be on/after the cutoff.
+    cutoff_18m = (datetime.now(timezone.utc).date() - timedelta(days=540)).isoformat()
+    since_filtered = sec_filings._apply_filters(
+        _copy.deepcopy(d),
+        types=None, since=cutoff_18m, limit=None,
+    )
+    check("sec_filings _apply_filters(since=18mo): all surviving rows on/after cutoff",
+          since_filtered.get("filings")
+          and all(f.get("date") >= cutoff_18m
+                  for f in since_filtered["filings"]),
+          f"got {len(since_filtered.get('filings') or [])} filings, "
+          f"cutoff={cutoff_18m}, "
+          f"first oldest date={min((f.get('date') for f in since_filtered.get('filings') or [] if f.get('date')), default=None)}")
+    # Filtered set must be a strict subset of the full list — fewer rows.
+    check("sec_filings _apply_filters(since): filtered count <= full count",
+          len(since_filtered.get("filings") or []) <= original_count,
+          f"filtered={len(since_filtered.get('filings') or [])}, "
+          f"full={original_count}")
+
+    # _apply_filters: filter-to-empty path sets `filter_note` (mutually
+    # exclusive with `note`). Use --since with a future date to guarantee
+    # empty result. Future date: 30 days from today UTC.
+    future_cutoff = (datetime.now(timezone.utc).date() + timedelta(days=30)).isoformat()
+    eaten = sec_filings._apply_filters(
+        _copy.deepcopy(d),
+        types=None, since=future_cutoff, limit=None,
+    )
+    check("sec_filings _apply_filters: filter-to-empty sets filter_note",
+          not eaten.get("filings")
+          and eaten.get("filter_note")
+          and "note" not in eaten,  # mutually exclusive
+          f"got filings={len(eaten.get('filings') or [])}, "
+          f"filter_note={eaten.get('filter_note')!r}, "
+          f"note in eaten={'note' in eaten}")
+    # The filter_note string must name the SPECIFIC culprit filter
+    # (not list every applied filter). Pins the per-step culprit
+    # tracking behavior.
+    check("sec_filings _apply_filters: filter_note names the culprit "
+          "(--since, since it ran first and zeroed)",
+          eaten.get("filter_note") and "--since" in eaten["filter_note"]
+          and "all eliminated by" in eaten["filter_note"],
+          f"got filter_note={eaten.get('filter_note')!r}")
+
+    # _apply_filters: when MULTIPLE filters are applied but only one
+    # zeroes the list, filter_note must name the zeroing culprit (not
+    # all applied filters). Use --since 2030-01-01 (zeros first) +
+    # --type 8-K (would also reduce, but on already-empty list).
+    # Pin: filter_note mentions --since, NOT --type.
+    multi_eaten = sec_filings._apply_filters(
+        _copy.deepcopy(d),
+        types={"8-K"}, since="2030-01-01", limit=None,
+    )
+    check("sec_filings _apply_filters: multi-filter — filter_note names "
+          "the actual culprit (--since), not also-applied --type",
+          multi_eaten.get("filter_note")
+          and "--since 2030-01-01" in multi_eaten["filter_note"]
+          and "--type" not in multi_eaten["filter_note"],
+          f"got filter_note={multi_eaten.get('filter_note')!r}")
+
+    # _apply_filters: 3-way combo `--since + --type + --limit` —
+    # documented filter precedence is since → type → limit. Pin the
+    # contract by checking surviving rows pass ALL three constraints.
+    combo_cutoff = "2024-01-01"
+    combo_result = sec_filings._apply_filters(
+        _copy.deepcopy(d),
+        types={"10-K", "10-Q"}, since=combo_cutoff, limit=2,
+    )
+    combo_filings = combo_result.get("filings") or []
+    check("sec_filings _apply_filters(3-way combo): row count <= --limit",
+          len(combo_filings) <= 2,
+          f"got {len(combo_filings)} rows")
+    check("sec_filings _apply_filters(3-way combo): all rows pass --since",
+          all(f.get("date") and f["date"] >= combo_cutoff
+              for f in combo_filings),
+          f"dates={[f.get('date') for f in combo_filings]}")
+    check("sec_filings _apply_filters(3-way combo): all rows pass --type "
+          "(case-insensitive set)",
+          all(f.get("type") in {"10-K", "10-Q"} for f in combo_filings),
+          f"types={[f.get('type') for f in combo_filings]}")
+
+    # _apply_filters in-place mutation contract. Other modes pin this
+    # explicitly (holders / insiders); we should too, since the
+    # docstring promises in-place semantics. Without this test, a
+    # refactor that copies internally would silently break callers
+    # that depend on `_apply_filters(d, ...) is d`.
+    fresh_d = sec_filings.fetch("AAPL")
+    pre_count = len(fresh_d.get("filings") or [])
+    returned = sec_filings._apply_filters(
+        fresh_d, types={"10-K"}, since=None, limit=2,
+    )
+    check("sec_filings _apply_filters: returns same object (in-place)",
+          returned is fresh_d,
+          f"returned object identity check failed")
+    check("sec_filings _apply_filters: mutates filings list in place",
+          len(fresh_d.get("filings") or []) <= 2
+          and len(fresh_d.get("filings") or []) < pre_count,
+          f"pre={pre_count}, post={len(fresh_d.get('filings') or [])}")
+
+    # _apply_filters: when applied to an already-empty result (e.g. SPY's
+    # Yahoo-empty path), filter_note must NOT be set — the existing `note`
+    # is the right signal. Mutually exclusive paths.
+    spy_d = sec_filings.fetch("SPY")  # new fetch (single Yahoo-empty path)
+    spy_filtered = sec_filings._apply_filters(
+        spy_d,
+        types={"10-K"}, since=None, limit=None,
+    )
+    check("sec_filings _apply_filters: empty-input + filter does NOT set filter_note",
+          "note" in spy_filtered and "filter_note" not in spy_filtered,
+          f"got keys={list(spy_filtered.keys())}")
+
+    # _summarize projection: peer-comparison flat dict. Pins schema.
+    flat = sec_filings._summarize(d)
+    expected_flat = {"symbol", *sec_filings._SUMMARY_FLAT_KEYS}
+    check("sec_filings _summarize(AAPL): has documented flat field set",
+          set(flat.keys()) >= expected_flat,
+          f"missing={expected_flat - set(flat.keys())}")
+    # total_filings should match d["count"] (the FULL pre-filter pre-limit
+    # count). Regression guard: if _summarize ever reads from a sliced
+    # list, this drops to the slice size.
+    check("sec_filings _summarize: total_filings == d['count']",
+          flat.get("total_filings") == d.get("count"),
+          f"got {flat.get('total_filings')!r}, expected {d.get('count')!r}")
+    # latest_date == max(filing dates) — algorithm-independent invariant.
+    dates = [f["date"] for f in d.get("filings") or [] if f.get("date")]
+    expected_latest = max(dates) if dates else None
+    check("sec_filings _summarize: latest_date == max(filing dates)",
+          flat.get("latest_date") == expected_latest,
+          f"got {flat.get('latest_date')!r}, expected {expected_latest!r}")
+    # latest_type must equal the type of a filing whose date == latest_date.
+    if expected_latest:
+        valid_types_at_max = {f.get("type") for f in d.get("filings") or []
+                              if f.get("date") == expected_latest}
+        check("sec_filings _summarize: latest_type names a filing at latest_date",
+              flat.get("latest_type") in valid_types_at_max,
+              f"got latest_type={flat.get('latest_type')!r}, "
+              f"valid={valid_types_at_max}")
+    # AAPL is a US issuer — must have a latest_10k_date populated and
+    # latest_20f_date null. Pins the headline-type bucketing.
+    check("sec_filings _summarize(AAPL US issuer): latest_10k_date populated, "  # canary
+          "latest_20f_date null",
+          flat.get("latest_10k_date") is not None
+          and flat.get("latest_20f_date") is None,
+          f"10k={flat.get('latest_10k_date')!r}, 20f={flat.get('latest_20f_date')!r}")
+
+    # latest_proxy_date covers BOTH `DEF 14A` and `DEFA14A` (set-bucketed
+    # in _HEADLINE_TYPES). Verify by recomputing via the union and
+    # comparing against the summary's value. Algorithm-independent
+    # invariant: max date across the union of both proxy form types.
+    proxy_types = {"DEF 14A", "DEFA14A"}
+    proxy_pairs = [(f["date"], f["type"]) for f in d.get("filings") or []
+                   if f.get("type") in proxy_types and f.get("date")]
+    expected_proxy = max(p[0] for p in proxy_pairs) if proxy_pairs else None
+    check("sec_filings _summarize: latest_proxy_date == max(DEF 14A or DEFA14A dates)",
+          flat.get("latest_proxy_date") == expected_proxy,
+          f"got latest_proxy_date={flat.get('latest_proxy_date')!r}, "
+          f"expected={expected_proxy!r} (across {len(proxy_pairs)} proxy filings)")
+    # latest_proxy_type companion: must name the form code (DEF 14A or
+    # DEFA14A) of the filing whose date == latest_proxy_date. Pin the
+    # multi-form-bucket _type companion contract.
+    if expected_proxy:
+        valid_proxy_types = {t for date, t in proxy_pairs
+                             if date == expected_proxy}
+        check("sec_filings _summarize: latest_proxy_type names a winning form",
+              flat.get("latest_proxy_type") in valid_proxy_types,
+              f"got latest_proxy_type={flat.get('latest_proxy_type')!r}, "
+              f"valid={valid_proxy_types}")
+        check("sec_filings _summarize: latest_proxy_type is in proxy bucket",
+              flat.get("latest_proxy_type") in proxy_types,
+              f"got {flat.get('latest_proxy_type')!r}")
+    else:
+        check("sec_filings _summarize: latest_proxy_type null when no proxy filings",
+              flat.get("latest_proxy_type") is None,
+              f"got {flat.get('latest_proxy_type')!r}")
+    # Single-form buckets (10-K etc.) must NOT have a `_type` companion
+    # field — only the multi-form proxy bucket does. Pin the asymmetry.
+    for absent in ("latest_10k_type", "latest_10q_type", "latest_8k_type",
+                   "latest_20f_type", "latest_6k_type"):
+        check(f"sec_filings _summarize: no {absent} (single-form bucket "
+              "skips _type companion)",
+              absent not in flat, f"unexpected key {absent!r} in flat dict")
+
+    # 8-K primary_url canary: per docstring, primary_url for 8-K points
+    # at the form itself (`exhibits["8-K"]`), not the typical
+    # `EX-99.1` press release. Pin this contract — if a future change
+    # silently flips to "prefer EX-99.1 for 8-K", the doc and code
+    # would diverge. Find an AAPL 8-K with EX-99.1 in exhibits and
+    # verify primary_url uses the 8-K form, not the press release.
+    eight_k_with_pr = None
+    for f in d.get("filings") or []:
+        if f.get("type") == "8-K":
+            ex = f.get("exhibits") or {}
+            if "8-K" in ex and "EX-99.1" in ex:
+                eight_k_with_pr = f
+                break
+    if eight_k_with_pr:
+        check("sec_filings 8-K with EX-99.1: primary_url == exhibits['8-K'] "  # canary
+              "(NOT the press release) — pins doc claim",
+              eight_k_with_pr.get("primary_url")
+              == eight_k_with_pr["exhibits"]["8-K"],
+              f"got primary_url={eight_k_with_pr.get('primary_url')!r}, "
+              f"exhibits['8-K']={eight_k_with_pr['exhibits']['8-K']!r}, "
+              f"exhibits['EX-99.1']={eight_k_with_pr['exhibits']['EX-99.1']!r}")
+    else:
+        # Canary path didn't fire — fine, but warn so a regression
+        # that drops EX-99.1 from AAPL 8-Ks doesn't go unnoticed.
+        check("sec_filings: AAPL has at least one 8-K with EX-99.1 "  # canary
+              "in exhibits (data availability for the primary_url canary)",
+              False,
+              "no AAPL 8-K with EX-99.1 found — 8-K primary_url canary "
+              "couldn't run")
+    # filings_last_90d is integer >= 0, never null on a successful fetch.
+    check("sec_filings _summarize: filings_last_90d is non-negative int",
+          isinstance(flat.get("filings_last_90d"), int)
+          and flat["filings_last_90d"] >= 0,
+          f"got {type(flat.get('filings_last_90d')).__name__}="
+          f"{flat.get('filings_last_90d')!r}")
+
+    # _summarize on TM (ADR): mirror image — latest_20f_date or
+    # latest_6k_date populated, latest_10k_date null. Verifies foreign-
+    # issuer headline-type routing.
+    tm_flat = sec_filings._summarize(tm)
+    check("sec_filings _summarize(TM ADR): latest_6k_date populated, "  # canary
+          "latest_10k_date null",
+          tm_flat.get("latest_6k_date") is not None
+          and tm_flat.get("latest_10k_date") is None,
+          f"6k={tm_flat.get('latest_6k_date')!r}, "
+          f"10k={tm_flat.get('latest_10k_date')!r}")
+
+    # _summarize on an empty result must carry the `note` through (CSV
+    # would drop it otherwise — same defect class as holders / news).
+    empty_flat = sec_filings._summarize(sec_filings.fetch("SPY"))
+    check("sec_filings _summarize(SPY empty): preserves `note` for CSV",
+          "note" in empty_flat and empty_flat.get("note"),
+          f"got keys={list(empty_flat.keys())}")
+    # Empty result: total_filings=0, filings_last_90d=0 (both known
+    # answers, integer), other latest_* fields null.
+    check("sec_filings _summarize(SPY empty): total_filings=0, "
+          "filings_last_90d=0 (integers, not null)",
+          empty_flat.get("total_filings") == 0
+          and empty_flat.get("filings_last_90d") == 0,
+          f"got total={empty_flat.get('total_filings')!r}, "
+          f"recent={empty_flat.get('filings_last_90d')!r}")
+
+    # _parse_types_arg: comma split + whitespace tolerance + UPPERCASE
+    # normalization (case-insensitive contract), None pass-through.
+    check("sec_filings _parse_types_arg(None): None",
+          sec_filings._parse_types_arg(None) is None)
+    check("sec_filings _parse_types_arg('10-K'): {'10-K'} (upper preserved)",
+          sec_filings._parse_types_arg("10-K") == {"10-K"})
+    check("sec_filings _parse_types_arg('10-k'): {'10-K'} (lowercase upper-cased)",
+          sec_filings._parse_types_arg("10-k") == {"10-K"})
+    check("sec_filings _parse_types_arg('def 14a, defa14a'): "
+          "{'DEF 14A', 'DEFA14A'} — internal whitespace preserved, "
+          "case folded",
+          sec_filings._parse_types_arg("def 14a, defa14a")
+          == {"DEF 14A", "DEFA14A"})
+    check("sec_filings _parse_types_arg('10-K, 10-Q ,  8-K, DEF 14A'): "
+          "splits + strips outer whitespace, preserves internal "
+          "whitespace, all upper",
+          sec_filings._parse_types_arg("10-K, 10-Q ,  8-K, DEF 14A")
+          == {"10-K", "10-Q", "8-K", "DEF 14A"})
+    check("sec_filings _parse_types_arg(''): None (empty after split)",
+          sec_filings._parse_types_arg("") is None)
+
+    # _parse_since_arg: ISO date / datetime normalization, --days
+    # arithmetic, both-None pass-through, malformed input raises.
+    check("sec_filings _parse_since_arg(None, None): None",
+          sec_filings._parse_since_arg(None, None) is None)
+    check("sec_filings _parse_since_arg('2024-01-01', None): pass-through",
+          sec_filings._parse_since_arg("2024-01-01", None) == "2024-01-01")
+    # ISO datetime input must be normalized to YYYY-MM-DD. Without
+    # normalization, downstream string comparison would silently
+    # exclude same-day filings (Python: shorter string < longer with
+    # matching prefix; "2024-01-01" < "2024-01-01T00:00:00").
+    # Pins the boundary-bug fix.
+    check("sec_filings _parse_since_arg('2024-01-01T00:00:00', None): "
+          "normalized to date-only YYYY-MM-DD",
+          sec_filings._parse_since_arg("2024-01-01T00:00:00", None)
+          == "2024-01-01",
+          f"got {sec_filings._parse_since_arg('2024-01-01T00:00:00', None)!r}")
+    check("sec_filings _parse_since_arg('2024-12-31T23:59:59', None): "
+          "time discarded, date returned",
+          sec_filings._parse_since_arg("2024-12-31T23:59:59", None)
+          == "2024-12-31",
+          f"got {sec_filings._parse_since_arg('2024-12-31T23:59:59', None)!r}")
+    # --days N → today UTC - N days. Verify by recomputing.
+    today_utc = datetime.now(timezone.utc).date()
+    expected_30d = (today_utc - timedelta(days=30)).isoformat()
+    check("sec_filings _parse_since_arg(None, 30): today_utc - 30d",
+          sec_filings._parse_since_arg(None, 30) == expected_30d,
+          f"got {sec_filings._parse_since_arg(None, 30)!r}, "
+          f"expected {expected_30d!r}")
+    # Malformed --since must raise ValueError so argparse can convert
+    # to a usage error.
+    raised = False
+    try:
+        sec_filings._parse_since_arg("not-a-date", None)
+    except ValueError:
+        raised = True
+    check("sec_filings _parse_since_arg('not-a-date'): raises ValueError",
+          raised, "expected ValueError for malformed input")
+
+    # _project_filing: empty exhibits dict yields exhibit_keys="" (empty
+    # string, not None). Pin the documented contract — chose empty
+    # string to keep the field flat for CSV consumers' string filters.
+    # Pure unit test (no Yahoo call) since real AAPL data has exhibits
+    # on every observed filing; constructing a synthetic input is the
+    # only way to cover this branch.
+    proj_no_ex = sec_filings._project_filing({
+        "date": "2024-01-01",
+        "type": "TEST",
+        "title": "Synthetic",
+        "epochDate": 0,
+        "edgarUrl": "http://example.com",
+        "exhibits": {},  # explicit empty dict
+    })
+    check("sec_filings _project_filing(empty exhibits): exhibit_keys is ''",
+          proj_no_ex.get("exhibit_keys") == "",
+          f"got {proj_no_ex.get('exhibit_keys')!r}")
+    check("sec_filings _project_filing(empty exhibits): exhibit_count is 0",
+          proj_no_ex.get("exhibit_count") == 0,
+          f"got {proj_no_ex.get('exhibit_count')!r}")
+    check("sec_filings _project_filing(empty exhibits): exhibits is None",
+          proj_no_ex.get("exhibits") is None,
+          f"got {proj_no_ex.get('exhibits')!r}")
+    check("sec_filings _project_filing(empty exhibits): primary_url is None",
+          proj_no_ex.get("primary_url") is None,
+          f"got {proj_no_ex.get('primary_url')!r}")
+    # Missing exhibits key entirely (different from explicit empty dict).
+    proj_missing = sec_filings._project_filing({
+        "date": "2024-01-01", "type": "TEST",
+        "title": "Synthetic", "edgarUrl": "http://example.com",
+    })
+    check("sec_filings _project_filing(missing exhibits): same shape as "
+          "empty (exhibit_keys='', exhibit_count=0)",
+          proj_missing.get("exhibit_keys") == ""
+          and proj_missing.get("exhibit_count") == 0
+          and proj_missing.get("exhibits") is None,
+          f"got {proj_missing!r}")
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"sec_filings fetch crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
 # --- options fetch shape ---
 section("options fetch")
 try:
@@ -4851,6 +5395,12 @@ try:
         ("analyst.py", ("--summary", "AAPL")),
         ("fund_holdings.py", ("--limit", "3", "SPY")),
         ("fund_holdings.py", ("--summary", "SPY", "VTI")),
+        ("sec_filings.py", ("--limit", "3", "AAPL")),
+        ("sec_filings.py", ("--type", "10-K,10-Q", "--limit", "2", "AAPL")),
+        ("sec_filings.py", ("--type", "10-k", "--limit", "1", "AAPL")),  # case-insensitive
+        ("sec_filings.py", ("--since", "2024-01-01", "--limit", "3", "AAPL")),
+        ("sec_filings.py", ("--days", "30", "--type", "8-K", "AAPL")),
+        ("sec_filings.py", ("--summary", "AAPL", "TM", "SPY")),
     ):
         rc, data = run_cli(script, *args)
         check(f"{script} {' '.join(args)}: exit 0 + valid JSON list",
@@ -4870,7 +5420,7 @@ try:
     for script in ("fast_info.py", "history.py", "info.py", "earnings.py",
                    "financials.py", "news.py", "holders.py", "options.py",
                    "insiders.py", "analyst.py", "screener.py",
-                   "fund_holdings.py"):
+                   "fund_holdings.py", "sec_filings.py"):
         cmd = [sys.executable, str(SCRIPTS_DIR / script), "--help"]
         out = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
         check(f"{script} --help exits 0",
@@ -5437,6 +5987,212 @@ try:
               "error_kind=not_found",
               "not_found" in csv_lines[3],
               f"got row={csv_lines[3]!r}")
+
+    # sec_filings CSV: row-per-filing layout. Mixing a filtered-to-empty
+    # ticker (TM with --type 10-K — TM is an ADR that files 20-F not
+    # 10-K) with a real US issuer (AAPL) and a Yahoo-empty ticker (SPY)
+    # specifically pins:
+    #   - 1 header + N AAPL filing rows + 1 TM filter_note row + 1 SPY note row
+    #   - filter_note vs note are in distinct columns and never co-occur
+    #   - AAPL data rows have no note / no filter_note populated
+    #   - exhibit_keys column populated for AAPL rows (pipe-joined)
+    #   - exhibits dict NOT in CSV header (dropped from tabular output)
+    cmd = [sys.executable, str(SCRIPTS_DIR / "sec_filings.py"),
+           "--type", "10-K", "--limit", "2", "--format", "csv",
+           "AAPL", "TM", "SPY"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    csv_lines = [ln for ln in out.stdout.splitlines() if ln.strip()]
+    check("sec_filings --type 10-K --format csv: rc=0",
+          out.returncode == 0, f"rc={out.returncode}")
+    if csv_lines:
+        header = csv_lines[0]
+        # Header must include filter_note distinct from note, and exhibit_keys.
+        check("sec_filings --format csv: header has expected cols "
+              "(filter_note, exhibit_keys, no exhibits dict)",
+              "exhibit_keys" in header
+              and "filter_note" in header
+              and "note" in header
+              and "exhibits," not in header  # bare `exhibits` col absent
+              and ",exhibits" not in header
+              and header.endswith("error,error_kind,attempts"),
+              f"got header={header!r}")
+        # Header column order: filter_note must follow note (set in
+        # _DEFAULT_CSV_COLS). Pins the documented column order.
+        cols_split = header.split(",")
+        check("sec_filings --format csv: filter_note column follows note",
+              "note" in cols_split and "filter_note" in cols_split
+              and cols_split.index("filter_note") == cols_split.index("note") + 1,
+              f"got cols={cols_split}")
+
+        # AAPL rows: 2 of them (since --limit 2 and AAPL has multiple 10-Ks),
+        # both starting with AAPL and having no filter_note populated.
+        aapl_rows = [ln for ln in csv_lines[1:] if ln.startswith("AAPL,")]
+        check("sec_filings --format csv: AAPL has 2 data rows (--limit 2)",
+              len(aapl_rows) == 2,
+              f"got {len(aapl_rows)} rows: {aapl_rows[:2]!r}")
+        # AAPL data rows must NOT have filter_note populated. Find the
+        # column index for filter_note and check.
+        filter_note_idx = cols_split.index("filter_note")
+        for i, row in enumerate(aapl_rows):
+            # csv module would handle quoting; for these test cases the
+            # data fields don't contain commas in values that'd shift idx.
+            # Simple split is fine here.
+            row_fields = row.split(",")
+            if len(row_fields) > filter_note_idx:
+                check(f"sec_filings --format csv: AAPL row {i+1} filter_note empty",
+                      not row_fields[filter_note_idx].strip(),
+                      f"got filter_note={row_fields[filter_note_idx]!r} "
+                      f"(row={row!r})")
+        # AAPL row's exhibit_keys col should be populated (pipe-joined,
+        # contains "10-K" since the type filter ensures these are 10-Ks).
+        ek_idx = cols_split.index("exhibit_keys")
+        if aapl_rows:
+            first_row = aapl_rows[0]
+            row_fields = first_row.split(",")
+            if len(row_fields) > ek_idx:
+                ek_val = row_fields[ek_idx].strip('"')  # CSV may quote pipe
+                check("sec_filings --format csv: AAPL exhibit_keys populated, "
+                      "contains 10-K",
+                      ek_val and "10-K" in ek_val,
+                      f"got exhibit_keys={ek_val!r}")
+
+        # TM row: filter ate everything (TM has no 10-K — files 20-F).
+        # Carry row with filter_note populated.
+        tm_rows = [ln for ln in csv_lines if ln.startswith("TM,")]
+        check("sec_filings --format csv: TM has exactly 1 carry row "
+              "(filter_note path)",
+              len(tm_rows) == 1, f"got {len(tm_rows)} rows: {tm_rows!r}")
+        if tm_rows:
+            tm_row = tm_rows[0]
+            check("sec_filings --format csv: TM carry row has filter_note "
+                  "populated (NOT note)",
+                  "all eliminated by" in tm_row
+                  # Sanity: filter_note text names the culprit filter.
+                  and "--type 10-K" in tm_row,
+                  f"got TM row={tm_row!r}")
+
+        # SPY row: Yahoo returned nothing (note path). Carry row with
+        # `note` populated, NOT filter_note.
+        spy_rows = [ln for ln in csv_lines if ln.startswith("SPY,")]
+        check("sec_filings --format csv: SPY has exactly 1 carry row "
+              "(note path, not filter_note)",
+              len(spy_rows) == 1, f"got {len(spy_rows)} rows: {spy_rows!r}")
+        if spy_rows:
+            spy_row = spy_rows[0]
+            # Note text mentions "no SEC filings" — the _EMPTY_NOTE prefix.
+            check("sec_filings --format csv: SPY carry row has note "
+                  "populated (NOT filter_note)",
+                  "no SEC filings" in spy_row,
+                  f"got SPY row={spy_row!r}")
+
+    # sec_filings --summary CSV: strict one row per ticker. Pins schema:
+    # latest_proxy_date column (renamed from latest_def14a_date),
+    # latest_proxy_type companion (the multi-form bucket _type field),
+    # latest_*_date set, filings_last_90d column.
+    cmd = [sys.executable, str(SCRIPTS_DIR / "sec_filings.py"),
+           "--summary", "--format", "csv", "AAPL", "TM", "SPY"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    csv_lines = [ln for ln in out.stdout.splitlines() if ln.strip()]
+    check("sec_filings --summary --format csv: rc=0 + header + 3 rows (4 lines)",
+          out.returncode == 0 and len(csv_lines) == 4,
+          f"rc={out.returncode}, lines={len(csv_lines)}")
+    if csv_lines:
+        header = csv_lines[0]
+        # Pin latest_proxy_date column (the rename from latest_def14a_date).
+        # Also pin filings_last_90d (the recency rollup).
+        check("sec_filings --summary --format csv: header has latest_proxy_date "
+              "(NOT latest_def14a_date) and filings_last_90d",
+              "latest_proxy_date" in header
+              and "filings_last_90d" in header
+              and "latest_def14a_date" not in header,
+              f"got header={header!r}")
+        # latest_proxy_type companion column must be present (only
+        # multi-form bucket gets one). Pins the asymmetric naming
+        # convention.
+        check("sec_filings --summary --format csv: header has "
+              "latest_proxy_type (multi-form bucket companion)",
+              "latest_proxy_type" in header,
+              f"got header={header!r}")
+        # Single-form buckets must NOT have _type companion columns.
+        for absent in ("latest_10k_type", "latest_10q_type",
+                       "latest_8k_type", "latest_20f_type",
+                       "latest_6k_type"):
+            check(f"sec_filings --summary --format csv: no {absent} column "
+                  "(single-form bucket asymmetry)",
+                  absent not in header, f"unexpected col {absent} in {header!r}")
+        # All headline-type columns present.
+        for col in ("latest_10k_date", "latest_10q_date", "latest_8k_date",
+                    "latest_20f_date", "latest_6k_date", "latest_proxy_date",
+                    "total_filings"):
+            check(f"sec_filings --summary --format csv: header has {col}",
+                  col in header, f"missing from {header!r}")
+        # Summary CSV header must also include filter_note column (now
+        # carried defensively in --summary mode for symmetry with note).
+        check("sec_filings --summary --format csv: header has "
+              "filter_note column (defensive carry)",
+              "filter_note" in header, f"got header={header!r}")
+
+    # sec_filings --since: subprocess test pinning that surviving rows
+    # respect the date floor and no filter_note column is populated
+    # (success case — AAPL has post-2024 filings). Limits to top 5
+    # to keep the test compact.
+    cmd = [sys.executable, str(SCRIPTS_DIR / "sec_filings.py"),
+           "--since", "2024-01-01", "--limit", "5", "--format", "csv",
+           "AAPL"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    csv_lines = [ln for ln in out.stdout.splitlines() if ln.strip()]
+    check("sec_filings --since --format csv: rc=0 + header + N data rows",
+          out.returncode == 0 and len(csv_lines) >= 2,
+          f"rc={out.returncode}, lines={len(csv_lines)}")
+    if csv_lines and len(csv_lines) >= 2:
+        header_cols = csv_lines[0].split(",")
+        date_idx = header_cols.index("date")
+        filter_note_idx = header_cols.index("filter_note")
+        # Every data row's `date` column must be >= 2024-01-01.
+        for i, row in enumerate(csv_lines[1:], start=1):
+            row_fields = row.split(",")
+            if len(row_fields) > date_idx:
+                row_date = row_fields[date_idx].strip('"')
+                check(f"sec_filings --since --format csv: row {i} date >= 2024-01-01",
+                      row_date >= "2024-01-01",
+                      f"got date={row_date!r}")
+        # No filter_note populated (AAPL has plenty of post-2024 filings,
+        # so success path; filter_note column should be empty on every row).
+        for i, row in enumerate(csv_lines[1:], start=1):
+            row_fields = row.split(",")
+            if len(row_fields) > filter_note_idx:
+                fn_val = row_fields[filter_note_idx].strip('"').strip()
+                check(f"sec_filings --since --format csv: row {i} filter_note empty",
+                      not fn_val,
+                      f"got filter_note={fn_val!r} (row should be success path)")
+
+    # sec_filings --summary + filters: stderr warning. Pins the
+    # noise-on-misuse contract — user passing `--summary --type 10-K`
+    # gets a stderr warning naming the ignored filters. Pure subprocess
+    # test (capture stderr separately).
+    cmd = [sys.executable, str(SCRIPTS_DIR / "sec_filings.py"),
+           "--summary", "--type", "10-K", "--limit", "5", "AAPL"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    check("sec_filings --summary + filters: rc=0 (warning is noise, not error)",
+          out.returncode == 0, f"rc={out.returncode}")
+    check("sec_filings --summary --type --limit: stderr warns about "
+          "ignored filters",
+          "warning:" in out.stderr.lower()
+          and "--type" in out.stderr
+          and "--limit" in out.stderr,
+          f"got stderr={out.stderr!r}")
+    check("sec_filings --summary --type --limit: --since NOT in stderr "
+          "(only ignored flags listed)",
+          "--since" not in out.stderr and "--days" not in out.stderr,
+          f"got stderr={out.stderr!r}")
+    # No filters + --summary: NO warning. Pin the negative case so the
+    # warning doesn't fire on every summary call.
+    cmd = [sys.executable, str(SCRIPTS_DIR / "sec_filings.py"),
+           "--summary", "AAPL"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    check("sec_filings --summary (no filters): no warning on stderr",
+          "warning:" not in out.stderr.lower(),
+          f"got stderr={out.stderr!r}")
 except Exception as e:
     FAIL += 1
     FAILURES.append(f"CLI sanity crashed: {e}")

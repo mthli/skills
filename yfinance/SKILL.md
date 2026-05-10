@@ -27,9 +27,10 @@ one per mode:
 - `scripts/analyst.py` — analyst recommendations time series (0m / -1m / -2m / -3m bucket counts) + per-event grade-change feed with embedded price-target moves
 - `scripts/screener.py` — market-wide discovery. Run a Yahoo predefined screen (`day_gainers`, `undervalued_growth_stocks`, `top_etfs_us`, …) or a custom AND/OR query over fields like `intradaymarketcap`, `peratio.lasttwelvemonths`, `epsgrowth.lasttwelvemonths`. Returns up to 250 quotes per call. **Only mode that produces tickers from a filter rather than starting from a known ticker.**
 - `scripts/fund_holdings.py` — ETF / mutual-fund holdings. Top-10 positions, sector / asset / bond-rating weightings, expense ratio + AUM, fund-level P/E / P/B / duration. **Fund-only** (equity / index / crypto / FX / future return success-with-note carrying the resolved `quote_type` — no follow-up `fast_info` chain needed). One HTTP per ticker covers all 9 sections.
+- `scripts/sec_filings.py` — SEC filings list (10-K / 10-Q / 8-K / DEF 14A / 20-F / 6-K / SC 13G/A / etc.) with date, type, title, primary doc URL, and exhibits dict. Up to ~75–120 filings going back ~3 years per ticker. Coverage is **SEC-registered securities only**: US-listed equities and ADRs (TM = 6-K + 20-F) get full data; non-US primary listings (BMW.DE, 0700.HK), ETFs, mutual funds, indexes, crypto, FX, futures, and bogus tickers all return success-with-note (ambiguous — chain `fast_info` to disambiguate). No `coverage_note` partial-empty path — the SEC-filings endpoint is binary.
 
 Shared NaN/Inf-safe converters live in `scripts/helpers.py`. A
-`scripts/smoke.py` test exercises all twelve wrappers against
+`scripts/smoke.py` test exercises all thirteen wrappers against
 representative tickers — run after editing schema or when yfinance API
 drift is suspected:
 `uv run --with 'yfinance>=1.3,<2' --with 'lxml' python <SKILL_DIR>/scripts/smoke.py`
@@ -65,7 +66,16 @@ as functionality grows.
 > array — same ambiguity, same `fast_info` chain to disambiguate.
 > A second, rarer `note` covers the case where `expirations` is
 > populated but Yahoo returned an empty chain for the requested date
-> (try a different expiry from the array). `insiders` mirrors the
+> (try a different expiry from the array). `sec_filings` mirrors the
+> `holders` shape: ETFs / mutual funds / indexes / crypto / FX /
+> futures / non-US primary listings (`BMW.DE`, `0700.HK`) / bogus all
+> return empty — `{}` from yfinance, not a list — surfaced as
+> success-with-`note` (ambiguous; chain `fast_info` to disambiguate).
+> No `coverage_note` partial-empty path — the SEC-filings endpoint
+> is binary. **ADRs (verified `TM`) ARE covered** (foreign issuers
+> file 6-K / 20-F instead of 10-K / 10-Q / 8-K), distinct from
+> non-US **primary** listings which aren't SEC-registered at all.
+> `insiders` mirrors the
 > `holders` shape with one twist: ETFs / indexes / crypto / FX /
 > futures / bogus tickers all return three empty frames
 > (success-with-`note` — same ambiguity, same `fast_info` chain to
@@ -140,6 +150,10 @@ as functionality grows.
 | "latest quarter", "QoQ revenue", "TTM trailing twelve months" | `financials --period quarterly\|ttm` | ~5–7 most-recent quarters; `ttm` = 1-row rollup (income + cashflow only) |
 | "compare 3+ tickers' revenue / FCF / margins / growth" | `financials --summary` | flat per-ticker dict + period-over-period growth (`*_growth_yoy`) |
 | "what's the latest news on X", "recent headlines", "what's driving X today" | `news` | up to ~10 articles per ticker; works for all quote types; use `--limit` to tighten |
+| "latest 10-K / 10-Q / 8-K of X", "recent SEC filings", "any 8-Ks lately" | `sec_filings --type 10-K --limit 1` (or `--type 8-K --limit 5`, etc.) | up to ~75–120 filings ~4 years back (row-bounded, not time-bounded); `--type` is case-insensitive; use `--limit` to cap |
+| "ADR annual report", "Toyota 20-F", "foreign-issuer interim filings" | `sec_filings --type 20-F,6-K` | ADRs file 6-K + 20-F (not 10-Q/10-K); non-US primary listings (`BMW.DE`, `0700.HK`) return empty (not SEC-registered) |
+| "filings since 2024", "8-Ks in last 30 days", "what's filed lately" | `sec_filings --since YYYY-MM-DD` or `--days N` | date floor on filings; combine with `--type` for "8-Ks last 30d" type questions; mutually exclusive flags (`--since` is ISO date, `--days` is rolling-N convenience) |
+| "compare filing activity across tickers", "rank by recent 8-Ks", "who's most active in SEC filings" | `sec_filings --summary` | flat per-ticker dict: `total_filings`, `latest_*_date` per headline type (10-K / 10-Q / 8-K / 20-F / 6-K / proxy), `filings_last_90d` recency count |
 | "who owns X", "top institutional holders", "% insider / institution ownership" | `holders` | rollup pcts + top-10 institutional + top-10 mutualfund holders, one Yahoo call total |
 | "compare ownership concentration across tickers", "top-5 institutional %" | `holders --summary` | flat per-ticker dict + `top5_institutions_pct` concentration signal |
 | "top mutual-fund holders of X", "which Vanguard / iShares funds hold X" | `holders` | mutualfund section. Mostly broad index trackers; specialist active funds rarely surface |
@@ -260,6 +274,16 @@ uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/fund_holdings.py SPY
 uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/fund_holdings.py --summary SPY VTI QQQ              # peer compare
 uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/fund_holdings.py --limit 5 SPY                      # top 5 holdings only
 uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/fund_holdings.py --format csv --summary SPY VTI QQQ # peer-compare CSV
+
+# sec_filings — SEC filings list (see references/sec_filings.md)
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/sec_filings.py AAPL                                 # all filings (~75-120), JSON
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/sec_filings.py --type 10-K,10-Q AAPL                # quarterly + annual (case-insensitive)
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/sec_filings.py --type 8-K --limit 5 TSLA            # last 5 events
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/sec_filings.py --type 20-F,6-K TM                   # ADR foreign-issuer filings
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/sec_filings.py --since 2024-01-01 AAPL              # ISO date floor
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/sec_filings.py --days 30 --type 8-K AAPL TSLA NVDA  # 8-Ks in last 30 days
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/sec_filings.py --summary AAPL MSFT NVDA             # peer rollup (latest_10k_date, latest_proxy_date, filings_last_90d, ...)
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/sec_filings.py --format csv --limit 5 AAPL          # CSV: row per filing (exhibits dict dropped, exhibit_keys preserved)
 ```
 
 `<SKILL_DIR>` is the absolute path of the directory containing this
@@ -267,11 +291,12 @@ SKILL.md. Substitute it once when running.
 
 ## Cost / latency
 
-Rough per-ticker cost: `fast_info` / `news` / `holders` / `insiders`
-~0.3–1.5 s, `fund_holdings` ~0.7–1.5 s (single quoteSummary call but
-fetches 4 modules at once — see references/performance.md), `history`
-~0.5–4 s, `info` / `earnings` / `financials` / `options` / `analyst`
-~1–5 s. **`screener` is per-call, not per-ticker** —
+Rough per-ticker cost: `fast_info` / `news` / `holders` / `insiders` /
+`sec_filings` ~0.3–1.5 s (sec_filings is one quoteSummary call —
+similar shape to news), `fund_holdings` ~0.7–1.5 s (single quoteSummary
+call but fetches 4 modules at once — see references/performance.md),
+`history` ~0.5–4 s, `info` / `earnings` / `financials` / `options` /
+`analyst` ~1–5 s. **`screener` is per-call, not per-ticker** —
 1 HTTP returns ≤ 250 quotes (~1–3 s typical), so the marginal cost
 of a wider screen is ~0. (`analyst` makes **3 HTTP per ticker** —
 `recommendations`, `upgrades_downgrades`, and `fast_info` for
@@ -304,7 +329,7 @@ explanation, and the version-pin rationale.
 
 ## Cross-cutting caveats
 
-These apply to all twelve modes. Mode-specific caveats live in the
+These apply to all thirteen modes. Mode-specific caveats live in the
 matching `references/<mode>.md`. Grouped into three concerns:
 
 ### Data formats (interpreting the numbers)
@@ -511,6 +536,9 @@ matching `references/<mode>.md`. Grouped into three concerns:
     `record_class` discriminator: `meta` / `operations` /
     `asset_class` / `sector` / `bond_rating` / `equity_metric` /
     `bond_metric` / `holding`); ✅ `--summary`.
+  - `sec_filings` — ✅ default (one row per filing; the nested
+    `exhibits` dict is dropped from CSV — `primary_url` +
+    `exhibit_count` carry the headline signals); ✅ `--summary`.
 
   **`screener` shape note.** Screener is the only mode that emits a
   **single envelope dict** (one screener call → one result), not a
@@ -524,22 +552,25 @@ matching `references/<mode>.md`. Grouped into three concerns:
   **CSV row shapes split into two families.** Strict "one row per
   ticker": `fast_info` and all `--summary` modes (`history` / `info` /
   `earnings` / `financials` / `holders` / `options` / `insiders` /
-  `analyst` / `fund_holdings`). "Row-per-event" (with `symbol` column
-  repeating across rows for the same ticker): `history` default (one
-  row per bar), `earnings` default (one row per `earnings_date`),
-  `news` (one row per article), `holders` default (one row per
-  holder, plus one rollup row per ticker tagged `holder_class=summary`),
-  `options` default (one row per contract, tagged `leg=call` /
-  `leg=put`), `insiders` default (one row per record, tagged
-  `record_class=purchases` / `transaction` / `roster`), `analyst`
-  default (one row per record, tagged `record_class=recommendation` /
-  `change`), `fund_holdings` default (one row per record, tagged
-  `record_class=meta` / `operations` / `asset_class` / `sector` /
-  `bond_rating` / `equity_metric` / `bond_metric` / `holding`).
-  For `news`, `holders`, `options`, `insiders`, `analyst`, and
-  `fund_holdings` specifically: tickers with no data or an error still
-  get a single row carrying the symbol + `note` + meta fields so
-  they aren't silently dropped.
+  `analyst` / `fund_holdings` / `sec_filings`). "Row-per-event" (with
+  `symbol` column repeating across rows for the same ticker): `history`
+  default (one row per bar), `earnings` default (one row per
+  `earnings_date`), `news` (one row per article), `holders` default
+  (one row per holder, plus one rollup row per ticker tagged
+  `holder_class=summary`), `options` default (one row per contract,
+  tagged `leg=call` / `leg=put`), `insiders` default (one row per
+  record, tagged `record_class=purchases` / `transaction` / `roster`),
+  `analyst` default (one row per record, tagged
+  `record_class=recommendation` / `change`), `fund_holdings` default
+  (one row per record, tagged `record_class=meta` / `operations` /
+  `asset_class` / `sector` / `bond_rating` / `equity_metric` /
+  `bond_metric` / `holding`), `sec_filings` default (one row per
+  filing; nested `exhibits` dict dropped — `primary_url` +
+  `exhibit_count` columns carry the headline signals).
+  For `news`, `holders`, `options`, `insiders`, `analyst`,
+  `fund_holdings`, and `sec_filings` specifically: tickers with no
+  data or an error still get a single row carrying the symbol +
+  `note` + meta fields so they aren't silently dropped.
 
   **`screener` is its own family — single envelope, row-per-quote.**
   Unlike the per-ticker modes which iterate N tickers and emit N
@@ -618,6 +649,21 @@ matching `references/<mode>.md`. Grouped into three concerns:
     path either (Yahoo's funds endpoint is binary). Bogus / delisted
     tickers route through `error_kind: not_found` instead, and in
     that path `quote_type` is null because the parser never ran.
+  - `sec_filings.note` — **Yahoo returned no data** (`{}` instead
+    of a list), regardless of cause. Same ambiguity shape as
+    `holders` / `insiders` / `analyst` (non-US primary listing /
+    non-equity / bogus). ADRs (`TM`) are NOT in this bucket —
+    they're SEC-registered foreign issuers and get full 6-K / 20-F
+    coverage. Caller can chain `fast_info` to disambiguate. No
+    `coverage_note` partial-empty path — the SEC-filings endpoint
+    is binary. Distinct companion field `sec_filings.filter_note`
+    fires when the ticker DID fetch successfully but `--type` /
+    `--since` / `--days` filters reduced the displayed list to
+    zero (e.g. `--type 10-K` on TM, an ADR that files 20-F). The
+    two are mutually exclusive at the result level — `note`
+    means "no data from Yahoo", `filter_note` means "Yahoo
+    returned data, the display filters ate it". CSV consumers
+    should check both columns.
   - `options.note` — **two distinct empty paths, same `note`
     convention.** (1) **No options listed at all** (`t.options`
     returns `()`): same ambiguity shape as `holders` — non-equity
