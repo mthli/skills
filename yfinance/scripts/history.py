@@ -8,9 +8,10 @@ of data so a single bad symbol does not poison the batch.
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 # Allow this script to be run directly OR imported as a module: ensure
@@ -42,11 +43,32 @@ INTRADAY = {"1m", "2m", "5m", "15m", "30m", "60m", "90m", "1h"}
 _BASE_KEYS = ("symbol", "period", "start", "end", "interval", "timezone")
 _PER_BAR_KEYS = ("date", "open", "high", "low", "close", "volume",
                  "dividends", "split_ratio")
+_PER_EVENT_KEYS = ("date", "dividends", "split_ratio", "capital_gains")
 _SUMMARY_KEYS = ("rows_count", "start_date", "end_date",
                  "start_close", "end_close", "change_abs", "change_pct",
                  "period_high", "period_high_date",
                  "period_low", "period_low_date",
                  "avg_volume", "total_dividends")
+# `--metadata` projects Ticker.history_metadata into a flat dict — single
+# row per ticker, no per-bar / per-event nesting. Field names normalized
+# from Yahoo's camelCase to snake_case for skill-wide consistency. Two
+# datetime fields are pre-converted to ISO strings (epoch siblings kept
+# for raw access). The complex nested fields yfinance exposes
+# (currentTradingPeriod / tradingPeriods / lastTrade) are dropped — they
+# don't survive CSV flattening cleanly and aren't worth the schema noise
+# for the headline metadata use case (when did this ticker start
+# trading? what bar sizes does Yahoo accept? what's the exchange tz?).
+_METADATA_KEYS = (
+    "symbol", "currency", "exchange_name", "full_exchange_name",
+    "instrument_type", "first_trade_date", "first_trade_date_epoch",
+    "regular_market_time", "regular_market_time_epoch", "has_prepost",
+    "gmt_offset", "timezone_short", "exchange_timezone_name",
+    "data_granularity", "valid_ranges", "long_name", "short_name",
+    "regular_market_price", "previous_close", "chart_previous_close",
+    "fifty_two_week_high", "fifty_two_week_low",
+    "regular_market_day_high", "regular_market_day_low",
+    "regular_market_volume", "price_hint",
+)
 # Error / retry metadata cols live in helpers.RESULT_META — imported above
 # for cross-script consistency.
 
@@ -55,6 +77,41 @@ def _fmt_index(ts, intraday: bool) -> str:
     if intraday:
         return ts.isoformat()
     return ts.strftime("%Y-%m-%d")
+
+
+def _epoch_to_iso_date(v) -> str | None:
+    """Epoch (seconds) → 'YYYY-MM-DD' in UTC.
+
+    UTC is the principled choice because Yahoo emits these epochs against
+    UTC; using the server's local timezone (the previous bug — naive
+    `datetime.fromtimestamp(v)`) means the same metadata blob would
+    decode to different dates depending on where the script runs. For
+    consumers who need exchange-local dates, the IANA tz lives in
+    `exchange_timezone_name` — convert downstream rather than baking
+    server-tz drift into the response.
+    """
+    if not isinstance(v, (int, float)) or v <= 0:
+        return None
+    try:
+        return datetime.fromtimestamp(v, tz=timezone.utc).strftime("%Y-%m-%d")
+    except (ValueError, OSError, OverflowError):
+        return None
+
+
+def _epoch_to_iso_dt(v) -> str | None:
+    """Epoch (seconds) → ISO datetime with `+00:00` offset (UTC).
+
+    Same rationale as `_epoch_to_iso_date`: the offset is part of the
+    string so consumers can parse it unambiguously. Without the offset,
+    a naive ISO string would be ambiguous about which clock it
+    represents.
+    """
+    if not isinstance(v, (int, float)) or v <= 0:
+        return None
+    try:
+        return datetime.fromtimestamp(v, tz=timezone.utc).isoformat()
+    except (ValueError, OSError, OverflowError):
+        return None
 
 
 class _DropDuplicateNotFoundFilter(logging.Filter):
@@ -93,12 +150,70 @@ class _DropDuplicateNotFoundFilter(logging.Filter):
 _NOT_FOUND_DUP_FILTER = _DropDuplicateNotFoundFilter()
 
 
+def _build_metadata_result(symbol: str, md: dict, attempts: int) -> dict:
+    """Project yfinance's Ticker.history_metadata dict into a flat,
+    snake_cased shape.
+
+    Two datetime fields (`firstTradeDate`, `regularMarketTime`) are
+    pre-converted to ISO strings; raw epoch siblings (`*_epoch`) are
+    preserved for callers that need to do their own arithmetic. The
+    complex nested fields yfinance exposes (`currentTradingPeriod`,
+    `tradingPeriods`, `lastTrade`) are intentionally dropped — they're
+    DataFrames / nested dicts that don't survive CSV flattening
+    cleanly, and the headline-metadata use case (when did this ticker
+    start trading, what bar sizes does Yahoo accept, what's the
+    exchange tz) doesn't need them.
+
+    `timezone_short` is the Yahoo `timezone` field (e.g. "EDT") —
+    renamed to disambiguate from the IANA `exchange_timezone_name`
+    ("America/New_York") which is what callers usually want for
+    tz_convert. Ordering of the rename: keeping both fields lets
+    callers see the DST-aware short code AND the IANA zone in one
+    response.
+    """
+    raw_first = md.get("firstTradeDate")
+    raw_market = md.get("regularMarketTime")
+
+    out = {
+        "symbol": symbol,
+        "currency": md.get("currency"),
+        "exchange_name": md.get("exchangeName"),
+        "full_exchange_name": md.get("fullExchangeName"),
+        "instrument_type": md.get("instrumentType"),
+        "first_trade_date": _epoch_to_iso_date(raw_first),
+        "first_trade_date_epoch": safe_int(raw_first),
+        "regular_market_time": _epoch_to_iso_dt(raw_market),
+        "regular_market_time_epoch": safe_int(raw_market),
+        "has_prepost": md.get("hasPrePostMarketData"),
+        "gmt_offset": safe_int(md.get("gmtoffset")),
+        "timezone_short": md.get("timezone"),
+        "exchange_timezone_name": md.get("exchangeTimezoneName"),
+        "data_granularity": md.get("dataGranularity"),
+        "valid_ranges": md.get("validRanges"),
+        "long_name": md.get("longName"),
+        "short_name": md.get("shortName"),
+        "regular_market_price": safe_float(md.get("regularMarketPrice")),
+        "previous_close": safe_float(md.get("previousClose")),
+        "chart_previous_close": safe_float(md.get("chartPreviousClose")),
+        "fifty_two_week_high": safe_float(md.get("fiftyTwoWeekHigh")),
+        "fifty_two_week_low": safe_float(md.get("fiftyTwoWeekLow")),
+        "regular_market_day_high": safe_float(md.get("regularMarketDayHigh")),
+        "regular_market_day_low": safe_float(md.get("regularMarketDayLow")),
+        "regular_market_volume": safe_int(md.get("regularMarketVolume")),
+        "price_hint": safe_int(md.get("priceHint")),
+    }
+    if attempts > 1:
+        out["attempts"] = attempts
+    return out
+
+
 def _build_result(symbol: str, df, period: str | None, start: str | None,
                   effective_end: str | None, interval: str,
                   summary: bool, head: int | None, tail: int | None,
                   attempts: int, *,
                   output_tz: str | None,
-                  exchange_tz: str | None) -> dict:
+                  exchange_tz: str | None,
+                  events_only: bool = False) -> dict:
     """Project a per-ticker DataFrame into the output dict.
 
     output_tz     value for the response's `timezone` field; also the tz
@@ -192,10 +307,54 @@ def _build_result(symbol: str, df, period: str | None, start: str | None,
         })
         return base
 
-    # Row dict keys must match _PER_BAR_KEYS for CSV emit alignment.
-    rows = []
     has_div = "Dividends" in df.columns
     has_split = "Stock Splits" in df.columns
+    has_capgain = "Capital Gains" in df.columns
+
+    if events_only:
+        # Strip OHLCV — keep only rows where at least one corporate action
+        # fired (dividend / split / capital-gain distribution). Capital
+        # Gains column is fund-only; for non-funds the `capital_gains`
+        # field is uniformly 0.0 (schema consistency over conditional
+        # presence). Empirical: yfinance / Yahoo data rarely populates
+        # Capital Gains even for funds where it should fire — see
+        # references/history.md "Mode-specific caveats" for the coverage
+        # warning. The COLUMN appears, the DATA is sparse.
+        rows = []
+        for ts, row in df.iterrows():
+            div = safe_float(row["Dividends"]) if has_div else 0.0
+            split = safe_float(row["Stock Splits"]) if has_split else 0.0
+            capgain = safe_float(row["Capital Gains"]) if has_capgain else 0.0
+            # Treat None as 0 for the predicate (NaN-fold safety).
+            if (div or 0.0) == 0.0 and (split or 0.0) == 0.0 and (capgain or 0.0) == 0.0:
+                continue
+            rows.append({
+                "date": _fmt_index(ts, intraday),
+                "dividends": div or 0.0,
+                "split_ratio": split or 0.0,
+                "capital_gains": capgain or 0.0,
+            })
+        rows_total = len(rows)
+        if head is not None:
+            rows = rows[:head]
+        elif tail is not None:
+            rows = rows[-tail:]
+        base["rows"] = rows
+        # Surface fund-only signal so callers know when a 0.0 capital_gains
+        # is "no distribution" vs "Yahoo doesn't report it for this
+        # ticker type". Non-fund tickers literally don't have the column
+        # in the underlying DataFrame.
+        base["has_capital_gains_column"] = has_capgain
+        # Truncation metadata uses the same shape as default mode
+        # (`rows_truncated: {total, shown}`) so callers can read either
+        # mode without branching on the schema. Only emitted when
+        # truncation actually applied.
+        if head is not None or tail is not None:
+            base["rows_truncated"] = {"total": rows_total, "shown": len(rows)}
+        return base
+
+    # Row dict keys must match _PER_BAR_KEYS for CSV emit alignment.
+    rows = []
     for ts, row in df.iterrows():
         rows.append({
             "date": _fmt_index(ts, intraday),
@@ -221,10 +380,57 @@ def _build_result(symbol: str, df, period: str | None, start: str | None,
     return base
 
 
+def fetch_metadata(symbol: str, interval: str = "1d") -> dict:
+    """Fetch Ticker.history_metadata for one ticker.
+
+    Implementation detail: yfinance auto-fetches a default `.history()`
+    on access if no fetch has happened yet (verified empirically). We
+    call `.history()` explicitly anyway so the fetch goes through
+    `with_retry` and any rate-limit / network error surfaces with the
+    same `error_kind` / `attempts` shape as the OHLCV path. The
+    DataFrame return value is discarded — only the side-effect-populated
+    `history_metadata` dict matters for this code path.
+
+    The fetch window is hard-pinned to `period=1d` regardless of what
+    the user passed via `--period` / `--start` / `--end` — the metadata
+    blob is window-invariant (Yahoo returns the same `firstTradeDate` /
+    `validRanges` / `currency` / etc. for any pull), so a 1-day fetch
+    is the cheapest path to populate it. Honoring the user's window
+    flag would just waste bandwidth; the args are still accepted by
+    the CLI so the flag combination stays orthogonal across modes.
+    """
+    def _fetch():
+        # Hard-pin the cheapest window — see docstring.
+        kwargs = dict(interval=interval, auto_adjust=True,
+                      actions=False, prepost=False, period="1d")
+        t = yf.Ticker(symbol)
+        t.history(**kwargs)
+        return t
+
+    t, err_kind, attempts = with_retry(_fetch)
+    if err_kind:
+        return {
+            "symbol": symbol,
+            "error": f"fetch failed ({err_kind}, after {attempts} attempt(s))",
+            "error_kind": err_kind,
+            "attempts": attempts,
+        }
+    md = getattr(t, "history_metadata", None)
+    if not md:
+        return {
+            "symbol": symbol,
+            "error": "no metadata returned (delisted, wrong suffix, or rate-limited)",
+            "error_kind": "not_found",
+            "attempts": attempts,
+        }
+    return _build_metadata_result(symbol, md, attempts)
+
+
 def fetch(symbol: str, period: str | None, interval: str,
           summary: bool, prepost: bool, adjust: bool = True,
           start: str | None = None, end: str | None = None,
-          head: int | None = None, tail: int | None = None) -> dict:
+          head: int | None = None, tail: int | None = None,
+          events_only: bool = False) -> dict:
     """Single-ticker fetch via Ticker.history. Preserves native tz semantics
     (response `timezone` = exchange-local, daily dates in exchange-local).
     For multi-ticker batches, `main()` dispatches to `fetch_batch` instead.
@@ -276,13 +482,15 @@ def fetch(symbol: str, period: str | None, interval: str,
         symbol, df, period, start, effective_end, interval,
         summary, head, tail, attempts,
         output_tz=output_tz, exchange_tz=None,
+        events_only=events_only,
     )
 
 
 def fetch_batch(symbols: list[str], period: str | None, interval: str,
                 summary: bool, prepost: bool, adjust: bool = True,
                 start: str | None = None, end: str | None = None,
-                head: int | None = None, tail: int | None = None) -> list[dict]:
+                head: int | None = None, tail: int | None = None,
+                events_only: bool = False) -> list[dict]:
     """Multi-ticker fetch via yf.download — one HTTP request, threaded
     internally by yfinance, then sliced per ticker.
 
@@ -415,6 +623,7 @@ def fetch_batch(symbols: list[str], period: str | None, interval: str,
             summary, head, tail, attempts,
             output_tz="UTC",
             exchange_tz=infer_exchange_tz(sym),
+            events_only=events_only,
         ))
     return results
 
@@ -423,11 +632,12 @@ def main() -> None:
     ap = argparse.ArgumentParser(
         prog=Path(__file__).name,
         description=(
-            "Fetch historical OHLCV bars from Yahoo Finance via yfinance.\n\n"
-            "Two output modes:\n"
-            "  default     full OHLCV rows over the period\n"
-            "  --summary   aggregate stats only — use when ~252 daily rows\n"
-            "              would be overkill\n\n"
+            "Fetch historical OHLCV / event / metadata data from Yahoo Finance via yfinance.\n\n"
+            "Four output modes (mutually exclusive):\n"
+            "  default         full OHLCV rows over the period\n"
+            "  --summary       aggregate stats only (start/end close, change_pct, period high/low)\n"
+            "  --events-only   corporate-action rows only (dividends / splits / capital_gains) — no OHLCV\n"
+            "  --metadata      Ticker.history_metadata snapshot (currency, exchange, first_trade_date, valid_ranges) — no rows\n\n"
             "See references/history.md for the full output schema of each mode."
         ),
         epilog=(
@@ -436,6 +646,9 @@ def main() -> None:
             "  history.py --period 1y AAPL MSFT                 # 1y daily, full rows\n"
             "  history.py --period 1mo --summary AAPL MSFT GOOGL  # 1mo summary, 3 tickers\n"
             "  history.py --period ytd --summary AAPL           # YTD aggregate\n"
+            "  history.py --period 5y --events-only AAPL        # all dividends / splits in last 5y\n"
+            "  history.py --period 10y --events-only --tail 5 VFIAX  # last 5 distributions of a fund\n"
+            "  history.py --metadata AAPL MSFT 0700.HK          # currency / exchange / first_trade_date\n"
             "  history.py --period 5d --interval 1h AAPL        # intraday bars\n"
             "  history.py --period 1d --interval 5m --prepost AAPL  # extended hours\n"
             "  history.py --start 2023-01-15 --end 2023-01-22 AAPL  # explicit window\n"
@@ -469,6 +682,36 @@ def main() -> None:
                     help="Bar size. Default %(default)s.")
     ap.add_argument("--summary", action="store_true",
                     help="Aggregate stats instead of full OHLCV rows.")
+    ap.add_argument("--events-only", dest="events_only", action="store_true",
+                    help="Only corporate-action rows (dividends, splits, "
+                         "capital_gains) — no OHLCV. Each row has date + the "
+                         "three event fields; non-event days are filtered "
+                         "out. Adds a `capital_gains` column not visible in "
+                         "default mode (fund-only; populated sparsely by "
+                         "Yahoo). Cannot combine with --summary or "
+                         "--metadata (only one output mode at a time). "
+                         "--prepost and intraday --interval values "
+                         "(1m / 5m / 15m / 30m / 60m / 90m / 1h) are also "
+                         "rejected — corporate actions are end-of-day "
+                         "events that don't appear on intraday bars, and "
+                         "Yahoo's 7-60 day intraday window is too short to "
+                         "capture meaningful events anyway.")
+    ap.add_argument("--metadata", action="store_true",
+                    help="Return Ticker.history_metadata only — currency, "
+                         "exchange, instrument_type, first_trade_date, "
+                         "valid_ranges, etc. Skips per-bar / per-event row "
+                         "construction entirely. Cannot combine with "
+                         "--summary or --events-only (only one output mode "
+                         "at a time). --head / --tail / --no-adjust / "
+                         "--prepost are also rejected because metadata is a "
+                         "rowless, adjustment-invariant snapshot — those "
+                         "flags would have no effect, so script fails fast "
+                         "rather than silently ignoring them. "
+                         "--period / --start / --end ARE accepted but "
+                         "internally ignored — metadata is window-invariant "
+                         "(same firstTradeDate / validRanges / currency for "
+                         "any window), so the call hard-pins period=1d to "
+                         "minimize bandwidth.")
     ap.add_argument("--prepost", action="store_true",
                     help="Include pre-market + after-hours bars (intraday only; ignored for daily+).")
     ap.add_argument("--no-adjust", dest="adjust", action="store_false", default=True,
@@ -538,6 +781,46 @@ def main() -> None:
     if args.summary and (args.head is not None or args.tail is not None):
         ap.error("--head / --tail apply to default mode only, not --summary")
 
+    # New mode flags: only one of {--summary, --events-only, --metadata}
+    # may be set. argparse can't express a 3-way mutex on store_true
+    # flags via add_mutually_exclusive_group + per-mode head/tail mutex,
+    # so do it by hand.
+    mode_flags = sum([args.summary, args.events_only, args.metadata])
+    if mode_flags > 1:
+        ap.error("--summary, --events-only, and --metadata are mutually exclusive")
+
+    # --metadata is a one-row-per-ticker projection of history_metadata.
+    # head/tail don't apply (no per-row data); --no-adjust doesn't apply
+    # (metadata is invariant under adjustment); --prepost doesn't apply
+    # (no bars are returned). Reject explicitly so the user gets a clear
+    # error rather than a silently-ignored flag.
+    if args.metadata:
+        if args.head is not None or args.tail is not None:
+            ap.error("--head / --tail don't apply to --metadata "
+                     "(metadata is one row per ticker)")
+        if args.prepost:
+            ap.error("--prepost doesn't apply to --metadata")
+        if not args.adjust:
+            ap.error("--no-adjust doesn't apply to --metadata "
+                     "(metadata is invariant under price adjustment)")
+
+    # --events-only doesn't accept --prepost (corporate actions don't
+    # fire intraday — extended-hours bars contain no event data) or any
+    # intraday interval (Yahoo caps intraday windows at 7-60 days, and
+    # dividends / splits are end-of-day events that don't appear on
+    # individual minute bars even when they do fall in window). Both
+    # combinations would silently return near-empty rows and confuse
+    # the user; reject explicitly with an actionable message.
+    if args.events_only and args.prepost:
+        ap.error("--prepost doesn't apply to --events-only "
+                 "(corporate actions are end-of-day events)")
+    if args.events_only and args.interval in INTRADAY:
+        ap.error(
+            f"--events-only requires a daily-or-coarser --interval "
+            f"(got {args.interval!r}); intraday windows are too short "
+            f"and corporate actions don't fire mid-session — "
+            f"use --interval 1d (default) instead")
+
     # --prepost is meaningless on daily+ intervals (no extended-hours
     # daily bars exist). yfinance silently ignores it; we reject explicitly
     # so the user picks an intraday interval rather than wondering why
@@ -549,6 +832,20 @@ def main() -> None:
             f"daily+ intervals have no extended-hours bars to fetch")
 
     symbols = [s.strip().upper() for s in args.symbols if s.strip()]
+    # --metadata bypasses both fetch paths — it's a per-ticker
+    # Ticker.history_metadata projection (one HTTP per ticker, serial).
+    # yf.download doesn't reliably populate per-Ticker.history_metadata
+    # state, so batching has no benefit here. For N≥2 the cost is N
+    # HTTP, not 1.
+    if args.metadata:
+        # fetch_metadata pins period=1d internally — user-passed window
+        # flags (--period / --start / --end) are accepted by argparse
+        # for CLI orthogonality but ignored here, since metadata is
+        # window-invariant. Only --interval is honored (it leaks into
+        # `data_granularity` on the response).
+        results = [fetch_metadata(s, args.interval) for s in symbols]
+        _emit(results, args.format, summary=False, metadata=True)
+        return
     # N=1 keeps the original Ticker.history path (preserves native tz in
     # `timezone`, no `exchange_tz` field). N>=2 routes through yf.download —
     # one HTTP request, threaded internally, dates folded back into each
@@ -557,29 +854,39 @@ def main() -> None:
         results = [fetch(symbols[0], args.period, args.interval,
                          args.summary, args.prepost, args.adjust,
                          start=args.start, end=args.end,
-                         head=args.head, tail=args.tail)]
+                         head=args.head, tail=args.tail,
+                         events_only=args.events_only)]
     else:
         results = fetch_batch(symbols, args.period, args.interval,
                               args.summary, args.prepost, args.adjust,
                               start=args.start, end=args.end,
-                              head=args.head, tail=args.tail)
-    _emit(results, args.format, summary=args.summary)
+                              head=args.head, tail=args.tail,
+                              events_only=args.events_only)
+    _emit(results, args.format, summary=args.summary,
+          events_only=args.events_only)
 
 
-def _emit(results: list, fmt: str, *, summary: bool) -> None:
+def _emit(results: list, fmt: str, *, summary: bool,
+          events_only: bool = False, metadata: bool = False) -> None:
     """Render results to stdout in the requested format.
 
-    json   pretty-printed JSON array (default, current behavior)
-    ndjson one JSON object per line (streaming-friendly)
-    csv    flattened tabular: summary mode = one row per ticker;
-           default mode = one row per OHLCV bar with symbol prepended
+    json     pretty-printed JSON array (default, current behavior)
+    ndjson   one JSON object per line (streaming-friendly)
+    csv      flattened tabular:
+               summary       one row per ticker (base + summary stats)
+               events_only   one row per event (base + event fields)
+               metadata      one row per ticker (metadata-only schema)
+               default       one row per OHLCV bar (base + per-bar fields)
 
-    CSV column count is conditional: single-ticker output keeps the
-    original 6-col base schema (symbol/period/start/end/interval/timezone);
-    multi-ticker batch output inserts `exchange_tz` right after `timezone`
-    so consumers can tell which calendar daily dates belong to. The split
+    CSV column count for the OHLCV / events / summary layouts is
+    conditional: single-ticker output keeps the original 6-col base
+    schema (symbol/period/start/end/interval/timezone); multi-ticker
+    batch output inserts `exchange_tz` right after `timezone` so
+    consumers can tell which calendar daily dates belong to. The split
     matches main()'s dispatch (N=1 → fetch, N≥2 → fetch_batch with
-    exchange_tz set).
+    exchange_tz set). Metadata layout is its own schema entirely (no
+    period / start / end / interval — those don't apply to a metadata
+    snapshot) and uses _METADATA_KEYS directly.
     """
     if emit_json_or_ndjson(results, fmt):
         return
@@ -587,6 +894,24 @@ def _emit(results: list, fmt: str, *, summary: bool) -> None:
     import csv as _csv
     # lineterminator='\n' — default is '\r\n' (Windows); CRs poison `wc -l` etc.
     writer = _csv.writer(sys.stdout, lineterminator="\n")
+
+    if metadata:
+        # Metadata schema: no per-bar / per-event nesting. valid_ranges is
+        # a list — JSON-encode into a single cell so the row stays flat.
+        # No exchange_tz column (metadata isn't tied to a daily-date
+        # calendar fold; the IANA tz lives in `exchange_timezone_name`).
+        import json as _json
+        cols = list(_METADATA_KEYS) + list(RESULT_META)
+        writer.writerow(cols)
+        for r in results:
+            row = []
+            for c in cols:
+                v = r.get(c, "")
+                if isinstance(v, list):
+                    v = _json.dumps(v)
+                row.append(v)
+            writer.writerow(row)
+        return
 
     # Insert exchange_tz column only when at least one result carries it
     # (i.e. fetch_batch path). Keeps single-ticker CSV at the original
@@ -602,22 +927,32 @@ def _emit(results: list, fmt: str, *, summary: bool) -> None:
         for r in results:
             writer.writerow([r.get(c, "") for c in cols])
         return
-    # default mode: flatten rows, prepend ticker metadata, append error
-    # + attempts cols. error/error_kind cols mirror fast_info / info CSV
-    # layout — keep error text out of the data columns so consumers can
-    # rely on column types. `attempts` is per-ticker metadata (same value
-    # repeated across all rows of the same ticker on retry).
-    cols = base_keys + list(_PER_BAR_KEYS) + list(RESULT_META)
+
+    # default and events-only both flatten rows. The per-row column set
+    # differs (_PER_BAR_KEYS vs _PER_EVENT_KEYS), but the surrounding
+    # base/meta layout is identical. error rows still get a single
+    # carrying row regardless of which inner schema we're using.
+    #
+    # events-only adds one extra per-ticker column: `has_capital_gains_column`
+    # — a fund/non-fund discriminator that's per-ticker, not per-row, but
+    # repeats across the rows of one ticker so consumers using `awk` /
+    # pandas without GROUP BY can still see it. Insert right before
+    # RESULT_META so the column ordering is base / event / discriminator /
+    # error metadata.
+    inner_keys = list(_PER_EVENT_KEYS) if events_only else list(_PER_BAR_KEYS)
+    extra_per_ticker = ["has_capital_gains_column"] if events_only else []
+    cols = base_keys + inner_keys + extra_per_ticker + list(RESULT_META)
     writer.writerow(cols)
     for r in results:
         if "error" in r:
             # One row for the failed ticker. Iterate base_keys so column
             # ordering follows the (possibly batch-extended) header —
             # symbol/exchange_tz fill via .get(); the rest collapse to ""
-            # for bogus-ticker dicts. Per-bar cols all blank.
+            # for bogus-ticker dicts. Per-bar/event cols all blank.
             writer.writerow(
                 [r.get(k, "") for k in base_keys]
-                + [""] * len(_PER_BAR_KEYS)
+                + [""] * len(inner_keys)
+                + [r.get(k, "") for k in extra_per_ticker]
                 + [r.get(k, "") for k in RESULT_META]
             )
             continue
@@ -626,10 +961,14 @@ def _emit(results: list, fmt: str, *, summary: bool) -> None:
         # (success rows don't have them); attempts present only on retry.
         # Iterating RESULT_META keeps this drift-proof if new meta added.
         meta_cells = [r.get(k, "") for k in RESULT_META]
+        # Per-ticker discriminator (events-only only) — repeated across
+        # this ticker's event rows.
+        ticker_extras = [r.get(k, "") for k in extra_per_ticker]
         for row in r.get("rows", []):
             writer.writerow(
                 meta
-                + [row.get(c, "") for c in _PER_BAR_KEYS]
+                + [row.get(c, "") for c in inner_keys]
+                + ticker_extras
                 + meta_cells
             )
 

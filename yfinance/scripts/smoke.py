@@ -795,6 +795,300 @@ except Exception as e:
     traceback.print_exc(file=sys.stderr)
 
 
+# --- history --events-only ---
+section("history --events-only")
+try:
+    # AAPL pays quarterly dividends; 5y window has ~20 events. Each row
+    # should have only event fields (no OHLCV).
+    d = history.fetch("AAPL", period="5y", interval="1d",
+                       summary=False, prepost=False, events_only=True)
+    rows = d.get("rows", [])
+    check("AAPL --events-only: rows is list, len >= 15",
+          isinstance(rows, list) and len(rows) >= 15,
+          f"got {len(rows)}")
+    check("AAPL --events-only: rows have only event fields, no OHLCV",
+          all(set(r.keys()) == {"date", "dividends", "split_ratio", "capital_gains"}
+              for r in rows),
+          f"sample keys={list(rows[0].keys()) if rows else None}")
+    check("AAPL --events-only: every row has at least one nonzero event",
+          all(abs(r["dividends"]) > 0 or abs(r["split_ratio"]) > 0
+              or abs(r["capital_gains"]) > 0 for r in rows),
+          "row with all-zero events leaked through")
+    check("AAPL --events-only: has_capital_gains_column is False (non-fund)",
+          d.get("has_capital_gains_column") is False)
+    # No --head/--tail → rows_truncated absent (matches default mode shape).
+    check("AAPL --events-only: rows_truncated absent when no head/tail",
+          "rows_truncated" not in d)
+
+    # Fund: VFIAX gets the Capital Gains column even though Yahoo doesn't
+    # populate values reliably. The COLUMN existence is the schema
+    # invariant; the values are documented as sparse.
+    df = history.fetch("VFIAX", period="10y", interval="1d",
+                        summary=False, prepost=False, events_only=True)
+    check("VFIAX --events-only: has_capital_gains_column is True (fund)",
+          df.get("has_capital_gains_column") is True,
+          f"got {df.get('has_capital_gains_column')!r}")
+    check("VFIAX --events-only: returned event rows (Vanguard pays distributions)",
+          isinstance(df.get("rows"), list) and len(df["rows"]) > 0,
+          f"rows={len(df.get('rows', []))}")
+
+    # CSV: events column set is base + per-event + meta. Multi-ticker
+    # batch adds exchange_tz right after timezone (same pattern as
+    # default mode).
+    cmd = [sys.executable, str(SCRIPTS_DIR / "history.py"),
+           "--period", "5y", "--events-only", "--format", "csv",
+           "--tail", "3", "AAPL"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    csv_lines = [ln for ln in out.stdout.splitlines() if ln.strip()]
+    if csv_lines:
+        header = csv_lines[0].split(",")
+        check("--events-only CSV header has event cols, NOT ohlcv cols",
+              "dividends" in header and "capital_gains" in header
+              and "open" not in header and "close" not in header,
+              f"header={header}")
+        # Per-ticker discriminator must survive CSV flattening — without
+        # it, a fund/non-fund signal (which 0.0 capital_gains means "no
+        # distribution" vs "Yahoo doesn't track this") is invisible in
+        # tabular form. Repeats across this ticker's event rows.
+        check("--events-only CSV header includes has_capital_gains_column",
+              "has_capital_gains_column" in header,
+              f"header={header}")
+        check("--events-only CSV: AAPL row has has_capital_gains_column=False",
+              "False" in csv_lines[1].split(",")
+              or "false" in csv_lines[1].split(","),
+              f"row={csv_lines[1]!r}")
+        check("--events-only CSV: header + 3 rows (--tail 3)",
+              out.returncode == 0 and len(csv_lines) == 4,
+              f"rc={out.returncode}, lines={len(csv_lines)}")
+    else:
+        check("--events-only CSV produced output", False,
+              f"stdout empty, rc={out.returncode}")
+
+    # Mutex check: argparse rejects --summary + --events-only.
+    cmd = [sys.executable, str(SCRIPTS_DIR / "history.py"),
+           "--summary", "--events-only", "AAPL"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    check("--summary + --events-only is rejected (mutex)",
+          out.returncode != 0
+          and "mutually exclusive" in out.stderr.lower(),
+          f"rc={out.returncode}, stderr={out.stderr[:200]!r}")
+
+    # Mutex check: --events-only + --prepost is rejected.
+    cmd = [sys.executable, str(SCRIPTS_DIR / "history.py"),
+           "--events-only", "--prepost", "--interval", "5m", "AAPL"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    check("--events-only + --prepost is rejected",
+          out.returncode != 0
+          and "prepost" in out.stderr.lower(),
+          f"rc={out.returncode}, stderr={out.stderr[:200]!r}")
+
+    # Guard: --events-only + intraday interval is rejected (corporate
+    # actions are end-of-day; Yahoo intraday windows cap at 7-60 days
+    # so events-only would silently return empty).
+    cmd = [sys.executable, str(SCRIPTS_DIR / "history.py"),
+           "--events-only", "--interval", "5m", "AAPL"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    check("--events-only + --interval 5m is rejected (intraday guard)",
+          out.returncode != 0
+          and "daily-or-coarser" in out.stderr.lower(),
+          f"rc={out.returncode}, stderr={out.stderr[:200]!r}")
+
+    # Batch path: --events-only over multi-ticker. exchange_tz fold for
+    # daily dates should preserve event dates correctly across markets
+    # (events are end-of-day; folding into local tz is a no-op for the
+    # date string format).
+    bres = history.fetch_batch(["AAPL", "MSFT"], period="2y",
+                                interval="1d", summary=False,
+                                prepost=False, events_only=True)
+    by_sym = {r["symbol"]: r for r in bres}
+    check("--events-only batch: 2 dicts, both succeed",
+          len(bres) == 2
+          and "error" not in by_sym.get("AAPL", {})
+          and "error" not in by_sym.get("MSFT", {}))
+    check("--events-only batch: AAPL has dividend rows",
+          isinstance(by_sym.get("AAPL", {}).get("rows"), list)
+          and len(by_sym["AAPL"]["rows"]) >= 6,
+          f"got {len(by_sym.get('AAPL', {}).get('rows', []))}")
+    check("--events-only batch: exchange_tz field present (batch schema)",
+          "exchange_tz" in by_sym.get("AAPL", {}))
+    # Single-ticker AAPL events vs batched AAPL events should produce
+    # the same date strings — the tz fold is a no-op for daily dates
+    # in the source ticker's own tz. Compare last 3 dividend dates.
+    single = history.fetch("AAPL", period="2y", interval="1d",
+                            summary=False, prepost=False, events_only=True)
+    single_dates = [r["date"] for r in single.get("rows", [])][-3:]
+    batch_dates = [r["date"] for r in by_sym["AAPL"]["rows"]][-3:]
+    check("--events-only batch: AAPL event dates match single-ticker",
+          single_dates == batch_dates,
+          f"single={single_dates}, batch={batch_dates}")
+
+    # --events-only with --start/--end window (independent code path
+    # from --period in fetch / fetch_batch).
+    se = history.fetch("AAPL", period=None, interval="1d",
+                        summary=False, prepost=False, events_only=True,
+                        start="2024-01-01", end="2024-12-31")
+    check("--events-only --start/--end: window echoes back",
+          se.get("start") == "2024-01-01" and se.get("end") == "2024-12-31"
+          and se.get("period") is None)
+    check("--events-only --start/--end: returns AAPL's 4 quarterly dividends in 2024",
+          isinstance(se.get("rows"), list) and len(se["rows"]) == 4,
+          f"got {len(se.get('rows', []))} rows")
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"history --events-only crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
+# --- history --metadata ---
+section("history --metadata")
+try:
+    d = history.fetch_metadata("AAPL", interval="1d")
+    # invariant: required headline fields present
+    must_have = {"symbol", "currency", "exchange_name", "instrument_type",
+                 "first_trade_date", "exchange_timezone_name", "valid_ranges"}
+    check("AAPL --metadata: required fields present",
+          must_have.issubset(d.keys()),
+          f"missing={must_have - d.keys()}")
+    # canary: AAPL is on Nasdaq, USD, listed since 1980-12-12
+    check("AAPL --metadata: currency=USD, exchange_name=NMS",
+          d.get("currency") == "USD" and d.get("exchange_name") == "NMS",
+          f"got {d.get('currency')!r}, {d.get('exchange_name')!r}")
+    check("AAPL --metadata: first_trade_date is 1980-12-12 (IPO date)",
+          d.get("first_trade_date") == "1980-12-12",
+          f"got {d.get('first_trade_date')!r}")
+    check("AAPL --metadata: exchange_timezone_name is IANA",
+          d.get("exchange_timezone_name") == "America/New_York",
+          f"got {d.get('exchange_timezone_name')!r}")
+    check("AAPL --metadata: instrument_type=EQUITY",
+          d.get("instrument_type") == "EQUITY")
+    check("AAPL --metadata: has_prepost is True",
+          d.get("has_prepost") is True)
+    check("AAPL --metadata: valid_ranges is list with `1y` and `max`",
+          isinstance(d.get("valid_ranges"), list)
+          and "1y" in d["valid_ranges"]
+          and "max" in d["valid_ranges"])
+    # No `period` / `start` / `end` / `interval` in metadata schema
+    # (those describe the query window; metadata is a snapshot).
+    check("AAPL --metadata: no period/start/end/interval fields",
+          not any(k in d for k in ("period", "start", "end", "interval")))
+
+    # Non-US: HK ticker has different currency, IANA tz, has_prepost=False.
+    h = history.fetch_metadata("0700.HK", interval="1d")
+    check("0700.HK --metadata: HKD currency",
+          h.get("currency") == "HKD",
+          f"got {h.get('currency')!r}")
+    check("0700.HK --metadata: Asia/Hong_Kong IANA tz",
+          h.get("exchange_timezone_name") == "Asia/Hong_Kong",
+          f"got {h.get('exchange_timezone_name')!r}")
+    check("0700.HK --metadata: has_prepost is False (HK no extended hours)",
+          h.get("has_prepost") is False,
+          f"got {h.get('has_prepost')!r}")
+
+    # CSV: one row per ticker; valid_ranges JSON-encoded into a cell.
+    cmd = [sys.executable, str(SCRIPTS_DIR / "history.py"),
+           "--metadata", "--format", "csv", "AAPL", "MSFT"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    csv_lines = [ln for ln in out.stdout.splitlines() if ln.strip()]
+    if csv_lines:
+        header = csv_lines[0].split(",")
+        check("--metadata CSV header has metadata cols, no ohlcv/event cols",
+              "first_trade_date" in header and "valid_ranges" in header
+              and "open" not in header and "dividends" not in header,
+              f"header={header}")
+        check("--metadata CSV: header + 2 rows for 2 tickers",
+              out.returncode == 0 and len(csv_lines) == 3,
+              f"rc={out.returncode}, lines={len(csv_lines)}")
+        # No exchange_tz column — IANA tz lives in exchange_timezone_name
+        # for the metadata schema.
+        check("--metadata CSV: no `exchange_tz` column",
+              "exchange_tz" not in header,
+              f"header={header}")
+    else:
+        check("--metadata CSV produced output", False,
+              f"stdout empty, rc={out.returncode}")
+
+    # Bogus ticker → error_kind=not_found, no other fields populated.
+    bogus = history.fetch_metadata("ZZZZNOTREAL", interval="1d")
+    check("--metadata bogus ticker: error_kind=not_found",
+          bogus.get("error_kind") == "not_found",
+          f"got {bogus.get('error_kind')!r}")
+
+    # Mutex: --metadata + --events-only rejected.
+    cmd = [sys.executable, str(SCRIPTS_DIR / "history.py"),
+           "--metadata", "--events-only", "AAPL"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    check("--metadata + --events-only is rejected (mutex)",
+          out.returncode != 0
+          and "mutually exclusive" in out.stderr.lower(),
+          f"rc={out.returncode}, stderr={out.stderr[:200]!r}")
+
+    # Mutex: --metadata + --head rejected (head/tail don't apply).
+    cmd = [sys.executable, str(SCRIPTS_DIR / "history.py"),
+           "--metadata", "--head", "5", "AAPL"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    check("--metadata + --head is rejected",
+          out.returncode != 0
+          and "head" in out.stderr.lower(),
+          f"rc={out.returncode}, stderr={out.stderr[:200]!r}")
+
+    # Mutex: --metadata + --no-adjust rejected (adjustment-invariant snapshot).
+    cmd = [sys.executable, str(SCRIPTS_DIR / "history.py"),
+           "--metadata", "--no-adjust", "AAPL"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    check("--metadata + --no-adjust is rejected",
+          out.returncode != 0
+          and "no-adjust" in out.stderr.lower(),
+          f"rc={out.returncode}, stderr={out.stderr[:200]!r}")
+
+    # Mutex: --metadata + --prepost rejected (no bars are returned).
+    cmd = [sys.executable, str(SCRIPTS_DIR / "history.py"),
+           "--metadata", "--prepost", "AAPL"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    check("--metadata + --prepost is rejected",
+          out.returncode != 0
+          and "prepost" in out.stderr.lower(),
+          f"rc={out.returncode}, stderr={out.stderr[:200]!r}")
+
+    # Quote-type coverage: --metadata works across instrument types,
+    # and `instrument_type` is a reliable disambiguator for callers
+    # that need to sniff what kind of ticker they got. Schema invariant:
+    # symbol + currency + instrument_type + exchange_timezone_name are
+    # populated for every quote type yfinance recognizes.
+    quote_type_cases = [
+        ("SPY",     "ETF",          "USD"),
+        ("VFIAX",   "MUTUALFUND",   "USD"),
+        ("^GSPC",   "INDEX",        "USD"),
+        ("BTC-USD", "CRYPTOCURRENCY", "USD"),
+    ]
+    for sym, expected_type, expected_ccy in quote_type_cases:
+        m = history.fetch_metadata(sym, interval="1d")
+        check(f"{sym} --metadata: instrument_type={expected_type}",
+              m.get("instrument_type") == expected_type,
+              f"got {m.get('instrument_type')!r}")
+        check(f"{sym} --metadata: currency={expected_ccy}",
+              m.get("currency") == expected_ccy,
+              f"got {m.get('currency')!r}")
+        check(f"{sym} --metadata: exchange_timezone_name populated",
+              isinstance(m.get("exchange_timezone_name"), str)
+              and len(m["exchange_timezone_name"]) > 0,
+              f"got {m.get('exchange_timezone_name')!r}")
+
+    # tz-correctness regression: fix #1. ISO datetime fields must carry
+    # `+00:00` offset (we forced UTC in _epoch_to_iso_dt) so consumers
+    # parsing the string get an unambiguous moment. Server-tz drift is
+    # the bug this asserts against — naive `datetime.fromtimestamp(v)`
+    # would emit no offset.
+    aapl = history.fetch_metadata("AAPL", interval="1d")
+    rmt = aapl.get("regular_market_time")
+    check("--metadata: regular_market_time ISO string carries +00:00 offset",
+          isinstance(rmt, str) and rmt.endswith("+00:00"),
+          f"got {rmt!r} (must end with +00:00 — UTC offset)")
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"history --metadata crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
 # --- info default mode (stock) ---
 section("info default (stock)")
 try:

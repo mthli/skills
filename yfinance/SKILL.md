@@ -16,7 +16,7 @@ Python scripts wrapping [yfinance](https://github.com/ranaroussi/yfinance),
 one per mode:
 
 - `scripts/fast_info.py` — current quote
-- `scripts/history.py` — historical OHLCV; full bars or `--summary` aggregates
+- `scripts/history.py` — historical OHLCV; full bars, `--summary` aggregates, `--events-only` corporate-action rows, or `--metadata` snapshot
 - `scripts/info.py` — profile + fundamentals + analyst; full grouped sections or `--summary` flat dict
 - `scripts/earnings.py` — upcoming + recent earnings dates with EPS estimates / actuals / surprise
 - `scripts/financials.py` — annual / quarterly / TTM income statement, balance sheet, and cash flow
@@ -51,7 +51,15 @@ as functionality grows.
 ## When to use which mode
 
 > **Quote-type precondition:** `fast_info`, `history`, and `news` work
-> for any ticker (stocks, ETFs, indexes, crypto, futures, FX). `info` is
+> for any ticker (stocks, ETFs, indexes, crypto, futures, FX). One
+> wrinkle on `history`: the `--events-only` projection returns empty
+> rows for indexes / crypto / FX / futures (they have no corporate
+> actions to filter to) and is dividend-only for most equities (splits
+> are rare); funds (ETF / mutual fund) get the unique `Capital Gains`
+> column though Yahoo's data is sparse — see references/history.md.
+> `--metadata` works for every quote type (returns `instrument_type`
+> = EQUITY / ETF / MUTUALFUND / INDEX / CRYPTOCURRENCY / FUTURE / etc.,
+> letting it double as a cheap quote-type sniff). `info` is
 > meaningful only for `quote_type` ∈ {`EQUITY`, `ETF`, `MUTUALFUND`} —
 > for indexes / crypto / futures / FX it returns mostly null, so don't
 > waste the call. `earnings` and `financials` are **equity-only** (no
@@ -174,6 +182,8 @@ as functionality grows.
 | "show me last N days / weeks", "plot the chart" | `history` (default) | full OHLCV rows |
 | "intraday last 5 days" | `history --interval 1h` (or `5m`/`15m`) | tick-level rows |
 | "after-hours price right now", "pre-market gap after earnings" | `history --interval 5m --prepost` | extended-hours bars |
+| "all dividends paid by X", "split history", "capital-gain distributions" | `history --events-only` | corporate-action rows only — no OHLCV. Adds `capital_gains` field (fund-only — the column appears for ETFs / mutual funds, but Yahoo's actual coverage is sparse — see references/history.md "Capital Gains coverage") |
+| "when did X start trading", "what bar sizes does Yahoo accept for X", "IANA tz of HK ticker" | `history --metadata` | one-row-per-ticker projection of `Ticker.history_metadata` — `first_trade_date`, `valid_ranges`, `exchange_timezone_name`, `has_prepost`, plus quote / 52-week mirror fields |
 
 > "S&P 500 P/E" or any index-fundamental question isn't answerable through `info` (or the other modes) — yfinance has no fundamentals for indexes; you'd need a different data source.
 
@@ -298,6 +308,8 @@ uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/history.py AAPL     
 uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/history.py --period ytd --summary AAPL       # aggregate stats
 uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/history.py --period 5d --interval 1h AAPL    # intraday
 uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/history.py --period 1d --interval 5m --prepost AAPL  # extended-hours
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/history.py --period 5y --events-only AAPL                     # corporate actions only (dividends/splits/capital_gains)
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/history.py --metadata AAPL MSFT 0700.HK                       # currency / exchange / first_trade_date / valid_ranges
 
 # info — profile + fundamentals + analyst (see references/info.md)
 uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/info.py AAPL MSFT                            # full sections
@@ -456,7 +468,13 @@ disambiguator that lets the all-empty `note` path be answered inline
 without a follow-up call). All modes are serial (total ≈ N ×
 per-ticker) **except `history`** — it batches N≥2 through
 `yf.download` in one threaded HTTP call, so 10 tickers cost ~1–2 s
-instead of ~5–15 s. `--summary` does
+instead of ~5–15 s. **One wrinkle:** `history --metadata` is the
+exception within history itself — it routes per-ticker through
+`Ticker.history()` (cheapest possible window, `period=1d`) because
+`yf.download` doesn't reliably populate per-ticker `history_metadata`
+state. So a 10-ticker `--metadata` call is N HTTP, ~3–8 s, not the
+batched 1-HTTP path. `--summary` and `--events-only` still go through
+the batched path for N≥2. `--summary` does
 **not** reduce latency; it's a post-fetch projection that only shrinks
 output JSON (use it to save context tokens, not time). When a question
 is answerable by multiple modes, pick the cheapest — don't call `info`

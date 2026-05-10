@@ -5,10 +5,16 @@
 _Yahoo behavior verified: 2026-05, yfinance 1.3.x. Re-run `scripts/smoke.py`
 if you suspect upstream drift._
 
-**Sections:** [Run](#run) · [CLI arguments](#cli-arguments) · [Output — default mode](#output--default-mode-full-rows) · [Output — `--summary` mode](#output----summary-mode) · [Multi-ticker batch](#multi-ticker-batch-behavior) · [When to use `--summary`](#when-to-use---summary) · [Presenting history results](#presenting-history-results) · [Mode-specific caveats](#mode-specific-caveats) (incl. **adjusted-vs-price-only**, **`total_dividends` double-count**, **intraday window caps**)
+**Sections:** [Run](#run) · [CLI arguments](#cli-arguments) · [Output — default mode](#output--default-mode-full-rows) · [Output — `--summary` mode](#output----summary-mode) · [Output — `--events-only` mode](#output----events-only-mode) · [Output — `--metadata` mode](#output----metadata-mode) · [Multi-ticker batch](#multi-ticker-batch-behavior) · [When to use `--summary`](#when-to-use---summary) · [Presenting history results](#presenting-history-results) · [Mode-specific caveats](#mode-specific-caveats) (incl. **adjusted-vs-price-only**, **`total_dividends` double-count**, **intraday window caps**, **Capital Gains coverage**)
 
-Historical OHLCV time series. Default mode returns full bars; `--summary`
-returns aggregate stats over the window.
+Historical OHLCV time series. Four output modes:
+
+- **default** — full OHLCV rows over the window
+- **`--summary`** — aggregate stats only (start/end close, change, period high/low, etc.)
+- **`--events-only`** — corporate-action rows only (dividends, splits, capital_gains) — no OHLCV
+- **`--metadata`** — `Ticker.history_metadata` projection (currency, exchange, instrument_type, first_trade_date, valid_ranges, …) — no rows at all
+
+The four modes are mutually exclusive at the CLI layer.
 
 ## Run
 
@@ -26,6 +32,14 @@ uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/history.py --period 
 
 # Summary mode — aggregate stats, no rows
 uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/history.py --period ytd --summary AAPL
+
+# Events-only — corporate action rows only (dividend/split/capital_gains), no OHLCV
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/history.py --period 5y --events-only AAPL
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/history.py --period 10y --events-only --tail 5 VFIAX
+
+# Metadata — currency / exchange / first_trade_date / valid_ranges / etc.
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/history.py --metadata AAPL
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/history.py --metadata --format csv AAPL MSFT 0700.HK
 
 # Intraday
 uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/history.py --period 5d --interval 1h AAPL
@@ -67,6 +81,34 @@ uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/history.py --period 
 - `--summary` — flag. Output aggregate stats (start/end close, change_abs,
   change_pct, period high/low with dates, avg volume, total dividends, splits)
   instead of full rows.
+- `--events-only` — flag. Output only rows where a corporate action fired —
+  dividend, split, or capital-gain distribution. OHLCV columns are stripped;
+  rows have just `date` + `dividends` + `split_ratio` + `capital_gains`. Adds
+  a top-level `has_capital_gains_column` (True for fund tickers; False for
+  non-funds — the underlying yfinance DataFrame literally lacks the column
+  for non-funds, so a 0.0 here means "Yahoo doesn't track this for this
+  instrument", not "no distribution paid"). **Mutually exclusive with
+  `--summary`, `--metadata`, `--prepost`, and intraday `--interval` values**
+  (`1m` / `5m` / ... / `1h`) — corporate actions are end-of-day events,
+  extended-hours bars contain no event data, and Yahoo's intraday windows
+  are too short (7-60 days) to capture meaningful events. `--head` /
+  `--tail` apply the same way as default mode (post-fetch projection over
+  the events list, with `rows_truncated: {total, shown}` surfaced when
+  truncation actually applies — same shape as default mode for schema
+  consistency).
+- `--metadata` — flag. Return `Ticker.history_metadata` only — currency,
+  exchange (short + full name), instrument_type, first_trade_date,
+  regular_market_time, valid_ranges, has_prepost, IANA exchange tz, and a
+  small set of "current quote" mirror fields (regular_market_price,
+  fifty_two_week_high/low, etc.). One row per ticker, no per-bar / per-event
+  data. Datetime fields are pre-converted to ISO strings; raw `*_epoch`
+  siblings are preserved for callers that need their own arithmetic. **Cost
+  is 1 HTTP per ticker** (no batching — yfinance's `yf.download` doesn't
+  reliably populate per-Ticker `history_metadata`, so the metadata path
+  serializes through `Ticker.history()`). **Mutually exclusive with
+  `--summary`, `--events-only`, `--head`, `--tail`, `--no-adjust`, and
+  `--prepost`** (all of those describe how to project rows; metadata is a
+  rowless snapshot).
 - `--prepost` — flag. Include pre-market (04:00–09:30 ET) and after-hours
   (16:00–20:00 ET) bars. Intraday-only — daily+ intervals ignore it. Use for
   "what's the after-hours price right now", "where did the stock open
@@ -223,6 +265,128 @@ difference is that the date fields become ISO timestamps instead of
 `YYYY-MM-DD`. `total_dividends` and `splits` will usually be `0` / `[]`
 because corporate actions don't fire mid-session.
 
+## Output — `--events-only` mode
+
+Sample numbers and dates below are illustrative, not a real capture.
+
+```json
+[
+  {
+    "symbol": "AAPL",
+    "period": "5y",
+    "interval": "1d",
+    "timezone": "America/New_York",
+    "rows": [
+      {"date": "2025-02-10", "dividends": 0.25, "split_ratio": 0.0, "capital_gains": 0.0},
+      {"date": "2025-05-12", "dividends": 0.26, "split_ratio": 0.0, "capital_gains": 0.0},
+      {"date": "2025-08-11", "dividends": 0.26, "split_ratio": 0.0, "capital_gains": 0.0}
+    ],
+    "has_capital_gains_column": false
+  }
+]
+```
+
+Each row carries one date + the three event fields. Non-event days are
+filtered out — every row in `rows` has at least one nonzero value among
+`dividends` / `split_ratio` / `capital_gains`. When `--head` / `--tail`
+truncates the list, the response gains `rows_truncated: {total, shown}`
+(same shape as default mode — total is pre-truncation, shown is final
+list length).
+
+`has_capital_gains_column` is a fund-only signal: `true` when the
+underlying yfinance DataFrame contained a `Capital Gains` column (fund
+ticker — ETF / mutual fund), `false` for non-funds (equity / index /
+crypto / FX / future) where the column simply doesn't exist. A
+`capital_gains: 0.0` row for a fund means "no distribution that day"; the
+same value on a non-fund row means "Yahoo doesn't track this for this
+instrument type" — the column is uniformly 0.0 for schema completeness.
+
+For the multi-ticker batch path, `--events-only` rows still get the
+`exchange_tz` fold so dates land in each ticker's local trading-day
+calendar (same logic as default mode — see [Multi-ticker batch
+behavior](#multi-ticker-batch-behavior)).
+
+## Output — `--metadata` mode
+
+Sample numbers and dates below are illustrative, not a real capture.
+
+```json
+[
+  {
+    "symbol": "AAPL",
+    "currency": "USD",
+    "exchange_name": "NMS",
+    "full_exchange_name": "NasdaqGS",
+    "instrument_type": "EQUITY",
+    "first_trade_date": "1980-12-12",
+    "first_trade_date_epoch": 345479400,
+    "regular_market_time": "2026-05-08T19:59:58",
+    "regular_market_time_epoch": 1778270402,
+    "has_prepost": true,
+    "gmt_offset": -14400,
+    "timezone_short": "EDT",
+    "exchange_timezone_name": "America/New_York",
+    "data_granularity": "1h",
+    "valid_ranges": ["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max"],
+    "long_name": "Apple Inc.",
+    "short_name": "Apple Inc.",
+    "regular_market_price": 215.30,
+    "previous_close": 213.85,
+    "chart_previous_close": 211.41,
+    "fifty_two_week_high": 237.49,
+    "fifty_two_week_low": 169.21,
+    "regular_market_day_high": 216.10,
+    "regular_market_day_low": 213.50,
+    "regular_market_volume": 45708423,
+    "price_hint": 2
+  }
+]
+```
+
+The metadata projection serves three distinct use cases that no other
+mode covers:
+
+1. **`first_trade_date`** — when did this ticker start trading on Yahoo?
+   Useful for context ("AAPL has been listed since 1980-12-12") and for
+   bounding `--period max` queries.
+2. **`valid_ranges`** — which `--period` strings does Yahoo accept for
+   *this specific ticker*? The skill-wide `VALID_PERIODS` list is the
+   intersection across all tickers; some instruments support fewer
+   periods (e.g., recently-listed names have no `max` data, some
+   indexes refuse `5d`).
+3. **`exchange_timezone_name`** — IANA tz string for downstream
+   `tz_convert` calls. Disambiguates from `timezone_short` (Yahoo's
+   short code like `EDT` / `HKT` which is DST-dependent).
+
+The `regular_market_*` and `fifty_two_week_*` fields overlap with
+`fast_info` (use whichever you already have a call to); `currency` and
+`instrument_type` overlap with both `fast_info` and `info`. The unique
+value-adds are the three above, plus `has_prepost` (whether extended
+hours data is fetchable for this ticker — `false` for HK, `true` for
+US) and `data_granularity` (what bar size yfinance returned in the
+underlying `.history()` call).
+
+**No `period` / `start` / `end` / `interval` fields appear in metadata
+output** — those describe a query window, but metadata is a snapshot
+that's window-invariant. Pass any window flag to satisfy CLI parsing;
+the value is consumed by the underlying `.history()` call (cheapest is
+`--period 1mo`, the default) but isn't echoed back.
+
+CSV layout: one row per ticker, no `exchange_tz` column (the IANA tz
+already lives in `exchange_timezone_name`), `valid_ranges` is
+JSON-encoded into a single cell.
+
+A failed ticker has the same error shape as other modes:
+
+```json
+{
+  "symbol": "ZZZZNOTREAL",
+  "error": "no metadata returned (delisted, wrong suffix, or rate-limited)",
+  "error_kind": "not_found",
+  "attempts": 1
+}
+```
+
 ## Multi-ticker batch behavior
 
 Passing **two or more symbols** routes through `yf.download` — one HTTP
@@ -329,6 +493,19 @@ note the period and interval in the heading.
   (total-return view). `--no-adjust` = split-adjusted only (price-return
   view). Neither reproduces the actual pre-split printed price you'd see
   on a brokerage statement; that needs a different data source.
+- **`Capital Gains` coverage is sparse.** The `capital_gains` field in
+  `--events-only` output (and the underlying `Capital Gains` column on
+  the yfinance DataFrame for fund tickers) is populated by Yahoo
+  inconsistently — most Vanguard and Fidelity index funds verified
+  2026-05 returned the column with all zeros across multi-year windows,
+  even where the funds publicly distributed cap gains. Treat the column
+  as schema-complete but data-sparse: the presence of the column
+  (`has_capital_gains_column: true`) tells you this is a fund;
+  non-zero values are a real signal but absence is not. For
+  authoritative cap-gains data you'll need a different source. The
+  same caveat applies to `Ticker.capital_gains` directly — the yfinance
+  property returns an empty Series for the same set of funds. This is
+  a Yahoo data quality issue, not a yfinance bug.
 - **`total_dividends` + adjusted closes can double-count.** Default mode
   has `auto_adjust=True`, so `change_pct` already reflects total return
   (price + reinvested dividends). `total_dividends` reports the *nominal
