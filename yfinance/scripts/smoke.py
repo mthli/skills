@@ -75,6 +75,7 @@ import history
 import holders
 import info
 import insiders
+import market
 import news
 import options
 import screener
@@ -7268,6 +7269,420 @@ try:
 except Exception as e:
     FAIL += 1
     FAILURES.append(f"sectors smoke crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
+# --- market ---
+section("market")
+try:
+    # --- --list-markets (offline; no HTTP) ---
+    rc, parsed = run_cli("market.py", "--list-markets")
+    check("market --list-markets CLI: exit 0", rc == 0)
+    check("market --list-markets: 8 canonical region keys",
+          isinstance(parsed, list) and len(parsed) == 8
+          and {r.get("key") for r in parsed} == set(market.MARKET_KEYS),
+          f"got {len(parsed) if isinstance(parsed, list) else parsed!r}")
+
+    # --- default US fetch ---
+    rc, parsed = run_cli("market.py", "US")
+    check("market US CLI: exit 0", rc == 0)
+    env = parsed[0] if isinstance(parsed, list) and parsed else {}
+    check("market US: envelope has clock + summary sections",
+          isinstance(env.get("clock"), dict)
+          and isinstance(env.get("summary"), list)
+          and env.get("summary_count", 0) >= 3,
+          f"got clock={type(env.get('clock')).__name__}, "
+          f"summary len={len(env.get('summary') or [])}")
+    check("market US: clock has open/close ISO strings + IANA timezone",
+          isinstance(env.get("clock"), dict)
+          and isinstance(env["clock"].get("open"), str)
+          and "T" in (env["clock"].get("open") or "")
+          and env["clock"].get("timezone") == "America/New_York",
+          f"got open={env.get('clock', {}).get('open')!r}, "
+          f"tz={env.get('clock', {}).get('timezone')!r}")
+    rows = env.get("summary") or []
+    check("market US: summary rows have ^GSPC + ^DJI + ^IXIC",
+          {r.get("symbol") for r in rows} >= {"^GSPC", "^DJI", "^IXIC"},
+          f"got symbols={[r.get('symbol') for r in rows]}")
+    # Arithmetic verification: for any row with non-zero change AND
+    # non-zero previous_close, change_pct should be approximately
+    # `(change/previous_close)*100` (percent encoding) and NOT
+    # approximately `change/previous_close` (fraction encoding). On
+    # any non-trivial move the two forms are off by 100x, easy to
+    # tell apart. We pick the form whose computed value is CLOSER
+    # to the reported `change_pct`. If at least one row votes
+    # `percent`, we've verified the encoding. Skipped for rows where
+    # change is 0 (frozen markets / first trade of session) — the
+    # two encodings collapse to 0, can't distinguish.
+    def _vote(row):
+        pct = row.get("change_pct")
+        chg = row.get("change")
+        pc = row.get("previous_close")
+        if (pct is None or chg is None or pc is None
+                or pc == 0 or chg == 0):
+            return None
+        as_percent = (chg / pc) * 100.0
+        as_fraction = chg / pc
+        return "percent" if abs(pct - as_percent) < abs(pct - as_fraction) else "fraction"
+    votes = [_vote(r) for r in rows]
+    decided = [v for v in votes if v is not None]
+    check("market US: change_pct is PERCENT-encoded "
+          "(arithmetic match against change/previous_close*100, "
+          "not just a magnitude heuristic)",
+          decided and all(v == "percent" for v in decided),
+          f"got votes={votes} (None = couldn't decide due to zero values)")
+    check("market US: dst is bool (not string)",
+          isinstance(env.get("clock", {}).get("dst"), bool),
+          f"got dst={env.get('clock', {}).get('dst')!r} "
+          f"(type={type(env.get('clock', {}).get('dst')).__name__})")
+    check("market US: row has listing_region (renamed from `region`) "
+          "and NOT exchange (dropped — redundant with exchange_code)",
+          rows and "listing_region" in rows[0]
+          and "exchange" not in rows[0]
+          and "region" not in rows[0],
+          f"got row keys={list(rows[0].keys()) if rows else 'n/a'}")
+    # data_delayed_by_minutes — Yahoo's exchangeDataDelayedBy, surfaced
+    # so callers can distinguish API feed delay from yfinance cache
+    # staleness. Verified per-quote variance: US has ^GSPC at 0 but
+    # ^RUT at 15. Smoke checks that (a) the field is present on every
+    # row as an int (or None) and (b) at least one row in US has a
+    # non-zero delay (^RUT) — pinning the variance signal.
+    check("market US: every summary row has data_delayed_by_minutes "
+          "(int or None — Yahoo's per-quote feed delay)",
+          rows and all(
+              "data_delayed_by_minutes" in r
+              and (r["data_delayed_by_minutes"] is None
+                   or isinstance(r["data_delayed_by_minutes"], int))
+              for r in rows
+          ),
+          f"got values={[r.get('data_delayed_by_minutes') for r in rows]}")
+    check("market US: data_delayed_by_minutes varies per quote "
+          "(at least one non-zero delay — typically ^RUT at 15min)",
+          rows and any((r.get("data_delayed_by_minutes") or 0) > 0
+                       for r in rows),
+          f"got values={[(r.get('symbol'), r.get('data_delayed_by_minutes')) for r in rows]}")
+    check("market US: NO clock_is_us_fallback on US "
+          "(flag only fires for non-US)",
+          "clock_is_us_fallback" not in env,
+          f"got clock_is_us_fallback={env.get('clock_is_us_fallback')!r}")
+
+    # --- non-US warning ---
+    rc, parsed = run_cli("market.py", "ASIA")
+    env = parsed[0] if isinstance(parsed, list) and parsed else {}
+    check("market ASIA CLI: exit 0", rc == 0)
+    check("market ASIA: clock_is_us_fallback bool flag set "
+          "(replaces verbose duplicate string)",
+          env.get("clock_is_us_fallback") is True,
+          f"got clock_is_us_fallback={env.get('clock_is_us_fallback')!r}")
+    rows = env.get("summary") or []
+    check("market ASIA: summary contains an Asian index "
+          "(^N225 / ^HSI / ^AXJO)",
+          any(r.get("symbol") in ("^N225", "^HSI", "^AXJO", "000001.SS")
+              for r in rows),
+          f"got symbols={[r.get('symbol') for r in rows]}")
+    # listing_region is Yahoo's listing-region tag — confirmed = "US"
+    # for cross-listed Asian indexes (^N225, ^HSI). The renamed field
+    # makes this misleading-vs-the-code-name fact explicit.
+    asian_rows = [r for r in rows
+                  if r.get("symbol") in ("^N225", "^HSI", "^AXJO")]
+    check("market ASIA: cross-listed Asian indexes carry "
+          "listing_region='US' (Yahoo's listing tag, not home market)",
+          asian_rows and all(r.get("listing_region") == "US"
+                              for r in asian_rows),
+          f"got listing_regions="
+          f"{[r.get('listing_region') for r in asian_rows]}")
+
+    # --- case insensitivity ---
+    rc, parsed = run_cli("market.py", "us")
+    check("market 'us' (lowercase) CLI: exit 0 + market normalized to 'US'",
+          rc == 0 and isinstance(parsed, list) and parsed
+          and parsed[0].get("market") == "US",
+          f"got rc={rc}, "
+          f"market={parsed[0].get('market') if parsed else 'n/a'!r}")
+
+    # --- invalid market: argparse rejects (no HTTP) ---
+    cmd = [sys.executable, str(SCRIPTS_DIR / "market.py"), "BOGUS"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+    check("market BOGUS: argparse rejects (no HTTP)",
+          out.returncode == 2 and "unknown market key" in out.stderr,
+          f"got rc={out.returncode}, stderr={out.stderr!r}")
+
+    # --- --summary peer compare ---
+    rc, parsed = run_cli("market.py", "--summary", "US", "ASIA")
+    check("market --summary CLI: exit 0", rc == 0)
+    check("market --summary: flat dicts with avg/best/worst change_pct "
+          "+ avg_quote_type + avg_rows_used",
+          isinstance(parsed, list) and len(parsed) == 2
+          and all({"avg_change_pct", "best_change_pct",
+                   "worst_change_pct", "avg_quote_type",
+                   "avg_rows_used"}.issubset(r.keys())
+                  for r in parsed),
+          f"got rolled fields: "
+          f"{set(parsed[0].keys()) if isinstance(parsed, list) and parsed else 'n/a'}")
+    # Dominant-quote_type filter: US summary has 5 INDEX + 1 FUTURE
+    # (Gold). avg_quote_type should be INDEX, avg_rows_used = 5.
+    # ASIA has 5 INDEX + 1 CURRENCY. Same expectation.
+    us_row = next((r for r in (parsed or []) if r.get("market") == "US"), {})
+    asia_row = next((r for r in (parsed or []) if r.get("market") == "ASIA"), {})
+    check("market --summary: avg_quote_type='INDEX' for US "
+          "(dominant over the lone FUTURE row, GC=F gold)",
+          us_row.get("avg_quote_type") == "INDEX"
+          and us_row.get("avg_rows_used") == 5
+          and us_row.get("summary_count") == 6,
+          f"got us_row avg_quote_type={us_row.get('avg_quote_type')!r}, "
+          f"avg_rows_used={us_row.get('avg_rows_used')!r}, "
+          f"summary_count={us_row.get('summary_count')!r}")
+    check("market --summary: avg_quote_type='INDEX' for ASIA "
+          "(dominant over the lone CURRENCY row, JPY=X)",
+          asia_row.get("avg_quote_type") == "INDEX"
+          and asia_row.get("avg_rows_used") == 5,
+          f"got asia_row avg_quote_type={asia_row.get('avg_quote_type')!r}, "
+          f"avg_rows_used={asia_row.get('avg_rows_used')!r}")
+
+    # --- --summary + --limit warning fires ---
+    cmd = [sys.executable, str(SCRIPTS_DIR / "market.py"),
+           "--summary", "--limit", "2", "US"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+    check("market --summary + --limit: stderr warns + exit 0 "
+          "(--limit silently ignored under --summary)",
+          out.returncode == 0
+          and "limit is ignored" in out.stderr.lower(),
+          f"got rc={out.returncode}, stderr={out.stderr!r}")
+    # Confirm aggregation still saw the full set despite --limit 2.
+    try:
+        parsed_warn = json.loads(out.stdout)
+        warn_row = parsed_warn[0] if parsed_warn else {}
+    except json.JSONDecodeError:
+        warn_row = {}
+    check("market --summary --limit: avg_rows_used reflects FULL set "
+          "(not clipped to --limit)",
+          warn_row.get("summary_count") == 6
+          and (warn_row.get("avg_rows_used") or 0) >= 5,
+          f"got summary_count={warn_row.get('summary_count')!r}, "
+          f"avg_rows_used={warn_row.get('avg_rows_used')!r}")
+
+    # --- --summary + --full mutex ---
+    cmd = [sys.executable, str(SCRIPTS_DIR / "market.py"),
+           "US", "--summary", "--full"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+    check("market --summary + --full: argparse rejects",
+          out.returncode != 0
+          and "mutually exclusive" in out.stderr.lower(),
+          f"got rc={out.returncode}, stderr={out.stderr!r}")
+
+    # --- CSV output: meta + quote record_classes ---
+    cmd = [sys.executable, str(SCRIPTS_DIR / "market.py"),
+           "US", "--format", "csv"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+    check("market CSV CLI: exit 0", out.returncode == 0,
+          f"got rc={out.returncode}, stderr={out.stderr!r}")
+    lines = out.stdout.strip().split("\n")
+    rcs = {ln.split(",")[0] for ln in lines[1:]}  # skip header
+    check("market CSV: emits both meta and quote record_classes",
+          rcs >= {"meta", "quote"},
+          f"got record_classes={rcs}")
+
+    # --- --section clock only (slimmer output, same 2-HTTP cost) ---
+    rc, parsed = run_cli("market.py", "US", "--section", "clock")
+    env = parsed[0] if isinstance(parsed, list) and parsed else {}
+    check("market --section clock CLI: exit 0", rc == 0)
+    check("market --section clock: drops summary, keeps clock",
+          isinstance(env.get("clock"), dict) and "summary" not in env
+          and env.get("sections_returned") == ["clock"],
+          f"got sections_returned={env.get('sections_returned')!r}, "
+          f"summary present={('summary' in env)}")
+
+    # --- --full passthrough: shape divergence + raw camelCase keys ---
+    # In --full mode `summary` is a dict (NOT a list) — Yahoo's raw
+    # `{exchange_code: quote_dict}` shape. Quote dicts preserve
+    # camelCase keys (regularMarketPrice, shortName, fullExchangeName)
+    # rather than our snake_case projections. This is intentional but
+    # easy to trip over; pin it in smoke.
+    rc, parsed = run_cli("market.py", "US", "--full")
+    env = parsed[0] if isinstance(parsed, list) and parsed else {}
+    check("market --full CLI: exit 0", rc == 0)
+    check("market --full: summary is a DICT (not list) keyed by "
+          "exchange_code (Yahoo's raw shape)",
+          isinstance(env.get("summary"), dict)
+          and {"SNP", "DJI", "NIM"}.issubset(env.get("summary", {}).keys()),
+          f"got summary type={type(env.get('summary')).__name__}, "
+          f"keys={list(env.get('summary', {}).keys())[:5] if isinstance(env.get('summary'), dict) else 'n/a'}")
+    sample = (next(iter(env["summary"].values()))
+              if isinstance(env.get("summary"), dict) and env["summary"]
+              else {})
+    check("market --full: raw quote dict preserves Yahoo camelCase "
+          "(regularMarketPrice / shortName / fullExchangeName)",
+          isinstance(sample, dict)
+          and {"regularMarketPrice", "shortName",
+               "fullExchangeName"}.issubset(sample.keys()),
+          f"got sample keys (first 5)="
+          f"{list(sample.keys())[:5] if isinstance(sample, dict) else 'n/a'}")
+    check("market --full: clock keeps raw `tz` + nested `timezone` dict "
+          "(projection drops tz, flattens timezone)",
+          isinstance(env.get("clock"), dict)
+          and isinstance(env["clock"].get("timezone"), dict)
+          and "$text" in env["clock"].get("timezone", {}),
+          f"got clock.timezone="
+          f"{type(env.get('clock', {}).get('timezone')).__name__}")
+
+    # --- --list-markets + positional rejected ---
+    cmd = [sys.executable, str(SCRIPTS_DIR / "market.py"),
+           "--list-markets", "US"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+    check("market --list-markets + positional: argparse rejects",
+          out.returncode != 0
+          and "cannot be combined" in out.stderr.lower(),
+          f"got rc={out.returncode}, stderr={out.stderr!r}")
+
+    # --- retry surfacing: market.fetch() returns attempts > 1 after
+    # a transient 429 on the underlying property access.
+    # Mocks yfinance.Market entirely so this is offline + deterministic.
+    # Mirrors the fast_info retry-surfacing test pattern. ---
+    import yfinance as _yf_for_market
+    class _FlakyMarket:
+        # Class-level counter so retries (which construct a fresh
+        # `yf.Market(...)` each time via with_retry's callable) share state.
+        summary_calls = 0
+        def __init__(self, market):
+            self.market = market
+        @property
+        def summary(self):
+            type(self).summary_calls += 1
+            if type(self).summary_calls <= 1:
+                raise RuntimeError("HTTP 429 Too Many Requests")
+            return {
+                "SNP": {
+                    "symbol": "^GSPC",
+                    "shortName": "S&P 500",
+                    "quoteType": "INDEX",
+                    "regularMarketPrice": 100.0,
+                    "regularMarketChange": 1.0,
+                    "regularMarketChangePercent": 1.0,
+                    "regularMarketPreviousClose": 99.0,
+                    "marketState": "CLOSED",
+                    "exchange": "SNP",
+                    "fullExchangeName": "SNP",
+                    "regularMarketTime": 1778273206,
+                    "region": "US",
+                    "exchangeTimezoneName": "America/New_York",
+                },
+            }
+        @property
+        def status(self):
+            return {
+                "id": "us",
+                "name": "U.S. markets",
+                "status": "closed",
+                "open": "2026-05-11T13:30:00+00:00",
+                "close": "2026-05-11T20:00:00+00:00",
+                "timezone": {
+                    "$text": "America/New_York", "short": "EDT",
+                    "gmtoffset": "-14400", "dst": "true",
+                },
+                "tz": "EDT",
+                "yfit_market_status": "YFT_MARKET_CLOSED",
+                "message": "U.S. markets closed",
+            }
+    saved_market_cls = _yf_for_market.Market
+    _yf_for_market.Market = _FlakyMarket
+    try:
+        # NOTE: with_retry's `sleep` default is captured at def-time, so
+        # we accept a real ~0.5s sleep on the one retry rather than
+        # monkey-patch helpers.time. Same trade-off as fast_info's test.
+        envelope = market.fetch(market="US",
+                                sections=("clock", "summary"),
+                                full=False)
+    finally:
+        _yf_for_market.Market = saved_market_cls
+    check("market.fetch() surfaces attempts > 1 after a transient 429 "
+          "(retry recovery via helpers.with_retry)",
+          envelope.get("attempts") == 2 and envelope.get("error") is None
+          and isinstance(envelope.get("summary"), list)
+          and len(envelope["summary"]) == 1,
+          f"got attempts={envelope.get('attempts')!r}, "
+          f"error={envelope.get('error')!r}, "
+          f"summary len={len(envelope.get('summary') or [])}")
+
+    # --- retry exhaustion: 3 attempts all 429 → error envelope shape.
+    # Companion to the retry-recovery test above. Verifies the failure
+    # path: error / error_kind / attempts populated, NO clock / summary
+    # / sections_returned (early return before per-section projection).
+    # ---
+    class _PermaFlakyMarket:
+        summary_calls = 0
+        def __init__(self, market):
+            self.market = market
+        @property
+        def summary(self):
+            type(self).summary_calls += 1
+            raise RuntimeError("HTTP 429 Too Many Requests")
+        @property
+        def status(self):
+            return {}  # never reached on this path
+    saved_market_cls = _yf_for_market.Market
+    _yf_for_market.Market = _PermaFlakyMarket
+    try:
+        # Real ~1.5s of retry sleeps (3 attempts × ~0.5s base + jitter);
+        # acceptable for smoke. If sleep budget becomes a concern,
+        # monkey-patch `helpers.time.sleep` BEFORE importing market —
+        # with_retry's `sleep` default is captured at def-time.
+        err_env = market.fetch(market="US",
+                                sections=("clock", "summary"),
+                                full=False)
+    finally:
+        _yf_for_market.Market = saved_market_cls
+    check("market.fetch() error envelope on 3-attempt 429 exhaustion: "
+          "error_kind=rate_limit, attempts=3, NO clock/summary/sections_returned",
+          err_env.get("error_kind") == "rate_limit"
+          and err_env.get("attempts") == 3
+          and isinstance(err_env.get("error"), str)
+          and "clock" not in err_env
+          and "summary" not in err_env
+          and "sections_returned" not in err_env,
+          f"got error_kind={err_env.get('error_kind')!r}, "
+          f"attempts={err_env.get('attempts')!r}, "
+          f"keys={sorted(err_env.keys())}")
+
+    # --- HTTP count regression: 2 HTTP per market regardless of --section.
+    # Mirrors the sectors HTTP-count test. yfinance interleaves both
+    # endpoints in _parse_data, so neither --section clock nor
+    # --section summary should be able to skip a fetch.
+    #
+    # Use DIFFERENT markets for the two probes so yfinance's persistent
+    # SQLite response cache (~/.cache/...) doesn't make the second call
+    # falsely return 0 HTTP — that would mask the invariant we're
+    # actually checking. The invariant is "regardless of which sections
+    # the user requested, the first fetch for a given market is 2 HTTP".
+    # ---
+    import yfinance.data as ydata
+    orig_get = ydata.YfData.get
+    counter = {"calls": 0}
+    def _counting_get(self, url, *args, **kwargs):
+        counter["calls"] += 1
+        return orig_get(self, url, *args, **kwargs)
+    ydata.YfData.get = _counting_get
+    try:
+        counter["calls"] = 0
+        market.fetch(market="EUROPE", sections=("clock",), full=False)
+        n_clock_only = counter["calls"]
+        check("market HTTP count: --section clock = 2 HTTP "
+              "(yfinance fetches both endpoints together)",
+              n_clock_only == 2,
+              f"got {n_clock_only} HTTP for clock-only fetch")
+
+        counter["calls"] = 0
+        market.fetch(market="RATES", sections=("clock", "summary"),
+                     full=False)
+        n_both = counter["calls"]
+        check("market HTTP count: --section clock,summary = 2 HTTP "
+              "(same as clock-only — sections share fetch)",
+              n_both == 2,
+              f"got {n_both} HTTP for both-sections fetch")
+    finally:
+        ydata.YfData.get = orig_get
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"market smoke crashed: {e}")
     traceback.print_exc(file=sys.stderr)
 
 

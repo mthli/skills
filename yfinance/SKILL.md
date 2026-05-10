@@ -30,9 +30,10 @@ one per mode:
 - `scripts/sec_filings.py` — SEC filings list (10-K / 10-Q / 8-K / DEF 14A / 20-F / 6-K / SC 13G/A / etc.) with date, type, title, primary doc URL, and exhibits dict. Up to ~75–120 filings going back ~3 years per ticker. Coverage is **SEC-registered securities only**: US-listed equities and ADRs (TM = 6-K + 20-F) get full data; non-US primary listings (BMW.DE, 0700.HK), ETFs, mutual funds, indexes, crypto, FX, futures, and bogus tickers all return success-with-note (ambiguous — chain `fast_info` to disambiguate). No `coverage_note` partial-empty path — the SEC-filings endpoint is binary.
 - `scripts/calendars.py` — market-wide event calendars (earnings / IPO / splits / economic) over a date window. **Single envelope per call** (or **list of envelopes** for multi-type), NOT per-ticker — same shape as `screener`. Multi-type via comma-separated `--type earnings,ipo` or `--type all`. Per-type rollup via `--summary`. Retrospective scan via `--past-days N`. Raw Yahoo payload via `--full`. One HTTP per type (earnings with default most-active filter is 2 HTTP). Default window today + 7 days. Discovery mode for "what's happening this week" — distinct from per-ticker `earnings.py`.
 - `scripts/sectors.py` — Yahoo's sector / industry hierarchy (11 sectors → ~150 industries → companies / ETFs / funds). One mode handles both `Sector` and `Industry` classes via `--kind auto|sector|industry` (auto-inferred from the key). Sections selected via `--section` (default: overview + top_companies; `--section all` pulls all-applicable). Sector-only sections: `industries`, `top_etfs`, `top_mutual_funds`. Industry-only: `top_performing_companies`, `top_growth_companies`. Common: `overview`, `top_companies`, `research_reports`. **Cost is 1 HTTP per key regardless of `--section` count** — yfinance hits one endpoint per key and caches all sections on the instance. Discovery flags `--list-sectors` / `--list-industries [SEC1,SEC2,...]` / `--peers <industry>` (sibling industries) enumerate canonical keys with no HTTP. **Doesn't take a ticker** — keys are sector/industry strings (`technology`, `semiconductors`). Distinct discovery axis from `screener`: sectors browses Yahoo's curated taxonomy; screener filters with custom predicates.
+- `scripts/market.py` — market-wide pulse across 8 canonical Yahoo regions (`US`, `GB`, `ASIA`, `EUROPE`, `RATES`, `COMMODITIES`, `CURRENCIES`, `CRYPTOCURRENCIES`). Two sections per market: `clock` (open/close + status string) and `summary` (Yahoo's curated featured quotes — 1–6 per region; sparse on purpose). **Cost is 2 HTTP per market** (markettime + marketSummary; yfinance interleaves both fetches in `_parse_data` to keep them time-aligned, so `--section` only affects projection cost, not network). **Yahoo quirk: `clock` always returns the US market clock** regardless of region arg — surfaced verbatim with a `clock_is_us_fallback: true` flag on non-US envelopes; per-region open/closed lives on each summary row's `market_state`. `--summary` peer-compares across regions and aggregates avg/best/worst `change_pct` over the **dominant `quote_type`** in each region (so ASIA's 5 INDEX rows aren't averaged with the lone CURRENCY pair); `avg_quote_type` echoes which type fed the rollup. `--list-markets` enumerates the 8 keys with no HTTP. **Doesn't take a ticker** — keys are region strings. Distinct from `calendars` (event timeline) and `screener` (filter predicates): market is the live pulse — "what's leading today / what's the macro tape look like." **yfinance's persistent SQLite cache** can hide staleness on repeat calls (`~/.cache/py-yfinance/...`); first call of a session is freshest.
 
 Shared NaN/Inf-safe converters live in `scripts/helpers.py`. A
-`scripts/smoke.py` test exercises all fifteen wrappers against
+`scripts/smoke.py` test exercises all sixteen wrappers against
 representative tickers — run after editing schema or when yfinance API
 drift is suspected:
 `uv run --with 'yfinance>=1.3,<2' --with 'lxml' python <SKILL_DIR>/scripts/smoke.py`
@@ -134,6 +135,32 @@ as functionality grows.
 > canonical keys with no HTTP — use them to discover keys before
 > the main fetch. Each section is one HTTP; `--section all` is ~5
 > HTTP per key (default 2). See references/sectors.md.
+>
+> **`market` doesn't take a ticker either** — keys are region
+> strings drawn from Yahoo's 8 canonical regions (`US`, `GB`,
+> `ASIA`, `EUROPE`, `RATES`, `COMMODITIES`, `CURRENCIES`,
+> `CRYPTOCURRENCIES`). Two sections per region: `clock` (market
+> open/close + status) and `summary` (curated featured quotes —
+> 1–6 per region). Distinct from `calendars` (event timeline) and
+> `screener` (filter predicates): market is the live pulse —
+> "what's leading right now / how is the macro tape." **Yahoo
+> quirk**: the `clock` section always returns the U.S. clock
+> regardless of region arg (yfinance fires `markettime` with
+> `market=<region>` but Yahoo's response is region-agnostic) —
+> surfaced as a `clock_is_us_fallback: true` flag on non-US
+> envelopes; for per-region open/closed read each summary row's
+> `market_state`. Cost is 2 HTTP per region regardless of
+> `--section` count (yfinance interleaves both fetches in
+> `_parse_data` to keep them time-aligned). `--summary` aggregates
+> avg/best/worst `change_pct` over the **dominant `quote_type`**
+> per region (avoiding the meaningless mean-of-INDEX-and-FX) and
+> echoes `avg_quote_type` + `avg_rows_used` for self-describing
+> output; `--limit` is silently ignored when `--summary` is set
+> (would clip rows before aggregation). `--list-markets`
+> enumerates canonical keys with no HTTP. See references/market.md.
+> **yfinance's persistent SQLite cache** (`~/.cache/py-yfinance/...`)
+> can return stale prices on repeat calls — for genuinely live data
+> the first call of a session is freshest.
 
 | Question shape | Mode | Why |
 |---|---|---|
@@ -204,6 +231,10 @@ as functionality grows.
 | "top performing semiconductor stocks YTD", "fastest-growing software companies" | `sectors <industry-key> --section top_performing_companies,top_growth_companies` | Industry-only sections. **Note:** `ytd_return` and `growth_estimate` are MULTIPLES (4.7 = +470%), not fractions — see references/sectors.md units |
 | "compare 3 sectors side by side", "rank industries by market weight / company count" | `sectors --summary KEY1 KEY2 KEY3` | Flat per-key dict for peer compare. Auto-expands `--section` to all-applicable for the kind, so the rollup fields (top_company / top_industry / top_etf / top_performer) are populated. Mixed-kind runs work but the JSON shape differs per row |
 | "what does the technology sector cover", "description of the energy sector" | `sectors <key> --section overview` | Yahoo's curated sector / industry description, market cap, market weight (FRACTION), and child counts. Cheapest call (1 HTTP after key validation) |
+| "is the market open right now", "US market status", "when does the market open today" | `market US --section clock` | Live market clock (open / close datetimes + `status` string). **Yahoo quirk: always returns US clock** regardless of region arg — for non-US live status, read summary row `market_state`. 2 HTTP cost (yfinance fetches both sections together) |
+| "how is Asia trading today", "what's the macro tape look like", "European indexes overview" | `market ASIA` (or `EUROPE` / `RATES` / `COMMODITIES`) | Yahoo's curated representative quotes for the region (ASIA = 5 INDEX + 1 CURRENCY pair; EUROPE = 4 mixed; RATES = 1 INDEX `^TYX` 30Y yield + 1 FUTURE `ZN=F` 10Y T-Note; COMMODITIES = 2 FUTURE — Brent + Copper). Each row has `change_pct` (PERCENT) + `market_state` |
+| "is the region green or red right now", "compare US vs Asia vs Europe today" | `market --summary US ASIA EUROPE` | Cross-region peer compare: per-market avg/best/worst `change_pct` across featured quotes + top index. Quick "which region is leading today" digest |
+| "what crypto / FX is featured", "today's CURRENCIES snapshot" | `market CRYPTOCURRENCIES` (or `CURRENCIES`) | Yahoo's curated featured pair (typically 1 row — `SOL-USD` / `MXN=X` rotates). Sparse by design; for the full crypto / FX universe use `screener --predefined` or chain `fast_info` over explicit pairs |
 
 A single user request can need multiple modes. "What's AAPL trading at, how
 much is it up YTD, and what's its P/E?" → `fast_info` for the live price,
@@ -243,6 +274,15 @@ taxonomy (predefined top_companies / top_etfs / industries lists);
 screener filters with custom predicates. Use `--list-sectors` /
 `--list-industries` to discover canonical keys before the main
 fetch if a key isn't obvious.
+
+If the user asks "is the market open" / "how is Asia trading" /
+"what's the macro tape" / "compare US vs Europe today" — that's
+**live region pulse**, jump to `market <key>`. Distinct from
+`calendars` (event timeline, date-bounded) and `sectors` (curated
+hierarchy of one US-listed taxonomy): market is the cross-region
+live snapshot. Use `--list-markets` to enumerate the 8 keys.
+**Caveat:** yfinance's `clock` always returns US data — read each
+summary row's `market_state` for per-region open/closed.
 
 ## Invocations
 
@@ -367,6 +407,16 @@ uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/sectors.py --peers s
 uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/sectors.py --kind industry semiconductors --section overview     # force kind explicitly (overrides auto-detect)
 uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/sectors.py technology --section overview --full                  # raw Yahoo payload (DataFrames as records)
 uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/sectors.py technology --section overview,top_companies --format csv --limit 5  # CSV: row per record (record_class discriminator)
+
+# market — market-wide pulse across 8 Yahoo regions (see references/market.md)
+# Doesn't take a ticker — keys are region strings (US, GB, ASIA, EUROPE, RATES, COMMODITIES, CURRENCIES, CRYPTOCURRENCIES).
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/market.py US                                                       # default: US clock + 6 featured indexes (2 HTTP)
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/market.py US ASIA EUROPE                                           # multi-region (2 HTTP per market, serial)
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/market.py --summary US GB ASIA EUROPE RATES COMMODITIES CURRENCIES CRYPTOCURRENCIES  # cross-region peer compare
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/market.py --list-markets                                           # 8 canonical region keys (no HTTP)
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/market.py US --section clock                                       # slim output (clock only); 2-HTTP cost unchanged
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/market.py US ASIA EUROPE --format csv                              # CSV: meta + quote rows (record_class discriminator)
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/market.py US --full --limit 1                                      # raw Yahoo passthrough (debug)
 ```
 
 `<SKILL_DIR>` is the absolute path of the directory containing this
@@ -393,7 +443,11 @@ applicable) cost the same network-wise per key. `--section` only
 affects projection / output cost. Cross-key fan-out is serial:
 N keys = N HTTP, ~0.6–2 s per key, so a 5-sector `--summary` is ~5
 HTTP / ~3–10 s. `--list-sectors` / `--list-industries` / `--peers`
-are 0 HTTP (pure local lookup).
+are 0 HTTP (pure local lookup). **`market` is 2 HTTP per region**
+(markettime + marketSummary; yfinance interleaves both fetches in
+`_parse_data` to keep them time-aligned, so `--section` doesn't
+reduce HTTP — only projection cost). N regions = 2N HTTP, serial,
+~1.5–3 s per region. `--list-markets` is 0 HTTP.
 (`analyst` makes **3 HTTP per ticker** —
 `recommendations`, `upgrades_downgrades`, and `fast_info` for
 `quote_type` — each from a different endpoint or module group, so
@@ -425,7 +479,7 @@ explanation, and the version-pin rationale.
 
 ## Cross-cutting caveats
 
-These apply to all fourteen modes. Mode-specific caveats live in the
+These apply to all sixteen modes. Mode-specific caveats live in the
 matching `references/<mode>.md`. Grouped into three concerns:
 
 ### Data formats (interpreting the numbers)

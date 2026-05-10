@@ -143,4 +143,5 @@ vite.config.ts.timestamp-*
 .vite/
 
 # Others
+**/__pycache__/
 .DS_Store
