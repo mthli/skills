@@ -195,15 +195,12 @@ running the session (check the environment block — e.g. `Claude Opus 4.7 (1M c
 
 ### 5. Commit
 
-**Do not use a heredoc.** Heredocs route the message through the shell, which tempts
-out-of-habit escaping (most commonly `\$` on the `Total cost:` line) — a silent
-corruption that's easy to miss. Instead, write the message to a temp file with the
-`Write` tool and pass it to git with `-F`. The `Write` tool writes bytes to disk
-verbatim, so `$`, `` ` ``, `\`, and quotes are preserved exactly as authored.
+Write the message to a temp file with the `Write` tool, then pass it to
+`git commit -F`. The `Write` tool writes bytes verbatim — `$`, `` ` ``, `\`,
+and quotes are preserved exactly as authored, with no shell expansion.
 
 1. Use the `Write` tool to write the full commit message to `/tmp/commit-context-msg.txt`.
-   - Write `$0.1234` literally. Never write `\$`.
-   - Do not wrap the message in quotes or any other delimiter.
+   Do not wrap the message in quotes or any other delimiter.
 2. Commit and clean up in a single chained Bash call so the temp file is always removed,
    even if the commit fails:
 
