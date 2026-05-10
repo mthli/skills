@@ -29,9 +29,10 @@ one per mode:
 - `scripts/fund_holdings.py` — ETF / mutual-fund holdings. Top-10 positions, sector / asset / bond-rating weightings, expense ratio + AUM, fund-level P/E / P/B / duration. **Fund-only** (equity / index / crypto / FX / future return success-with-note carrying the resolved `quote_type` — no follow-up `fast_info` chain needed). One HTTP per ticker covers all 9 sections.
 - `scripts/sec_filings.py` — SEC filings list (10-K / 10-Q / 8-K / DEF 14A / 20-F / 6-K / SC 13G/A / etc.) with date, type, title, primary doc URL, and exhibits dict. Up to ~75–120 filings going back ~3 years per ticker. Coverage is **SEC-registered securities only**: US-listed equities and ADRs (TM = 6-K + 20-F) get full data; non-US primary listings (BMW.DE, 0700.HK), ETFs, mutual funds, indexes, crypto, FX, futures, and bogus tickers all return success-with-note (ambiguous — chain `fast_info` to disambiguate). No `coverage_note` partial-empty path — the SEC-filings endpoint is binary.
 - `scripts/calendars.py` — market-wide event calendars (earnings / IPO / splits / economic) over a date window. **Single envelope per call** (or **list of envelopes** for multi-type), NOT per-ticker — same shape as `screener`. Multi-type via comma-separated `--type earnings,ipo` or `--type all`. Per-type rollup via `--summary`. Retrospective scan via `--past-days N`. Raw Yahoo payload via `--full`. One HTTP per type (earnings with default most-active filter is 2 HTTP). Default window today + 7 days. Discovery mode for "what's happening this week" — distinct from per-ticker `earnings.py`.
+- `scripts/sectors.py` — Yahoo's sector / industry hierarchy (11 sectors → ~150 industries → companies / ETFs / funds). One mode handles both `Sector` and `Industry` classes via `--kind auto|sector|industry` (auto-inferred from the key). Sections selected via `--section` (default: overview + top_companies; `--section all` pulls all-applicable). Sector-only sections: `industries`, `top_etfs`, `top_mutual_funds`. Industry-only: `top_performing_companies`, `top_growth_companies`. Common: `overview`, `top_companies`, `research_reports`. **Cost is 1 HTTP per key regardless of `--section` count** — yfinance hits one endpoint per key and caches all sections on the instance. Discovery flags `--list-sectors` / `--list-industries [SEC1,SEC2,...]` / `--peers <industry>` (sibling industries) enumerate canonical keys with no HTTP. **Doesn't take a ticker** — keys are sector/industry strings (`technology`, `semiconductors`). Distinct discovery axis from `screener`: sectors browses Yahoo's curated taxonomy; screener filters with custom predicates.
 
 Shared NaN/Inf-safe converters live in `scripts/helpers.py`. A
-`scripts/smoke.py` test exercises all fourteen wrappers against
+`scripts/smoke.py` test exercises all fifteen wrappers against
 representative tickers — run after editing schema or when yfinance API
 drift is suspected:
 `uv run --with 'yfinance>=1.3,<2' --with 'lxml' python <SKILL_DIR>/scripts/smoke.py`
@@ -121,6 +122,18 @@ as functionality grows.
 > answers "AAPL's earnings history"; `calendars` answers "who's
 > reporting this week". Each `--type` has its own schema — see
 > references/calendars.md.
+>
+> **`sectors` doesn't take a ticker either** — keys are sector or
+> industry strings (`technology`, `semiconductors`) drawn from
+> Yahoo's curated 11-sector / ~150-industry taxonomy. One mode
+> handles both via `--kind auto|sector|industry` (auto-inferred
+> from the key). Distinct from `screener`: sectors browses Yahoo's
+> hand-curated hierarchy with predefined top-companies / top-ETFs
+> rollups; screener applies user-defined filter predicates over the
+> universe. `--list-sectors` / `--list-industries` enumerate
+> canonical keys with no HTTP — use them to discover keys before
+> the main fetch. Each section is one HTTP; `--section all` is ~5
+> HTTP per key (default 2). See references/sectors.md.
 
 | Question shape | Mode | Why |
 |---|---|---|
@@ -185,6 +198,12 @@ as functionality grows.
 | "what's happening this week", "all market events", "earnings + IPOs + splits in one query" | `calendars --type all` | Multi-type fetch in one invocation. Each type is a separate HTTP call; output is a list of envelopes (JSON) or per-record `record_class`-tagged rows (NDJSON / CSV). Pair with `--summary` for a digest |
 | "who reported last week", "IPOs in the past 30 days", "macro releases I missed" | `calendars --past-days N` | Retrospective scan: window = (today − N) → today. Mutually exclusive with `--start` / `--end` / `--days` |
 | "summary of this week's events", "rollup count of earnings / IPOs / splits" | `calendars --summary` | Per-type counts and aggregates (count_by_timing, count_by_action, count_forward / count_reverse, count_by_region_top10, ...) instead of full event lists. Pairs with `--type all` for cross-type peer compare |
+| "what industries are in the technology sector", "breakdown of healthcare", "biggest sector by market cap" | `sectors <key>` | Yahoo's curated sector hierarchy. Default fetch = overview + top_companies (2 HTTP). For sector/industry decomposition pass `--section industries` (sector-only). Use `--list-sectors` to discover the 11 canonical keys without a network call |
+| "top semiconductor stocks", "leading software companies", "best names in oil-and-gas" | `sectors <industry-key>` | Industry top_companies (sorted by market weight inside the industry). Auto-detects kind from the key. Use `--list-industries [SECTOR]` to discover canonical industry keys |
+| "best technology ETFs", "top mutual funds for healthcare" | `sectors <sector-key> --section top_etfs,top_mutual_funds` | Yahoo's curated top-10 lists per sector (sector-only sections; industries return `coverage_note`). Chain a returned symbol into `fund_holdings.py` for expense ratio + holdings |
+| "top performing semiconductor stocks YTD", "fastest-growing software companies" | `sectors <industry-key> --section top_performing_companies,top_growth_companies` | Industry-only sections. **Note:** `ytd_return` and `growth_estimate` are MULTIPLES (4.7 = +470%), not fractions — see references/sectors.md units |
+| "compare 3 sectors side by side", "rank industries by market weight / company count" | `sectors --summary KEY1 KEY2 KEY3` | Flat per-key dict for peer compare. Auto-expands `--section` to all-applicable for the kind, so the rollup fields (top_company / top_industry / top_etf / top_performer) are populated. Mixed-kind runs work but the JSON shape differs per row |
+| "what does the technology sector cover", "description of the energy sector" | `sectors <key> --section overview` | Yahoo's curated sector / industry description, market cap, market weight (FRACTION), and child counts. Cheapest call (1 HTTP after key validation) |
 
 A single user request can need multiple modes. "What's AAPL trading at, how
 much is it up YTD, and what's its P/E?" → `fast_info` for the live price,
@@ -215,6 +234,15 @@ If the user asks "what's happening this week" / "who's reporting" /
 earnings|ipo|splits|economic`. Per-ticker `earnings.py` can't answer
 this without a ticker list (no inverse direction); `calendars` is
 date-bounded and ticker-free.
+
+If the user asks "what's in the X sector" / "top stocks in Y
+industry" / "industries under sector Z" / "best ETFs / mutual funds
+for sector W" — that's **hierarchy navigation**, jump to `sectors
+<key>`. Distinct from `screener`: sectors browses Yahoo's curated
+taxonomy (predefined top_companies / top_etfs / industries lists);
+screener filters with custom predicates. Use `--list-sectors` /
+`--list-industries` to discover canonical keys before the main
+fetch if a key isn't obvious.
 
 ## Invocations
 
@@ -323,6 +351,22 @@ uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/calendars.py --type 
 uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/calendars.py --type splits --full --limit 5                        # FULL: raw Yahoo column names (no projection)
 uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/calendars.py --start 2026-06-01 --end 2026-06-15                   # explicit date window
 uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/calendars.py --type earnings --format csv --days 7                 # CSV: row per event, type-specific cols
+
+# sectors — Yahoo's sector / industry hierarchy (see references/sectors.md)
+# Doesn't take a ticker — keys are sector / industry strings (e.g. `technology`, `semiconductors`).
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/sectors.py technology                                            # default: overview + top_companies (2 HTTP)
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/sectors.py semiconductors --section all                          # industry, all applicable sections (autodetect kind)
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/sectors.py technology --section overview,industries,top_etfs     # sector decomposition + top ETFs
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/sectors.py --summary technology healthcare financial-services    # peer compare across sectors
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/sectors.py --summary semiconductors software-infrastructure      # peer compare across industries
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/sectors.py semiconductors --section top_performing_companies,top_growth_companies --limit 5  # industry top performers / growth
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/sectors.py --list-sectors                                        # 11 sector keys (no HTTP)
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/sectors.py --list-industries technology                          # industry keys for one sector (no HTTP)
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/sectors.py --list-industries technology,healthcare                # multi-sector (no HTTP)
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/sectors.py --peers semiconductors                                 # sibling industries within parent sector (no HTTP)
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/sectors.py --kind industry semiconductors --section overview     # force kind explicitly (overrides auto-detect)
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/sectors.py technology --section overview --full                  # raw Yahoo payload (DataFrames as records)
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/sectors.py technology --section overview,top_companies --format csv --limit 5  # CSV: row per record (record_class discriminator)
 ```
 
 `<SKILL_DIR>` is the absolute path of the directory containing this
@@ -340,7 +384,17 @@ per-ticker** — `screener` is 1 HTTP returning ≤ 250 quotes (~1–3 s
 typical), so the marginal cost of a wider screen is ~0. `calendars`
 is 1 HTTP per call (~1–2 s) **except** earnings with the default
 most-active filter, which costs 2 HTTP (the prescreen for the
-most-active list runs first). (`analyst` makes **3 HTTP per ticker** —
+most-active list runs first). **`sectors` is 1 HTTP per key
+regardless of `--section` count** — verified 2026-05: yfinance hits
+one Yahoo endpoint per `yf.Sector(key)` / `yf.Industry(key)` and
+caches all sections on the instance, so `--section overview`,
+`--section all`, and `--summary` (which auto-expands to all-
+applicable) cost the same network-wise per key. `--section` only
+affects projection / output cost. Cross-key fan-out is serial:
+N keys = N HTTP, ~0.6–2 s per key, so a 5-sector `--summary` is ~5
+HTTP / ~3–10 s. `--list-sectors` / `--list-industries` / `--peers`
+are 0 HTTP (pure local lookup).
+(`analyst` makes **3 HTTP per ticker** —
 `recommendations`, `upgrades_downgrades`, and `fast_info` for
 `quote_type` — each from a different endpoint or module group, so
 none share a backend request; the `fast_info` call is the
@@ -589,6 +643,18 @@ matching `references/<mode>.md`. Grouped into three concerns:
     dicts JSON-encoded into a single cell). ❌ CSV with `--full`
     (raw Yahoo keys break column stability — argparse rejects
     the combo; use `--format ndjson --full`).
+  - `sectors` — ✅ default (one row per record, with a
+    `record_class` discriminator: `meta` / `top_company` /
+    `industry` / `top_performer` / `top_growth_company` / `top_etf`
+    / `top_mutual_fund` / `research_report`). Identity columns
+    (`key` / `kind` / `name` / `symbol` / `sector_key` /
+    `sector_name`) repeat across the records of one envelope; the
+    `industry` record class overrides `key` with the *child*
+    industry key (not the parent sector). ✅ `--summary` (one row
+    per key; sector and industry rollups have different rollup
+    fields — CSV emits the union). `--list-sectors` /
+    `--list-industries` are their own flat schemas (`key` +
+    `industry_count` / `sector_key` + `industry_key`).
 
   **`screener` and `calendars` shape note.** Both emit a **single
   envelope dict** (one call → one result), not a list of per-ticker
@@ -646,6 +712,17 @@ matching `references/<mode>.md`. Grouped into three concerns:
   `symbols` format. `--summary` projects the `results` list down to
   a per-type rollup dict (counts / aggregates) — useful for
   cross-type digest under `--type all --summary`.
+
+  **`sectors` is the per-key fan-out family** (similar to
+  `fund_holdings` / `holders`): one envelope per positional key,
+  but each envelope carries multiple sections (overview +
+  top_companies + industries + ...) that NDJSON / CSV flatten via
+  a `record_class` discriminator. Distinct from
+  `screener` / `calendars` (single envelope per call, ticker-free)
+  and from per-ticker modes (one envelope per ticker, single
+  payload). Discovery flags (`--list-sectors` / `--list-industries`)
+  bypass the envelope shape entirely and emit flat row lists with
+  no HTTP.
 - **`note` field convention.** Several modes expose a per-result
   `note` string carrying **ambiguous-but-successful** state, distinct
   from `error` (which only appears on failure). Two cross-mode
@@ -654,13 +731,13 @@ matching `references/<mode>.md`. Grouped into three concerns:
      both appear as columns in the CSVs of modes that emit `note`,
      so neither category gets dropped from tabular output.
   2. **`note` and `coverage_note` are mutually exclusive** in
-     modes that expose both (currently `earnings`, `insiders`, and
-     `analyst` — all three signal "successful but unusual shape",
-     but with different action implications: `note` = no data /
-     ambiguous cause, chain `fast_info`; `coverage_note` = real
-     data with thin event coverage, the empty fields ARE the
-     answer). Both fields appear as CSV columns in modes that
-     emit them.
+     modes that expose both (currently `earnings`, `insiders`,
+     `analyst`, and `sectors` — all four signal "successful but
+     unusual shape", but with different action implications:
+     `note` = no data / ambiguous cause, chain `fast_info`;
+     `coverage_note` = real data with thin event coverage, the
+     empty fields ARE the answer). Both fields appear as CSV
+     columns in modes that emit them.
   Per-mode semantics differ — see references/<mode>.md for the
   contract:
   - `news.note` — empty Yahoo response (ambiguous: bogus / low
@@ -748,6 +825,23 @@ matching `references/<mode>.md`. Grouped into three concerns:
     explicit; both have empty `calls` / `puts` arrays + no
     `error_kind`. See references/options.md "Empty / non-applicable
     result" for the exact texts.
+  - `sectors.coverage_note` — **section requested but inapplicable
+    to the kind**, e.g. `--section industries` on an industry
+    (industries are children of sectors, not of other industries),
+    or `--section top_etfs` on an industry. The script doesn't
+    attempt the HTTP call (the property doesn't exist on the wrong
+    class) and lists the skipped sections in `coverage_note`.
+    Mutually exclusive with `error` (which only fires for whole-
+    envelope failures). `--summary` auto-expands `--section` per-
+    kind, so this only fires under explicit `--section`. There's
+    no `sectors.note` path: bogus keys route through `error_kind:
+    not_found` instead (Yahoo returns None for unknown keys; the
+    script probes overview first to validate, before firing the
+    other section calls). Sectors also has a per-section error
+    isolation field `section_errors` for transient single-section
+    failures (other sections succeed; whole envelope still
+    succeeds) — not a `note` variant, but worth checking before
+    treating a `null` section as "Yahoo has no data."
 - **Unofficial.** yfinance is unaffiliated with Yahoo and its endpoints
   can break at any time. If a script returns nothing for a ticker that
   should exist, the upstream API may have changed — don't keep retrying.

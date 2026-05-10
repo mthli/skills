@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smoke test for the twelve yfinance wrapper scripts.
+"""Smoke test for the fifteen yfinance wrapper scripts.
 
 Three layers of coverage:
   1. Offline / pure-Python: invariants over pure-Python logic with no
@@ -79,6 +79,7 @@ import news
 import options
 import screener
 import sec_filings
+import sectors
 
 
 def run_cli(script: str, *args: str) -> tuple[int, list | None]:
@@ -6831,6 +6832,442 @@ try:
 except Exception as e:
     FAIL += 1
     FAILURES.append(f"CLI sanity crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
+# --- sectors fetch shape (no ticker; key is a sector / industry string) ---
+# Two kinds (Sector, Industry) with overlapping but asymmetric sections.
+# Tests: pure-Python helpers, key auto-detection, em-dash normalization,
+# section coverage, --summary peer compare, error paths.
+section("sectors fetch")
+try:
+    # --- _normalize_key (offline; pure-Python) ---
+    check("sectors _normalize_key: em-dash → hyphen",
+          sectors._normalize_key("software—application") == "software-application",
+          f"got {sectors._normalize_key('software—application')!r}")
+    check("sectors _normalize_key: idempotent on hyphen form",
+          sectors._normalize_key("software-application") == "software-application")
+    check("sectors _normalize_key: strips + lowercases",
+          sectors._normalize_key("  TECHNOLOGY  ") == "technology")
+
+    # --- key set sanity (offline) ---
+    check("sectors SECTOR_KEYS has exactly 11 entries",
+          len(sectors.SECTOR_KEYS) == 11,
+          f"got {len(sectors.SECTOR_KEYS)}: {sectors.SECTOR_KEYS}")
+    check("sectors SECTOR_KEYS contains 'technology'",
+          "technology" in sectors.SECTOR_KEYS)
+    check("sectors INDUSTRY_KEYS contains 'semiconductors'",
+          "semiconductors" in sectors.INDUSTRY_KEYS)
+    check("sectors INDUSTRY_KEYS has no em-dash characters "
+          "(yfinance.const quirk normalized away)",
+          all("—" not in k for k in sectors.INDUSTRY_KEYS),
+          "found em-dash in normalized industry keys")
+    check("sectors INDUSTRY_KEYS contains the formerly-em-dashed "
+          "'software-application' (regular hyphen)",
+          "software-application" in sectors.INDUSTRY_KEYS)
+    check("sectors INDUSTRY_TO_SECTOR['semiconductors'] == 'technology'",
+          sectors.INDUSTRY_TO_SECTOR.get("semiconductors") == "technology",
+          f"got {sectors.INDUSTRY_TO_SECTOR.get('semiconductors')!r}")
+
+    # --- _kind_for_key auto-detect (offline) ---
+    check("sectors _kind_for_key('technology') → 'sector'",
+          sectors._kind_for_key("technology") == "sector")
+    check("sectors _kind_for_key('semiconductors') → 'industry'",
+          sectors._kind_for_key("semiconductors") == "industry")
+    check("sectors _kind_for_key('software—application') → 'industry' "
+          "(em-dash normalized)",
+          sectors._kind_for_key("software—application") == "industry")
+    check("sectors _kind_for_key('not-a-real-thing') → None",
+          sectors._kind_for_key("not-a-real-thing") is None)
+    check("sectors _kind_for_key case-insensitive",
+          sectors._kind_for_key("TECHNOLOGY") == "sector")
+
+    # --- live fetch: sector default (overview + top_companies) ---
+    env = sectors.fetch(
+        key="technology", kind="sector",
+        sections=("overview", "top_companies"),
+        limit=3, full=False,
+    )
+    check("sectors[sector default]: no error",
+          env.get("error") is None,
+          f"got error={env.get('error')!r} kind={env.get('error_kind')!r}")
+    check("sectors[sector default]: identity fields populated",
+          env.get("key") == "technology" and env.get("kind") == "sector"
+          and env.get("name") == "Technology"
+          and env.get("symbol") == "^YH311",
+          f"got {env}")
+    check("sectors[sector default]: overview is dict",
+          isinstance(env.get("overview"), dict))
+    check("sectors[sector default]: overview.companies_count is positive int",  # canary
+          isinstance(env.get("overview", {}).get("companies_count"), int)
+          and env["overview"]["companies_count"] > 100,
+          f"got {env.get('overview', {}).get('companies_count')!r}")
+    check("sectors[sector default]: overview.market_weight is FRACTION",
+          isinstance(env.get("overview", {}).get("market_weight"), float)
+          and 0.0 < env["overview"]["market_weight"] < 1.0,
+          f"got {env.get('overview', {}).get('market_weight')!r}")
+    check("sectors[sector default]: top_companies is list of dicts",
+          isinstance(env.get("top_companies"), list)
+          and len(env["top_companies"]) > 0
+          and all(isinstance(r, dict) for r in env["top_companies"]))
+    check("sectors[sector default]: top_companies respects --limit",
+          len(env.get("top_companies") or []) == 3,
+          f"got {len(env.get('top_companies') or [])} rows")
+    tc0 = (env.get("top_companies") or [{}])[0]
+    check("sectors[sector default]: top_companies[0] has symbol/name/rating/market_weight",
+          all(k in tc0 for k in ("symbol", "name", "rating", "market_weight")),
+          f"got {list(tc0.keys())}")
+    check("sectors[sector default]: top_companies[0].market_weight is fraction",
+          isinstance(tc0.get("market_weight"), float)
+          and 0.0 < tc0["market_weight"] < 1.0,
+          f"got {tc0.get('market_weight')!r}")
+    check("sectors[sector default]: no industries section (not requested)",
+          "industries" not in env)
+    check("sectors[sector default]: no coverage_note "
+          "(both sections applicable to sector kind)",
+          "coverage_note" not in env)
+
+    # --- live fetch: industry default ---
+    env_ind = sectors.fetch(
+        key="semiconductors", kind="industry",
+        sections=("overview", "top_companies"),
+        limit=2, full=False,
+    )
+    check("sectors[industry default]: no error",
+          env_ind.get("error") is None,
+          f"got error={env_ind.get('error')!r}")
+    check("sectors[industry default]: sector_key/sector_name back-ref populated",
+          env_ind.get("sector_key") == "technology"
+          and env_ind.get("sector_name") == "Technology",
+          f"got sector_key={env_ind.get('sector_key')!r}")
+    check("sectors[industry default]: overview.industries_count is null "
+          "(industries are leaves, no children)",
+          env_ind.get("overview", {}).get("industries_count") is None)
+
+    # --- live fetch: industry --section all (asymmetric coverage) ---
+    env_all = sectors.fetch(
+        key="semiconductors", kind="industry",
+        sections=sectors.ALL_SECTIONS,  # includes sector-only sections
+        limit=2, full=False,
+    )
+    check("sectors[industry --section all]: top_performing_companies is list",
+          isinstance(env_all.get("top_performing_companies"), list)
+          and len(env_all["top_performing_companies"]) > 0)
+    tp0 = (env_all.get("top_performing_companies") or [{}])[0]
+    check("sectors[industry top_performing]: row has ytd_return + last_price + target_price",
+          all(k in tp0 for k in ("symbol", "ytd_return", "last_price", "target_price")),
+          f"got {list(tp0.keys())}")
+    check("sectors[industry --section all]: top_growth_companies is list",
+          isinstance(env_all.get("top_growth_companies"), list)
+          and len(env_all["top_growth_companies"]) > 0)
+    tg0 = (env_all.get("top_growth_companies") or [{}])[0]
+    check("sectors[industry top_growth]: row has growth_estimate (float)",
+          isinstance(tg0.get("growth_estimate"), float),
+          f"got {tg0.get('growth_estimate')!r}")
+    check("sectors[industry --section all]: coverage_note fired for "
+          "sector-only sections (industries / top_etfs / top_mutual_funds)",
+          isinstance(env_all.get("coverage_note"), str)
+          and all(s in env_all["coverage_note"]
+                  for s in ("industries", "top_etfs", "top_mutual_funds")),
+          f"got coverage_note={env_all.get('coverage_note')!r}")
+    check("sectors[industry --section all]: sector-only sections NOT in envelope "
+          "(no HTTP attempted)",
+          all(s not in env_all
+              for s in ("industries", "top_etfs", "top_mutual_funds")),
+          f"got keys={list(env_all.keys())}")
+
+    # --- live fetch: error path (bogus key under explicit kind) ---
+    env_404 = sectors.fetch(
+        key="not-a-real-sector", kind="sector",
+        sections=("overview",), limit=None, full=False,
+    )
+    check("sectors[bogus sector key]: error_kind == 'not_found'",
+          env_404.get("error_kind") == "not_found",
+          f"got {env_404.get('error_kind')!r}")
+    check("sectors[bogus sector key]: error message mentions 'unknown'",
+          isinstance(env_404.get("error"), str)
+          and "unknown" in env_404["error"].lower(),
+          f"got {env_404.get('error')!r}")
+
+    # --- summarize() projection ---
+    summ = sectors.summarize(env)
+    check("sectors summarize(sector envelope): flat dict",
+          isinstance(summ, dict) and "top_companies" not in summ
+          and "overview" not in summ,
+          f"got {list(summ.keys())}")
+    check("sectors summarize(sector envelope): top_company_symbol populated",
+          isinstance(summ.get("top_company_symbol"), str)
+          and len(summ["top_company_symbol"]) > 0,
+          f"got {summ.get('top_company_symbol')!r}")
+    summ_ind = sectors.summarize(env_all)
+    check("sectors summarize(industry envelope): top_performer_symbol populated",
+          isinstance(summ_ind.get("top_performer_symbol"), str),
+          f"got {summ_ind.get('top_performer_symbol')!r}")
+    check("sectors summarize(industry envelope): top_growth_estimate populated",
+          isinstance(summ_ind.get("top_growth_estimate"), float),
+          f"got {summ_ind.get('top_growth_estimate')!r}")
+
+    # --- CLI: --list-sectors (no HTTP) ---
+    rc, parsed = run_cli("sectors.py", "--list-sectors")
+    parsed_count = len(parsed) if isinstance(parsed, list) else f"<not a list: {parsed!r}>"
+    check("sectors --list-sectors CLI: exit 0", rc == 0)
+    check("sectors --list-sectors CLI: returns list of 11 dicts",
+          isinstance(parsed, list) and len(parsed) == 11
+          and all("key" in r and "industry_count" in r for r in parsed),
+          f"got {parsed_count}")
+
+    # --- CLI: --list-industries technology (no HTTP) ---
+    rc, parsed = run_cli("sectors.py", "--list-industries", "technology")
+    parsed_count = len(parsed) if isinstance(parsed, list) else f"<not a list: {parsed!r}>"
+    check("sectors --list-industries CLI: exit 0", rc == 0)
+    check("sectors --list-industries CLI: all rows are technology subsector",
+          isinstance(parsed, list) and len(parsed) > 5
+          and all(r.get("sector_key") == "technology" for r in parsed),
+          f"got {parsed_count}")
+    check("sectors --list-industries CLI: contains 'semiconductors'",
+          isinstance(parsed, list)
+          and any(r.get("industry_key") == "semiconductors" for r in parsed))
+
+    # --- CLI: typo on positional key gets argparse error (not 404) ---
+    cmd = [sys.executable, str(SCRIPTS_DIR / "sectors.py"), "tech"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+    check("sectors CLI typo on key: exits non-zero",
+          out.returncode != 0,
+          f"got rc={out.returncode}, stdout={out.stdout!r}")
+    check("sectors CLI typo on key: stderr mentions discovery flags",
+          "--list-sectors" in out.stderr or "--list-industries" in out.stderr,
+          f"got stderr={out.stderr!r}")
+
+    # --- CLI: --summary peer compare across sectors ---
+    rc, parsed = run_cli("sectors.py", "--summary",
+                          "technology", "healthcare")
+    check("sectors --summary CLI: exit 0", rc == 0)
+    check("sectors --summary CLI: returns list of 2 envelopes",
+          isinstance(parsed, list) and len(parsed) == 2,
+          f"got {len(parsed) if isinstance(parsed, list) else parsed!r}")
+    check("sectors --summary CLI: each row has top_industry_key "
+          "(auto-expand fetched industries section)",
+          isinstance(parsed, list) and all(
+              isinstance(r.get("top_industry_key"), str) for r in parsed
+          ),
+          f"got {parsed!r}")
+
+    # --- CLI: --format csv (record_class discriminator) ---
+    cmd = [sys.executable, str(SCRIPTS_DIR / "sectors.py"),
+           "technology", "--section", "overview,top_companies",
+           "--limit", "3", "--format", "csv"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+    check("sectors CLI csv: exit 0", out.returncode == 0,
+          f"got rc={out.returncode}, stderr={out.stderr!r}")
+    lines = out.stdout.strip().split("\n")
+    check("sectors CLI csv: header has record_class as first col",
+          lines[0].startswith("record_class,"),
+          f"got header={lines[0]!r}")
+    check("sectors CLI csv: emits exactly 4 rows (1 meta + 3 top_company)",
+          len(lines) == 5,  # header + 4
+          f"got {len(lines) - 1} data rows: {lines}")
+    check("sectors CLI csv: first data row is record_class=meta",
+          lines[1].startswith("meta,"),
+          f"got row1={lines[1]!r}")
+    check("sectors CLI csv: subsequent rows are record_class=top_company",
+          all(line.startswith("top_company,") for line in lines[2:5]),
+          f"got rows={lines[2:]!r}")
+
+    # --- CSV: kind=industry override on industry rows ---
+    # Regression for the row-vs-envelope kind bug. Industry rows
+    # under a sector envelope should carry kind="industry", not
+    # kind="sector" (which is the parent envelope's kind).
+    cmd = [sys.executable, str(SCRIPTS_DIR / "sectors.py"),
+           "technology", "--section", "overview,industries",
+           "--limit", "2", "--format", "csv"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+    check("sectors CLI csv (industries): exit 0", out.returncode == 0,
+          f"got rc={out.returncode}, stderr={out.stderr!r}")
+    lines = out.stdout.strip().split("\n")
+    # Header row + 1 meta + 2 industry = 4 lines
+    check("sectors CLI csv (industries): meta row has kind=sector",
+          lines[1].split(",")[2] == "sector",
+          f"got meta row kind={lines[1].split(',')[2]!r}")
+    check("sectors CLI csv (industries): industry rows have kind=industry "
+          "(NOT 'sector' — fixed in this round)",
+          all(line.split(",")[2] == "industry" for line in lines[2:4]),
+          f"got industry rows kinds: {[l.split(',')[2] for l in lines[2:4]]}")
+    check("sectors CLI csv (industries): industry rows' key is the child "
+          "industry key (NOT the parent sector key)",
+          all(line.split(",")[1] != "technology" for line in lines[2:4]),
+          f"got industry rows keys: {[l.split(',')[1] for l in lines[2:4]]}")
+
+    # --- CLI: --peers (no HTTP, sibling industries) ---
+    rc, parsed = run_cli("sectors.py", "--peers", "semiconductors")
+    check("sectors --peers CLI: exit 0", rc == 0)
+    check("sectors --peers CLI: returns sibling industries with is_self flag",
+          isinstance(parsed, list) and len(parsed) > 5
+          and all("is_self" in r for r in parsed)
+          and sum(1 for r in parsed if r.get("is_self")) == 1,
+          f"got {len(parsed) if isinstance(parsed, list) else parsed!r}; "
+          f"is_self count: {sum(1 for r in parsed if r.get('is_self')) if isinstance(parsed, list) else 'n/a'}")
+    check("sectors --peers CLI: all rows share the same parent sector",
+          isinstance(parsed, list)
+          and len({r.get("sector_key") for r in parsed}) == 1
+          and parsed[0].get("sector_key") == "technology",
+          f"got sector_keys: {set(r.get('sector_key') for r in parsed) if isinstance(parsed, list) else 'n/a'}")
+    check("sectors --peers CLI: matching industry has is_self=True",
+          isinstance(parsed, list)
+          and any(r.get("industry_key") == "semiconductors"
+                  and r.get("is_self") is True for r in parsed))
+
+    # --- CLI: --peers bogus key ---
+    cmd = [sys.executable, str(SCRIPTS_DIR / "sectors.py"),
+           "--peers", "not-a-real-industry"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+    check("sectors --peers bogus key: exits non-zero",
+          out.returncode != 0)
+    check("sectors --peers bogus key: stderr mentions --list-industries",
+          "--list-industries" in out.stderr,
+          f"got stderr={out.stderr!r}")
+
+    # --- CLI: --list-industries multi-sector ---
+    rc, parsed = run_cli("sectors.py", "--list-industries", "technology,healthcare")
+    check("sectors --list-industries multi-sector CLI: exit 0", rc == 0)
+    check("sectors --list-industries multi-sector CLI: contains both sectors",
+          isinstance(parsed, list)
+          and {r.get("sector_key") for r in parsed} == {"technology", "healthcare"},
+          f"got sectors={set(r.get('sector_key') for r in parsed) if isinstance(parsed, list) else 'n/a'}")
+
+    # --- CLI: discovery flag mutex ---
+    cmd = [sys.executable, str(SCRIPTS_DIR / "sectors.py"),
+           "--list-sectors", "--peers", "semiconductors"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+    check("sectors discovery flags mutex: --list-sectors + --peers fails",
+          out.returncode != 0
+          and "mutually exclusive" in out.stderr,
+          f"got rc={out.returncode}, stderr={out.stderr!r}")
+
+    # --- --summary: description field is in projection ---
+    rc, parsed = run_cli("sectors.py", "--summary", "technology")
+    desc_preview = (parsed[0].get("description") if isinstance(parsed, list) and parsed
+                    else "<no parse>")
+    check("sectors --summary: includes description field",
+          isinstance(parsed, list) and len(parsed) > 0
+          and isinstance(parsed[0].get("description"), str)
+          and len(parsed[0]["description"]) > 50,
+          f"got description={desc_preview!r}")
+
+    # --- cost preview fires at ≥ 8 KEYS (not 8 HTTP). Cost is 1 HTTP
+    # per key regardless of --section count, so the threshold is on
+    # key count, not section count. ---
+    cmd = [sys.executable, str(SCRIPTS_DIR / "sectors.py"),
+           "--summary",
+           "technology", "healthcare", "financial-services",
+           "consumer-cyclical", "communication-services", "industrials",
+           "energy", "basic-materials"]  # 8 keys
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+    check("sectors cost preview: fires at 8 keys (= 8 HTTP, threshold)",
+          "info: sectors plan" in out.stderr,
+          f"got stderr={out.stderr!r}")
+
+    # --- cost preview NOT fired below threshold ---
+    cmd = [sys.executable, str(SCRIPTS_DIR / "sectors.py"),
+           "--summary", "technology", "healthcare"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    check("sectors cost preview: silent at 2 keys (under threshold of 8)",
+          "info: sectors plan" not in out.stderr,
+          f"got stderr={out.stderr!r}")
+
+    # --- regression: HTTP count is constant per key regardless of --section ---
+    # Counts yfinance.data.YfData.get invocations to verify the
+    # "1 HTTP per key, all sections share cache" invariant. If
+    # yfinance changes its caching strategy in a future version,
+    # this test catches it.
+    import yfinance.data as ydata
+    orig_get = ydata.YfData.get
+    counter = {"calls": 0}
+    def _counting_get(self, url, *args, **kwargs):
+        counter["calls"] += 1
+        return orig_get(self, url, *args, **kwargs)
+    ydata.YfData.get = _counting_get
+    try:
+        counter["calls"] = 0
+        sectors.fetch(key="technology", kind="sector",
+                       sections=("overview",), limit=None, full=False)
+        n_overview_only = counter["calls"]
+        check("sectors HTTP count: --section overview = 1 HTTP per key",
+              n_overview_only == 1,
+              f"got {n_overview_only} HTTP for overview-only fetch")
+
+        counter["calls"] = 0
+        sectors.fetch(key="technology", kind="sector",
+                       sections=sectors.SECTOR_SECTIONS,
+                       limit=None, full=False)
+        n_all_sections = counter["calls"]
+        check("sectors HTTP count: --section all = 1 HTTP per key "
+              "(all sections share cache, same as overview-only)",
+              n_all_sections == 1,
+              f"got {n_all_sections} HTTP for all-sections fetch")
+
+        counter["calls"] = 0
+        sectors.fetch(key="semiconductors", kind="industry",
+                       sections=sectors.INDUSTRY_SECTIONS,
+                       limit=None, full=False)
+        n_industry = counter["calls"]
+        check("sectors HTTP count: industry --section all = 1 HTTP per key",
+              n_industry == 1,
+              f"got {n_industry} HTTP for industry all-sections fetch")
+    finally:
+        ydata.YfData.get = orig_get
+
+    # --- --summary --format csv ---
+    cmd = [sys.executable, str(SCRIPTS_DIR / "sectors.py"),
+           "--summary", "--format", "csv", "technology", "healthcare"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    check("sectors --summary csv: exit 0", out.returncode == 0,
+          f"got rc={out.returncode}, stderr={out.stderr!r}")
+    lines = out.stdout.strip().split("\n")
+    check("sectors --summary csv: header has 'description' column",
+          "description" in lines[0],
+          f"got header={lines[0]!r}")
+    check("sectors --summary csv: emits 2 data rows (one per sector)",
+          len(lines) == 3,
+          f"got {len(lines) - 1} data rows")
+
+    # --- --full raw output shape ---
+    cmd = [sys.executable, str(SCRIPTS_DIR / "sectors.py"),
+           "technology", "--section", "industries", "--limit", "2",
+           "--full"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+    rc, parsed = out.returncode, None
+    if rc == 0:
+        try:
+            parsed = json.loads(out.stdout)
+        except json.JSONDecodeError:
+            pass
+    check("sectors --full: exit 0", rc == 0,
+          f"got rc={rc}, stderr={out.stderr!r}")
+    if (isinstance(parsed, list) and parsed
+            and isinstance(parsed[0].get("industries"), list)
+            and parsed[0]["industries"]):
+        ind_keys = list(parsed[0]["industries"][0].keys())
+    else:
+        ind_keys = "<no parse>"
+    check("sectors --full (industries): row keys preserve raw Yahoo "
+          "names (e.g., 'market weight' with space, not 'market_weight')",
+          isinstance(parsed, list) and len(parsed) > 0
+          and isinstance(parsed[0].get("industries"), list)
+          and len(parsed[0]["industries"]) > 0
+          and "market weight" in parsed[0]["industries"][0],
+          f"got industries[0] keys: {ind_keys}")
+
+    # --- mutex: --summary + --full ---
+    cmd = [sys.executable, str(SCRIPTS_DIR / "sectors.py"),
+           "technology", "--summary", "--full"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+    check("sectors --summary + --full: argparse rejects",
+          out.returncode != 0
+          and "mutually exclusive" in out.stderr.lower(),
+          f"got rc={out.returncode}, stderr={out.stderr!r}")
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"sectors smoke crashed: {e}")
     traceback.print_exc(file=sys.stderr)
 
 
