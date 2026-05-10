@@ -16,7 +16,7 @@ Python scripts wrapping [yfinance](https://github.com/ranaroussi/yfinance),
 one per mode:
 
 - `scripts/fast_info.py` — current quote
-- `scripts/history.py` — historical OHLCV; full bars, `--summary` aggregates, `--events-only` corporate-action rows, or `--metadata` snapshot
+- `scripts/history.py` — historical OHLCV; full bars, `--summary` aggregates, `--events-only` corporate-action rows, `--shares` shares-outstanding time series (equity-only), or `--metadata` snapshot
 - `scripts/info.py` — profile + fundamentals + analyst; full grouped sections or `--summary` flat dict
 - `scripts/earnings.py` — upcoming + recent earnings dates with EPS estimates / actuals / surprise
 - `scripts/financials.py` — annual / quarterly / TTM income statement, balance sheet, and cash flow
@@ -57,6 +57,14 @@ as functionality grows.
 > actions to filter to) and is dividend-only for most equities (splits
 > are rare); funds (ETF / mutual fund) get the unique `Capital Gains`
 > column though Yahoo's data is sparse — see references/history.md.
+> `--shares` is **equity-only** (US + non-US equities both work — AAPL,
+> 0700.HK verified): ETFs / mutual funds / indexes / crypto / FX /
+> futures all return success-with-`note` (no shares-outstanding concept
+> for these instruments; same ambiguous-empty contract as `holders` /
+> `insiders` / `analyst` — chain `fast_info` to disambiguate via
+> `quote_type`). Values are post-split actual counts, NOT split-adjusted
+> (a 4-for-1 split shows as a clean 4× step on the split date — see
+> references/history.md "Mode-specific caveats" for the AAPL example).
 > `--metadata` works for every quote type (returns `instrument_type`
 > = EQUITY / ETF / MUTUALFUND / INDEX / CRYPTOCURRENCY / FUTURE / etc.,
 > letting it double as a cheap quote-type sniff). `info` is
@@ -183,6 +191,8 @@ as functionality grows.
 | "intraday last 5 days" | `history --interval 1h` (or `5m`/`15m`) | tick-level rows |
 | "after-hours price right now", "pre-market gap after earnings" | `history --interval 5m --prepost` | extended-hours bars |
 | "all dividends paid by X", "split history", "capital-gain distributions" | `history --events-only` | corporate-action rows only — no OHLCV. Adds `capital_gains` field (fund-only — the column appears for ETFs / mutual funds, but Yahoo's actual coverage is sparse — see references/history.md "Capital Gains coverage") |
+| "has X bought back stock", "shares-outstanding over time", "buyback / issuance history", "share-count change since IPO" | `history --shares` | `Ticker.get_shares_full` time series — sparse irregular-daily rows of `{date, shares_outstanding}`. **Equity-only** — ETFs / funds / indexes / crypto / FX / futures return success-with-`note` (chain `fast_info`); **values are NOT split-adjusted**, so a 4-for-1 split shows as a clean 4× step. Same-date dups deduped via `groupby(date).last()` (count surfaced in `same_date_duplicates_dropped`). Splits surfaced via `splits_detected` (heuristic — chain `--events-only` for ground truth). Coverage empirically ~10y back. **Cost is 1 HTTP per ticker** (multi-ticker is a serial loop) |
+| "compare buyback rates across N tickers", "rank by shares-outstanding change", "peer compare share-count growth" | `history --shares --summary` | flat per-ticker dict: `start_shares` / `end_shares` / `change_abs` / `change_pct` (percent) / `min` / `max` with dates / `splits_detected_count`. Net out splits before quoting buyback rates (`change_pct` includes them as 4× jumps) |
 | "when did X start trading", "what bar sizes does Yahoo accept for X", "IANA tz of HK ticker" | `history --metadata` | one-row-per-ticker projection of `Ticker.history_metadata` — `first_trade_date`, `valid_ranges`, `exchange_timezone_name`, `has_prepost`, plus quote / 52-week mirror fields |
 
 > "S&P 500 P/E" or any index-fundamental question isn't answerable through `info` (or the other modes) — yfinance has no fundamentals for indexes; you'd need a different data source.
@@ -309,6 +319,9 @@ uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/history.py --period 
 uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/history.py --period 5d --interval 1h AAPL    # intraday
 uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/history.py --period 1d --interval 5m --prepost AAPL  # extended-hours
 uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/history.py --period 5y --events-only AAPL                     # corporate actions only (dividends/splits/capital_gains)
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/history.py --period 2y --shares AAPL                          # shares-outstanding time series (buyback signal); equity-only
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/history.py --period max --shares --tail 5 AAPL                # most recent 5 share-count changes (incl. splits as 4× steps)
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/history.py --period 2y --shares --summary AAPL MSFT GOOGL     # peer-compare buyback rates (one row per ticker)
 uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/history.py --metadata AAPL MSFT 0700.HK                       # currency / exchange / first_trade_date / valid_ranges
 
 # info — profile + fundamentals + analyst (see references/info.md)
@@ -473,10 +486,17 @@ exception within history itself — it routes per-ticker through
 `Ticker.history()` (cheapest possible window, `period=1d`) because
 `yf.download` doesn't reliably populate per-ticker `history_metadata`
 state. So a 10-ticker `--metadata` call is N HTTP, ~3–8 s, not the
-batched 1-HTTP path. `--summary` and `--events-only` still go through
-the batched path for N≥2. `--summary` does
-**not** reduce latency; it's a post-fetch projection that only shrinks
-output JSON (use it to save context tokens, not time). When a question
+batched 1-HTTP path. **`history --shares` is the second per-ticker
+exception inside history**: `Ticker.get_shares_full` is a distinct
+Yahoo timeseries endpoint with no `yf.download` equivalent, so
+multi-ticker shares mode is also a serial loop — 10 tickers ≈ N HTTP,
+~5–15 s (`get_shares_full` is slightly slower per call than the
+metadata path). `--summary` and `--events-only` still go through the
+batched path for N≥2. `--summary` does **not** reduce latency; it's a
+post-fetch projection that only shrinks output JSON (use it to save
+context tokens, not time). Same applies to `--shares --summary` —
+the aggregate runs after the per-ticker fetch, so latency matches
+default `--shares`. When a question
 is answerable by multiple modes, pick the cheapest — don't call `info`
 for a field already in `fast_info` (e.g. `market_cap`); don't call
 `financials` for AAPL's P/E (that's in `info`).

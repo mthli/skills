@@ -870,7 +870,8 @@ try:
     out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
     check("--summary + --events-only is rejected (mutex)",
           out.returncode != 0
-          and "mutually exclusive" in out.stderr.lower(),
+          and ("incompatible" in out.stderr.lower()
+               or "mutually" in out.stderr.lower()),
           f"rc={out.returncode}, stderr={out.stderr[:200]!r}")
 
     # Mutex check: --events-only + --prepost is rejected.
@@ -1086,6 +1087,333 @@ try:
 except Exception as e:
     FAIL += 1
     FAILURES.append(f"history --metadata crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
+# --- history --shares ---
+section("history --shares")
+try:
+    # Equity (US) — populated time series. AAPL goes back ~10y.
+    d = history.fetch_shares("AAPL", period="2y", start=None, end=None,
+                             interval="1d", head=None, tail=None)
+    check("AAPL --shares: success, no error/note",
+          "error" not in d and "note" not in d,
+          f"got error={d.get('error')!r}, note={d.get('note')!r}")
+    check("AAPL --shares: rows is non-empty list",
+          isinstance(d.get("rows"), list) and len(d["rows"]) > 0,
+          f"got rows={type(d.get('rows'))}, len={len(d.get('rows') or [])}")
+    check("AAPL --shares: timezone is exchange-local (America/New_York)",
+          d.get("timezone") == "America/New_York",
+          f"got {d.get('timezone')!r}")
+    # invariant: each row has date + shares_outstanding (int)
+    if d.get("rows"):
+        r0 = d["rows"][0]
+        check("AAPL --shares: row has date + shares_outstanding",
+              set(r0.keys()) == {"date", "shares_outstanding"})
+        check("AAPL --shares: shares_outstanding is int > 0",
+              isinstance(r0["shares_outstanding"], int)
+              and r0["shares_outstanding"] > 0,
+              f"got {r0['shares_outstanding']!r}")
+        # canary: AAPL has between 10B and 20B shares outstanding (post-2020-split,
+        # pre-future-splits). Will fail legitimately if AAPL splits again.
+        check("AAPL --shares: shares_outstanding in 10B-20B range (canary)",
+              10_000_000_000 < r0["shares_outstanding"] < 20_000_000_000,
+              f"got {r0['shares_outstanding']:,}")
+    # echo: --period was used → start/end are null in echo
+    check("AAPL --shares: --period echo (start/end are null)",
+          d.get("period") == "2y" and d.get("start") is None
+          and d.get("end") is None,
+          f"got period={d.get('period')!r}, start={d.get('start')!r}, end={d.get('end')!r}")
+
+    # Non-US equity (HK) — populated, native HK tz.
+    h = history.fetch_shares("0700.HK", period="1y", start=None, end=None,
+                             interval="1d", head=None, tail=None)
+    check("0700.HK --shares: success",
+          "error" not in h and "note" not in h
+          and isinstance(h.get("rows"), list) and len(h["rows"]) > 0,
+          f"got error={h.get('error')!r}, note={h.get('note')!r}, rows_len={len(h.get('rows') or [])}")
+    check("0700.HK --shares: timezone is Asia/Hong_Kong (native, no UTC fold)",
+          h.get("timezone") == "Asia/Hong_Kong",
+          f"got {h.get('timezone')!r}")
+
+    # Non-equity → success-with-`note` (ambiguous-empty path)
+    for sym, expected_label in [("SPY", "ETF"), ("BTC-USD", "crypto"),
+                                 ("^GSPC", "index"), ("EURUSD=X", "FX")]:
+        n = history.fetch_shares(sym, period="1y", start=None, end=None,
+                                 interval="1d", head=None, tail=None)
+        check(f"{sym} --shares ({expected_label}): success-with-note",
+              "error" not in n and "note" in n
+              and isinstance(n.get("rows"), list) and len(n["rows"]) == 0,
+              f"got error={n.get('error')!r}, note_set={('note' in n)}, "
+              f"rows_len={len(n.get('rows') or [])}")
+        check(f"{sym} --shares: note mentions chain fast_info",
+              "fast_info" in (n.get("note") or "").lower(),
+              f"got note={n.get('note')!r}")
+
+    # Bogus ticker → also note path (Yahoo logs 404 to stderr but
+    # underlying call returns None, indistinguishable from non-equity).
+    bogus = history.fetch_shares("ZZZZNOTREAL", period="1y", start=None,
+                                  end=None, interval="1d", head=None, tail=None)
+    check("ZZZZNOTREAL --shares: success-with-note (same shape as non-equity)",
+          "error" not in bogus and "note" in bogus
+          and len(bogus.get("rows", [])) == 0)
+
+    # Narrow-window equity → also None → also note (4th indistinguishable
+    # cause). Verified empirically (probe 2026-05): pre-IPO / future /
+    # 1-day-inside-data all return None for AAPL.
+    narrow = history.fetch_shares("AAPL", period=None, start="2050-01-01",
+                                   end="2050-01-02", interval="1d",
+                                   head=None, tail=None)
+    check("AAPL future-window --shares: success-with-note (4th cause)",
+          "error" not in narrow and "note" in narrow
+          and len(narrow.get("rows", [])) == 0)
+    check("AAPL future-window note message mentions 'narrow' cause",
+          "narrow" in (narrow.get("note") or "").lower(),
+          f"got note={narrow.get('note')!r}")
+
+    # Same-date dedup — AAPL --period max has known dups (verified: ~80
+    # rows dropped on a fresh fetch).
+    # canary: this is data-dependent — if Yahoo cleans up the dups
+    # upstream, the count drops to 0 and this check fails legitimately
+    # (not because of our bug). The strict invariant lives one check
+    # below: post-dedup output rows MUST have unique dates regardless
+    # of what Yahoo emitted.
+    dedup = history.fetch_shares("AAPL", period="max", start=None, end=None,
+                                  interval="1d", head=None, tail=None)
+    check("AAPL --period max --shares: same_date_duplicates_dropped > 0 (canary)",
+          isinstance(dedup.get("same_date_duplicates_dropped"), int)
+          and dedup["same_date_duplicates_dropped"] > 0,
+          f"got {dedup.get('same_date_duplicates_dropped')!r}")
+    # invariant: post-dedup, every row must have a unique date — this
+    # is the contract of the dedup pass, independent of how many dups
+    # Yahoo originally emitted.
+    if dedup.get("rows"):
+        dates = [r["date"] for r in dedup["rows"]]
+        check("AAPL --shares: all post-dedup dates are unique (invariant)",
+              len(dates) == len(set(dates)),
+              f"got {len(dates)} rows, {len(set(dates))} unique dates")
+
+    # Split detection — AAPL's 2020-08-31 4-for-1 split shows up in
+    # `splits_detected` over a `--period max` window. Yahoo's filing-cycle
+    # lag means the split row may land on a date weeks AFTER the actual
+    # split (verified: ~2020-10-22), so we don't pin the date — just
+    # check ratio ~= 4.0 ± epsilon.
+    splits = dedup.get("splits_detected", [])
+    check("AAPL --period max --shares: splits_detected populated (≥1)",
+          isinstance(splits, list) and len(splits) >= 1,
+          f"got {splits!r}")
+    if splits:
+        forward_4x = [s for s in splits if 3.5 < s.get("ratio", 0) < 4.5]
+        check("AAPL --shares: splits_detected has 4-for-1 split (ratio ≈ 4.0)",
+              len(forward_4x) >= 1,
+              f"all splits: {splits}")
+        check("AAPL --shares: split entry has all required fields",
+              all(set(s.keys()) >= {"date", "prev_shares", "current_shares", "ratio"}
+                  for s in splits),
+              f"got entries: {splits}")
+
+    # Buyback directional canary: AAPL has been net buying back over 2y
+    # (verified 2026-05: -4.2% over 2y). Will fail legitimately if AAPL
+    # starts net-issuing for an extended period.
+    rows = d["rows"]
+    if len(rows) >= 2:
+        check("AAPL 2y --shares: end < start (net buyback canary)",
+              rows[-1]["shares_outstanding"] < rows[0]["shares_outstanding"],
+              f"start={rows[0]['shares_outstanding']:,}, end={rows[-1]['shares_outstanding']:,}")
+
+    # --head N (symmetry with --tail test above).
+    h = history.fetch_shares("AAPL", period="2y", start=None, end=None,
+                              interval="1d", head=3, tail=None)
+    check("AAPL --shares --head 3: at most 3 rows",
+          len(h.get("rows", [])) <= 3)
+    check("AAPL --shares --head 3: rows_truncated populated",
+          isinstance(h.get("rows_truncated"), dict)
+          and h["rows_truncated"]["shown"] == len(h["rows"]))
+
+    # --start alone (no --end) → today-backfill in echo. Match the
+    # convention from default OHLCV's `effective_end`.
+    se = history.fetch_shares("AAPL", period=None, start="2025-01-01",
+                               end=None, interval="1d", head=None, tail=2)
+    check("AAPL --start alone --shares: end backfilled to today (or later) in echo",
+          isinstance(se.get("end"), str) and len(se["end"]) == 10
+          and se["end"] >= "2025-01-01",
+          f"got end={se.get('end')!r}")
+
+    # --shares --summary (peer-compare) — flat per-ticker dict.
+    summ = history.fetch_shares("AAPL", period="2y", start=None, end=None,
+                                 interval="1d", head=None, tail=None,
+                                 summary=True)
+    summary_required = {"start_shares", "end_shares", "change_abs", "change_pct",
+                        "min_shares", "min_shares_date",
+                        "max_shares", "max_shares_date",
+                        "rows_count", "start_date", "end_date",
+                        "splits_detected_count"}
+    check("AAPL --shares --summary: required aggregate fields present",
+          summary_required.issubset(summ.keys()),
+          f"missing={summary_required - summ.keys()}")
+    check("AAPL --shares --summary: NO `rows` field (flat aggregate)",
+          "rows" not in summ,
+          f"unexpected rows={summ.get('rows')!r}")
+    check("AAPL --shares --summary: change_pct is in PERCENT (matches default --summary)",
+          summ.get("change_pct") is None
+          or abs(summ["change_pct"]) > 0.01,  # canary: AAPL 2y is several %
+          f"got change_pct={summ.get('change_pct')!r}")
+
+    # --shares --summary on non-equity → note (no aggregate fields).
+    nsumm = history.fetch_shares("SPY", period="2y", start=None, end=None,
+                                  interval="1d", head=None, tail=None,
+                                  summary=True)
+    check("SPY --shares --summary: note path (no aggregate fields)",
+          "note" in nsumm and "start_shares" not in nsumm,
+          f"got note={nsumm.get('note')!r}, has start_shares={'start_shares' in nsumm}")
+
+    # CLI: --shares --summary CSV multi-ticker peer compare.
+    cmd = [sys.executable, str(SCRIPTS_DIR / "history.py"),
+           "--shares", "--summary", "--period", "2y", "--format", "csv",
+           "AAPL", "MSFT", "SPY"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    csv_lines = [ln for ln in out.stdout.splitlines() if ln.strip()]
+    if csv_lines:
+        header = csv_lines[0].split(",")
+        check("--shares --summary CSV header has start_shares + change_pct",
+              "start_shares" in header and "change_pct" in header
+              and "splits_detected_count" in header,
+              f"header={header}")
+        check("--shares --summary CSV: 1 header + 3 ticker rows",
+              out.returncode == 0 and len(csv_lines) == 4,
+              f"rc={out.returncode}, lines={len(csv_lines)}")
+        check("--shares --summary CSV: NO `splits_detected` (nested) column",
+              "splits_detected" not in header
+              or "splits_detected_count" in header,  # only the count survives
+              f"header={header}")
+    else:
+        check("--shares --summary CSV produced output", False,
+              f"stdout empty, rc={out.returncode}")
+
+    # CLI: --shares --format ndjson (explicit smoke gap fix).
+    cmd = [sys.executable, str(SCRIPTS_DIR / "history.py"),
+           "--shares", "--period", "1y", "--tail", "2", "--format", "ndjson",
+           "AAPL", "MSFT"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    nd_lines = [ln for ln in out.stdout.splitlines() if ln.strip()]
+    check("--shares --format ndjson: 2 lines for 2 tickers",
+          out.returncode == 0 and len(nd_lines) == 2,
+          f"rc={out.returncode}, lines={len(nd_lines)}")
+    if len(nd_lines) >= 1:
+        try:
+            ndj = json.loads(nd_lines[0])
+            check("--shares --format ndjson: each line is valid JSON object",
+                  isinstance(ndj, dict) and ndj.get("symbol") == "AAPL"
+                  and isinstance(ndj.get("rows"), list))
+        except json.JSONDecodeError as exc:
+            check("--shares --format ndjson lines parse", False, str(exc))
+
+    # Mutex: --shares --summary + --head rejected.
+    cmd = [sys.executable, str(SCRIPTS_DIR / "history.py"),
+           "--shares", "--summary", "--head", "5", "AAPL"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    check("--shares --summary + --head is rejected (would distort aggregate)",
+          out.returncode != 0
+          and "head" in out.stderr.lower(),
+          f"rc={out.returncode}, stderr={out.stderr[:200]!r}")
+
+    # Mutex: --summary + --events-only rejected (still — no shares involved).
+    cmd = [sys.executable, str(SCRIPTS_DIR / "history.py"),
+           "--summary", "--events-only", "AAPL"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    check("--summary + --events-only is rejected (incompat axis)",
+          out.returncode != 0
+          and ("incompatible" in out.stderr.lower()
+               or "mutually" in out.stderr.lower()),
+          f"rc={out.returncode}, stderr={out.stderr[:200]!r}")
+
+    # --tail truncation — surfaces rows_truncated.
+    t = history.fetch_shares("AAPL", period="2y", start=None, end=None,
+                             interval="1d", head=None, tail=3)
+    check("AAPL --shares --tail 3: at most 3 rows",
+          len(t.get("rows", [])) <= 3)
+    check("AAPL --shares --tail 3: rows_truncated populated",
+          isinstance(t.get("rows_truncated"), dict)
+          and t["rows_truncated"]["shown"] == len(t["rows"])
+          and t["rows_truncated"]["total"] >= t["rows_truncated"]["shown"])
+
+    # --start/--end window — start/end are echoed in the response.
+    w = history.fetch_shares("AAPL", period=None, start="2024-01-01",
+                              end="2024-04-01", interval="1d",
+                              head=None, tail=2)
+    check("AAPL --shares --start/--end: window echoed",
+          w.get("period") is None and w.get("start") == "2024-01-01"
+          and w.get("end") == "2024-04-01",
+          f"got period={w.get('period')!r}, start={w.get('start')!r}, "
+          f"end={w.get('end')!r}")
+
+    # CLI subprocess paths — exercise argparse + JSON / CSV emit.
+    cmd = [sys.executable, str(SCRIPTS_DIR / "history.py"),
+           "--shares", "--period", "1y", "--tail", "5", "--format", "csv",
+           "AAPL", "SPY", "ZZZZNOTREAL"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    csv_lines = [ln for ln in out.stdout.splitlines() if ln.strip()]
+    if csv_lines:
+        header = csv_lines[0].split(",")
+        check("--shares CSV header has shares_outstanding + note, no OHLCV",
+              "shares_outstanding" in header and "note" in header
+              and "open" not in header and "dividends" not in header,
+              f"header={header}")
+        # No exchange_tz column — shares is serial-loop, not yf.download batch.
+        check("--shares CSV: no `exchange_tz` column (serial-loop, not batched)",
+              "exchange_tz" not in header,
+              f"header={header}")
+        # Three tickers → at least one carrying row each. AAPL fills 5 (tail),
+        # SPY + ZZZZNOTREAL each emit 1 carrying note row → ≥ 7 data rows.
+        check("--shares CSV: ≥ 7 data rows for 3 tickers (5 AAPL + 1 SPY + 1 bogus)",
+              out.returncode == 0 and len(csv_lines) >= 8,  # 1 header + ≥ 7
+              f"rc={out.returncode}, lines={len(csv_lines)}")
+    else:
+        check("--shares CSV produced output", False,
+              f"stdout empty, rc={out.returncode}")
+
+    # Mutex: --shares + --metadata rejected.
+    cmd = [sys.executable, str(SCRIPTS_DIR / "history.py"),
+           "--shares", "--metadata", "AAPL"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    check("--shares + --metadata is rejected (mutex)",
+          out.returncode != 0
+          and "mutually exclusive" in out.stderr.lower(),
+          f"rc={out.returncode}, stderr={out.stderr[:200]!r}")
+
+    # --shares + --summary is now ALLOWED (orthogonal projection axis).
+    # The combination is exercised in the dedicated --shares --summary
+    # block above (peer-compare aggregate). What's NOT allowed: --shares
+    # + --summary + --head/--tail (clipping the row stream before the
+    # aggregate would distort change_pct / min / max). That mutex is
+    # tested in the new block above too.
+
+    # Reject: --shares + --prepost (extended-hours bars don't carry shares).
+    cmd = [sys.executable, str(SCRIPTS_DIR / "history.py"),
+           "--shares", "--prepost", "AAPL"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    check("--shares + --prepost is rejected",
+          out.returncode != 0 and "prepost" in out.stderr.lower(),
+          f"rc={out.returncode}, stderr={out.stderr[:200]!r}")
+
+    # Reject: --shares + --no-adjust (shares are integer counts, not prices).
+    cmd = [sys.executable, str(SCRIPTS_DIR / "history.py"),
+           "--shares", "--no-adjust", "AAPL"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    check("--shares + --no-adjust is rejected",
+          out.returncode != 0 and "no-adjust" in out.stderr.lower(),
+          f"rc={out.returncode}, stderr={out.stderr[:200]!r}")
+
+    # Reject: --shares + intraday --interval (share counts don't fire mid-session).
+    cmd = [sys.executable, str(SCRIPTS_DIR / "history.py"),
+           "--shares", "--interval", "1h", "AAPL"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    check("--shares + --interval 1h is rejected",
+          out.returncode != 0 and "daily-or-coarser" in out.stderr.lower(),
+          f"rc={out.returncode}, stderr={out.stderr[:200]!r}")
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"history --shares crashed: {e}")
     traceback.print_exc(file=sys.stderr)
 
 

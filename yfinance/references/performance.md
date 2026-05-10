@@ -13,6 +13,8 @@ and subtract ~0.5s of uv startup for the network-only delta._
 | `history` (≤1y daily, 1 ticker) | ~0.5–1.5 s | one call, ~252 rows for 1y |
 | `history` (≤1y daily, N tickers) | ~0.7 s for 5, ~1.5–2.5 s for 10 | yf.download batches N≥2 in one request, threaded |
 | `history` (max / 5y intraday) | ~2–4 s | larger payload |
+| `history --metadata` (1 ticker) | ~0.5–1 s | distinct path: per-ticker `Ticker.history()` call hard-pinned to `period=1d` (cheapest window) so the metadata side-effect populates. **No batching** — `yf.download` doesn't reliably populate per-ticker `history_metadata` state. N tickers ≈ N × this cost. |
+| `history --shares` (1 ticker) | ~0.7–1.5 s | `Ticker.get_shares_full(start, end)` — distinct Yahoo timeseries endpoint; **no batching** (no `yf.download` equivalent). N tickers serial loop ≈ N × this cost. `--shares --summary` adds ~0 latency (post-fetch projection over the same Series). |
 | `info` | ~1–3 s | multiple internal modules — as of yfinance 1.3.x: `financialData`, `quoteType`, `defaultKeyStatistics`, `assetProfile`, `summaryDetail` |
 | `earnings` (equity) | ~1.5–2.5 s | quote_type pre-check (~0.3s) + HTML scrape (~1–2s) |
 | `earnings --estimates` (equity) | ~+1.5–3 s on top of baseline (total ~3–5.5 s) | five Yahoo property reads on a shared Ticker (`earnings_estimate`, `revenue_estimate`, `eps_trend`, `eps_revisions`, `growth_estimates`); equity-only. **Worst case under sustained 429:** each of the 5 sources independently retries up to 3 attempts. `with_retry` sleeps between attempts only — 3 attempts means 2 backoff windows (~0.5 s after attempt 1, ~1.0 s after attempt 2, plus jitter), so per-source max sleep ≈ 2 s. 5 sources × ~2 s = ~10 s of cumulative sleep, plus the 15 actual call attempts, gives a total worst-case of ~10–15 s before failing. Drop batch size to ~3 and pause between calls if you see this pattern. |
@@ -36,7 +38,10 @@ Yahoo's empty-response / 429 rate-limit (`financials` actually issues an
 `info` call internally for reporting-currency lookup, so the cost
 profile is similar to `info`). `history` is the exception: N ≥ 2 routes
 through `yf.download` (one HTTP request, threaded), so 5–10 tickers cost
-~1–2 s total instead of ~5–15 s. When a question is answerable by
+~1–2 s total instead of ~5–15 s. **Two history sub-modes opt back into
+the serial path**: `--metadata` (yf.download doesn't reliably populate
+`history_metadata`) and `--shares` (`get_shares_full` has no batched
+equivalent). Both cost N × per-ticker for N tickers. When a question is answerable by
 multiple modes, pick the cheapest. Don't call `info` if `fast_info`
 already has the field you need (e.g., `market_cap` is in both); don't
 call `financials` for "what's AAPL's P/E" — that's in `info`.
@@ -58,7 +63,7 @@ response — it appears whenever a call retried.
 
 ## `--summary` is post-fetch projection, not a network optimization
 
-`--summary` modes (`history --summary`, `info --summary`, `earnings --summary`,
+`--summary` modes (`history --summary`, `history --shares --summary`, `info --summary`, `earnings --summary`,
 `financials --summary`, `holders --summary`, `options --summary`,
 `fund_holdings --summary`, `calendars --summary`) **don't reduce latency** —
 they're post-fetch projections of the same payload, so network cost is

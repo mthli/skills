@@ -5,16 +5,25 @@
 _Yahoo behavior verified: 2026-05, yfinance 1.3.x. Re-run `scripts/smoke.py`
 if you suspect upstream drift._
 
-**Sections:** [Run](#run) · [CLI arguments](#cli-arguments) · [Output — default mode](#output--default-mode-full-rows) · [Output — `--summary` mode](#output----summary-mode) · [Output — `--events-only` mode](#output----events-only-mode) · [Output — `--metadata` mode](#output----metadata-mode) · [Multi-ticker batch](#multi-ticker-batch-behavior) · [When to use `--summary`](#when-to-use---summary) · [Presenting history results](#presenting-history-results) · [Mode-specific caveats](#mode-specific-caveats) (incl. **adjusted-vs-price-only**, **`total_dividends` double-count**, **intraday window caps**, **Capital Gains coverage**)
+**Sections:** [Run](#run) · [CLI arguments](#cli-arguments) · [Output — default mode](#output--default-mode-full-rows) · [Output — `--summary` mode](#output----summary-mode) · [Output — `--events-only` mode](#output----events-only-mode) · [Output — `--shares` mode](#output----shares-mode) · [Output — `--shares --summary` mode](#output----shares---summary-mode) · [Output — `--metadata` mode](#output----metadata-mode) · [Multi-ticker batch](#multi-ticker-batch-behavior) · [When to use `--summary`](#when-to-use---summary) · [Presenting history results](#presenting-history-results) · [Mode-specific caveats](#mode-specific-caveats) (incl. **adjusted-vs-price-only**, **`total_dividends` double-count**, **intraday window caps**, **Capital Gains coverage**, **shares are not split-adjusted**, **same-date dedup**, **splits_detected is heuristic**)
 
-Historical OHLCV time series. Four output modes:
+Two orthogonal axes describe `history`'s output:
 
-- **default** — full OHLCV rows over the window
-- **`--summary`** — aggregate stats only (start/end close, change, period high/low, etc.)
-- **`--events-only`** — corporate-action rows only (dividends, splits, capital_gains) — no OHLCV
-- **`--metadata`** — `Ticker.history_metadata` projection (currency, exchange, instrument_type, first_trade_date, valid_ranges, …) — no rows at all
+- **Data source** (one at a time): `default` (OHLCV) | `--events-only`
+  (corporate actions) | `--shares` (share-count time series, equity-only)
+  | `--metadata` (`Ticker.history_metadata` snapshot — no rows)
+- **Projection**: row stream (default) | `--summary` (per-ticker
+  aggregate). `--summary` is valid with **default OHLCV** or
+  **`--shares`**; it doesn't combine with `--events-only` (corporate-
+  action rows have no natural aggregate over the existing summary
+  fields) or `--metadata` (already a snapshot, not a series).
 
-The four modes are mutually exclusive at the CLI layer.
+Six modes in total: `default-rows`, `default-summary`, `events-only`,
+`shares-rows`, `shares-summary`, `metadata`. (Of the 4 × 2 = 8 axis
+combinations, two are CLI-rejected: `events-only --summary` and
+`metadata --summary` — neither has a meaningful aggregate.) The mutex
+is hand-checked in argparse — see the [CLI arguments](#cli-arguments)
+below.
 
 ## Run
 
@@ -36,6 +45,11 @@ uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/history.py --period 
 # Events-only — corporate action rows only (dividend/split/capital_gains), no OHLCV
 uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/history.py --period 5y --events-only AAPL
 uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/history.py --period 10y --events-only --tail 5 VFIAX
+
+# Shares — shares-outstanding history (buyback / issuance signal), equity-only
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/history.py --period 2y --shares AAPL
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/history.py --period max --shares --tail 5 AAPL
+uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/history.py --period 2y --shares --summary AAPL MSFT GOOGL
 
 # Metadata — currency / exchange / first_trade_date / valid_ranges / etc.
 uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/history.py --metadata AAPL
@@ -96,6 +110,65 @@ uv run --with 'yfinance>=1.3,<2' python <SKILL_DIR>/scripts/history.py --period 
   the events list, with `rows_truncated: {total, shown}` surfaced when
   truncation actually applies — same shape as default mode for schema
   consistency).
+- `--shares` — flag. Output a shares-outstanding time series via
+  `Ticker.get_shares_full`. Each row carries `date` +
+  `shares_outstanding` (integer). Yahoo emits a row only when the share
+  count changes (issuance / buyback / split), so the series is sparse
+  irregular-daily — typical equities return dozens to hundreds of rows
+  per year, NOT one per trading day. Values are **post-split actual
+  counts, NOT split-adjusted to a single base**: AAPL's 4-for-1 split
+  in 2020-08 shows as a clean 4× step (verified: prev 4.28B, current
+  17.10B, ratio 4.0 in `splits_detected`). Use for buyback / issuance
+  analysis; for valuation-multiple math use point-in-time
+  `fast_info.shares_outstanding` instead.
+
+  **Dedup.** Yahoo occasionally emits multiple rows for one calendar
+  date (different upstream filings collide). Verified: AAPL Mar 2024
+  returned 16 rows over 12 unique dates, with 2026-03-26 carrying 3
+  distinct values. The script collapses these via
+  `groupby(date).last()` — Yahoo's emission order is preserved and the
+  LAST observation wins. When dedup actually fires,
+  `same_date_duplicates_dropped: N` is surfaced top-level.
+
+  **Split detection.** Adjacent-row ratios `>= 1.5` (forward) or
+  `<= 0.667` (reverse) populate a `splits_detected: [{date, prev_shares,
+  current_shares, ratio}]` field — heuristic. Boundary is **inclusive**,
+  so exact 3-for-2 (ratio = 1.5) and 2-for-3 (≈ 0.667) splits register.
+  For ground truth (event date + ratio from Yahoo's actions feed),
+  chain `history --events-only --start S --end E`. Splits are detected
+  on the post-dedup, pre-truncation series so a `--tail 5` user still
+  sees them.
+
+  **Coverage: equities only.** ETFs / mutual funds / indexes / crypto /
+  FX / futures all return `rows: []` with a `note` field (no
+  shares-outstanding concept for these instruments). Bogus / delisted
+  tickers also fall through that note path (Yahoo logs an HTTP 404 to
+  stderr but the underlying call returns `None`, not an exception).
+  **Narrow windows on real equities** (1-day-inside-data window,
+  pre-IPO, future) ALSO return `None` — verified empirically — and
+  share the same `note`. Four indistinguishable causes; chain
+  `fast_info` to disambiguate via `quote_type`.
+
+  **Cost is 1 HTTP per ticker** (no batching — there's no `yf.download`
+  equivalent for shares; multi-ticker is a serial loop, same shape as
+  `--metadata`). Each ticker's `timezone` field carries its native
+  exchange tz directly (no UTC roundtrip, no `exchange_tz` companion
+  field).
+
+  **Combinable with `--summary`** — `--shares --summary` projects the
+  deduped series to a per-ticker flat aggregate (start/end shares,
+  change_abs, change_pct, min/max with dates, `splits_detected_count`,
+  `same_date_duplicates_dropped`). See
+  [Output — `--shares --summary` mode](#output----shares---summary-mode).
+
+  **Mutually exclusive with `--events-only`, `--metadata`, `--prepost`,
+  `--no-adjust`, and intraday `--interval` values** — share-count
+  changes are end-of-day events that don't fire in extended hours, the
+  underlying values are integers (not adjustable prices), and intraday
+  windows are meaningless for daily-or-coarser changes. `--head` /
+  `--tail` apply post-fetch in row mode (same shape as default /
+  events-only); under `--summary` they're rejected (would silently
+  distort the aggregate over a clipped slice).
 - `--metadata` — flag. Return `Ticker.history_metadata` only — currency,
   exchange (short + full name), instrument_type, first_trade_date,
   regular_market_time, valid_ranges, has_prepost, IANA exchange tz, and a
@@ -306,6 +379,169 @@ For the multi-ticker batch path, `--events-only` rows still get the
 calendar (same logic as default mode — see [Multi-ticker batch
 behavior](#multi-ticker-batch-behavior)).
 
+## Output — `--shares` mode
+
+Sample numbers and dates below are illustrative, not a real capture.
+
+```json
+[
+  {
+    "symbol": "AAPL",
+    "period": "max",
+    "start": null,
+    "end": null,
+    "interval": "1d",
+    "timezone": "America/New_York",
+    "rows": [
+      {"date": "2015-10-28", "shares_outstanding": 5575330000},
+      {"date": "2020-10-22", "shares_outstanding": 17102499840},
+      {"date": "2024-08-02", "shares_outstanding": 15204137984},
+      {"date": "2025-05-02", "shares_outstanding": 14935826000},
+      {"date": "2026-05-05", "shares_outstanding": 14687356000}
+    ],
+    "same_date_duplicates_dropped": 80,
+    "splits_detected": [
+      {"date": "2020-10-22", "prev_shares": 4275630080, "current_shares": 17102499840, "ratio": 4.0}
+    ]
+  }
+]
+```
+
+Each row is one observation of the share count as of that date. Yahoo
+emits a row only when the count changes (issuance / buyback / split) —
+not one per trading day — so series spacing is irregular.
+
+**`same_date_duplicates_dropped`** appears top-level when at least one
+calendar date had multiple Yahoo observations and dedup fired (verified
+empirically — AAPL `--period max` typically drops ~80 rows). Yahoo's
+emission order is preserved and the LAST observation wins. Field is
+absent when no dedup was needed.
+
+**`splits_detected`** appears top-level when adjacent-row ratios cross
+the forward (`>= 1.5×`) or reverse (`<= 0.667×`) threshold (boundary
+inclusive — exact 3-for-2 / 2-for-3 splits register). Heuristic — for
+ground truth use `history --events-only --start S --end E`. AAPL's
+2020-08-31 4-for-1 split shows here as a single entry with ratio = 4.0
+(observe: Yahoo's first post-split shares row may lag the split date by
+a filing cycle — the 2020-08-31 split shows up on 2020-10-22 in this
+endpoint). Detection runs on the post-dedup, pre-truncation series so
+splits remain visible under `--head` / `--tail`.
+
+For a buyback question, diff `rows[0]` vs `rows[-1]` for window-spanning
+net change. **If `splits_detected` is non-empty, net out the split
+factor first** — a 4× jump otherwise looks like a 4× secondary issuance.
+
+**Empty-result path** (non-equity / bogus / no-coverage / narrow window):
+
+```json
+[
+  {
+    "symbol": "SPY",
+    "period": "2y",
+    "start": null,
+    "end": null,
+    "interval": "1d",
+    "timezone": null,
+    "rows": [],
+    "note": "no shares data — likely non-equity (ETF/fund/index/crypto/FX/future) / bogus / no coverage / window too narrow; chain fast_info via quote_type"
+  }
+]
+```
+
+The `note` field carries the ambiguous-empty signal (same shape as
+`holders` / `insiders` / `analyst` / `sec_filings`). Four
+indistinguishable causes at this endpoint: non-equity instrument,
+bogus / delisted ticker, real equity with no Yahoo coverage, or window
+too narrow on a real equity (verified: 1-day-inside-data, pre-IPO, and
+future windows all return `None` from `get_shares_full`, just like
+non-equities). Chain `fast_info` to read `quote_type` for the first
+three; widen `--period` to rule out the fourth. `note` and `error` are
+mutually exclusive.
+
+CSV layout: one row per share-count observation, columns are
+`symbol / period / start / end / interval / timezone / date /
+shares_outstanding / note / error / error_kind / attempts`. Note rows
+(empty-result path) emit a single carrying row with `date` and
+`shares_outstanding` blank but the rest of the meta populated, so the
+ticker isn't silently dropped from CSV. The nested `splits_detected`
+list and `same_date_duplicates_dropped` int are not projected to CSV
+(use JSON / NDJSON if you need them — same convention as default
+summary's `splits` list). No `exchange_tz` column — multi-ticker shares
+is a serial loop (not batched), so each ticker's `timezone` is already
+its native IANA zone.
+
+**Window flag handling.** `--shares` honors `--period` / `--start` /
+`--end` (unlike `--metadata` which is window-invariant). With `--period`
+the script translates to ISO dates internally — `mo = 30d`, `y = 365d`
+**approximations**, NOT calendar months / years (so `--period 1y`
+translates to "last 365 days from today", which differs from
+`relativedelta(years=1)` by 1 day in leap years). Fine for sparse
+irregular daily data; document explicitly because OHLCV `--period`
+semantics in yfinance ARE calendar-aware. `--period 1d` / `5d` are
+typically too narrow for shares data (returns `None` → empty / note);
+recommend `--period 1mo` or longer. `--period max` maps to
+`1970-01-01 → today` to maximize Yahoo's available coverage (typically
+~10 years for major equities; AAPL goes back to 2015-10).
+
+`--interval` (when daily-or-coarser) is silently ignored under
+`--shares` — `get_shares_full` is not interval-parametrized; the field
+is echoed in the response for schema consistency only.
+
+## Output — `--shares --summary` mode
+
+Sample numbers and dates below are illustrative, not a real capture.
+
+```json
+[
+  {
+    "symbol": "AAPL",
+    "period": "2y",
+    "start": null,
+    "end": null,
+    "interval": "1d",
+    "timezone": "America/New_York",
+    "rows_count": 82,
+    "start_date": "2024-05-11",
+    "end_date": "2026-05-05",
+    "start_shares": 15334099968,
+    "end_shares": 14687356000,
+    "change_abs": -646743968,
+    "change_pct": -4.2177,
+    "min_shares": 14667688000,
+    "min_shares_date": "2026-05-02",
+    "max_shares": 15787400192,
+    "max_shares_date": "2025-03-11",
+    "splits_detected_count": 0,
+    "same_date_duplicates_dropped": 40
+  }
+]
+```
+
+One row per ticker — flat aggregate over the deduped series, designed
+for **peer compare** ("rank AAPL / MSFT / GOOGL by 2y buyback rate").
+`change_pct` is in **percent** to match default `--summary.change_pct`
+convention (don't confuse with `info`-style fraction encoding). Negative
+`change_abs` / `change_pct` = net buyback; positive = net issuance.
+
+**Splits warning carries through.** When `splits_detected_count > 0`,
+the `change_abs` / `change_pct` / `min_shares` / `max_shares` fields
+include the split as a 4× (or N×) jump — same caveat as default-mode
+rows. The full `splits_detected` list is JSON-only (CSV summary drops
+it; only the count column survives) — read it from JSON / NDJSON to net
+splits out before quoting buyback rates.
+
+`--head` / `--tail` are **rejected** under `--shares --summary`
+(clipping the row stream before the aggregate would silently distort
+change_pct / min / max). Empty-result rows still carry `note` — the
+summary fields collapse out and only `symbol / period / start / end /
+interval / timezone / rows: [] / note` survive on those rows.
+
+CSV layout: one row per ticker, columns are `symbol / period / start /
+end / interval / timezone /` `rows_count / start_date / end_date /
+start_shares / end_shares / change_abs / change_pct / min_shares /
+min_shares_date / max_shares / max_shares_date / splits_detected_count /
+same_date_duplicates_dropped / note / error / error_kind / attempts`.
+
 ## Output — `--metadata` mode
 
 Sample numbers and dates below are illustrative, not a real capture.
@@ -506,6 +742,44 @@ note the period and interval in the heading.
   same caveat applies to `Ticker.capital_gains` directly — the yfinance
   property returns an empty Series for the same set of funds. This is
   a Yahoo data quality issue, not a yfinance bug.
+- **`--shares` values are NOT split-adjusted.** `Ticker.get_shares_full`
+  returns the actual share count as of each date — a 4-for-1 split
+  multiplies the count on the split date (NOT a continuous backward-
+  adjustment that hides the discontinuity). AAPL is the canonical
+  example: ≈ 5.5B in Oct 2015 → 4× on 2020-08-31 → ≈ 22B → buybacks →
+  ≈ 14.7B today. Useful: split events show up as a clean step in the
+  series, surfaced via `splits_detected`. NOT useful: computing a
+  per-share metric that should be split-adjusted (e.g. EPS on the
+  pre-split share count). For per-share fundamentals use `info` or
+  `financials` (Yahoo split-adjusts those backwards). Coverage
+  empirically goes back ~10 years for major equities; older data isn't
+  in Yahoo's window for this endpoint regardless of `--period max`.
+- **`--shares` same-date dedup is "last-wins".** Yahoo emits multiple
+  rows per calendar date when several upstream filings collide
+  (verified: AAPL 2024-03-26 returned 3 distinct values). The script
+  collapses these via `groupby(date).last()` and surfaces
+  `same_date_duplicates_dropped: N` top-level when N > 0. "Last" is
+  Yahoo's emission order — deterministic but NOT principled (Yahoo
+  doesn't expose filing-date semantics here, so we don't know which
+  observation is the "official" one). For most buyback-rate questions
+  this is fine; for forensic analysis of a specific date, fetch the raw
+  Series via `Ticker.get_shares_full` directly and inspect all rows.
+- **`splits_detected` is heuristic, not authoritative.** Adjacent-row
+  ratios `>= 1.5` fire as forward-split candidates and `<= 0.667` as
+  reverse-split candidates. Threshold catches all common ratios
+  (3-for-2 / 2-for-1 / 3-for-1 / 4-for-1 forward; 2-for-3 / 1-for-2 /
+  1-for-3 / 1-for-4 reverse — boundary INCLUSIVE so exact 1.5 / 0.667
+  register) with comfortable gap from organic buyback / issuance (rare
+  to exceed 5% per single Yahoo observation). False positives: a
+  same-date dedup edge case where a non-canonical row crosses the
+  threshold; an extreme single-observation issuance (>= 50%) — rare
+  in practice. False negatives: splits where Yahoo's first post-split
+  row hasn't propagated yet. **For ground truth chain `history
+  --events-only --start S --end E`** — Yahoo's actions feed has the
+  official event date and ratio. Empirical oddity: `splits_detected`
+  may surface a split on a date weeks AFTER the actual split (e.g.
+  AAPL's 2020-08-31 4-for-1 shows on 2020-10-22 in this endpoint —
+  Yahoo's filing-cycle lag, not our bug).
 - **`total_dividends` + adjusted closes can double-count.** Default mode
   has `auto_adjust=True`, so `change_pct` already reflects total return
   (price + reinvested dividends). `total_dividends` reports the *nominal

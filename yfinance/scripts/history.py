@@ -11,7 +11,7 @@ import argparse
 import json
 import logging
 import sys
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 # Allow this script to be run directly OR imported as a module: ensure
@@ -44,11 +44,25 @@ _BASE_KEYS = ("symbol", "period", "start", "end", "interval", "timezone")
 _PER_BAR_KEYS = ("date", "open", "high", "low", "close", "volume",
                  "dividends", "split_ratio")
 _PER_EVENT_KEYS = ("date", "dividends", "split_ratio", "capital_gains")
+_PER_SHARES_KEYS = ("date", "shares_outstanding")
 _SUMMARY_KEYS = ("rows_count", "start_date", "end_date",
                  "start_close", "end_close", "change_abs", "change_pct",
                  "period_high", "period_high_date",
                  "period_low", "period_low_date",
                  "avg_volume", "total_dividends")
+# `--shares --summary` projects a deduped Series into a flat aggregate
+# dict — one row per ticker, mirroring the shape of `_SUMMARY_KEYS` but
+# with shares-specific fields. `splits_detected_count` is the scalar
+# headline; the full `splits_detected` list is JSON-only (silently
+# dropped from CSV like default summary's `splits` list).
+# `same_date_duplicates_dropped` is always emitted as a column for
+# transparency — empty cell when no dedup fired.
+_SHARES_SUMMARY_KEYS = ("rows_count", "start_date", "end_date",
+                        "start_shares", "end_shares", "change_abs", "change_pct",
+                        "min_shares", "min_shares_date",
+                        "max_shares", "max_shares_date",
+                        "splits_detected_count",
+                        "same_date_duplicates_dropped")
 # `--metadata` projects Ticker.history_metadata into a flat dict — single
 # row per ticker, no per-bar / per-event nesting. Field names normalized
 # from Yahoo's camelCase to snake_case for skill-wide consistency. Two
@@ -426,6 +440,290 @@ def fetch_metadata(symbol: str, interval: str = "1d") -> dict:
     return _build_metadata_result(symbol, md, attempts)
 
 
+def _period_to_window(period: str) -> tuple[str, str]:
+    """Translate a yfinance period string to (start_iso, end_iso) for
+    `Ticker.get_shares_full` (which takes start/end but no period).
+
+    Approximate (mo=30d, y=365d) — fine for shares data, which is sparse
+    irregular daily anyway. `max` maps to 1970-01-01 (deeper than Yahoo's
+    actual coverage; yfinance returns whatever it has, typically ~10 years
+    for major equities).
+    """
+    today = date.today()
+    today_iso = today.isoformat()
+    if period == "max":
+        return "1970-01-01", today_iso
+    if period == "ytd":
+        return f"{today.year}-01-01", today_iso
+    if period.endswith("mo"):
+        delta = timedelta(days=int(period[:-2]) * 30)
+    elif period.endswith("d"):
+        delta = timedelta(days=int(period[:-1]))
+    elif period.endswith("y"):
+        delta = timedelta(days=int(period[:-1]) * 365)
+    else:
+        # argparse rejects anything outside VALID_PERIODS, so unreachable.
+        delta = timedelta(days=30)
+    return (today - delta).isoformat(), today_iso
+
+
+# Threshold for `splits_detected`: ratio of adjacent share counts at or
+# above this is a forward-split candidate; at or below 1/threshold is a
+# reverse-split candidate. 1.5 catches 3-for-2 / 2-for-1 / 3-for-1 /
+# 4-for-1 forwards (ratios 1.5 / 2.0 / 3.0 / 4.0) and the matching
+# reverses (0.667 / 0.5 / 0.333 / 0.25). Boundary is INCLUSIVE so exact
+# 3-for-2 (ratio = 1.5) and 2-for-3 (ratio ≈ 0.667) splits — uncommon
+# but real on small-caps — register. A normal buyback / secondary
+# issuance is well under 10% per single Yahoo observation (rare to see
+# > 5%), so 1.5 is a comfortable gap. Heuristic only — chain `history
+# --events-only --start S --end E` for ground truth from Yahoo's
+# actions feed.
+_SPLIT_RATIO_THRESHOLD = 1.5
+
+
+def _detect_splits(series) -> list[dict]:
+    """Scan adjacent rows of a deduped shares Series for ratio jumps that
+    look like splits.
+
+    Returns a list of `{date, prev_shares, current_shares, ratio}` dicts
+    (forward-split ratios are >= 1.5, reverse-split ratios <= 0.667).
+    Empty list when no candidates fired. Heuristic — see
+    `_SPLIT_RATIO_THRESHOLD` docstring for the rationale and the
+    recommended ground-truth path.
+    """
+    out: list[dict] = []
+    prev_v: int | None = None
+    for d, raw in series.items():
+        v = safe_int(raw)
+        if prev_v is not None and v is not None and prev_v > 0:
+            ratio = v / prev_v
+            if ratio >= _SPLIT_RATIO_THRESHOLD or ratio <= (1 / _SPLIT_RATIO_THRESHOLD):
+                # `d` is a `datetime.date` after groupby-dedup, or a
+                # `pd.Timestamp` for never-deduped paths. Both expose
+                # strftime; use it uniformly.
+                date_str = d.strftime("%Y-%m-%d") if hasattr(d, "strftime") else str(d)
+                out.append({
+                    "date": date_str,
+                    "prev_shares": prev_v,
+                    "current_shares": v,
+                    "ratio": round(ratio, 4),
+                })
+        if v is not None:
+            prev_v = v
+    return out
+
+
+def _shares_summary(symbol: str, base: dict, deduped, splits_detected: list[dict],
+                    rows_total_pre_dedup: int) -> dict:
+    """Project a deduped shares Series into a single flat aggregate dict
+    for `--shares --summary`. One row per ticker — `start_shares` /
+    `end_shares` / `change_abs` / `change_pct` (percent) / `min` / `max`
+    with their dates / `rows_count` / `start_date` / `end_date` /
+    `splits_detected_count` / `same_date_duplicates_dropped` (when > 0).
+
+    `change_pct` is in PERCENT to match default `--summary.change_pct`
+    convention (history.py's existing OHLCV summary semantics). Don't
+    confuse with `info`-style fraction encoding.
+    """
+    start_shares = safe_int(deduped.iloc[0])
+    end_shares = safe_int(deduped.iloc[-1])
+    change_abs = (end_shares - start_shares
+                  if (start_shares is not None and end_shares is not None)
+                  else None)
+    change_pct = (change_abs / start_shares * 100
+                  if (change_abs is not None and start_shares)
+                  else None)
+
+    min_idx = deduped.idxmin()
+    max_idx = deduped.idxmax()
+    min_date = (min_idx.strftime("%Y-%m-%d") if hasattr(min_idx, "strftime")
+                else str(min_idx))
+    max_date = (max_idx.strftime("%Y-%m-%d") if hasattr(max_idx, "strftime")
+                else str(max_idx))
+    start_idx = deduped.index[0]
+    end_idx = deduped.index[-1]
+    start_date = (start_idx.strftime("%Y-%m-%d") if hasattr(start_idx, "strftime")
+                  else str(start_idx))
+    end_date = (end_idx.strftime("%Y-%m-%d") if hasattr(end_idx, "strftime")
+                else str(end_idx))
+
+    out = dict(base)
+    out.update({
+        "rows_count": len(deduped),
+        "start_date": start_date,
+        "end_date": end_date,
+        "start_shares": start_shares,
+        "end_shares": end_shares,
+        "change_abs": change_abs,
+        "change_pct": change_pct,
+        "min_shares": safe_int(deduped.min()),
+        "min_shares_date": min_date,
+        "max_shares": safe_int(deduped.max()),
+        "max_shares_date": max_date,
+        "splits_detected_count": len(splits_detected),
+    })
+    n_dups = rows_total_pre_dedup - len(deduped)
+    if n_dups > 0:
+        out["same_date_duplicates_dropped"] = n_dups
+    return out
+
+
+def fetch_shares(symbol: str, period: str | None, start: str | None,
+                 end: str | None, interval: str,
+                 head: int | None, tail: int | None,
+                 summary: bool = False) -> dict:
+    """Single-ticker fetch via `Ticker.get_shares_full` — returns rows of
+    `{date, shares_outstanding}` over the window (or a flat aggregate
+    dict when `summary=True`).
+
+    `get_shares_full` is a Yahoo timeseries endpoint distinct from the
+    OHLCV path. It takes (start, end) ISO dates only (no period string),
+    so this function translates `--period` into a date window first. The
+    underlying Series is sparse irregular daily — Yahoo emits a row only
+    when the share count changes (issuance / buyback / split) — so a
+    typical equity returns dozens to hundreds of rows per year, NOT one
+    per trading day. Values are post-split actual counts (a 4-for-1 split
+    quadruples the count on the split date), NOT split-adjusted to a
+    single base — verified empirically with AAPL (2015 ≈ 5.5B → 2020
+    split → ≈ 22B → buybacks → 2026 ≈ 14.7B).
+
+    Same-date duplicates: Yahoo emits multiple rows for one calendar date
+    when several upstream filings (annualShareIssued / quarterlyShareIssued
+    / asOfDate) collide. Verified empirically (AAPL 2024-03-26 returned
+    3 distinct values for the same date). `fetch_shares` collapses these
+    via `groupby(date).last()` — Yahoo's emission order is preserved and
+    the LAST observation wins (deterministic, but not principled — Yahoo's
+    ordering doesn't carry filing-date semantics here). When dedup
+    actually fires, `same_date_duplicates_dropped: N` is surfaced at the
+    top level so the caller can see the data-quality signal.
+
+    Split detection: after dedup, adjacent-row ratios `>= 1.5` (forward)
+    or `<= 0.667` (reverse) populate a `splits_detected` field for the
+    caller to net out from buyback math. Heuristic only — chain `history
+    --events-only` for ground truth.
+
+    Coverage: equities only (US + non-US verified — AAPL, 0700.HK both
+    populated). ETFs / mutual funds / indexes / crypto / FX / futures
+    return None at the API layer (no shares-outstanding concept). Bogus
+    / delisted tickers also return None (Yahoo logs an HTTP 404 to stderr
+    but the function still returns None, not an exception). Narrow
+    windows on real equities (e.g. a 1-day inside-data window, or a
+    pre-IPO / future window) ALSO return None — verified empirically.
+    All four empty paths share the same `note` shape — chain `fast_info`
+    to disambiguate via `quote_type`.
+
+    No multi-ticker batching: there's no `yf.download` equivalent for
+    shares, so multi-ticker shares mode is a serial loop in `main()`,
+    same as `--metadata`. Each ticker keeps its own native exchange tz
+    on the index (no UTC roundtrip), so the response `timezone` field
+    is the per-ticker tz directly — no `exchange_tz` companion field is
+    needed.
+    """
+    # Resolve window: explicit dates take precedence over --period; with
+    # neither, pass (None, None) and let yfinance pick its default window
+    # (~18 months for equities). When --period is given, translate to
+    # ISO dates so we can pass them through.
+    if start is not None:
+        s_arg = start
+        e_arg = end if end is not None else date.today().isoformat()
+    elif period is not None:
+        s_arg, e_arg = _period_to_window(period)
+    else:
+        s_arg = None
+        e_arg = None
+
+    def _fetch():
+        return yf.Ticker(symbol).get_shares_full(start=s_arg, end=e_arg)
+
+    series, err_kind, attempts = with_retry(_fetch)
+    if err_kind:
+        return {
+            "symbol": symbol,
+            "error": f"fetch failed ({err_kind}, after {attempts} attempt(s))",
+            "error_kind": err_kind,
+            "attempts": attempts,
+        }
+
+    # Echo what the user PASSED (not the resolved window) — same convention
+    # as `_build_result` for default / events-only modes. `start`/`end` are
+    # only echoed when --start was used; --period mode leaves them null.
+    base = {
+        "symbol": symbol,
+        "period": period,
+        "start": start,
+        "end": end if end is not None else (
+            date.today().isoformat() if start is not None else None
+        ),
+        "interval": interval,
+    }
+    if attempts > 1:
+        base["attempts"] = attempts
+
+    if series is None or len(series) == 0:
+        # Empty path — four indistinguishable causes at this endpoint:
+        # non-equity (no shares concept), bogus / delisted, no Yahoo
+        # coverage, or window too narrow on a real equity. Chain
+        # fast_info via `quote_type` for the disambiguator.
+        base["timezone"] = None
+        base["rows"] = []
+        base["note"] = (
+            "no shares data — likely non-equity (ETF/fund/index/crypto/FX/"
+            "future) / bogus / no coverage / window too narrow; chain "
+            "fast_info via quote_type"
+        )
+        return base
+
+    base["timezone"] = str(series.index.tz) if series.index.tz is not None else None
+
+    # Dedup same-calendar-date observations — keep the last value Yahoo
+    # emitted for the date. groupby(date) collapses the DatetimeIndex into
+    # a date-keyed index, losing tz info on the result; we already
+    # captured the original tz string into `base["timezone"]` above, so
+    # the response stays self-describing. Series remains sorted because
+    # groupby preserves first-occurrence order of unique keys (the
+    # original index is already sorted ascending from yfinance).
+    rows_total_pre_dedup = len(series)
+    date_keys = series.index.date
+    if len(date_keys) > len(set(date_keys)):
+        series = series.groupby(date_keys).last()
+
+    # Split detection runs on the post-dedup, pre-truncation series so
+    # splits anywhere in the user's window are visible regardless of
+    # `--head` / `--tail` projection.
+    splits_detected = _detect_splits(series)
+
+    if summary:
+        out = _shares_summary(symbol, base, series, splits_detected,
+                              rows_total_pre_dedup)
+        if splits_detected:
+            out["splits_detected"] = splits_detected
+        return out
+
+    rows_total_after_dedup = len(series)
+    if head is not None:
+        series = series.iloc[:head]
+    elif tail is not None:
+        series = series.iloc[-tail:]
+
+    rows = []
+    for d, v in series.items():
+        date_str = d.strftime("%Y-%m-%d") if hasattr(d, "strftime") else str(d)
+        rows.append({
+            "date": date_str,
+            "shares_outstanding": safe_int(v),
+        })
+    base["rows"] = rows
+    n_dups = rows_total_pre_dedup - rows_total_after_dedup
+    if n_dups > 0:
+        base["same_date_duplicates_dropped"] = n_dups
+    if splits_detected:
+        base["splits_detected"] = splits_detected
+    if head is not None or tail is not None:
+        base["rows_truncated"] = {"total": rows_total_after_dedup,
+                                  "shown": len(rows)}
+    return base
+
+
 def fetch(symbol: str, period: str | None, interval: str,
           summary: bool, prepost: bool, adjust: bool = True,
           start: str | None = None, end: str | None = None,
@@ -632,12 +930,15 @@ def main() -> None:
     ap = argparse.ArgumentParser(
         prog=Path(__file__).name,
         description=(
-            "Fetch historical OHLCV / event / metadata data from Yahoo Finance via yfinance.\n\n"
-            "Four output modes (mutually exclusive):\n"
-            "  default         full OHLCV rows over the period\n"
-            "  --summary       aggregate stats only (start/end close, change_pct, period high/low)\n"
-            "  --events-only   corporate-action rows only (dividends / splits / capital_gains) — no OHLCV\n"
-            "  --metadata      Ticker.history_metadata snapshot (currency, exchange, first_trade_date, valid_ranges) — no rows\n\n"
+            "Fetch historical OHLCV / event / shares / metadata data from Yahoo Finance via yfinance.\n\n"
+            "Four data modes (one at a time):\n"
+            "  default         OHLCV rows over the period\n"
+            "  --events-only   corporate-action rows only (dividends / splits / capital_gains)\n"
+            "  --shares        shares-outstanding time series — equity-only\n"
+            "  --metadata      Ticker.history_metadata snapshot — no rows at all\n\n"
+            "Projection: --summary aggregates rows into per-ticker stats; valid\n"
+            "with default OHLCV (start/end close, change_pct, ...) or --shares\n"
+            "(start/end shares, change_pct, splits_detected_count, ...).\n\n"
             "See references/history.md for the full output schema of each mode."
         ),
         epilog=(
@@ -648,6 +949,8 @@ def main() -> None:
             "  history.py --period ytd --summary AAPL           # YTD aggregate\n"
             "  history.py --period 5y --events-only AAPL        # all dividends / splits in last 5y\n"
             "  history.py --period 10y --events-only --tail 5 VFIAX  # last 5 distributions of a fund\n"
+            "  history.py --period 2y --shares AAPL             # shares-outstanding history (buyback signal)\n"
+            "  history.py --period max --shares --tail 5 AAPL   # most recent 5 share-count changes\n"
             "  history.py --metadata AAPL MSFT 0700.HK          # currency / exchange / first_trade_date\n"
             "  history.py --period 5d --interval 1h AAPL        # intraday bars\n"
             "  history.py --period 1d --interval 5m --prepost AAPL  # extended hours\n"
@@ -681,7 +984,11 @@ def main() -> None:
     ap.add_argument("--interval", default="1d", choices=sorted(VALID_INTERVALS),
                     help="Bar size. Default %(default)s.")
     ap.add_argument("--summary", action="store_true",
-                    help="Aggregate stats instead of full OHLCV rows.")
+                    help="Aggregate stats instead of full rows. Valid with "
+                         "default OHLCV (start/end close, change_pct, period "
+                         "high/low) or --shares (start/end shares, change_pct, "
+                         "splits_detected_count). Incompatible with "
+                         "--events-only and --metadata.")
     ap.add_argument("--events-only", dest="events_only", action="store_true",
                     help="Only corporate-action rows (dividends, splits, "
                          "capital_gains) — no OHLCV. Each row has date + the "
@@ -696,6 +1003,20 @@ def main() -> None:
                          "events that don't appear on intraday bars, and "
                          "Yahoo's 7-60 day intraday window is too short to "
                          "capture meaningful events anyway.")
+    ap.add_argument("--shares", action="store_true",
+                    help="Shares-outstanding time series via "
+                         "Ticker.get_shares_full. Sparse irregular-daily "
+                         "rows of {date, shares_outstanding}; values are "
+                         "post-split actual counts (NOT split-adjusted). "
+                         "Equity-only — non-equities / bogus / narrow "
+                         "windows return success-with-`note`. Same-date "
+                         "duplicates are deduped (`groupby(date).last()`); "
+                         "split candidates surface in `splits_detected`. "
+                         "Combine with --summary for peer-compare aggregate. "
+                         "Mutex with --events-only / --metadata / --prepost "
+                         "/ --no-adjust / intraday --interval. See "
+                         "references/history.md for the full schema and "
+                         "rationale.")
     ap.add_argument("--metadata", action="store_true",
                     help="Return Ticker.history_metadata only — currency, "
                          "exchange, instrument_type, first_trade_date, "
@@ -778,16 +1099,38 @@ def main() -> None:
     if not args.period and not args.start:
         args.period = "1mo"  # default window
 
-    if args.summary and (args.head is not None or args.tail is not None):
+    if args.summary and (args.head is not None or args.tail is not None) \
+            and not args.shares:
+        # `--summary` is row-aggregate; head/tail clip the row stream
+        # before the aggregate runs, which would silently distort
+        # change_pct / period_high. EXCEPTION: under `--shares --summary`
+        # head/tail aren't accepted either, but the rejection happens via
+        # the dedicated --shares mutex below for a more specific error
+        # message — this clause covers the OHLCV summary path.
         ap.error("--head / --tail apply to default mode only, not --summary")
 
-    # New mode flags: only one of {--summary, --events-only, --metadata}
-    # may be set. argparse can't express a 3-way mutex on store_true
-    # flags via add_mutually_exclusive_group + per-mode head/tail mutex,
-    # so do it by hand.
-    mode_flags = sum([args.summary, args.events_only, args.metadata])
-    if mode_flags > 1:
-        ap.error("--summary, --events-only, and --metadata are mutually exclusive")
+    # Output mode mutex: --events-only, --metadata, --shares pick the
+    # data source; only one at a time. --summary is a separate axis (a
+    # projection over rows), valid with default OHLCV OR --shares; it
+    # doesn't combine with --events-only (corporate-action rows have no
+    # natural aggregate over the existing summary fields) or --metadata
+    # (already a snapshot, not a series). argparse can't express this
+    # 2D layout on store_true flags, so it's hand-checked.
+    output_modes = sum([args.events_only, args.metadata, args.shares])
+    if output_modes > 1:
+        ap.error("--events-only, --metadata, and --shares are mutually "
+                 "exclusive output modes")
+    if args.summary and (args.events_only or args.metadata):
+        ap.error("--summary is incompatible with --events-only and "
+                 "--metadata (use --summary alone for OHLCV aggregate, or "
+                 "--shares --summary for shares aggregate)")
+    if args.shares and (args.head is not None or args.tail is not None) \
+            and args.summary:
+        # --head / --tail clip the row stream before the summary
+        # aggregate runs, which would silently distort change_pct /
+        # min / max. Reject explicitly under --shares --summary.
+        ap.error("--head / --tail don't apply to --shares --summary "
+                 "(they would distort the aggregate over a clipped slice)")
 
     # --metadata is a one-row-per-ticker projection of history_metadata.
     # head/tail don't apply (no per-row data); --no-adjust doesn't apply
@@ -821,6 +1164,24 @@ def main() -> None:
             f"and corporate actions don't fire mid-session — "
             f"use --interval 1d (default) instead")
 
+    # --shares constraints — same shape rationale as --events-only:
+    # share-count changes are end-of-day events (filings settle once
+    # daily), extended-hours bars carry no share data, and Yahoo's
+    # `auto_adjust` flag has no meaning for an integer count. Reject
+    # explicitly rather than silently ignore so the user picks the
+    # right flags for the question.
+    if args.shares and args.prepost:
+        ap.error("--prepost doesn't apply to --shares "
+                 "(share-count changes are end-of-day events)")
+    if args.shares and not args.adjust:
+        ap.error("--no-adjust doesn't apply to --shares "
+                 "(shares are integer counts, not adjusted prices)")
+    if args.shares and args.interval in INTRADAY:
+        ap.error(
+            f"--shares requires a daily-or-coarser --interval "
+            f"(got {args.interval!r}); share-count changes don't fire "
+            f"mid-session — use --interval 1d (default) instead")
+
     # --prepost is meaningless on daily+ intervals (no extended-hours
     # daily bars exist). yfinance silently ignores it; we reject explicitly
     # so the user picks an intraday interval rather than wondering why
@@ -846,6 +1207,23 @@ def main() -> None:
         results = [fetch_metadata(s, args.interval) for s in symbols]
         _emit(results, args.format, summary=False, metadata=True)
         return
+    if args.shares:
+        # --shares is also a per-ticker serial loop (same as --metadata):
+        # there's no yf.download equivalent for the shares endpoint, so
+        # batching has no benefit. For N≥2 the cost is N HTTP, not 1.
+        # Each ticker keeps its native exchange tz on the response (no
+        # UTC roundtrip), so the schema is single-ticker-shaped even on
+        # multi-ticker calls — no `exchange_tz` companion field.
+        # `--summary` is the orthogonal projection axis: when set,
+        # fetch_shares returns a flat aggregate dict (one row per ticker)
+        # instead of per-row data; _emit dispatches to the summary CSV
+        # path accordingly.
+        results = [fetch_shares(s, args.period, args.start, args.end,
+                                args.interval, args.head, args.tail,
+                                summary=args.summary)
+                   for s in symbols]
+        _emit(results, args.format, summary=args.summary, shares=True)
+        return
     # N=1 keeps the original Ticker.history path (preserves native tz in
     # `timezone`, no `exchange_tz` field). N>=2 routes through yf.download —
     # one HTTP request, threaded internally, dates folded back into each
@@ -867,7 +1245,8 @@ def main() -> None:
 
 
 def _emit(results: list, fmt: str, *, summary: bool,
-          events_only: bool = False, metadata: bool = False) -> None:
+          events_only: bool = False, metadata: bool = False,
+          shares: bool = False) -> None:
     """Render results to stdout in the requested format.
 
     json     pretty-printed JSON array (default, current behavior)
@@ -875,6 +1254,7 @@ def _emit(results: list, fmt: str, *, summary: bool,
     csv      flattened tabular:
                summary       one row per ticker (base + summary stats)
                events_only   one row per event (base + event fields)
+               shares        one row per share-count change (base + per-shares fields)
                metadata      one row per ticker (metadata-only schema)
                default       one row per OHLCV bar (base + per-bar fields)
 
@@ -884,7 +1264,10 @@ def _emit(results: list, fmt: str, *, summary: bool,
     batch output inserts `exchange_tz` right after `timezone` so
     consumers can tell which calendar daily dates belong to. The split
     matches main()'s dispatch (N=1 → fetch, N≥2 → fetch_batch with
-    exchange_tz set). Metadata layout is its own schema entirely (no
+    exchange_tz set). `--shares` and `--metadata` layouts skip the batch
+    `exchange_tz` injection (both run via per-ticker serial loops, not
+    yf.download — each ticker's `timezone` field already carries its
+    native tz). Metadata layout is its own schema entirely (no
     period / start / end / interval — those don't apply to a metadata
     snapshot) and uses _METADATA_KEYS directly.
     """
@@ -921,17 +1304,24 @@ def _emit(results: list, fmt: str, *, summary: bool,
         base_keys.insert(base_keys.index("timezone") + 1, "exchange_tz")
 
     if summary:
-        # One row per ticker; columns = base + summary stats + error/attempts.
-        cols = base_keys + list(_SUMMARY_KEYS) + list(RESULT_META)
+        # One row per ticker. Two summary schemas — OHLCV-default vs
+        # shares — pick by the `shares` flag. shares-summary adds a
+        # `note` column so the empty-result path (non-equity / bogus /
+        # narrow window) carries its disambiguator into CSV; default
+        # summary doesn't expose `note` (its empty path is `error`).
+        if shares:
+            cols = base_keys + list(_SHARES_SUMMARY_KEYS) + ["note"] + list(RESULT_META)
+        else:
+            cols = base_keys + list(_SUMMARY_KEYS) + list(RESULT_META)
         writer.writerow(cols)
         for r in results:
             writer.writerow([r.get(c, "") for c in cols])
         return
 
-    # default and events-only both flatten rows. The per-row column set
-    # differs (_PER_BAR_KEYS vs _PER_EVENT_KEYS), but the surrounding
-    # base/meta layout is identical. error rows still get a single
-    # carrying row regardless of which inner schema we're using.
+    # default, events-only, and shares all flatten rows. The per-row column
+    # set differs (_PER_BAR_KEYS / _PER_EVENT_KEYS / _PER_SHARES_KEYS), but
+    # the surrounding base/meta layout is identical. error rows still get a
+    # single carrying row regardless of which inner schema we're using.
     #
     # events-only adds one extra per-ticker column: `has_capital_gains_column`
     # — a fund/non-fund discriminator that's per-ticker, not per-row, but
@@ -939,8 +1329,21 @@ def _emit(results: list, fmt: str, *, summary: bool,
     # pandas without GROUP BY can still see it. Insert right before
     # RESULT_META so the column ordering is base / event / discriminator /
     # error metadata.
-    inner_keys = list(_PER_EVENT_KEYS) if events_only else list(_PER_BAR_KEYS)
-    extra_per_ticker = ["has_capital_gains_column"] if events_only else []
+    #
+    # shares adds a `note` column for the ambiguous-empty path (non-equity /
+    # bogus / no-coverage). Like `error`, it carries a single row when set;
+    # unlike `error` it co-occurs with successful base fields. Sits in the
+    # column ordering right before RESULT_META so the layout is
+    # base / per-row / note / error_meta.
+    if shares:
+        inner_keys = list(_PER_SHARES_KEYS)
+        extra_per_ticker = ["note"]
+    elif events_only:
+        inner_keys = list(_PER_EVENT_KEYS)
+        extra_per_ticker = ["has_capital_gains_column"]
+    else:
+        inner_keys = list(_PER_BAR_KEYS)
+        extra_per_ticker = []
     cols = base_keys + inner_keys + extra_per_ticker + list(RESULT_META)
     writer.writerow(cols)
     for r in results:
@@ -961,10 +1364,23 @@ def _emit(results: list, fmt: str, *, summary: bool,
         # (success rows don't have them); attempts present only on retry.
         # Iterating RESULT_META keeps this drift-proof if new meta added.
         meta_cells = [r.get(k, "") for k in RESULT_META]
-        # Per-ticker discriminator (events-only only) — repeated across
-        # this ticker's event rows.
+        # Per-ticker discriminator (events-only / shares only) — repeated
+        # across this ticker's per-row records.
         ticker_extras = [r.get(k, "") for k in extra_per_ticker]
-        for row in r.get("rows", []):
+        # If `rows` is empty AND there's a per-ticker note (shares mode's
+        # ambiguous-empty path), emit one carrying row so the ticker isn't
+        # silently dropped from CSV. Same convention as news / holders /
+        # insiders / sec_filings empty-but-not-error paths.
+        rows = r.get("rows", [])
+        if not rows and shares and r.get("note"):
+            writer.writerow(
+                meta
+                + [""] * len(inner_keys)
+                + ticker_extras
+                + meta_cells
+            )
+            continue
+        for row in rows:
             writer.writerow(
                 meta
                 + [row.get(c, "") for c in inner_keys]
