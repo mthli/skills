@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smoke test for the fifteen yfinance wrapper scripts.
+"""Smoke test for the sixteen yfinance wrapper scripts.
 
 Three layers of coverage:
   1. Offline / pure-Python: invariants over pure-Python logic with no
@@ -81,6 +81,7 @@ import options
 import screener
 import sec_filings
 import sectors
+import valuation
 
 
 def run_cli(script: str, *args: str) -> tuple[int, list | None]:
@@ -500,6 +501,45 @@ try:
     check("0700.HK exchange=HKG",
           d_hk.get("exchange") == "HKG",
           f"got {d_hk.get('exchange')!r}")
+
+    # --with-isin: opt-in ISIN lookup (slow path, ~1-5 s extra).
+    # Spotty hit rate by design — AAPL is the most reliable liquid
+    # name in the 2026-05 spot-check, but we still assert format
+    # rather than a specific value so a yfinance regression that
+    # NULLs out AAPL doesn't break smoke. Format regex is reused
+    # from fast_info module so test + production agree on shape.
+    d_iso = fast_info.fetch("AAPL", with_isin=True)
+    check("AAPL --with-isin: isin key present (lookup ran)",
+          "isin" in d_iso,
+          f"got keys {sorted(d_iso.keys())}")
+    check("AAPL --with-isin: isin is null or matches ISO 6166 shape",
+          d_iso.get("isin") is None
+          or bool(fast_info._ISIN_RE.match(d_iso["isin"])),
+          f"got {d_iso.get('isin')!r}")
+    check("AAPL --with-isin: last_price still populated",
+          isinstance(d_iso.get("last_price"), float),
+          f"got {type(d_iso.get('last_price')).__name__}")
+
+    # Short-circuit path: tickers with `-` or `^` resolve to null
+    # instantly inside yfinance (no network). Cheapest --with-isin
+    # case to assert — confirms (a) flag plumbing works on non-equity
+    # quote types, (b) sentinel mapping `-` → None lands correctly.
+    d_crypto = fast_info.fetch("BTC-USD", with_isin=True)
+    check("BTC-USD --with-isin: short-circuits to null isin",
+          d_crypto.get("isin") is None and "isin" in d_crypto,
+          f"got {d_crypto.get('isin')!r}, key present={'isin' in d_crypto}")
+    check("BTC-USD --with-isin: last_price intact (ISIN path didn't poison row)",
+          isinstance(d_crypto.get("last_price"), float),
+          f"got {type(d_crypto.get('last_price')).__name__}")
+
+    # Error path: when main fast_info errors, ISIN lookup is skipped
+    # entirely (avoid doubling latency on already-failing rows). The
+    # `isin` key MUST be absent — its presence/absence is the shape
+    # signal documented in references/fast_info.md.
+    d_bad = fast_info.fetch("ZZZZNOTREAL", with_isin=True)
+    check("ZZZZNOTREAL --with-isin: error path omits isin key entirely",
+          "error" in d_bad and "isin" not in d_bad,
+          f"got keys {sorted(d_bad.keys())}")
 except Exception as e:
     FAIL += 1
     FAILURES.append(f"fast_info crashed: {e}")
@@ -8305,6 +8345,446 @@ try:
 except Exception as e:
     FAIL += 1
     FAILURES.append(f"market smoke crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
+# --- valuation (offline + per-ticker scrape; equity-leaning ambiguous) ---
+section("valuation _parse_yahoo_display_value (offline)")
+try:
+    # Yahoo's missing-value marker → None (the most common case for
+    # loss-makers' P/E and small-cap PEG).
+    check("valuation parse '--' → None",
+          valuation._parse_yahoo_display_value("--") is None)
+    check("valuation parse '' → None",
+          valuation._parse_yahoo_display_value("") is None)
+    check("valuation parse '   ' → None (whitespace only)",
+          valuation._parse_yahoo_display_value("   ") is None)
+    check("valuation parse None → None (defensive)",
+          valuation._parse_yahoo_display_value(None) is None)
+
+    # Magnitude suffixes. Numerically pin each branch so a future
+    # mis-edit to _MAGNITUDE_SUFFIX surfaces immediately. Use a wide
+    # absolute tolerance (≤1) because float('4.31')*1e12 isn't exactly
+    # 4.31e12 — it's 4309999999999.9995. The precision-loss bound is
+    # documented in references/valuation.md ("Precision: ~3 sig figs").
+    check("valuation parse '4.31T' ≈ 4.31e12",
+          abs(valuation._parse_yahoo_display_value("4.31T") - 4.31e12) < 1)
+    check("valuation parse '10.89B' ≈ 1.089e10",
+          abs(valuation._parse_yahoo_display_value("10.89B") - 1.089e10) < 1)
+    check("valuation parse '373.53M' ≈ 3.7353e8",
+          abs(valuation._parse_yahoo_display_value("373.53M") - 3.7353e8) < 1)
+    check("valuation parse '123.4K' ≈ 123400.0",
+          abs(valuation._parse_yahoo_display_value("123.4K") - 123400.0) < 1)
+    check("valuation parse '4.31t' lowercase ≈ 4.31e12 (suffix uppercased)",
+          abs(valuation._parse_yahoo_display_value("4.31t") - 4.31e12) < 1)
+
+    # Plain decimal (the seven ratio fields).
+    check("valuation parse '35.51' → 35.51",
+          valuation._parse_yahoo_display_value("35.51") == 35.51)
+    check("valuation parse '0.34' → 0.34 (BMW.DE-style small ratio)",
+          valuation._parse_yahoo_display_value("0.34") == 0.34)
+
+    # Defensive: unrecognized suffix or garbage → None, not crash.
+    check("valuation parse 'abc' → None (unparseable)",
+          valuation._parse_yahoo_display_value("abc") is None)
+    check("valuation parse '5.0Q' → None (unknown suffix)",
+          valuation._parse_yahoo_display_value("5.0Q") is None)
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"valuation parse smoke crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
+section("valuation _parse_period_label (offline)")
+try:
+    check("valuation period label 'Current' → ('current', None)",
+          valuation._parse_period_label("Current") == ("current", None))
+    check("valuation period label 'current' lowercase → ('current', None)",
+          valuation._parse_period_label("current") == ("current", None))
+    check("valuation period label '3/31/2026' → ('2026-03-31', '2026-03-31')",
+          valuation._parse_period_label("3/31/2026") == ("2026-03-31", "2026-03-31"))
+    check("valuation period label '12/31/2024' → ('2024-12-31', '2024-12-31')",
+          valuation._parse_period_label("12/31/2024") == ("2024-12-31", "2024-12-31"))
+    # Defensive: unparseable format falls back to raw label + null date,
+    # so a Yahoo format change surfaces visibly rather than crashing.
+    bad_label, bad_date = valuation._parse_period_label("Q4-2025")
+    check("valuation period label 'Q4-2025' → raw label + null date",
+          bad_label == "Q4-2025" and bad_date is None)
+    # Strict date validation: `5/45/2026` would parse as a garbage ISO
+    # under the old splitting parser; strptime rejects it correctly so
+    # the unparseable-fallback fires.
+    bad_label, bad_date = valuation._parse_period_label("5/45/2026")
+    check("valuation period label '5/45/2026' (invalid day) → raw label + null date "
+          "(strptime catches it, doesn't silently emit '2026-05-45')",
+          bad_label == "5/45/2026" and bad_date is None)
+    bad_label, bad_date = valuation._parse_period_label("13/1/2026")
+    check("valuation period label '13/1/2026' (invalid month) → raw label + null date",
+          bad_label == "13/1/2026" and bad_date is None)
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"valuation period label smoke crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
+section("valuation _resolve_row_key (offline)")
+try:
+    # Exact-label happy paths — verifying the canonical mapping covers
+    # every key in our schema.
+    check("valuation resolve 'Market Cap' → 'market_cap'",
+          valuation._resolve_row_key("Market Cap") == "market_cap")
+    check("valuation resolve 'Trailing P/E' → 'trailing_pe'",
+          valuation._resolve_row_key("Trailing P/E") == "trailing_pe")
+    check("valuation resolve 'Price/Book' → 'price_to_book'",
+          valuation._resolve_row_key("Price/Book") == "price_to_book")
+    # Yahoo's actual PEG label has a parenthetical qualifier — prefix
+    # match handles it. The canonical anchor is just 'PEG Ratio'.
+    check("valuation resolve 'PEG Ratio (5yr expected)' → 'peg_ratio' "
+          "(Yahoo's actual label — anchor is bare 'PEG Ratio')",
+          valuation._resolve_row_key("PEG Ratio (5yr expected)") == "peg_ratio")
+    # Substring tolerance test: a hypothetical future qualifier change
+    # would still resolve correctly. This is the runtime safety net
+    # against Yahoo restyling the parenthetical.
+    check("valuation resolve 'PEG Ratio (5y forward)' → 'peg_ratio' "
+          "(hypothetical qualifier rename — prefix match still resolves)",
+          valuation._resolve_row_key("PEG Ratio (5y forward)") == "peg_ratio")
+    # Longest-anchor-first invariant — without the descending sort,
+    # 'Enterprise Value' (shorter) would absorb 'Enterprise Value/Revenue'.
+    check("valuation resolve 'Enterprise Value/Revenue' → 'ev_to_revenue' "
+          "(longer anchor wins over shorter 'Enterprise Value')",
+          valuation._resolve_row_key("Enterprise Value/Revenue") == "ev_to_revenue")
+    check("valuation resolve 'Enterprise Value/EBITDA' → 'ev_to_ebitda'",
+          valuation._resolve_row_key("Enterprise Value/EBITDA") == "ev_to_ebitda")
+    check("valuation resolve 'Enterprise Value' → 'enterprise_value' "
+          "(plain, no slash suffix — falls to the parent anchor)",
+          valuation._resolve_row_key("Enterprise Value") == "enterprise_value")
+    # Unknown / empty labels return None — caller silently skips them
+    # so Yahoo adding rows doesn't crash us.
+    check("valuation resolve 'Quick Ratio' (Yahoo doesn't emit this) → None",
+          valuation._resolve_row_key("Quick Ratio") is None)
+    check("valuation resolve '' → None (defensive)",
+          valuation._resolve_row_key("") is None)
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"valuation resolve smoke crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
+section("valuation _to_size_int (offline)")
+try:
+    # The whole point of this helper: '4.31T' parses to a float that's
+    # 0.0005 below the intended value, and naive int() would truncate
+    # to ...9999. Round() recovers the intended display number.
+    check("valuation _to_size_int: float-precision artifact rounds cleanly "
+          "(4309999999999.9995 → 4310000000000, NOT 4309999999999)",
+          valuation._to_size_int(4.31 * 1e12) == 4_310_000_000_000)
+    check("valuation _to_size_int: clean float passes through",
+          valuation._to_size_int(1.0) == 1)
+    check("valuation _to_size_int: None → None",
+          valuation._to_size_int(None) is None)
+    # Round-half-to-even is Python's default; document the boundary
+    # behavior so future-us doesn't get surprised by .5 inputs.
+    check("valuation _to_size_int: rounds to int (Python banker's rounding)",
+          valuation._to_size_int(0.5) == 0
+          and valuation._to_size_int(1.5) == 2)
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"valuation _to_size_int smoke crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
+section("valuation fetch")
+try:
+    # --- AAPL: full 6-period × 9-metric table ---
+    d = valuation.fetch("AAPL")
+    check("valuation AAPL: success has periods list",
+          isinstance(d.get("periods"), list) and "error" not in d,
+          f"got keys={list(d.keys())}")
+    periods = d.get("periods") or []
+    # Yahoo currently emits 6 columns (Current + 5 quarter-end snapshots).
+    # Canary: a Yahoo template change could shift this — investigate if so.
+    check("valuation AAPL: 6 periods returned (Current + 5 quarter-end)",  # canary: typical
+          len(periods) == 6,
+          f"got {len(periods)}")
+    check("valuation AAPL: no `note` on success path",
+          "note" not in d)
+    if periods:
+        first = periods[0]
+        # Documented field set lock — adding/removing a key in _PERIOD_KEYS
+        # should require updating the schema doc too, so the smoke fires.
+        check("valuation AAPL: periods[0] has documented field set "
+              f"({sorted(valuation._PERIOD_KEYS)})",
+              set(first.keys()) == set(valuation._PERIOD_KEYS),
+              f"got keys={sorted(first.keys())}")
+        check("valuation AAPL: periods[0].period_label == 'current'",
+              first.get("period_label") == "current")
+        check("valuation AAPL: periods[0].period_date is None (Current row)",
+              first.get("period_date") is None)
+        # Type pinning for the 9 metrics. market_cap / enterprise_value
+        # are int (via safe_int); the 7 ratios are float. None is allowed
+        # for any field (loss-makers have null trailing_pe / forward_pe).
+        for k in ("market_cap", "enterprise_value"):
+            check(f"valuation AAPL: periods[0].{k} is int (or None)",
+                  first.get(k) is None or isinstance(first.get(k), int),
+                  f"got {k}={first.get(k)!r} (type={type(first.get(k)).__name__})")
+        for k in ("trailing_pe", "forward_pe", "peg_ratio",
+                  "price_to_sales", "price_to_book",
+                  "ev_to_revenue", "ev_to_ebitda"):
+            v = first.get(k)
+            check(f"valuation AAPL: periods[0].{k} is float (or None)",
+                  v is None or isinstance(v, float),
+                  f"got {k}={v!r} (type={type(v).__name__})")
+        # Canary: AAPL is a profitable mega-cap; trailing_pe MUST be a
+        # populated positive float. Fails when (a) Yahoo's scrape breaks
+        # or (b) AAPL has a TTM loss (would be a major news event).
+        check("valuation AAPL: trailing_pe is a positive float "  # canary: AAPL profitable
+              "(scrape canary — fails if Yahoo restyles or AAPL has TTM loss)",
+              isinstance(first.get("trailing_pe"), float)
+              and first["trailing_pe"] > 0,
+              f"got {first.get('trailing_pe')!r}")
+        check("valuation AAPL: market_cap is a positive int "  # canary
+              "(roughly 1T–10T USD)",
+              isinstance(first.get("market_cap"), int)
+              and 1e12 < first["market_cap"] < 1e13,
+              f"got {first.get('market_cap')!r}")
+        # Clean-rounding canary: with _to_size_int's round(), parsing
+        # Yahoo's '4.31T' produces a clean ...0000 trailing rather
+        # than the ...9999 truncation artifact. The value should be
+        # divisible by 1e10 (Yahoo displays 3 sig figs of trillions =
+        # 10-billion granularity).
+        check("valuation AAPL: market_cap rounded cleanly to ~1e10 granularity "  # canary
+              "(no ...9999 truncation artifact from float-parse)",
+              isinstance(first.get("market_cap"), int)
+              and first["market_cap"] % int(1e10) == 0,
+              f"got {first.get('market_cap')!r} "
+              f"(mod 1e10 = {first.get('market_cap', 0) % int(1e10)})")
+        # PEG canary — AAPL has had a populated PEG for years.
+        # Catches the silent-null failure mode where Yahoo renames the
+        # row label to something our _ROW_LABEL_TO_KEY anchor doesn't
+        # prefix-match anymore. If it fires: check Yahoo's
+        # key-statistics page for the new PEG row label and update the
+        # anchor in _ROW_LABEL_TO_KEY.
+        check("valuation AAPL: peg_ratio is non-null float "  # canary: AAPL has PEG coverage
+              "(row-label canary — fails if Yahoo renames 'PEG Ratio (5yr expected)' "
+              "to something our anchor doesn't prefix-match)",
+              isinstance(first.get("peg_ratio"), float)
+              and first["peg_ratio"] > 0,
+              f"got {first.get('peg_ratio')!r}")
+        # Subsequent rows are quarter-end snapshots with ISO dates.
+        snapshots = periods[1:]
+        check("valuation AAPL: snapshot rows have ISO date period_label "
+              "(matches period_date)",
+              snapshots and all(
+                  isinstance(p.get("period_label"), str)
+                  and p.get("period_label") == p.get("period_date")
+                  and len(p["period_label"]) == 10
+                  for p in snapshots
+              ),
+              f"got labels={[p.get('period_label') for p in snapshots]}")
+        # Sort order: Yahoo emits newest-snapshot-first after Current.
+        snapshot_dates = [p["period_date"] for p in snapshots]
+        check("valuation AAPL: snapshot rows in newest-first order",  # canary
+              snapshot_dates == sorted(snapshot_dates, reverse=True),
+              f"got dates={snapshot_dates}")
+
+    # --- SPY: empty path emits note, no error_kind ---
+    spy = valuation.fetch("SPY")
+    check("valuation SPY (ETF): empty path emits note + no error_kind",
+          spy.get("periods") == [] and "note" in spy
+          and "error" not in spy and "error_kind" not in spy,
+          f"got keys={list(spy.keys())}")
+
+    # --- BOGUS: same empty path as SPY (ambiguous-by-design) ---
+    bogus = valuation.fetch("BOGUS123XYZ")
+    check("valuation BOGUS123XYZ: empty path same as SPY "
+          "(ambiguous — no error_kind, chain fast_info to disambiguate)",
+          bogus.get("periods") == [] and "note" in bogus
+          and "error" not in bogus,
+          f"got keys={list(bogus.keys())}")
+
+    # --- non-US listing (0700.HK) works ---
+    hk = valuation.fetch("0700.HK")
+    check("valuation 0700.HK: success has periods list",
+          isinstance(hk.get("periods"), list)
+          and len(hk["periods"]) > 0
+          and "error" not in hk,
+          f"got len={len(hk.get('periods') or [])}, keys={list(hk.keys())}")
+
+    # --- loss-maker (PLUG): trailing/forward P/E all null across the
+    # window, but price_to_book + market_cap still populated. Pins the
+    # '--' → None parse path on real data.
+    plug = valuation.fetch("PLUG")
+    plug_periods = plug.get("periods") or []
+    check("valuation PLUG (loss-maker): all trailing_pe values null",
+          plug_periods and all(p.get("trailing_pe") is None for p in plug_periods),
+          f"got trailing_pe values={[p.get('trailing_pe') for p in plug_periods]}")
+    check("valuation PLUG: price_to_book still populated "
+          "(loss-makers retain book equity)",  # canary: PLUG could go negative-book
+          plug_periods and any(
+              isinstance(p.get("price_to_book"), float) and p["price_to_book"] > 0
+              for p in plug_periods
+          ),
+          f"got price_to_book values={[p.get('price_to_book') for p in plug_periods]}")
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"valuation fetch smoke crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
+section("valuation _summarize (offline projection)")
+try:
+    # Build a synthetic fetch result; _summarize is pure projection
+    # over the periods list, no Yahoo round-trip needed.
+    fake = {
+        "symbol": "FAKE",
+        "periods": [
+            {"period_label": "current",  "period_date": None,
+             "market_cap": 1000, "enterprise_value": 1100,
+             "trailing_pe": 20.0, "forward_pe": 18.0, "peg_ratio": 1.5,
+             "price_to_sales": 5.0, "price_to_book": 3.0,
+             "ev_to_revenue": 5.5, "ev_to_ebitda": 12.0},
+            {"period_label": "2026-03-31", "period_date": "2026-03-31",
+             "market_cap": 900, "enterprise_value": 1000,
+             "trailing_pe": 15.0, "forward_pe": None, "peg_ratio": 1.2,
+             "price_to_sales": 4.5, "price_to_book": 2.5,
+             "ev_to_revenue": 5.0, "ev_to_ebitda": 10.0},
+            {"period_label": "2025-12-31", "period_date": "2025-12-31",
+             "market_cap": 800, "enterprise_value": 900,
+             "trailing_pe": 25.0, "forward_pe": 22.0, "peg_ratio": None,
+             "price_to_sales": 4.0, "price_to_book": 2.0,
+             "ev_to_revenue": 4.5, "ev_to_ebitda": 14.0},
+        ],
+    }
+    s = valuation._summarize(fake)
+    check("valuation summarize: periods_returned == 3",
+          s.get("periods_returned") == 3)
+    check("valuation summarize: oldest_period_date is the earliest snapshot",
+          s.get("oldest_period_date") == "2025-12-31",
+          f"got {s.get('oldest_period_date')!r}")
+    check("valuation summarize: current_* lifted from the period_date=None row",
+          s.get("current_trailing_pe") == 20.0
+          and s.get("current_market_cap") == 1000)
+
+    # Drift-resilience check: same data, but with the "current" row
+    # at the END of the periods list (simulating a hypothetical Yahoo
+    # emit-order change). _summarize should still pick it as current
+    # via the period_date=None marker, not via position. The dated
+    # rows go newest→oldest as Yahoo would emit them, but with
+    # Current having moved to last.
+    fake_reordered = {
+        "symbol": "FAKE2",
+        "periods": [
+            fake["periods"][1],   # 2026-03-31, market_cap 900
+            fake["periods"][2],   # 2025-12-31, market_cap 800
+            fake["periods"][0],   # Current, market_cap 1000
+        ],
+    }
+    s2 = valuation._summarize(fake_reordered)
+    check("valuation summarize: current_* found via period_date=None marker, "
+          "NOT position — drift-resilient against Yahoo emit-order changes",
+          s2.get("current_market_cap") == 1000
+          and s2.get("current_trailing_pe") == 20.0,
+          f"got current_market_cap={s2.get('current_market_cap')!r}, "
+          f"current_trailing_pe={s2.get('current_trailing_pe')!r}")
+    check("valuation summarize: oldest_period_date is min of dated rows, "
+          "not last-in-list (drift-resilient)",
+          s2.get("oldest_period_date") == "2025-12-31",
+          f"got {s2.get('oldest_period_date')!r}")
+    check("valuation summarize: min_trailing_pe == 15.0 across window",
+          s.get("min_trailing_pe") == 15.0)
+    check("valuation summarize: max_trailing_pe == 25.0 across window",
+          s.get("max_trailing_pe") == 25.0)
+    # forward_pe has a None in the middle row — should be excluded
+    # from min/max, not crash.
+    check("valuation summarize: forward_pe None excluded from min/max "
+          "(not treated as 0 or as a crash)",
+          s.get("min_forward_pe") == 18.0 and s.get("max_forward_pe") == 22.0,
+          f"got min={s.get('min_forward_pe')!r}, max={s.get('max_forward_pe')!r}")
+
+    # All-None metric across the window stays None (loss-maker simulation).
+    fake_loss = {
+        "symbol": "LOSS",
+        "periods": [
+            {"period_label": "current", "period_date": None,
+             "market_cap": 100, "enterprise_value": 120,
+             "trailing_pe": None, "forward_pe": None, "peg_ratio": None,
+             "price_to_sales": 2.0, "price_to_book": 1.5,
+             "ev_to_revenue": 2.5, "ev_to_ebitda": None},
+        ],
+    }
+    sl = valuation._summarize(fake_loss)
+    check("valuation summarize: all-None metric stays None "
+          "(loss-maker — min/max don't crash on empty filtered list)",
+          sl.get("current_trailing_pe") is None
+          and sl.get("min_trailing_pe") is None
+          and sl.get("max_trailing_pe") is None)
+
+    # Empty periods path: summary still emits the symbol + None fields.
+    empty = valuation._summarize({"symbol": "X", "periods": [], "note": "n/a"})
+    check("valuation summarize: empty periods → symbol + None fields + note",
+          empty.get("symbol") == "X"
+          and empty.get("periods_returned") == 0
+          and empty.get("note") == "n/a"
+          and empty.get("current_trailing_pe") is None)
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"valuation summarize smoke crashed: {e}")
+    traceback.print_exc(file=sys.stderr)
+
+
+section("valuation CLI (subprocess)")
+try:
+    # Default JSON path
+    rc, parsed = run_cli("valuation.py", "AAPL")
+    check("valuation AAPL CLI: exit 0", rc == 0)
+    check("valuation AAPL CLI: JSON array with one record",
+          isinstance(parsed, list) and len(parsed) == 1
+          and parsed[0].get("symbol") == "AAPL"
+          and isinstance(parsed[0].get("periods"), list),
+          f"got {type(parsed).__name__}")
+
+    # --summary CLI
+    rc, parsed = run_cli("valuation.py", "--summary", "AAPL", "MSFT")
+    check("valuation --summary AAPL MSFT CLI: exit 0", rc == 0)
+    check("valuation --summary CLI: 2 flat records with current_trailing_pe",
+          isinstance(parsed, list) and len(parsed) == 2
+          and all("current_trailing_pe" in r for r in parsed),
+          f"got {parsed!r}")
+
+    # CSV default mode — one row per period
+    cmd = [sys.executable, str(SCRIPTS_DIR / "valuation.py"),
+           "--format", "csv", "AAPL"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    check("valuation --format csv AAPL CLI: exit 0", out.returncode == 0)
+    lines = out.stdout.strip().split("\n")
+    header = lines[0].split(",") if lines else []
+    # Headers we promise in references/valuation.md.
+    expected_cols = {"symbol", "period_label", "period_date",
+                     "market_cap", "trailing_pe", "forward_pe",
+                     "note", "error", "error_kind", "attempts"}
+    check("valuation CSV: header has documented columns",
+          expected_cols <= set(header),
+          f"missing={expected_cols - set(header)}")
+    check("valuation CSV: AAPL emits 6 data rows (one per period) + 1 header",  # canary
+          len(lines) == 7,
+          f"got {len(lines)} lines")
+
+    # CSV summary mode — strict one row per ticker
+    cmd = [sys.executable, str(SCRIPTS_DIR / "valuation.py"),
+           "--format", "csv", "--summary", "AAPL", "MSFT", "SPY"]
+    out = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    check("valuation --format csv --summary CLI: exit 0", out.returncode == 0)
+    lines = out.stdout.strip().split("\n")
+    check("valuation CSV --summary: 3 data rows + 1 header (incl. empty SPY)",
+          len(lines) == 4,
+          f"got {len(lines)} lines")
+    # SPY (the empty/note ticker) should still appear as a carrying row
+    # rather than being silently dropped.
+    spy_in_csv = any(line.startswith("SPY,") for line in lines[1:])
+    check("valuation CSV --summary: SPY emits carrying row (not silently dropped)",
+          spy_in_csv, f"got SPY in CSV={spy_in_csv}")
+except Exception as e:
+    FAIL += 1
+    FAILURES.append(f"valuation CLI smoke crashed: {e}")
     traceback.print_exc(file=sys.stderr)
 
 
