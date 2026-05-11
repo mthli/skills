@@ -3,6 +3,7 @@
 Personal skills used in Claude Code 🤖
 
 - `commit-context` - Commit changes with a git message auto-generated from the current conversation context.
+- [`edgartools`](https://github.com/dgunning/edgartools) - Access and analyze SEC Edgar filings, XBRL financial statements, 10-K, 10-Q, and 8-K reports.
 - `momentum-scan` - Scan US large-cap equities for smooth uptrends and track which names persist across runs.
 - `yfinance` - Fetch stock/ETF/index quotes and historical OHLCV data from Yahoo Finance.
 
