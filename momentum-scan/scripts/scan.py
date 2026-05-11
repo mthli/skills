@@ -8,7 +8,7 @@ Self-contained — uses yfinance directly, no cross-skill dependencies.
 
 Usage:
   python scan.py                        # full run with default params
-  python scan.py --window-months 3      # shorter momentum window
+  python scan.py --window-months 6      # smoother, slower-moving leaders
   python scan.py --top-n 50             # show more names
   python scan.py --no-refresh-universe  # use cached universe regardless of TTL
   python scan.py --show-history         # dump history.csv summary
@@ -78,7 +78,7 @@ def load_universe(min_market_cap: float, min_volume: int, count: int,
 
 
 def fetch_prices(tickers: list[str], window_months: int) -> pd.DataFrame:
-    period = f"{max(window_months + 1, 7)}mo"
+    period = f"{max(window_months + 1, 4)}mo"
     print(f"Fetching {len(tickers)} tickers, period={period}...", file=sys.stderr)
     df = yf.download(
         tickers, period=period, interval="1d", auto_adjust=True,
@@ -332,7 +332,7 @@ def show_history_summary(history: pd.DataFrame):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--window-months", type=int, default=6)
+    ap.add_argument("--window-months", type=int, default=3)
     ap.add_argument("--top-n", type=int, default=30)
     ap.add_argument("--min-return-pct", type=float, default=30.0)
     ap.add_argument("--max-dd-pct", type=float, default=20.0)

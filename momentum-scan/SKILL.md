@@ -14,12 +14,12 @@ Find US equities in **smooth uptrends** — high trailing return with shallow dr
 ## Run
 
 ```bash
-# Standard run — 6mo window, top 30
+# Standard run — 3mo window, top 30
 uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy' \
   python <SKILL_DIR>/scripts/scan.py
 
-# Shorter window catches earlier-stage breakouts
-... python <SKILL_DIR>/scripts/scan.py --window-months 3
+# Longer window for smoother, slower-moving leaders
+... python <SKILL_DIR>/scripts/scan.py --window-months 6
 
 # Inspect the run history (no new scan)
 ... python <SKILL_DIR>/scripts/scan.py --show-history
@@ -32,7 +32,7 @@ uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy' \
 
 | Flag | Default | Notes |
 |---|---|---|
-| `--window-months` | 6 | Lookback for return + max drawdown. Shorter = earlier signals, more noise. |
+| `--window-months` | 3 | Lookback for return + max drawdown. Shorter = earlier signals, more noise. Bump to 6 for smoother, slower-moving leaders. |
 | `--top-n` | 30 | How many names to display + log to history. |
 | `--min-return-pct` | 30 | Filter floor on trailing return over the window. |
 | `--max-dd-pct` | 20 | Filter ceiling on max drawdown (absolute value). |
@@ -69,8 +69,8 @@ A markdown table of the top N, plus three discovery sections. Sample (truncated)
 ...
 
 ## Dropouts since last run (6)
-- **ASX** (was #2, 6m=+126.6%)
-- **TTE** (was #3, 6m=+45.8%)
+- **ASX** (was #2, 3m=+126.6%)
+- **TTE** (was #3, 3m=+45.8%)
 ...
 
 ## New entrants (6)
@@ -132,5 +132,5 @@ For automatic recurring runs, use a local scheduler (macOS `launchd` LaunchAgent
 - **Survivorship bias** — universe is current US large caps; delisted names (Lehman, SVB, etc.) are absent. Backtested CAGR is 1–2% optimistic vs. a true point-in-time universe.
 - **Pre-cost** — no transaction costs, slippage, or taxes modeled. Real execution shaves another ~0.5–1% CAGR.
 - **mcap floor at $5B** — small-cap moonshots are excluded by default; bump `--min-market-cap 1e9` to widen if the user wants to see them.
-- **6mo window misses fresh breakouts** — use `--window-months 3` for earlier-stage signals at the cost of more noise.
+- **3mo window is noisier** — fresher-breakout signals come with more single-week pops; bump `--window-months 6` for smoother trends if needed.
 - **Yahoo data quirks** — rare missing bars, occasional late dividend adjustments. If a single name looks wrong, sanity-check it via the `yfinance` skill's `fast_info` mode.
