@@ -1,11 +1,12 @@
 """Tests for append_history's same-ET-day upsert behavior.
 
 Run from the skill root via:
-    uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy' \
+    uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy>=1.24,<3' \
       --with 'pytest' pytest scripts/
 """
 from datetime import datetime, timezone
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -153,3 +154,991 @@ def test_clear_history_removes_tmp(history_file):
 def test_clear_history_safe_when_nothing_exists(history_file):
     # No files present — should not raise
     scan.clear_history()
+
+
+# render_regime_banner has no I/O, so we can exercise the strict-mode display
+# branch without waiting for a live RISK-OFF tape.
+
+def _regime(**overrides) -> dict:
+    base = {
+        "spy_last": 600.0,
+        "spy_ma50": 580.0,
+        "spy_ma200": 550.0,
+        "spy_ma200_slope_pct": 0.50,
+        "spy_above_200dma": True,
+        "spy_50_above_200": True,
+        "breadth_pct_above_200dma": 65.0,
+        "breadth_pct_50_above_200": 70.0,
+        "risk_on": True,
+    }
+    base.update(overrides)
+    return base
+
+
+def test_banner_risk_on():
+    out = scan.render_regime_banner(_regime())
+    assert "RISK-ON" in out
+    assert "RISK-OFF" not in out
+    assert "50DMA > 200DMA" in out
+    assert "Breadth: 65% > 200DMA" in out
+
+
+def test_banner_risk_off_when_below_200dma():
+    # SPY below 200DMA → risk_on must be False regardless of slope sign.
+    out = scan.render_regime_banner(_regime(
+        spy_last=500.0, spy_above_200dma=False, risk_on=False,
+    ))
+    assert "RISK-OFF" in out
+
+
+def test_banner_risk_off_when_slope_negative():
+    # SPY above 200DMA but the 200DMA itself rolling over — the slope filter
+    # exists exactly to catch this (2022 had a textbook example).
+    out = scan.render_regime_banner(_regime(
+        spy_ma200_slope_pct=-0.30, risk_on=False,
+    ))
+    assert "RISK-OFF" in out
+    assert "-0.30%" in out
+
+
+def test_banner_handles_50_below_200_cross():
+    out = scan.render_regime_banner(_regime(
+        spy_ma50=540.0, spy_50_above_200=False, risk_on=False,
+    ))
+    assert "50DMA < 200DMA" in out
+
+
+def test_banner_omits_breadth_when_missing():
+    # Universe didn't have enough history → breadth fields are None.
+    out = scan.render_regime_banner(_regime(
+        breadth_pct_above_200dma=None, breadth_pct_50_above_200=None,
+    ))
+    assert "Breadth" not in out
+
+
+def test_banner_unavailable_when_regime_is_none():
+    out = scan.render_regime_banner(None)
+    assert "unavailable" in out.lower()
+    assert "RISK-ON" not in out
+    assert "RISK-OFF" not in out
+
+
+# Vol target tests — synthetic price data so we can pin the expected vol exactly.
+
+
+def _synthetic_prices(n_days: int, n_tickers: int, daily_vol: float,
+                      seed: int = 0) -> pd.DataFrame:
+    """Generate i.i.d. lognormal closes with a known daily vol per name."""
+    rng = np.random.default_rng(seed)
+    rets = rng.normal(loc=0.0005, scale=daily_vol, size=(n_days, n_tickers))
+    prices = 100.0 * np.exp(np.cumsum(rets, axis=0))
+    idx = pd.date_range(end="2026-05-09", periods=n_days, freq="B")
+    cols = [f"T{i}" for i in range(n_tickers)]
+    return pd.DataFrame(prices, index=idx, columns=cols)
+
+
+def _vol_pick(ticker: str, rank: int, ann_vol_pct: float) -> dict:
+    return {
+        "ticker": ticker, "rank": rank, "score": 1.0,
+        "return_pct": 50.0, "max_dd_pct": -10.0,
+        "ann_vol_pct": ann_vol_pct, "from_high_pct": -1.0,
+    }
+
+
+def test_vol_target_returns_none_when_disabled():
+    prices = _synthetic_prices(100, 5, daily_vol=0.02)
+    picks = [_vol_pick(f"T{i}", i + 1, 30.0) for i in range(5)]
+    assert scan.compute_vol_target(prices, picks, 5, None) is None
+    assert scan.compute_vol_target(prices, picks, 5, 0) is None
+    assert scan.compute_vol_target(prices, picks, 5, -5) is None
+
+
+def test_vol_target_high_cohort_vol_deleverages():
+    # Daily vol 5% → ~79% per name annualized. Equal-weight basket of 5 iid
+    # names still has portfolio ann vol ~35% (single / sqrt(N)). Target 15%
+    # → raw leverage solidly below 1.
+    prices = _synthetic_prices(100, 5, daily_vol=0.05, seed=1)
+    picks = [_vol_pick(f"T{i}", i + 1, 79.0) for i in range(5)]
+    vt = scan.compute_vol_target(prices, picks, 5, target_vol_pct=15.0)
+    assert vt is not None
+    assert vt["raw_leverage"] < 1.0  # must be deleveraging
+    assert vt["suggested_leverage"] < 1.0
+    assert vt["suggested_leverage"] >= 0.25  # respect the floor
+    assert vt["lookback_days"] == 60
+    assert vt["n_tickers"] == 5
+
+
+def test_vol_target_clipped_at_floor_when_cohort_extreme():
+    # Daily vol 12% → cohort ann vol ~100%+. Raw leverage tiny; suggested
+    # clipped to the 0.25 floor.
+    prices = _synthetic_prices(100, 3, daily_vol=0.12, seed=3)
+    picks = [_vol_pick(f"T{i}", i + 1, 190.0) for i in range(3)]
+    vt = scan.compute_vol_target(prices, picks, 3, target_vol_pct=15.0)
+    assert vt is not None
+    assert vt["raw_leverage"] < 0.25
+    assert vt["suggested_leverage"] == 0.25
+
+
+def test_vol_target_clipped_at_1_when_cohort_quiet():
+    # Daily vol 0.3% → ann ~5%. Target 15% → raw ~3.0x, but clipped to 1.0x.
+    prices = _synthetic_prices(100, 5, daily_vol=0.003, seed=2)
+    picks = [_vol_pick(f"T{i}", i + 1, 5.0) for i in range(5)]
+    vt = scan.compute_vol_target(prices, picks, 5, target_vol_pct=15.0)
+    assert vt is not None
+    assert vt["raw_leverage"] > 1.5  # would leverage up
+    assert vt["suggested_leverage"] == 1.0  # but we cap
+
+
+def test_vol_target_returns_none_when_too_few_tickers_match_prices():
+    prices = _synthetic_prices(100, 3, daily_vol=0.02)
+    # Pick a ticker not in prices columns + one that is. Only 1 match.
+    picks = [_vol_pick("MISSING", 1, 30.0), _vol_pick("T0", 2, 30.0)]
+    assert scan.compute_vol_target(prices, picks, 5, target_vol_pct=15.0) is None
+
+
+def test_assign_weights_no_op_when_vol_target_none():
+    picks = [_vol_pick(f"T{i}", i + 1, 30.0) for i in range(3)]
+    out = scan.assign_weights(picks, 3, None)
+    assert all("weight_pct" not in p for p in out)
+
+
+def test_assign_weights_inverse_vol_normalized():
+    # Three picks with vols 20, 40, 40. Inverse vols: 0.05, 0.025, 0.025 →
+    # weights normalize to 0.5, 0.25, 0.25. Leverage 0.6 → 30, 15, 15 (%).
+    picks = [
+        _vol_pick("LOWVOL", 1, 20.0),
+        _vol_pick("HIGHVOL1", 2, 40.0),
+        _vol_pick("HIGHVOL2", 3, 40.0),
+    ]
+    vt = {
+        "suggested_leverage": 0.6, "target_vol_pct": 15.0,
+        "cohort_vol_pct": 25.0, "lookback_days": 60, "n_tickers": 3,
+        "raw_leverage": 0.6, "leverage_clip": [0.25, 1.0],
+    }
+    out = scan.assign_weights(picks, 3, vt)
+    assert out[0]["weight_pct"] == 30.0
+    assert out[1]["weight_pct"] == 15.0
+    assert out[2]["weight_pct"] == 15.0
+    # Sums to leverage × 100.
+    total = sum(p["weight_pct"] for p in out)
+    assert abs(total - 60.0) < 0.1
+
+
+def test_assign_weights_skips_picks_outside_top_n():
+    picks = [_vol_pick(f"T{i}", i + 1, 30.0) for i in range(5)]
+    vt = {
+        "suggested_leverage": 0.5, "target_vol_pct": 15.0,
+        "cohort_vol_pct": 30.0, "lookback_days": 60, "n_tickers": 3,
+        "raw_leverage": 0.5, "leverage_clip": [0.25, 1.0],
+    }
+    out = scan.assign_weights(picks, 3, vt)
+    # First 3 get weights; last 2 should not.
+    assert all(p.get("weight_pct") is not None for p in out[:3])
+    assert all("weight_pct" not in p for p in out[3:])
+
+
+def test_assign_weights_zero_vol_defensive():
+    # All picks rounded to 0% vol (degenerate but defensive).
+    picks = [_vol_pick(f"T{i}", i + 1, 0.0) for i in range(3)]
+    vt = {
+        "suggested_leverage": 0.5, "target_vol_pct": 15.0,
+        "cohort_vol_pct": 30.0, "lookback_days": 60, "n_tickers": 3,
+        "raw_leverage": 0.5, "leverage_clip": [0.25, 1.0],
+    }
+    out = scan.assign_weights(picks, 3, vt)
+    # Should not crash; weight_pct should be None on all.
+    assert all(p["weight_pct"] is None for p in out)
+
+
+def test_vol_target_banner_renders_key_numbers():
+    vt = {
+        "target_vol_pct": 15.0, "cohort_vol_pct": 24.8, "lookback_days": 60,
+        "n_tickers": 30, "raw_leverage": 0.60, "suggested_leverage": 0.60,
+        "leverage_clip": [0.25, 1.0],
+    }
+    out = scan.render_vol_target_banner(vt)
+    assert "24.8%" in out
+    assert "0.60x" in out
+    assert "60d" in out
+    assert "target 15%" in out
+
+
+def test_vol_target_banner_none_when_disabled():
+    assert scan.render_vol_target_banner(None) is None
+
+
+def test_render_table_omits_weight_column_when_unset():
+    picks = [{
+        "ticker": "FOO", "rank": 1, "score": 5.0, "return_pct": 50.0,
+        "max_dd_pct": -10.0, "from_high_pct": -1.0, "streak": 1,
+        "rank_delta": None, "first_seen": "🆕",
+    }]
+    out = scan.render_table(picks, 5, 3)
+    assert "Weight%" not in out
+
+
+def test_render_table_shows_weight_column_when_set():
+    picks = [{
+        "ticker": "FOO", "rank": 1, "score": 5.0, "return_pct": 50.0,
+        "max_dd_pct": -10.0, "from_high_pct": -1.0, "streak": 1,
+        "rank_delta": None, "first_seen": "🆕", "weight_pct": 12.5,
+    }]
+    out = scan.render_table(picks, 5, 3)
+    assert "Weight%" in out
+    assert "12.5" in out
+
+
+# ATR tests — synthetic OHLC so the expected ATR is computable by hand.
+
+def _synthetic_bars(n_days: int, tickers: list[str], daily_range: float,
+                    base_price: float = 100.0, seed: int = 0) -> pd.DataFrame:
+    """Build a yf.download-shape MultiIndex frame for `tickers` with a
+    constant daily range and a small random drift."""
+    rng = np.random.default_rng(seed)
+    idx = pd.date_range(end="2026-05-09", periods=n_days, freq="B")
+    frames = {}
+    for t in tickers:
+        rets = rng.normal(loc=0.0, scale=0.005, size=n_days)
+        closes = base_price * np.exp(np.cumsum(rets))
+        # Highs/lows symmetric around close with the chosen daily_range.
+        highs = closes * (1 + daily_range / 2)
+        lows = closes * (1 - daily_range / 2)
+        opens = (highs + lows) / 2
+        frames[t] = pd.DataFrame({
+            "Open": opens, "High": highs, "Low": lows,
+            "Close": closes, "Volume": np.ones(n_days) * 1e6,
+        }, index=idx)
+    # Stack into MultiIndex columns (ticker, field) to match yf.download.
+    return pd.concat(frames, axis=1)
+
+
+def test_atr_skips_tickers_without_high_low_data():
+    # Bars dataframe with only one ticker. Asking for ATR on an unknown
+    # ticker should silently skip it.
+    bars = _synthetic_bars(30, ["FOO"], daily_range=0.04)
+    atrs = scan.compute_atrs(bars, ["MISSING"])
+    assert atrs == {}
+
+
+def test_atr_computes_for_synthetic_bars():
+    bars = _synthetic_bars(30, ["AAA", "BBB"], daily_range=0.04)
+    atrs = scan.compute_atrs(bars, ["AAA", "BBB"])
+    assert set(atrs.keys()) == {"AAA", "BBB"}
+    for t, info in atrs.items():
+        # 4% daily H-L band on ~100 close → ATR should be ~4. True ranges
+        # also incorporate gaps, so ATR is slightly above the H-L band.
+        assert 3.5 < info["atr"] < 5.5
+        assert info["last_close"] > 0
+        assert 3.0 < info["atr_pct"] < 6.0
+
+
+def test_atr_skips_when_insufficient_history():
+    # ATR period is 14 days; with only 10 days of data we should skip.
+    bars = _synthetic_bars(10, ["AAA"], daily_range=0.04)
+    atrs = scan.compute_atrs(bars, ["AAA"])
+    assert atrs == {}
+
+
+def test_attach_atr_stops_sets_stop_columns():
+    bars = _synthetic_bars(30, ["AAA"], daily_range=0.04, base_price=100.0)
+    atrs = scan.compute_atrs(bars, ["AAA"])
+    picks = [{
+        "ticker": "AAA", "rank": 1, "score": 1.0, "return_pct": 50.0,
+        "max_dd_pct": -10.0, "ann_vol_pct": 30.0, "from_high_pct": -1.0,
+        "streak": 1, "first_seen": "🆕",
+    }]
+    closes = bars.xs("Close", level=1, axis=1)
+    out = scan.attach_atr_stops(picks, 5, atrs, closes, atr_mult=2.5)
+    p = out[0]
+    assert p["atr"] > 0
+    assert p["stop_price"] > 0
+    assert p["stop_price"] < atrs["AAA"]["last_close"]
+    # With mult=2.5 and atr~4 on a ~100 close, stop should be ~10 below
+    # spot. Verify the relationship.
+    expected_stop = atrs["AAA"]["last_close"] - 2.5 * atrs["AAA"]["atr"]
+    assert abs(p["stop_price"] - round(expected_stop, 2)) < 0.01
+    # Stop% is negative (stop is below current price).
+    assert p["stop_pct"] < 0
+    # Streak=1, so no trail stop attached.
+    assert "trail_stop_price" not in p
+
+
+def test_attach_atr_stops_adds_trail_stop_above_min_streak():
+    bars = _synthetic_bars(60, ["AAA"], daily_range=0.04, base_price=100.0)
+    atrs = scan.compute_atrs(bars, ["AAA"])
+    closes = bars.xs("Close", level=1, axis=1)
+    # first_seen needs to be a date string the function can pd.Timestamp.
+    first_seen = closes.index[5].strftime("%Y-%m-%d")
+    picks = [{
+        "ticker": "AAA", "rank": 1, "score": 1.0, "return_pct": 50.0,
+        "max_dd_pct": -10.0, "ann_vol_pct": 30.0, "from_high_pct": -1.0,
+        "streak": 5, "first_seen": first_seen,
+    }]
+    out = scan.attach_atr_stops(picks, 5, atrs, closes, atr_mult=2.5)
+    p = out[0]
+    assert p.get("trail_stop_price") is not None
+    assert p.get("peak_since_first_seen") is not None
+    # Trail stop = peak - 2.5×ATR. Peak ≥ current close, so trail_stop_pct
+    # could be positive or negative depending on where current sits.
+    assert p["peak_since_first_seen"] >= closes["AAA"].iloc[-1]
+
+
+def test_attach_atr_stops_trail_min_streak_respected():
+    # streak=3 is below trail_min_streak=4 → no trail stop attached.
+    bars = _synthetic_bars(60, ["AAA"], daily_range=0.04, base_price=100.0)
+    atrs = scan.compute_atrs(bars, ["AAA"])
+    closes = bars.xs("Close", level=1, axis=1)
+    first_seen = closes.index[5].strftime("%Y-%m-%d")
+    picks = [{
+        "ticker": "AAA", "rank": 1, "score": 1.0, "return_pct": 50.0,
+        "max_dd_pct": -10.0, "ann_vol_pct": 30.0, "from_high_pct": -1.0,
+        "streak": 3, "first_seen": first_seen,
+    }]
+    out = scan.attach_atr_stops(picks, 5, atrs, closes, atr_mult=2.5,
+                                trail_min_streak=4)
+    assert "trail_stop_price" not in out[0]
+    # Same pick with trail_min_streak=3 → trail stop is attached.
+    out = scan.attach_atr_stops(picks, 5, atrs, closes, atr_mult=2.5,
+                                trail_min_streak=3)
+    assert out[0].get("trail_stop_price") is not None
+
+
+def test_attach_atr_stops_no_trail_when_first_seen_missing():
+    bars = _synthetic_bars(30, ["AAA"], daily_range=0.04)
+    atrs = scan.compute_atrs(bars, ["AAA"])
+    closes = bars.xs("Close", level=1, axis=1)
+    picks = [{
+        "ticker": "AAA", "rank": 1, "score": 1.0, "return_pct": 50.0,
+        "max_dd_pct": -10.0, "ann_vol_pct": 30.0, "from_high_pct": -1.0,
+        "streak": 5, "first_seen": "🆕",  # sentinel for new entrant
+    }]
+    out = scan.attach_atr_stops(picks, 5, atrs, closes, atr_mult=2.5)
+    assert "trail_stop_price" not in out[0]
+
+
+# Pullback indicator tests — synthetic closes so MA20 / RSI are deterministic.
+
+def _trend_bars(n_days: int, ticker: str, daily_return: float,
+                base_price: float = 100.0) -> pd.DataFrame:
+    """Build a yf.download-shape frame with a constant daily compounding
+    return so MA20 and RSI are analytically predictable."""
+    idx = pd.date_range(end="2026-05-09", periods=n_days, freq="B")
+    closes = base_price * np.power(1 + daily_return, np.arange(n_days))
+    df = pd.DataFrame({
+        "Open": closes, "High": closes * 1.005, "Low": closes * 0.995,
+        "Close": closes, "Volume": np.ones(n_days) * 1e6,
+    }, index=idx)
+    return pd.concat({ticker: df}, axis=1)
+
+
+def test_pullback_computes_ma20_and_rsi_on_uptrend():
+    # Steady +1%/day → price ends well above MA20, RSI saturates near 100.
+    bars = _trend_bars(40, "UPP", daily_return=0.01)
+    out = scan.compute_pullback_indicators(bars, ["UPP"])
+    assert "UPP" in out
+    info = out["UPP"]
+    # 1%/day compounded over 40 days → final price ≈9.7% above the trailing
+    # 20-day average (analytically: 100 × 1.01^39 / mean(100 × 1.01^[20..39])).
+    assert 8 < info["ma20_dist_pct"] < 12
+    # Pure-up series with no down days → RSI = 100 by convention.
+    assert info["rsi14"] == 100.0
+
+
+def test_pullback_computes_rsi_on_downtrend():
+    # Steady -1%/day → no up days → RSI saturates at 0 by the standard formula
+    # (avg_gain = 0 → rs = 0 → RSI = 100 - 100/(1+0) = 0).
+    bars = _trend_bars(40, "DWN", daily_return=-0.01)
+    out = scan.compute_pullback_indicators(bars, ["DWN"])
+    assert "DWN" in out
+    assert out["DWN"]["rsi14"] is not None
+    assert out["DWN"]["rsi14"] < 5.0
+    # Price ends well below MA20 (mirror image of the uptrend case).
+    assert out["DWN"]["ma20_dist_pct"] < -8
+
+
+def test_pullback_skips_when_insufficient_history():
+    # MA20 needs ≥ 20 closes. 10 days is too few.
+    bars = _trend_bars(10, "SHORT", daily_return=0.01)
+    out = scan.compute_pullback_indicators(bars, ["SHORT"])
+    assert out == {}
+
+
+def test_pullback_skips_unknown_ticker():
+    bars = _trend_bars(40, "AAA", daily_return=0.001)
+    out = scan.compute_pullback_indicators(bars, ["MISSING"])
+    assert out == {}
+
+
+def test_classify_pullback_signal_buy_zone():
+    # Within ±3% of MA20 AND RSI in 40-55 → 🟢.
+    assert scan.classify_pullback_signal(0.0, 50.0) == "🟢"
+    assert scan.classify_pullback_signal(2.5, 45.0) == "🟢"
+    assert scan.classify_pullback_signal(-2.5, 55.0) == "🟢"
+
+
+def test_classify_pullback_signal_overextended():
+    # MA20% > 25 OR RSI > 80 → 🔴.
+    assert scan.classify_pullback_signal(30.0, 60.0) == "🔴"
+    assert scan.classify_pullback_signal(10.0, 85.0) == "🔴"
+    assert scan.classify_pullback_signal(50.0, 90.0) == "🔴"
+
+
+def test_classify_pullback_signal_stretched():
+    # MA20% 15-25 OR RSI 70-80 → 🟠.
+    assert scan.classify_pullback_signal(18.0, 60.0) == "🟠"
+    assert scan.classify_pullback_signal(5.0, 75.0) == "🟠"
+
+
+def test_classify_pullback_signal_watch():
+    # In trend but not in any other bucket → 🟡.
+    assert scan.classify_pullback_signal(8.0, 65.0) == "🟡"
+    assert scan.classify_pullback_signal(5.0, 58.0) == "🟡"
+
+
+def test_classify_pullback_signal_deep_pullback():
+    # MA20% ≤ -3 AND RSI < 40 → 🔵 (Connors-style deep pullback in an intact
+    # uptrend; the momentum-scan filter ensures the long-term trend is fine).
+    assert scan.classify_pullback_signal(-5.0, 35.0) == "🔵"
+    assert scan.classify_pullback_signal(-10.0, 30.0) == "🔵"
+    # Boundary on MA20% (= -3): with RSI < 40 → 🔵 (no gap with 🟢's lower edge).
+    assert scan.classify_pullback_signal(-3.0, 39.0) == "🔵"
+    # Same MA20% but RSI just at 🟢's floor → 🟢 wins (evaluated first).
+    assert scan.classify_pullback_signal(-3.0, 40.0) == "🟢"
+
+
+def test_classify_pullback_signal_below_ma20_but_normal_rsi_is_watch():
+    # Below MA20 but RSI hasn't cooled to deep-pullback territory → 🟡, not 🔵.
+    assert scan.classify_pullback_signal(-5.0, 60.0) == "🟡"
+    assert scan.classify_pullback_signal(-8.0, 45.0) == "🟡"
+
+
+def test_classify_pullback_signal_missing_data():
+    assert scan.classify_pullback_signal(None, 50.0) == "—"
+    assert scan.classify_pullback_signal(10.0, None) == "—"
+    assert scan.classify_pullback_signal(None, None) == "—"
+
+
+def test_classify_pullback_signal_overextended_beats_stretched():
+    # Boundary case: RSI=85 (in overext range) AND MA20%=18 (in stretched).
+    # Overextended wins.
+    assert scan.classify_pullback_signal(18.0, 85.0) == "🔴"
+
+
+def test_attach_pullback_sets_keys():
+    bars = _trend_bars(40, "AAA", daily_return=0.005)
+    indicators = scan.compute_pullback_indicators(bars, ["AAA"])
+    picks = [{
+        "ticker": "AAA", "rank": 1, "score": 1.0, "return_pct": 50.0,
+        "max_dd_pct": -10.0, "ann_vol_pct": 30.0, "from_high_pct": -1.0,
+    }]
+    out = scan.attach_pullback(picks, 5, indicators)
+    p = out[0]
+    assert "ma20_dist_pct" in p
+    assert "rsi14" in p
+    assert "pullback_signal" in p
+    assert p["pullback_signal"] in {"🟢", "🔵", "🟡", "🟠", "🔴", "—"}
+
+
+def test_attach_pullback_sets_none_for_missing_indicator():
+    # No indicator for AAA → keys are still set, but to None / "—". This gives
+    # JSON consumers a consistent schema (every key always present when the
+    # indicator is enabled at all, even if individual values are missing).
+    picks = [{
+        "ticker": "AAA", "rank": 1, "score": 1.0, "return_pct": 50.0,
+        "max_dd_pct": -10.0, "ann_vol_pct": 30.0, "from_high_pct": -1.0,
+    }]
+    out = scan.attach_pullback(picks, 5, {})
+    assert out[0]["ma20_dist_pct"] is None
+    assert out[0]["rsi14"] is None
+    assert out[0]["pullback_signal"] == "—"
+
+
+def test_argparser_no_pullback_default_false():
+    args = scan.build_argparser().parse_args([])
+    assert args.no_pullback is False
+
+
+def test_argparser_no_pullback_flag_sets_true():
+    args = scan.build_argparser().parse_args(["--no-pullback"])
+    assert args.no_pullback is True
+
+
+def test_argparser_atr_stop_mult_default_2_5():
+    # Locks the documented default; bump SKILL.md if you change this.
+    args = scan.build_argparser().parse_args([])
+    assert args.atr_stop_mult == 2.5
+
+
+def test_argparser_atr_stop_mult_zero_to_disable():
+    # Sentinel value for disabling the Stop column; not a no-op input.
+    args = scan.build_argparser().parse_args(["--atr-stop-mult", "0"])
+    assert args.atr_stop_mult == 0.0
+
+
+def test_render_table_shows_pullback_columns_when_set():
+    picks = [{
+        "ticker": "FOO", "rank": 1, "score": 5.0, "return_pct": 50.0,
+        "max_dd_pct": -10.0, "from_high_pct": -1.0, "streak": 1,
+        "rank_delta": None, "first_seen": "🆕",
+        "ma20_dist_pct": -1.5, "rsi14": 48.2, "pullback_signal": "🟢",
+    }]
+    out = scan.render_table(picks, 5, 3)
+    assert "MA20%" in out
+    assert "RSI" in out
+    assert "Sig" in out
+    assert "-1.5" in out
+    assert "48" in out  # RSI rounded to no decimals
+    assert "🟢" in out
+
+
+def test_render_table_omits_pullback_columns_when_unset():
+    picks = [{
+        "ticker": "FOO", "rank": 1, "score": 5.0, "return_pct": 50.0,
+        "max_dd_pct": -10.0, "from_high_pct": -1.0, "streak": 1,
+        "rank_delta": None, "first_seen": "🆕",
+    }]
+    out = scan.render_table(picks, 5, 3)
+    assert "MA20%" not in out
+    assert "| Sig |" not in out
+
+
+# Sector / cache tests — pure dict ops, no network.
+
+@pytest.fixture
+def sectors_file(tmp_path, monkeypatch):
+    f = tmp_path / "sectors.json"
+    monkeypatch.setattr(scan, "SECTORS_FILE", f)
+    return f
+
+
+def test_load_sectors_empty_when_no_file(sectors_file):
+    assert scan.load_sectors() == {}
+
+
+def test_save_then_load_sectors_roundtrip(sectors_file):
+    scan.save_sectors({"FOO": {"sector": "Tech", "industry": "Software", "ts": 0}})
+    out = scan.load_sectors()
+    assert out == {"FOO": {"sector": "Tech", "industry": "Software", "ts": 0}}
+
+
+def test_load_sectors_returns_empty_on_corrupt_file(sectors_file):
+    sectors_file.write_text("{not json")
+    assert scan.load_sectors() == {}
+
+
+def test_abbreviate_sector_known_and_unknown():
+    assert scan.abbreviate_sector("Information Technology") == "Tech"
+    assert scan.abbreviate_sector("Technology") == "Tech"
+    assert scan.abbreviate_sector("Healthcare") == "Health"
+    assert scan.abbreviate_sector("") == "—"
+    # Unknown sectors get first 10 chars.
+    assert scan.abbreviate_sector("Made Up Long Sector Name") == "Made Up Lo"
+
+
+def test_attach_sectors_handles_missing_tickers():
+    picks = [
+        {"ticker": "FOO", "rank": 1, "score": 1.0, "return_pct": 0,
+         "max_dd_pct": 0, "ann_vol_pct": 0, "from_high_pct": 0},
+        {"ticker": "BAR", "rank": 2, "score": 1.0, "return_pct": 0,
+         "max_dd_pct": 0, "ann_vol_pct": 0, "from_high_pct": 0},
+    ]
+    sectors = {"FOO": {"sector": "Technology", "industry": "Software", "ts": 0}}
+    out = scan.attach_sectors(picks, 2, sectors)
+    assert out[0]["sector"] == "Technology"
+    assert out[0]["industry"] == "Software"
+    # BAR isn't in cache — gets empty strings, not error.
+    assert out[1]["sector"] == ""
+    assert out[1]["industry"] == ""
+
+
+def test_sector_breakdown_counts_and_other_rollup():
+    picks = [
+        {"ticker": f"T{i}", "rank": i + 1,
+         "sector": "Tech" if i < 5 else ("Energy" if i < 8 else "Health")}
+        for i in range(10)
+    ]
+    out = scan.render_sector_breakdown(picks, 10, max_show=5)
+    assert "Tech 5" in out
+    assert "Energy 3" in out
+    assert "Health 2" in out
+    assert "Other" not in out  # only 3 sectors, fits in max_show=5
+
+
+def test_sector_breakdown_other_rollup_when_many_sectors():
+    picks = [
+        {"ticker": f"T{i}", "rank": i + 1,
+         "sector": f"Sector_{i % 8}"}  # 8 distinct sectors
+        for i in range(16)
+    ]
+    out = scan.render_sector_breakdown(picks, 16, max_show=3)
+    assert "Other" in out
+
+
+def test_sector_breakdown_flags_untagged_count():
+    picks = [
+        {"ticker": "T1", "rank": 1, "sector": "Tech"},
+        {"ticker": "T2", "rank": 2, "sector": ""},  # untagged
+        {"ticker": "T3", "rank": 3, "sector": "Energy"},
+    ]
+    out = scan.render_sector_breakdown(picks, 3)
+    assert "2/3 tagged" in out
+
+
+def test_sector_breakdown_none_when_no_tags():
+    picks = [
+        {"ticker": "T1", "rank": 1, "sector": ""},
+        {"ticker": "T2", "rank": 2, "sector": ""},
+    ]
+    assert scan.render_sector_breakdown(picks, 2) is None
+
+
+def test_render_table_shows_sector_column_when_set():
+    picks = [{
+        "ticker": "FOO", "rank": 1, "score": 5.0, "return_pct": 50.0,
+        "max_dd_pct": -10.0, "from_high_pct": -1.0, "streak": 1,
+        "rank_delta": None, "first_seen": "🆕", "sector": "Technology",
+    }]
+    out = scan.render_table(picks, 5, 3)
+    assert "Sector" in out
+    assert "Tech" in out  # abbreviated form
+
+
+def test_render_table_shows_stop_column_when_set():
+    picks = [{
+        "ticker": "FOO", "rank": 1, "score": 5.0, "return_pct": 50.0,
+        "max_dd_pct": -10.0, "from_high_pct": -1.0, "streak": 1,
+        "rank_delta": None, "first_seen": "🆕",
+        "stop_price": 95.50, "stop_pct": -4.5,
+    }]
+    out = scan.render_table(picks, 5, 3)
+    assert "Stop" in out
+    assert "$95.50" in out
+    assert "-4.5%" in out
+
+
+def test_render_table_shows_annvol_when_set():
+    picks = [{
+        "ticker": "FOO", "rank": 1, "score": 5.0, "return_pct": 50.0,
+        "max_dd_pct": -10.0, "from_high_pct": -1.0, "streak": 1,
+        "rank_delta": None, "first_seen": "🆕", "ann_vol_pct": 42.0,
+    }]
+    out = scan.render_table(picks, 5, 3)
+    assert "AnnVol%" in out
+    assert "42" in out
+
+
+# ─── enrich_with_persistence ─────────────────────────────────────────────────
+
+def _hist_row(run_id: str, run_date: str, ticker: str, rank: int) -> dict:
+    return {
+        "run_id": run_id, "run_date": run_date, "ticker": ticker, "rank": rank,
+        "score": 1.0, "return_pct": 50.0, "max_dd_pct": -10.0,
+        "ann_vol_pct": 30.0, "from_high_pct": -1.0,
+    }
+
+
+def _make_history(rows: list[dict]) -> pd.DataFrame:
+    df = pd.DataFrame(rows, columns=scan.HISTORY_COLS)
+    df["run_date"] = pd.to_datetime(df["run_date"], utc=True, format="ISO8601")
+    return df
+
+
+def test_enrich_empty_history_marks_all_new():
+    picks = [_pick("AAA", 1), _pick("BBB", 2)]
+    out = scan.enrich_with_persistence(picks, _make_history([]), "20260512")
+    for p in out:
+        assert p["streak"] == 1
+        assert p["first_seen"] == "—"
+        assert p["prev_rank"] is None
+        assert p["rank_delta"] is None
+
+
+def test_enrich_consecutive_streak_counted():
+    # AAA in 3 consecutive prior runs → streak should be 4 (3 prior + current).
+    history = _make_history([
+        _hist_row("20260509", "2026-05-09T20:00:00+00:00", "AAA", 5),
+        _hist_row("20260510", "2026-05-10T20:00:00+00:00", "AAA", 3),
+        _hist_row("20260511", "2026-05-11T20:00:00+00:00", "AAA", 2),
+    ])
+    picks = [_pick("AAA", 1)]
+    out = scan.enrich_with_persistence(picks, history, "20260512")
+    assert out[0]["streak"] == 4
+    assert out[0]["first_seen"] == "2026-05-09"
+    assert out[0]["prev_rank"] == 2
+    assert out[0]["rank_delta"] == 1  # rose from rank 2 → 1
+
+
+def test_enrich_streak_breaks_on_gap():
+    # AAA in 20260509, missing 20260510, present 20260511 → streak counts only
+    # the consecutive runs ending most recently (so 20260511 + current = 2).
+    history = _make_history([
+        _hist_row("20260509", "2026-05-09T20:00:00+00:00", "AAA", 5),
+        _hist_row("20260510", "2026-05-10T20:00:00+00:00", "BBB", 1),
+        _hist_row("20260511", "2026-05-11T20:00:00+00:00", "AAA", 2),
+    ])
+    picks = [_pick("AAA", 1)]
+    out = scan.enrich_with_persistence(picks, history, "20260512")
+    assert out[0]["streak"] == 2  # 20260511 + current; 20260509 doesn't count
+    assert out[0]["first_seen"] == "2026-05-09"  # but first_seen is the earliest
+
+
+def test_enrich_new_ticker_marked():
+    history = _make_history([
+        _hist_row("20260511", "2026-05-11T20:00:00+00:00", "AAA", 1),
+    ])
+    picks = [_pick("BBB", 1)]
+    out = scan.enrich_with_persistence(picks, history, "20260512")
+    assert out[0]["streak"] == 1
+    assert out[0]["first_seen"] == "🆕"
+    assert out[0]["prev_rank"] is None
+
+
+def test_enrich_excludes_current_run_id():
+    # If current run is already saved (run_id collision), enrichment must
+    # ignore those rows so streak counts only prior runs.
+    history = _make_history([
+        _hist_row("20260512", "2026-05-12T20:00:00+00:00", "AAA", 1),
+    ])
+    picks = [_pick("AAA", 1)]
+    out = scan.enrich_with_persistence(picks, history, "20260512")
+    # No prior runs → streak 1, first_seen "—".
+    assert out[0]["streak"] == 1
+    assert out[0]["first_seen"] == "—"
+
+
+# ─── dropouts ────────────────────────────────────────────────────────────────
+
+def test_dropouts_finds_missing_names_from_last_run():
+    history = _make_history([
+        _hist_row("20260511", "2026-05-11T20:00:00+00:00", "AAA", 1),
+        _hist_row("20260511", "2026-05-11T20:00:00+00:00", "BBB", 2),
+        _hist_row("20260511", "2026-05-11T20:00:00+00:00", "CCC", 3),
+    ])
+    out = scan.dropouts(history, {"AAA", "CCC"}, "20260512", top_n=10)
+    assert len(out) == 1
+    assert out[0]["ticker"] == "BBB"
+    assert out[0]["prev_rank"] == 2
+
+
+def test_dropouts_respects_top_n():
+    history = _make_history([
+        _hist_row("20260511", "2026-05-11T20:00:00+00:00", "AAA", 1),
+        _hist_row("20260511", "2026-05-11T20:00:00+00:00", "BBB", 11),  # outside top_n=10
+    ])
+    out = scan.dropouts(history, set(), "20260512", top_n=10)
+    tickers = {d["ticker"] for d in out}
+    assert "AAA" in tickers
+    assert "BBB" not in tickers
+
+
+def test_dropouts_empty_when_no_prior_runs():
+    history = _make_history([])
+    assert scan.dropouts(history, {"AAA"}, "20260512", top_n=10) == []
+
+
+# ─── score_tickers ───────────────────────────────────────────────────────────
+
+def _score_prices(n_days: int, columns: dict[str, np.ndarray]) -> pd.DataFrame:
+    idx = pd.date_range(end="2026-05-09", periods=n_days, freq="B")
+    return pd.DataFrame(columns, index=idx)
+
+
+def test_score_filters_by_return_floor():
+    # AAA rises 100%, BBB only 10%. min_return=30 keeps only AAA.
+    n = 80
+    aaa = np.linspace(100, 200, n)
+    bbb = np.linspace(100, 110, n)
+    prices = _score_prices(n, {"AAA": aaa, "BBB": bbb})
+    out = scan.score_tickers(prices, window_months=3,
+                              min_return_pct=30.0, max_dd_pct=20.0)
+    tickers = {r["ticker"] for r in out}
+    assert "AAA" in tickers
+    assert "BBB" not in tickers
+
+
+def test_score_filters_by_max_drawdown():
+    # AAA: smooth rise. BBB: rises but takes a 30% drawdown midway → fails max_dd=20.
+    n = 80
+    aaa = np.linspace(100, 200, n)
+    bbb = np.concatenate([np.linspace(100, 150, 40), np.linspace(150, 100, 20),
+                           np.linspace(100, 200, 20)])
+    prices = _score_prices(n, {"AAA": aaa, "BBB": bbb})
+    out = scan.score_tickers(prices, window_months=3,
+                              min_return_pct=30.0, max_dd_pct=20.0)
+    tickers = {r["ticker"] for r in out}
+    assert "AAA" in tickers
+    assert "BBB" not in tickers
+
+
+def test_score_rank_by_score_descending():
+    # AAA: 100% return with -2% dd → score 50. BBB: 50% return with -5% dd → score 10.
+    n = 80
+    aaa = np.linspace(100, 200, n)
+    bbb = np.linspace(100, 150, n)
+    prices = _score_prices(n, {"AAA": aaa, "BBB": bbb})
+    out = scan.score_tickers(prices, window_months=3,
+                              min_return_pct=30.0, max_dd_pct=20.0)
+    assert out[0]["ticker"] == "AAA"
+    assert out[0]["rank"] == 1
+    assert out[0]["score"] > out[1]["score"]
+
+
+def test_score_skips_short_history():
+    # Only 30 bars — score_tickers requires ≥ 60.
+    n = 30
+    prices = _score_prices(n, {"AAA": np.linspace(100, 200, n)})
+    out = scan.score_tickers(prices, window_months=3,
+                              min_return_pct=30.0, max_dd_pct=20.0)
+    assert out == []
+
+
+# ─── NYSE trading-day calendar ───────────────────────────────────────────────
+
+def test_is_nyse_trading_day_weekday():
+    from datetime import date
+    # 2026-05-12 is a Tuesday.
+    assert scan.is_nyse_trading_day(date(2026, 5, 12))
+
+
+def test_is_nyse_trading_day_weekend():
+    from datetime import date
+    # 2026-05-09 is a Saturday.
+    assert not scan.is_nyse_trading_day(date(2026, 5, 9))
+    assert not scan.is_nyse_trading_day(date(2026, 5, 10))
+
+
+def test_is_nyse_trading_day_christmas():
+    from datetime import date
+    # Christmas Day 2026 is a Friday.
+    assert not scan.is_nyse_trading_day(date(2026, 12, 25))
+
+
+def test_is_nyse_trading_day_good_friday():
+    from datetime import date
+    # Good Friday 2026 = 2026-04-03.
+    assert not scan.is_nyse_trading_day(date(2026, 4, 3))
+
+
+def test_is_nyse_trading_day_juneteenth_post_2022():
+    from datetime import date
+    # 2026-06-19 is a Friday — observed since 2022.
+    assert not scan.is_nyse_trading_day(date(2026, 6, 19))
+
+
+# ─── prune_non_trading_days ──────────────────────────────────────────────────
+
+def test_prune_drops_weekend_rows(history_file):
+    # Mix of weekday and weekend rows.
+    history = _make_history([
+        _hist_row("20260511", "2026-05-11T20:00:00+00:00", "AAA", 1),  # Mon ET
+        _hist_row("20260509", "2026-05-09T20:00:00+00:00", "BBB", 1),  # Sat ET
+    ])
+    history.to_csv(history_file, index=False)
+    rows, run_ids = scan.prune_non_trading_days()
+    assert rows == 1
+    assert run_ids == 1
+    remaining = pd.read_csv(history_file)
+    assert set(remaining["ticker"]) == {"AAA"}
+
+
+def test_prune_noop_when_all_trading_days(history_file):
+    history = _make_history([
+        _hist_row("20260511", "2026-05-11T20:00:00+00:00", "AAA", 1),
+        _hist_row("20260512", "2026-05-12T20:00:00+00:00", "BBB", 1),
+    ])
+    history.to_csv(history_file, index=False)
+    rows, run_ids = scan.prune_non_trading_days()
+    assert rows == 0
+    assert run_ids == 0
+
+
+def test_prune_handles_empty_history(history_file):
+    # No file present — should not raise.
+    rows, run_ids = scan.prune_non_trading_days()
+    assert rows == 0
+    assert run_ids == 0
+
+
+# ─── compute_regime breadth math ─────────────────────────────────────────────
+# We can't easily mock yfinance's SPY fetch here, but the breadth portion of
+# compute_regime takes the universe prices directly — exercise it by calling
+# the function with a synthetic prices frame and tolerating None when the SPY
+# half fails (offline tests). Instead, test the math by replicating the
+# breadth-pct calculation against a known synthetic universe.
+
+def test_breadth_math_consistent_with_implementation():
+    # 5 names, 3 above their 200DMA, 2 below.
+    n = 250
+    idx = pd.date_range(end="2026-05-09", periods=n, freq="B")
+    cols = {}
+    # Three uptrenders: current close well above 200DMA mean.
+    for t in ["UP1", "UP2", "UP3"]:
+        cols[t] = np.linspace(50, 200, n)
+    # Two downtrenders: current close well below 200DMA mean.
+    for t in ["DN1", "DN2"]:
+        cols[t] = np.linspace(200, 100, n)
+    prices = pd.DataFrame(cols, index=idx)
+    last = prices.iloc[-1]
+    ma200 = prices.rolling(200).mean().iloc[-1]
+    above = (last > ma200).sum()
+    assert above == 3
+    # The breadth percentage the regime banner would show.
+    breadth_pct = float((last > ma200).mean() * 100)
+    assert breadth_pct == 60.0
+
+
+# ─── sector breakdown (data layer) ───────────────────────────────────────────
+
+def test_compute_sector_breakdown_returns_dict():
+    picks = [
+        {"ticker": "T1", "rank": 1, "sector": "Tech"},
+        {"ticker": "T2", "rank": 2, "sector": "Tech"},
+        {"ticker": "T3", "rank": 3, "sector": "Energy"},
+        {"ticker": "T4", "rank": 4, "sector": ""},
+    ]
+    bd = scan.compute_sector_breakdown(picks, 4)
+    assert bd["counts"] == {"Tech": 2, "Energy": 1}
+    assert bd["n_tagged"] == 3
+    assert bd["n_total"] == 4
+
+
+def test_compute_sector_breakdown_none_when_no_tags():
+    picks = [{"ticker": "T1", "rank": 1, "sector": ""}]
+    assert scan.compute_sector_breakdown(picks, 1) is None
+
+
+# ─── _longest_consecutive_streak ─────────────────────────────────────────────
+
+def test_longest_streak_all_present():
+    # Ticker present in every run → longest streak == len(runs).
+    runs = ["r1", "r2", "r3", "r4"]
+    assert scan._longest_consecutive_streak(["r1", "r2", "r3", "r4"], runs) == 4
+
+
+def test_longest_streak_with_gap():
+    # Two separate streaks of 2 → longest is 2, not 4.
+    runs = ["r1", "r2", "r3", "r4", "r5"]
+    assert scan._longest_consecutive_streak(["r1", "r2", "r4", "r5"], runs) == 2
+
+
+def test_longest_streak_picks_max_of_multiple_runs():
+    # Streaks of 1, 3, 2 → longest is 3.
+    runs = ["r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8"]
+    present = ["r1", "r3", "r4", "r5", "r7", "r8"]
+    assert scan._longest_consecutive_streak(present, runs) == 3
+
+
+def test_longest_streak_empty_ticker_runs():
+    runs = ["r1", "r2", "r3"]
+    assert scan._longest_consecutive_streak([], runs) == 0
+
+
+def test_longest_streak_single_run_present():
+    runs = ["r1", "r2", "r3"]
+    assert scan._longest_consecutive_streak(["r2"], runs) == 1
+
+
+def test_longest_streak_ignores_unknown_run_ids():
+    # Run ids not in the master `runs` list should never contribute.
+    runs = ["r1", "r2", "r3"]
+    assert scan._longest_consecutive_streak(["rX", "rY"], runs) == 0

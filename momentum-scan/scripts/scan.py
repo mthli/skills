@@ -37,7 +37,9 @@ SKILL_DIR = Path(__file__).resolve().parent.parent
 STATE_DIR = SKILL_DIR / "state"
 UNIVERSE_FILE = STATE_DIR / "universe.txt"
 HISTORY_FILE = STATE_DIR / "history.csv"
+SECTORS_FILE = STATE_DIR / "sectors.json"
 UNIVERSE_TTL_DAYS = 7
+SECTORS_TTL_DAYS = 30  # sectors rarely change — long TTL keeps repeat runs fast
 MARKET_TZ = ZoneInfo("America/New_York")  # one snapshot per US market day
 
 HISTORY_COLS = [
@@ -110,28 +112,620 @@ def load_universe(min_market_cap: float, min_volume: int, count: int,
     return cached
 
 
-def fetch_prices(tickers: list[str], window_months: int) -> pd.DataFrame:
-    period = f"{max(window_months + 1, 4)}mo"
+def fetch_bars(tickers: list[str], window_months: int,
+               min_period_months: int = 0) -> pd.DataFrame:
+    """Pull the full OHLCV MultiIndex frame from yfinance. ATR/sector
+    consumers reuse this single download via `extract_closes` — a second
+    round-trip for the same 250 tickers would cost another ~10 sec."""
+    months_needed = max(window_months + 1, 4, min_period_months)
+    period = f"{months_needed}mo"
     print(f"Fetching {len(tickers)} tickers, period={period}...", file=sys.stderr)
-    df = yf.download(
+    return yf.download(
         tickers, period=period, interval="1d", auto_adjust=True,
         progress=False, threads=True, group_by="ticker",
     )
+
+
+def extract_closes(bars: pd.DataFrame, tickers: list[str],
+                   min_len: int = 60) -> pd.DataFrame:
+    """Pull Close column per ticker from the raw bars frame; drop tickers
+    that don't have enough history to score the short window."""
     closes = {}
     for t in tickers:
         try:
-            s = df[(t, "Close")].dropna() if (t, "Close") in df.columns else None
-            if s is not None and len(s) > 60:
+            s = bars[(t, "Close")].dropna() if (t, "Close") in bars.columns else None
+            if s is not None and len(s) > min_len:
                 closes[t] = s
         except Exception:
             pass
     return pd.DataFrame(closes).sort_index()
 
 
+# Regime gauges: SPY trend filter + universe breadth. Computed once per run and
+# attached to the output banner; --regime-gate controls whether RISK-OFF
+# suppresses the top-N table.
+SPY_HISTORY_MONTHS = 13  # need ≥ 200 trading days + buffer for slope lookback
+MA200_SLOPE_LOOKBACK_DAYS = 20  # ~1 trading month — long enough to filter noise
+# Dead band on the 200DMA slope. A literally-flat MA (slope == 0) used to flip
+# RISK-OFF; -0.05% over 20 trading days is ~noise from a single-bar revision.
+MA200_SLOPE_RISK_ON_THRESHOLD_PCT = -0.05
+
+
+def compute_regime(prices: pd.DataFrame) -> dict | None:
+    """Compute SPY trend + universe breadth. Returns None if SPY fetch fails
+    or has insufficient history; caller renders an 'unavailable' banner and
+    proceeds — regime is informational, not load-bearing for scoring."""
+    try:
+        spy_df = yf.download("SPY", period=f"{SPY_HISTORY_MONTHS}mo",
+                             interval="1d", auto_adjust=True, progress=False)
+    except Exception as e:
+        print(f"SPY fetch failed: {e}", file=sys.stderr)
+        return None
+    if spy_df is None or spy_df.empty:
+        return None
+    spy_close = spy_df["Close"]
+    # yf.download with a single ticker string usually returns flat columns, but
+    # certain versions/edge cases still wrap in MultiIndex — flatten defensively.
+    if isinstance(spy_close, pd.DataFrame):
+        spy_close = spy_close.iloc[:, 0]
+    spy_close = spy_close.dropna()
+    if len(spy_close) < 200 + MA200_SLOPE_LOOKBACK_DAYS:
+        return None
+
+    ma200_series = spy_close.rolling(200).mean()
+    spy_last = float(spy_close.iloc[-1])
+    spy_ma50 = float(spy_close.rolling(50).mean().iloc[-1])
+    spy_ma200 = float(ma200_series.iloc[-1])
+    spy_ma200_prev = float(ma200_series.iloc[-(MA200_SLOPE_LOOKBACK_DAYS + 1)])
+    # 20-trading-day % change in the 200DMA. Positive = trend lifting; negative
+    # = trend rolling over even if price is still above the line.
+    spy_ma200_slope_pct = (spy_ma200 / spy_ma200_prev - 1) * 100
+
+    breadth_pct_200 = None
+    breadth_pct_50_over_200 = None
+    if prices is not None and not prices.empty and len(prices) >= 200:
+        last = prices.iloc[-1]
+        ma200_uni = prices.rolling(200).mean().iloc[-1]
+        ma50_uni = prices.rolling(50).mean().iloc[-1]
+        valid_200 = ma200_uni.notna() & last.notna()
+        if valid_200.any():
+            breadth_pct_200 = float(
+                (last[valid_200] > ma200_uni[valid_200]).mean() * 100
+            )
+        valid_cross = ma50_uni.notna() & ma200_uni.notna()
+        if valid_cross.any():
+            breadth_pct_50_over_200 = float(
+                (ma50_uni[valid_cross] > ma200_uni[valid_cross]).mean() * 100
+            )
+
+    # RISK-ON requires SPY above 200DMA AND the 200DMA itself rising — single
+    # close-above-MA crosses whipsawed multiple times in 2015 and 2022; the
+    # slope check defuses those false starts. The slope threshold is a small
+    # negative dead band (not strict > 0) so a near-flat MA200 doesn't flip
+    # on single-bar noise.
+    risk_on = (spy_last > spy_ma200) and (
+        spy_ma200_slope_pct > MA200_SLOPE_RISK_ON_THRESHOLD_PCT
+    )
+    return {
+        "spy_last": spy_last,
+        "spy_ma50": spy_ma50,
+        "spy_ma200": spy_ma200,
+        "spy_ma200_slope_pct": spy_ma200_slope_pct,
+        "spy_above_200dma": spy_last > spy_ma200,
+        "spy_50_above_200": spy_ma50 > spy_ma200,
+        "breadth_pct_above_200dma": breadth_pct_200,
+        "breadth_pct_50_above_200": breadth_pct_50_over_200,
+        "risk_on": risk_on,
+    }
+
+
+# Vol targeting: cohort realized vol → suggested portfolio leverage. The
+# motivation is specifically the Daniel-Moskowitz (2016) finding that
+# vol-scaling momentum reduces the post-bear-crash drawdown — the failure
+# mode the trend filter doesn't catch. Off by default (set --target-vol-pct).
+VOL_TARGET_LOOKBACK_DAYS = 60  # ~3 trading months; canonical short-vol window.
+# Note: this is deliberately decoupled from --window-months. The scoring window
+# is the user's "what's been working lately" question; the vol-target window is
+# the "how volatile is the cohort *right now*" question, and the literature
+# (Daniel-Moskowitz, Barroso-Santa-Clara) converges on ~60 trading days as the
+# vol-regime estimator that best predicts the next-period momentum crash.
+# Using --window-months here would make 6-month users see laggier vol estimates.
+VOL_TARGET_LEVERAGE_CLIP = (0.25, 1.0)  # cap at 1.0 — we only deleverage, never
+# leverage up. Leveraging up during quiet pre-crash regimes is the exact
+# trap Daniel-Moskowitz documented; 1.0 cap is the defensive variant.
+
+
+def compute_vol_target(prices: pd.DataFrame, picks: list[dict], top_n: int,
+                       target_vol_pct: float | None) -> dict | None:
+    """Compute the equal-weight cohort's 60-day realized vol and the leverage
+    needed to hit target_vol_pct. Returns None when disabled or under-data'd."""
+    if target_vol_pct is None or target_vol_pct <= 0:
+        return None
+    cohort = [p["ticker"] for p in picks[:top_n] if p["ticker"] in prices.columns]
+    if len(cohort) < 2:
+        return None
+    # +1 because pct_change drops the first row; we want LOOKBACK valid returns.
+    basket = prices[cohort].tail(VOL_TARGET_LOOKBACK_DAYS + 1)
+    daily_returns = basket.pct_change().dropna(how="all")
+    # Equal-weight portfolio daily return = mean of constituent daily returns.
+    # `.mean(axis=1)` ignores NaN per row, so newly-listed names that don't
+    # cover the full window contribute only on days they have data — fine for
+    # a vol estimate, mildly biases toward the always-present names.
+    port_returns = daily_returns.mean(axis=1).dropna()
+    if len(port_returns) < 20:
+        return None
+    cohort_vol = float(port_returns.std() * np.sqrt(252) * 100)
+    if cohort_vol <= 0:
+        return None
+    raw_leverage = float(target_vol_pct) / cohort_vol
+    lo, hi = VOL_TARGET_LEVERAGE_CLIP
+    suggested_leverage = max(lo, min(hi, raw_leverage))
+    return {
+        "target_vol_pct": float(target_vol_pct),
+        "cohort_vol_pct": cohort_vol,
+        "lookback_days": int(VOL_TARGET_LOOKBACK_DAYS),
+        "n_tickers": len(cohort),
+        "raw_leverage": raw_leverage,
+        "suggested_leverage": suggested_leverage,
+        "leverage_clip": list(VOL_TARGET_LEVERAGE_CLIP),
+    }
+
+
+def assign_weights(picks: list[dict], top_n: int,
+                   vol_target: dict | None) -> list[dict]:
+    """Attach a `weight_pct` to each top-N pick using equal-risk-contribution
+    (1/vol normalized) scaled by suggested_leverage. In percentage points —
+    they sum to suggested_leverage * 100. No-op when vol_target is None."""
+    if vol_target is None:
+        return picks
+    lev = vol_target["suggested_leverage"]
+    top_picks = picks[:top_n]
+    inv_vols = [(p["ticker"], 1.0 / p["ann_vol_pct"]) for p in top_picks
+                if p.get("ann_vol_pct") and p["ann_vol_pct"] > 0]
+    total_inv = sum(v for _, v in inv_vols)
+    if total_inv <= 0:
+        # Defensive — would only hit if every pick rounded to 0% vol.
+        for p in top_picks:
+            p["weight_pct"] = None
+        return picks
+    weights = {t: (v / total_inv) * lev * 100 for t, v in inv_vols}
+    for p in top_picks:
+        w = weights.get(p["ticker"])
+        p["weight_pct"] = round(w, 1) if w is not None else None
+    return picks
+
+
+def render_vol_target_banner(vol_target: dict | None) -> str | None:
+    if vol_target is None:
+        return None
+    return (
+        f"**Vol target**: cohort {vol_target['lookback_days']}d vol "
+        f"{vol_target['cohort_vol_pct']:.1f}% → suggested leverage "
+        f"**{vol_target['suggested_leverage']:.2f}x** "
+        f"(target {vol_target['target_vol_pct']:.0f}%, "
+        f"raw {vol_target['raw_leverage']:.2f}x, "
+        f"clip {vol_target['leverage_clip'][0]:.2f}–{vol_target['leverage_clip'][1]:.2f}x)"
+    )
+
+
+# Pullback entry indicator: pairs with momentum-scan's "what's running" answer
+# by adding a "is it buyable *right now*" filter. Momentum names selected by
+# trailing return often arrive already extended — the leader sits 30-50%
+# above MA20 with RSI > 80, a state where mean-reversion pullbacks often give
+# back a meaningful slice of the gain before the trend resumes. The buy zone
+# (close to MA20 + cool RSI) is the classic "Trend Pullback" entry: buy
+# strength, but only on its weakness.
+PULLBACK_MA_PERIOD = 20
+PULLBACK_RSI_PERIOD = 14  # canonical RSI period (Wilder, 1978)
+
+# Signal classification thresholds. These are the literature-conventional RSI
+# bands (< 40 = oversold / deep pullback, 40-55 = neutral pullback zone,
+# > 70 = hot, > 80 = extreme) plus a 3% MA20 proximity that matches "stock is
+# testing its 20-day average". Tweak inline; not exposed as CLI flags to keep
+# the surface small.
+PULLBACK_BUY_MA20_MAX_PCT = 3.0
+PULLBACK_BUY_RSI_LOW = 40.0
+PULLBACK_BUY_RSI_HIGH = 55.0
+# 🔵 deep pullback: stock has pulled back through MA20 (more than the 🟢 buy
+# zone's lower edge) AND RSI has cooled below the 🟢 zone — i.e., a Connors-
+# style "uptrend got oversold short-term" entry, often the best risk/reward
+# *if* the long-term trend is still intact. The momentum-scan filter ensures
+# the trend is intact by construction (stock wouldn't pass the return floor
+# otherwise), so deep pullbacks here are signal, not broken trends.
+# DEEP/WATCH/OVEREXT all use the no-suffix trigger-threshold style; BUY is the
+# only group that uses range-boundary suffixes (_MAX_PCT/_LOW/_HIGH) since 🟢
+# is defined by a bounded interval, not a single threshold.
+PULLBACK_DEEP_MA20_PCT = -3.0  # 🔵 fires at or below this MA20% (matches 🟢's lower edge for gap-free boundary)
+PULLBACK_DEEP_RSI = 40.0       # 🔵 fires strictly below this RSI (the 🟢 zone's RSI floor)
+PULLBACK_WATCH_MA20_PCT = 15.0  # 🟠 fires when MA20% exceeds this
+PULLBACK_WATCH_RSI = 70.0       # 🟠 fires when RSI exceeds this
+PULLBACK_OVEREXT_MA20_PCT = 25.0
+PULLBACK_OVEREXT_RSI = 80.0
+
+
+def compute_pullback_indicators(bars: pd.DataFrame,
+                                tickers: list[str]) -> dict[str, dict]:
+    """Compute MA20 distance and RSI(14) for each ticker. Reads from the same
+    raw bars frame the universe was downloaded into — no extra network."""
+    out = {}
+    for t in tickers:
+        try:
+            if (t, "Close") not in bars.columns:
+                continue
+            close = bars[(t, "Close")].dropna()
+            # RSI needs `period + 1` to seed the first delta; MA20 needs 20.
+            min_len = max(PULLBACK_MA_PERIOD, PULLBACK_RSI_PERIOD + 1)
+            if len(close) < min_len:
+                continue
+            last = float(close.iloc[-1])
+            ma20 = float(close.rolling(PULLBACK_MA_PERIOD).mean().iloc[-1])
+            if ma20 <= 0 or pd.isna(ma20):
+                continue
+            ma20_dist_pct = (last / ma20 - 1) * 100
+
+            # RSI(14) with Wilder's smoothing — the canonical form. EWMA with
+            # α = 1/period matches the original Wilder recursive average; SMA
+            # would be wrong here (RSI without Wilder smoothing reads ~10
+            # points higher in trending markets and would skew the signal).
+            delta = close.diff()
+            gain = delta.where(delta > 0, 0.0)
+            loss = -delta.where(delta < 0, 0.0)
+            avg_gain = gain.ewm(alpha=1 / PULLBACK_RSI_PERIOD, adjust=False,
+                                min_periods=PULLBACK_RSI_PERIOD).mean()
+            avg_loss = loss.ewm(alpha=1 / PULLBACK_RSI_PERIOD, adjust=False,
+                                min_periods=PULLBACK_RSI_PERIOD).mean()
+            ag_last, al_last = avg_gain.iloc[-1], avg_loss.iloc[-1]
+            if pd.isna(ag_last) or pd.isna(al_last):
+                rsi = None
+            elif al_last == 0:
+                # All-gain window → RSI by convention is 100 (no downside).
+                rsi = 100.0
+            else:
+                rs = ag_last / al_last
+                rsi = 100 - (100 / (1 + rs))
+
+            out[t] = {
+                "ma20": ma20,
+                "ma20_dist_pct": ma20_dist_pct,
+                "rsi14": float(rsi) if rsi is not None else None,
+            }
+        except Exception:
+            continue
+    return out
+
+
+def classify_pullback_signal(ma20_dist_pct: float | None,
+                              rsi: float | None) -> str:
+    """Map (MA20 distance, RSI) → 🟢/🔵/🟡/🟠/🔴 entry signal.
+
+    Evaluation order: 🟢 → 🔵 → 🔴 → 🟠 → 🟡 (first match wins). The bucket
+    descriptions below describe the *resulting* range after earlier buckets
+    have been excluded, not the raw rule predicates.
+
+    🟢 buy zone — price within ±3% of MA20 and RSI in 40-55 (cooled off,
+        textbook Trend Pullback setup).
+    🔵 deep pullback — price at or below MA20 by 3% or more AND RSI below 40
+        (Connors-style "uptrend got oversold short-term"; the momentum-scan
+        filter guarantees the long-term trend is still intact, so a deep
+        short-term pullback here is signal, not broken trend). Both conditions
+        are required — a below-MA20 price with a normal RSI usually means a
+        mild drift, not the oversold setup the 🔵 entry relies on, so those
+        cases fall through to 🟡 by design.
+    🔴 overextended — MA20 distance > 25% or RSI > 80 (chasing here tends to
+        cost a meaningful slice of the gain on the first mean-reversion bar).
+    🟠 stretched — MA20 distance 15-25% or RSI 70-80 (in trend but extended;
+        wait for a better entry).
+    🟡 watch — everything else (in trend, neither at buy point nor extreme,
+        including below-MA20 names whose RSI hasn't cooled below 40).
+    — — data missing.
+    """
+    if ma20_dist_pct is None or rsi is None:
+        return "—"
+    if (-PULLBACK_BUY_MA20_MAX_PCT <= ma20_dist_pct <= PULLBACK_BUY_MA20_MAX_PCT
+            and PULLBACK_BUY_RSI_LOW <= rsi <= PULLBACK_BUY_RSI_HIGH):
+        return "🟢"
+    # 🔵 uses `<=` on MA20% so there's no gap with 🟢's `>=` lower edge at -3:
+    # MA20%=-3 + RSI=39 falls into 🔵, MA20%=-3 + RSI=40 into 🟢.
+    if (ma20_dist_pct <= PULLBACK_DEEP_MA20_PCT
+            and rsi < PULLBACK_DEEP_RSI):
+        return "🔵"
+    if ma20_dist_pct > PULLBACK_OVEREXT_MA20_PCT or rsi > PULLBACK_OVEREXT_RSI:
+        return "🔴"
+    if ma20_dist_pct > PULLBACK_WATCH_MA20_PCT or rsi > PULLBACK_WATCH_RSI:
+        return "🟠"
+    return "🟡"
+
+
+def attach_pullback(picks: list[dict], top_n: int,
+                    pullbacks: dict[str, dict]) -> list[dict]:
+    """Attach ma20_dist_pct / rsi14 / pullback_signal to top-N picks. Picks
+    without computed indicators get None / "—" so downstream JSON consumers
+    see a consistent schema (every key always present when the indicator is
+    enabled, even if individual values are missing)."""
+    for p in picks[:top_n]:
+        info = pullbacks.get(p["ticker"])
+        if info is None:
+            p["ma20_dist_pct"] = None
+            p["rsi14"] = None
+            p["pullback_signal"] = "—"
+            continue
+        p["ma20_dist_pct"] = round(info["ma20_dist_pct"], 1)
+        rsi = info.get("rsi14")
+        p["rsi14"] = round(rsi, 1) if rsi is not None else None
+        p["pullback_signal"] = classify_pullback_signal(
+            info["ma20_dist_pct"], rsi
+        )
+    return picks
+
+
+# ATR-based stop loss: per-name "where would I cut this if it turns" measure.
+# The skill's only built-in exit otherwise is "dropped out of top-N" which
+# fires after a -20% max-drawdown — too late for active risk management.
+ATR_PERIOD_DAYS = 14  # canonical Wilder period
+
+
+def compute_atrs(bars: pd.DataFrame, tickers: list[str],
+                 period: int = ATR_PERIOD_DAYS) -> dict[str, dict]:
+    """Compute the latest N-day ATR (simple-mean true-range variant) for each
+    ticker. Returns {ticker: {atr, last_close, atr_pct}}. Reads from the same
+    raw bars frame the universe was downloaded into — no extra network."""
+    out = {}
+    for t in tickers:
+        try:
+            if (t, "High") not in bars.columns:
+                continue
+            high = bars[(t, "High")].dropna()
+            low = bars[(t, "Low")].dropna()
+            close = bars[(t, "Close")].dropna()
+            if min(len(high), len(low), len(close)) < period + 1:
+                continue
+            # Align on the common index — newly-listed names occasionally have
+            # one of OHLC missing for a session due to corporate-action edges.
+            common = high.index.intersection(low.index).intersection(close.index)
+            if len(common) < period + 1:
+                continue
+            high, low, close = high.loc[common], low.loc[common], close.loc[common]
+            prev_close = close.shift(1)
+            tr = pd.concat([
+                high - low,
+                (high - prev_close).abs(),
+                (low - prev_close).abs(),
+            ], axis=1).max(axis=1).dropna()
+            if len(tr) < period:
+                continue
+            # Simple mean of last `period` true ranges. Wilder's smoothing is
+            # canonical (EWMA with α=1/n) but differs by <5% in steady state;
+            # SMA is easier to test and reason about for stop-sizing.
+            atr_val = float(tr.tail(period).mean())
+            last_close = float(close.iloc[-1])
+            if atr_val <= 0 or last_close <= 0:
+                continue
+            out[t] = {
+                "atr": atr_val,
+                "last_close": last_close,
+                "atr_pct": atr_val / last_close * 100,
+            }
+        except Exception:
+            continue
+    return out
+
+
+def attach_atr_stops(picks: list[dict], top_n: int,
+                     atrs: dict[str, dict],
+                     prices: pd.DataFrame,
+                     atr_mult: float,
+                     trail_min_streak: int = 4) -> list[dict]:
+    """Add stop_price / stop_pct (current-price anchored, always) and
+    trail_stop_price / trail_stop_pct (peak-since-first_seen, only for
+    streak ≥ trail_min_streak names — younger names don't have a stable
+    peak to trail)."""
+    for p in picks[:top_n]:
+        info = atrs.get(p["ticker"])
+        if info is None:
+            continue
+        p["atr"] = round(info["atr"], 2)
+        p["atr_pct"] = round(info["atr_pct"], 2)
+        stop = info["last_close"] - atr_mult * info["atr"]
+        p["stop_price"] = round(stop, 2)
+        p["stop_pct"] = round(
+            (stop / info["last_close"] - 1) * 100, 2
+        )
+        # Trail stop: only meaningful once we've seen a name persist long
+        # enough to have a real "peak since entry" instead of a single bar.
+        if (p.get("streak", 1) >= trail_min_streak
+                and p.get("first_seen") not in (None, "—", "🆕")
+                and p["ticker"] in prices.columns):
+            try:
+                first_seen_ts = pd.Timestamp(p["first_seen"])
+                series = prices[p["ticker"]].loc[first_seen_ts:].dropna()
+                if not series.empty:
+                    peak = float(series.max())
+                    trail = peak - atr_mult * info["atr"]
+                    p["trail_stop_price"] = round(trail, 2)
+                    p["trail_stop_pct"] = round(
+                        (trail / info["last_close"] - 1) * 100, 2
+                    )
+                    p["peak_since_first_seen"] = round(peak, 2)
+            except Exception:
+                pass
+    return picks
+
+
+# Sector / industry tagging. yfinance's Ticker.info is a separate HTTP round
+# trip per ticker, so we cache to state/sectors.json with a 30-day TTL and
+# only fetch for the top-N picks (not the full universe) on each run — the
+# cache grows organically as different names cycle through leadership.
+SECTOR_ABBREV = {
+    "Technology": "Tech",
+    "Information Technology": "Tech",
+    "Communication Services": "Comm Svc",
+    "Consumer Cyclical": "Cons Cyc",
+    "Consumer Discretionary": "Cons Disc",
+    "Consumer Defensive": "Cons Def",
+    "Consumer Staples": "Cons Stp",
+    "Healthcare": "Health",
+    "Health Care": "Health",
+    "Financial Services": "Financ",
+    "Financials": "Financ",
+    "Industrials": "Indust",
+    "Energy": "Energy",
+    "Basic Materials": "Materials",
+    "Materials": "Materials",
+    "Utilities": "Utils",
+    "Real Estate": "REIT",
+}
+
+
+def load_sectors() -> dict[str, dict]:
+    if not SECTORS_FILE.exists():
+        return {}
+    try:
+        data = json.loads(SECTORS_FILE.read_text())
+        return data if isinstance(data, dict) else {}
+    except (json.JSONDecodeError, OSError):
+        return {}
+
+
+def save_sectors(sectors: dict[str, dict]):
+    tmp = SECTORS_FILE.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(sectors, indent=2, sort_keys=True))
+    tmp.replace(SECTORS_FILE)
+
+
+def _fetch_sector_one(ticker: str) -> tuple[str, dict | None]:
+    try:
+        info = yf.Ticker(ticker).info or {}
+        sector = info.get("sector") or ""
+        industry = info.get("industry") or ""
+        if not sector and not industry:
+            return (ticker, None)
+        return (ticker, {
+            "sector": sector,
+            "industry": industry,
+            "ts": int(datetime.now().timestamp()),
+        })
+    except Exception:
+        return (ticker, None)
+
+
+def refresh_sectors(tickers: list[str], existing: dict | None = None,
+                    max_workers: int = 10) -> dict[str, dict]:
+    """Fetch sector/industry for tickers missing from cache or past their
+    TTL. Persists the merged cache back to disk. Failures are silently
+    skipped — a tagged-as-empty sector falls through the abbrev mapping
+    cleanly in render_sector_breakdown."""
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    cache = dict(existing or {})
+    now_ts = datetime.now().timestamp()
+    stale_threshold = now_ts - SECTORS_TTL_DAYS * 86400
+    to_fetch = [
+        t for t in tickers
+        if t not in cache or cache.get(t, {}).get("ts", 0) < stale_threshold
+    ]
+    if not to_fetch:
+        return cache
+    print(f"Fetching sectors for {len(to_fetch)} ticker(s)...", file=sys.stderr)
+    fetched = 0
+    failed = 0
+    with ThreadPoolExecutor(max_workers=max_workers) as pool:
+        futures = [pool.submit(_fetch_sector_one, t) for t in to_fetch]
+        for fut in as_completed(futures):
+            t, info = fut.result()
+            if info is not None:
+                cache[t] = info
+                fetched += 1
+            else:
+                failed += 1
+    if failed:
+        # Yahoo throttles Ticker.info aggressively — partial failures are common.
+        # Failed lookups render as `—` in the Sector column and skip the breakdown.
+        print(f"Sectors: {fetched} fetched, {failed} failed (will retry next run).",
+              file=sys.stderr)
+    save_sectors(cache)
+    return cache
+
+
+def attach_sectors(picks: list[dict], top_n: int,
+                   sectors: dict[str, dict]) -> list[dict]:
+    """Attach sector/industry strings to top-N picks. Missing tickers get
+    empty strings so render code can detect untagged rows."""
+    for p in picks[:top_n]:
+        info = sectors.get(p["ticker"]) or {}
+        p["sector"] = info.get("sector") or ""
+        p["industry"] = info.get("industry") or ""
+    return picks
+
+
+def abbreviate_sector(sector: str) -> str:
+    if not sector:
+        return "—"
+    return SECTOR_ABBREV.get(sector, sector[:10])
+
+
+def compute_sector_breakdown(picks: list[dict], top_n: int) -> dict | None:
+    """Return {counts: {sector: n}, n_tagged: int, n_total: int} or None when
+    no picks have sector tags. Pure data; renderers and JSON consumers share
+    this single source of truth."""
+    n_total = len(picks[:top_n])
+    tagged = [p.get("sector", "") for p in picks[:top_n] if p.get("sector")]
+    if not tagged:
+        return None
+    counts: dict[str, int] = {}
+    for s in tagged:
+        counts[s] = counts.get(s, 0) + 1
+    return {
+        "counts": counts,
+        "n_tagged": len(tagged),
+        "n_total": n_total,
+    }
+
+
+def render_sector_breakdown(picks: list[dict], top_n: int,
+                            max_show: int = 5) -> str | None:
+    """Markdown line with top-K sectors and 'Other' rollup. None when no picks
+    have sector tags (all lookups failed or sectors disabled)."""
+    bd = compute_sector_breakdown(picks, top_n)
+    if bd is None:
+        return None
+    sorted_sectors = sorted(bd["counts"].items(), key=lambda x: -x[1])
+    shown = sorted_sectors[:max_show]
+    remainder = sum(c for _, c in sorted_sectors[max_show:])
+    parts = [f"{s} {c}" for s, c in shown]
+    if remainder:
+        parts.append(f"Other {remainder}")
+    n_tagged, n_total = bd["n_tagged"], bd["n_total"]
+    suffix = f" ({n_tagged}/{n_total} tagged)" if n_tagged < n_total else ""
+    return f"**Sectors**: {' · '.join(parts)}{suffix}"
+
+
+def render_regime_banner(regime: dict | None) -> str:
+    if regime is None:
+        return "**Regime**: unavailable (SPY data fetch failed or insufficient history)"
+    verdict = "RISK-ON" if regime["risk_on"] else "RISK-OFF"
+    spy_vs_200 = (regime["spy_last"] / regime["spy_ma200"] - 1) * 100
+    cross = ">" if regime["spy_50_above_200"] else "<"
+    parts = [
+        f"SPY {regime['spy_last']:.1f} vs 200DMA {regime['spy_ma200']:.1f} "
+        f"({spy_vs_200:+.1f}%)",
+        f"50DMA {cross} 200DMA",
+        f"200DMA slope (20d): {regime['spy_ma200_slope_pct']:+.2f}%",
+    ]
+    if regime.get("breadth_pct_above_200dma") is not None:
+        parts.append(
+            f"Breadth: {regime['breadth_pct_above_200dma']:.0f}% > 200DMA"
+        )
+    return f"**Regime**: {' · '.join(parts)} → **{verdict}**"
+
+
 def score_tickers(prices: pd.DataFrame, window_months: int,
                   min_return_pct: float, max_dd_pct: float) -> list[dict]:
-    cutoff = prices.index[-1] - pd.Timedelta(days=int(window_months * 30.5))
-    window = prices.loc[cutoff:]
+    # Trading-day slice (~21 sessions / month) is more honest than a calendar
+    # cutoff: prices.index only contains trading days, so a calendar cutoff
+    # near a holiday week could include or exclude a session depending on
+    # weekday placement. tail(N) deterministically takes the last N sessions.
+    trading_days = max(int(round(window_months * 21)), 21)
+    window = prices.tail(trading_days)
     results = []
     for t in window.columns:
         s = window[t].dropna()
@@ -258,12 +852,9 @@ def append_history(picks: list[dict], run_id: str, run_date: datetime,
     )
 
     has_existing = HISTORY_FILE.exists() and HISTORY_FILE.stat().st_size > 0
-    if has_existing:
-        existing = pd.read_csv(HISTORY_FILE)
-    else:
-        existing = pd.DataFrame(columns=HISTORY_COLS)
+    existing = pd.read_csv(HISTORY_FILE) if has_existing else None
 
-    if not allow_same_day and not existing.empty:
+    if (existing is not None and not allow_same_day and not existing.empty):
         today_et = run_date.astimezone(MARKET_TZ).date()
         existing_dates = (pd.to_datetime(existing["run_date"],
                                          utc=True, format="ISO8601")
@@ -278,7 +869,13 @@ def append_history(picks: list[dict], run_id: str, run_date: datetime,
             )
         existing = existing.loc[~mask]
 
-    combined = pd.concat([existing, new_rows], ignore_index=True)
+    # Skip the concat when existing is empty/None — pd.concat with an empty
+    # all-NaN-columns DataFrame triggers a FutureWarning that will become an
+    # error in pandas 3.0.
+    if existing is None or existing.empty:
+        combined = new_rows
+    else:
+        combined = pd.concat([existing, new_rows], ignore_index=True)
     # Sort so the on-disk file is chronological — upserts append new rows at
     # the end, which would otherwise leave the file out of order after a
     # back-fill or any non-monotonic write.
@@ -292,7 +889,12 @@ def append_history(picks: list[dict], run_id: str, run_date: datetime,
 
 def enrich_with_persistence(picks: list[dict], history: pd.DataFrame,
                             current_run_id: str) -> list[dict]:
-    """Add streak / first_seen / rank_delta columns based on prior runs."""
+    """Add streak / first_seen / rank_delta columns based on prior runs.
+
+    rank_delta compares against the *latest prior appearance*, not the
+    *immediately previous run*. A ticker that fell out for a few runs and
+    is now back will show the delta against its last-seen rank — `streak`
+    and the dropouts/new-entrants sections cover the gap separately."""
     if history.empty:
         for p in picks:
             p.update({"streak": 1, "first_seen": "—", "prev_rank": None,
@@ -352,8 +954,22 @@ def render_table(picks: list[dict], top_n: int, window_months: int) -> str:
     rows = picks[:top_n]
     if not rows:
         return "(no picks passed the filter)"
-    headers = ["#", "Ticker", f"{window_months}m%", "MaxDD%", "Score", "Streak",
-               "RankΔ", "FirstSeen", "FromHigh%"]
+    # Conditional columns: show only when at least one row carries the field.
+    show_sector = any(p.get("sector") for p in rows)
+    show_weight = any(p.get("weight_pct") is not None for p in rows)
+    show_stop = any(p.get("stop_price") is not None for p in rows)
+    show_pullback = any(p.get("ma20_dist_pct") is not None for p in rows)
+    headers = ["#", "Ticker"]
+    if show_sector:
+        headers.append("Sector")
+    headers += [f"{window_months}m%", "MaxDD%", "AnnVol%", "Score",
+                "Streak", "RankΔ", "FirstSeen", "FromHigh%"]
+    if show_pullback:
+        headers += ["MA20%", "RSI", "Sig"]
+    if show_stop:
+        headers.append("Stop")
+    if show_weight:
+        headers.append("Weight%")
     out = ["| " + " | ".join(headers) + " |",
            "|" + "|".join("---" for _ in headers) + "|"]
     for p in rows:
@@ -366,18 +982,56 @@ def render_table(picks: list[dict], top_n: int, window_months: int) -> str:
             delta_str = f"{delta} ↘"
         else:
             delta_str = "—"
-        out.append("| " + " | ".join([
+        row = [
             str(p["rank"]),
             f"**{p['ticker']}**",
+        ]
+        if show_sector:
+            row.append(abbreviate_sector(p.get("sector", "")))
+        ann_vol = p.get("ann_vol_pct")
+        row += [
             f"{p['return_pct']:+.1f}",
             f"{p['max_dd_pct']:.1f}",
+            f"{ann_vol:.0f}" if ann_vol is not None else "—",
             f"{p['score']:.1f}",
             str(p.get("streak", 1)),
             delta_str,
             p.get("first_seen", "—"),
             f"{p['from_high_pct']:.1f}",
-        ]) + " |")
+        ]
+        if show_pullback:
+            md = p.get("ma20_dist_pct")
+            rsi = p.get("rsi14")
+            sig = p.get("pullback_signal")
+            row.append(f"{md:+.1f}" if md is not None else "—")
+            row.append(f"{rsi:.0f}" if rsi is not None else "—")
+            row.append(sig if sig else "—")
+        if show_stop:
+            sp = p.get("stop_price")
+            spct = p.get("stop_pct")
+            if sp is not None and spct is not None:
+                row.append(f"${sp:.2f} ({spct:+.1f}%)")
+            else:
+                row.append("—")
+        if show_weight:
+            w = p.get("weight_pct")
+            row.append(f"{w:.1f}" if w is not None else "—")
+        out.append("| " + " | ".join(row) + " |")
     return "\n".join(out)
+
+
+def _longest_consecutive_streak(run_ids_for_ticker: list[str],
+                                 ordered_run_ids: list[str]) -> int:
+    """Longest run of consecutive ordered_run_ids that are in the ticker's set."""
+    present = set(run_ids_for_ticker)
+    best = cur = 0
+    for rid in ordered_run_ids:
+        if rid in present:
+            cur += 1
+            best = max(best, cur)
+        else:
+            cur = 0
+    return best
 
 
 def show_history_summary(history: pd.DataFrame):
@@ -389,12 +1043,75 @@ def show_history_summary(history: pd.DataFrame):
     print(f"Date range: {history['run_date'].min().date()} → "
           f"{history['run_date'].max().date()}")
     counts = history.groupby("ticker").size().sort_values(ascending=False)
+
+    # Streak analysis: per ticker, find longest consecutive run-id streak and
+    # check whether the streak is "active" (extends to the most recent run).
+    latest_run_id = runs[-1]
+    longest_active: list[tuple[str, int]] = []
+    longest_historical: list[tuple[str, int]] = []
+    by_ticker = history.groupby("ticker")["run_id"].apply(list).to_dict()
+    for t, ticker_runs in by_ticker.items():
+        longest = _longest_consecutive_streak(ticker_runs, runs)
+        longest_historical.append((t, longest))
+        # Walk backwards from latest to find current active streak.
+        present = set(ticker_runs)
+        active = 0
+        for rid in reversed(runs):
+            if rid in present:
+                active += 1
+            else:
+                break
+        if active > 0:
+            longest_active.append((t, active))
+
+    longest_active.sort(key=lambda x: -x[1])
+    longest_historical.sort(key=lambda x: -x[1])
+
+    if longest_active:
+        print(f"\nLongest active streaks (extending through {latest_run_id}):")
+        for t, n in longest_active[:10]:
+            print(f"  {t:<8} {n} runs")
+
+    print(f"\nLongest historical streaks (any time in history):")
+    for t, n in longest_historical[:10]:
+        print(f"  {t:<8} {n} runs")
+
+    # Rank movement over the most recent comparable pair of runs.
+    if len(runs) >= 2:
+        latest = history[history["run_id"] == runs[-1]][["ticker", "rank"]]
+        prev = history[history["run_id"] == runs[-2]][["ticker", "rank"]]
+        merged = latest.merge(prev, on="ticker", suffixes=("_now", "_prev"))
+        merged["delta"] = merged["rank_prev"] - merged["rank_now"]
+        climbers = [r for _, r in merged.sort_values("delta", ascending=False)
+                    .head(5).iterrows() if r["delta"] > 0]
+        droppers = [r for _, r in merged.sort_values("delta", ascending=True)
+                    .head(5).iterrows() if r["delta"] < 0]
+        new = latest[~latest["ticker"].isin(prev["ticker"])]
+        dropped = prev[~prev["ticker"].isin(latest["ticker"])]
+        print(f"\nMost recent run pair: {runs[-2]} → {runs[-1]}")
+        if climbers:
+            print(f"  Biggest climbers:")
+            for r in climbers:
+                print(f"    {r['ticker']:<8} #{int(r['rank_prev'])} → #{int(r['rank_now'])} (+{int(r['delta'])})")
+        if droppers:
+            print(f"  Biggest droppers:")
+            for r in droppers:
+                print(f"    {r['ticker']:<8} #{int(r['rank_prev'])} → #{int(r['rank_now'])} ({int(r['delta'])})")
+        if len(new):
+            print(f"  New entrants ({len(new)}): {', '.join(new['ticker'].tolist()[:10])}"
+                  + (" ..." if len(new) > 10 else ""))
+        if len(dropped):
+            print(f"  Dropouts ({len(dropped)}): {', '.join(dropped['ticker'].tolist()[:10])}"
+                  + (" ..." if len(dropped) > 10 else ""))
+
     print(f"\nTop 20 most-frequent tickers across all runs:")
     for t, c in counts.head(20).items():
         print(f"  {t:<8} {c} appearances")
 
 
-def main():
+def build_argparser() -> argparse.ArgumentParser:
+    """Construct the CLI parser. Split out from main() so tests can verify
+    flag registration / parsing without invoking the full scan."""
     ap = argparse.ArgumentParser()
     ap.add_argument("--window-months", type=int, default=3)
     ap.add_argument("--top-n", type=int, default=30)
@@ -428,7 +1145,57 @@ def main():
                           "America/New_York date. Default behavior overwrites "
                           "today's snapshot."))
     ap.add_argument("--format", choices=["markdown", "json"], default="markdown")
-    args = ap.parse_args()
+    ap.add_argument("--regime-gate", choices=["off", "warn", "strict"],
+                    default="warn",
+                    help=("Market trend filter using SPY 200DMA + slope and "
+                          "universe breadth. RISK-ON requires SPY > 200DMA "
+                          "AND the 200DMA slope over the last 20 trading days "
+                          "to exceed a small -0.05%% dead band (a near-flat "
+                          "MA doesn't flip on single-bar noise). off=no "
+                          "banner (skips the longer data fetch). warn=show "
+                          "banner, still print top-N (default). strict="
+                          "suppress top-N when RISK-OFF."))
+    ap.add_argument("--target-vol-pct", type=float, default=None,
+                    help=("Enable portfolio vol targeting. Computes the "
+                          "equal-weight cohort's 60-day realized vol and a "
+                          "suggested leverage = target / cohort_vol "
+                          "(deleverage-only, clipped to [0.25, 1.0]). Adds a "
+                          "Weight%% column using equal-risk-contribution × "
+                          "leverage. Typical institutional target is 10–15. "
+                          "Off by default."))
+    ap.add_argument("--atr-stop-mult", type=float, default=2.5,
+                    help=("ATR-based stop loss multiplier (default 2.5). "
+                          "Computes 14-day ATR per top-N pick and adds a Stop "
+                          "column showing the suggested stop price = "
+                          "last_close - mult × ATR. For streak ≥ "
+                          "persistent-min-streak names, also computes a "
+                          "TrailStop anchored to the peak since first_seen. "
+                          "Typical multipliers: 2.0 tight, 2.5 standard, 3.0 "
+                          "loose. Pass 0 or a negative value to disable."))
+    ap.add_argument("--no-pullback", action="store_true",
+                    help=("Disable the pullback entry indicator (MA20%% / "
+                          "RSI / Sig columns). Default behavior shows price "
+                          "relative to MA20, RSI(14), and a 5-level buy-zone "
+                          "classification. See SKILL.md for thresholds."))
+    ap.add_argument("--persistent-min-streak", type=int, default=3,
+                    help=("Streak threshold used by both the 'Persistent "
+                          "leaders' section and the ATR TrailStop. Default 3 "
+                          "matches the historical display threshold; bump to "
+                          "4 if you only want streaks that have survived "
+                          "multiple periods of noise (the interpretation "
+                          "guide's 'real signal' cutoff)."))
+    ap.add_argument("--no-sectors", action="store_true",
+                    help=("Disable sector tagging. Default behavior fetches "
+                          "sector/industry for the top-N picks (cached in "
+                          "state/sectors.json with a 30-day TTL), shows a "
+                          "Sector column, and prints a sector-breakdown line. "
+                          "First-run cost is ~1-2 sec per missing ticker "
+                          "(parallelized at 10 workers)."))
+    return ap
+
+
+def main():
+    args = build_argparser().parse_args()
 
     STATE_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -449,13 +1216,38 @@ def main():
 
     universe = load_universe(args.min_market_cap, args.min_volume,
                              args.universe_count, args.refresh_universe)
-    prices = fetch_prices(universe, args.window_months)
+    # When the regime gate is active we need ≥ 200 trading days for the 200DMA
+    # breadth calc. Pull once in a longer window; score_tickers slices to the
+    # scoring lookback internally. Off mode keeps the original short fetch.
+    min_period = SPY_HISTORY_MONTHS if args.regime_gate != "off" else 0
+    bars = fetch_bars(universe, args.window_months,
+                      min_period_months=min_period)
+    prices = extract_closes(bars, universe)
+    regime = compute_regime(prices) if args.regime_gate != "off" else None
     picks = score_tickers(prices, args.window_months,
                           args.min_return_pct, args.max_dd_pct)
     history = load_history()
     now = datetime.now(timezone.utc)
     run_id = make_run_id(now, allow_same_day=args.allow_same_day)
     picks = enrich_with_persistence(picks, history, run_id)
+    vol_target = compute_vol_target(prices, picks, args.top_n,
+                                    args.target_vol_pct)
+    picks = assign_weights(picks, args.top_n, vol_target)
+    if args.atr_stop_mult and args.atr_stop_mult > 0:
+        # ATR only needed for the top-N display picks, not the whole universe.
+        top_tickers = [p["ticker"] for p in picks[: args.top_n]]
+        atrs = compute_atrs(bars, top_tickers)
+        picks = attach_atr_stops(picks, args.top_n, atrs, prices,
+                                 args.atr_stop_mult,
+                                 trail_min_streak=args.persistent_min_streak)
+    if not args.no_pullback:
+        top_tickers = [p["ticker"] for p in picks[: args.top_n]]
+        pullbacks = compute_pullback_indicators(bars, top_tickers)
+        picks = attach_pullback(picks, args.top_n, pullbacks)
+    if not args.no_sectors:
+        top_tickers = [p["ticker"] for p in picks[: args.top_n]]
+        sectors = refresh_sectors(top_tickers, load_sectors())
+        picks = attach_sectors(picks, args.top_n, sectors)
     current_set = {p["ticker"] for p in picks[: args.top_n]}
     drops = dropouts(history, current_set, run_id, args.top_n)
 
@@ -475,7 +1267,17 @@ def main():
         else:
             append_history(picks, run_id, now, allow_same_day=args.allow_same_day)
 
+    # In strict mode, suppress the discovery sections when RISK-OFF. History
+    # save still happens — streak is a fact about the market, not a trading
+    # signal, and breaking it on every bear-market day would erase real
+    # persistence data we'd want when the regime turns.
+    suppress_picks = (args.regime_gate == "strict"
+                      and regime is not None
+                      and not regime["risk_on"])
+
     if args.format == "json":
+        sector_breakdown = (None if args.no_sectors
+                            else compute_sector_breakdown(picks, args.top_n))
         print(json.dumps({
             "run_id": run_id,
             "run_date": now.isoformat(),
@@ -483,8 +1285,12 @@ def main():
             "universe_size": len(universe),
             "passed_filter": len(picks),
             "top_n": args.top_n,
-            "picks": picks[: args.top_n],
-            "dropouts_since_last_run": drops,
+            "regime": regime,
+            "vol_target": vol_target,
+            "sector_breakdown": sector_breakdown,
+            "picks_suppressed_by_gate": suppress_picks,
+            "picks": [] if suppress_picks else picks[: args.top_n],
+            "dropouts_since_last_run": [] if suppress_picks else drops,
         }, indent=2, default=str))
         return
 
@@ -496,6 +1302,32 @@ def main():
     print(f"**Universe**: {len(universe)} tickers · "
           f"**Passed filter**: {len(picks)} · "
           f"**Prior runs**: {n_prior}")
+    if args.regime_gate != "off":
+        print(render_regime_banner(regime))
+        if regime is not None and not regime["risk_on"]:
+            if args.regime_gate == "strict":
+                print("\n> ⚠️ **RISK-OFF + strict gate**: top-N suppressed. "
+                      "History still saved so streak data survives the regime "
+                      "change. Re-run with `--regime-gate warn` to see names.")
+            else:
+                print("\n> ⚠️ **RISK-OFF regime**: treat the names below as "
+                      "*relative strength* (what's holding up), not absolute "
+                      "buy candidates. Momentum strategies have their worst "
+                      "drawdowns in this regime.")
+
+    # Vol-target banner sits below the regime banner — same "context" block.
+    # Skip it in strict+RISK-OFF since per-name weights wouldn't be shown either.
+    if not suppress_picks:
+        vt_banner = render_vol_target_banner(vol_target)
+        if vt_banner is not None:
+            print(vt_banner)
+        sector_line = render_sector_breakdown(picks, args.top_n)
+        if sector_line is not None:
+            print(sector_line)
+
+    if suppress_picks:
+        return
+
     print(f"\n## Top {args.top_n}\n")
     print(render_table(picks, args.top_n, args.window_months))
 
@@ -513,12 +1345,22 @@ def main():
             for p in new_entries:
                 print(f"- **{p['ticker']}** at #{p['rank']} "
                       f"({w}m {p['return_pct']:+.1f}%, MaxDD {p['max_dd_pct']:.1f}%)")
-        sticky = [p for p in picks[: args.top_n] if p.get("streak", 1) >= 3]
+        min_streak = args.persistent_min_streak
+        sticky = [p for p in picks[: args.top_n] if p.get("streak", 1) >= min_streak]
         if sticky:
-            print(f"\n## Persistent leaders (streak ≥ 3 runs)")
+            print(f"\n## Persistent leaders (streak ≥ {min_streak} runs)")
             for p in sorted(sticky, key=lambda x: -x["streak"]):
-                print(f"- **{p['ticker']}** — streak {p['streak']}, "
-                      f"first seen {p.get('first_seen', '—')}, now #{p['rank']}")
+                line = (f"- **{p['ticker']}** — streak {p['streak']}, "
+                        f"first seen {p.get('first_seen', '—')}, "
+                        f"now #{p['rank']}")
+                # TrailStop attaches at the same min_streak threshold, so
+                # names below it skip the suffix cleanly.
+                if p.get("trail_stop_price") is not None:
+                    line += (f" · trail stop "
+                             f"${p['trail_stop_price']:.2f} "
+                             f"({p['trail_stop_pct']:+.1f}% from spot, "
+                             f"peak ${p['peak_since_first_seen']:.2f})")
+                print(line)
 
 
 if __name__ == "__main__":
