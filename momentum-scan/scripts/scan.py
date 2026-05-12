@@ -18,7 +18,7 @@ import argparse
 import json
 import sys
 import warnings
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -26,6 +26,11 @@ warnings.filterwarnings("ignore")
 import numpy as np
 import pandas as pd
 import yfinance as yf
+from pandas.tseries.holiday import (
+    AbstractHolidayCalendar, GoodFriday, Holiday, USLaborDay,
+    USMartinLutherKingJr, USMemorialDay, USPresidentsDay,
+    USThanksgivingDay, nearest_workday,
+)
 from yfinance import EquityQuery
 
 SKILL_DIR = Path(__file__).resolve().parent.parent
@@ -39,6 +44,34 @@ HISTORY_COLS = [
     "run_id", "run_date", "ticker", "rank", "score",
     "return_pct", "max_dd_pct", "ann_vol_pct", "from_high_pct",
 ]
+
+
+class _NYSECalendar(AbstractHolidayCalendar):
+    """NYSE-observed holidays. Pandas's USFederalHolidayCalendar isn't quite
+    right (NYSE observes Good Friday but not Columbus / Veterans Day). Rare
+    one-off closures (e.g. presidential funerals, 9/11) aren't included —
+    we'd save a stale snapshot on those (≤1 per year) and accept the noise."""
+    rules = [
+        Holiday("New Year's Day", month=1, day=1, observance=nearest_workday),
+        USMartinLutherKingJr,
+        USPresidentsDay,
+        GoodFriday,
+        USMemorialDay,
+        Holiday("Juneteenth", month=6, day=19, observance=nearest_workday,
+                start_date="2022-06-19"),
+        Holiday("Independence Day", month=7, day=4, observance=nearest_workday),
+        USLaborDay,
+        USThanksgivingDay,
+        Holiday("Christmas Day", month=12, day=25, observance=nearest_workday),
+    ]
+
+
+def is_nyse_trading_day(d: date) -> bool:
+    """True iff `d` is a weekday and not an NYSE-observed holiday."""
+    if d.weekday() >= 5:
+        return False
+    ts = pd.Timestamp(d)
+    return _NYSECalendar().holidays(start=ts, end=ts).empty
 
 
 def refresh_universe(min_market_cap: float, min_volume: int, count: int) -> list[str]:
@@ -144,6 +177,37 @@ def clear_history():
     tmp_path = HISTORY_FILE.with_suffix(".csv.tmp")
     if tmp_path.exists():
         tmp_path.unlink()
+
+
+def prune_non_trading_days() -> tuple[int, int]:
+    """Drop history rows whose run_date ET-date is not an NYSE trading day.
+    Cleans up snapshots that were saved before the non-trading-day guard
+    existed (or with --save-stale). Returns (rows_removed, run_ids_removed)."""
+    history = load_history()
+    if history.empty:
+        return (0, 0)
+    et_dates = history["run_date"].dt.tz_convert(MARKET_TZ).dt.date
+    min_d, max_d = et_dates.min(), et_dates.max()
+    # Precompute the trading-day set once over the whole span — cheaper than
+    # calling is_nyse_trading_day per row for histories with many rows.
+    cal = _NYSECalendar()
+    holidays = set(cal.holidays(start=pd.Timestamp(min_d),
+                                end=pd.Timestamp(max_d)).date)
+    trading_mask = et_dates.map(
+        lambda d: d.weekday() < 5 and d not in holidays
+    )
+    rows_removed = int((~trading_mask).sum())
+    if rows_removed == 0:
+        return (0, 0)
+    run_ids_removed = int(history.loc[~trading_mask, "run_id"].nunique())
+    kept = history[trading_mask].copy()
+    # load_history parsed run_date to tz-aware Timestamp; re-serialize so the
+    # CSV round-trips identically to the original isoformat strings.
+    kept["run_date"] = kept["run_date"].apply(lambda dt: dt.isoformat())
+    tmp_path = HISTORY_FILE.with_suffix(".csv.tmp")
+    kept.to_csv(tmp_path, index=False)
+    tmp_path.replace(HISTORY_FILE)
+    return (rows_removed, run_ids_removed)
 
 
 def load_history() -> pd.DataFrame:
@@ -347,8 +411,18 @@ def main():
                     help="Use cached universe even if past TTL.")
     ap.add_argument("--show-history", action="store_true")
     ap.add_argument("--clear-history", action="store_true")
+    ap.add_argument("--prune-non-trading-days", action="store_true",
+                    help=("Drop history rows whose run_date ET-date is not an "
+                          "NYSE trading day (cleanup for pre-guard or "
+                          "--save-stale runs)."))
     ap.add_argument("--no-save", action="store_true",
                     help="Don't append this run to history.")
+    ap.add_argument("--save-stale", action="store_true",
+                    help=("Save to history even when today's ET date is a "
+                          "weekend or NYSE-observed holiday. Default skips "
+                          "the save so streak counts don't inflate from "
+                          "duplicate-data days. Pre-market runs on a real "
+                          "trading day are always saved."))
     ap.add_argument("--allow-same-day", action="store_true",
                     help=("Append even if a row already exists for today's "
                           "America/New_York date. Default behavior overwrites "
@@ -361,6 +435,12 @@ def main():
     if args.clear_history:
         clear_history()
         print("history.csv cleared.")
+        return
+
+    if args.prune_non_trading_days:
+        rows, run_ids = prune_non_trading_days()
+        print(f"Pruned {rows} row(s) across {run_ids} run_id(s) "
+              f"with non-trading-day ET dates.")
         return
 
     if args.show_history:
@@ -378,8 +458,22 @@ def main():
     picks = enrich_with_persistence(picks, history, run_id)
     current_set = {p["ticker"] for p in picks[: args.top_n]}
     drops = dropouts(history, current_set, run_id, args.top_n)
+
+    # Non-trading-day guard: yfinance happily returns the last available
+    # session's close on weekends/holidays. Recording it under today's ET
+    # run_id would let streak counts inflate from duplicate data.
+    # Pre-market runs on a trading day still save: today is a real trading
+    # day from the streak's perspective even if we ran before the open.
+    today_et = now.astimezone(MARKET_TZ).date()
+    today_is_trading = is_nyse_trading_day(today_et)
+
     if not args.no_save:
-        append_history(picks, run_id, now, allow_same_day=args.allow_same_day)
+        if not today_is_trading and not args.save_stale:
+            print(f"Skipping history save: {today_et} is not an NYSE trading "
+                  f"day (weekend or market holiday). Pass --save-stale to "
+                  f"override.", file=sys.stderr)
+        else:
+            append_history(picks, run_id, now, allow_same_day=args.allow_same_day)
 
     if args.format == "json":
         print(json.dumps({

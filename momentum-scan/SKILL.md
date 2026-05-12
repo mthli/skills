@@ -44,7 +44,9 @@ uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy' \
 | `--show-history` | — | Dump history summary, no new scan. |
 | `--clear-history` | — | Wipe `state/history.csv`. |
 | `--no-save` | — | Run but don't append to history (useful for one-off exploration). |
+| `--save-stale` | — | Override the non-trading-day guard. By default the script skips `append_history` when today's ET date is a weekend or NYSE-observed holiday so streak counts don't inflate from duplicate-data days. Pre-market runs on a real trading day are still saved. |
 | `--allow-same-day` | — | Keep existing rows for today's ET date instead of overwriting them (debugging / forcing multiple snapshots). |
+| `--prune-non-trading-days` | — | One-shot cleanup: drop history rows whose ET-date `run_date` is not an NYSE trading day. Use after upgrading from a pre-guard version, or after intentional `--save-stale` runs. No scan is performed. |
 | `--format` | markdown | `markdown` or `json`. |
 
 ## Output shape
@@ -119,7 +121,7 @@ uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy' \
 
 ## Cadence
 
-Cadence-agnostic by design. At most one snapshot is kept per US market day (America/New_York), so streak always counts **consecutive prior scan-days** containing this ticker — running multiple times on the same ET day just refreshes that day's entry. Aligning to ET date instead of UTC matches what the underlying data represents (US market sessions) and behaves predictably across DST transitions. The `FirstSeen` dates tell you the natural granularity:
+Cadence-agnostic by design. At most one snapshot is kept per US market day (America/New_York), so streak always counts **consecutive prior scan-days** containing this ticker — running multiple times on the same ET day just refreshes that day's entry. Aligning to ET date instead of UTC matches what the underlying data represents (US market sessions) and behaves predictably across DST transitions. Runs on weekends or NYSE-observed market holidays are auto-skipped from history so streak doesn't inflate from duplicate-data days; results still print, just nothing is appended. Pre-market runs on a real trading day **do** save — today is a real trading day from the streak's perspective regardless of run time. Override the guard with `--save-stale`. To retroactively clean up snapshots saved on non-trading days (pre-guard, or after `--save-stale`), run `--prune-non-trading-days`. The `FirstSeen` dates tell you the natural granularity:
 
 - Daily runs → streak unit is days. Finest granularity but typically adds limited extra signal over weekly.
 - Weekly runs → streak unit is weeks. Recommended sweet spot — captures trend formation 4× faster than monthly while smoothing daily noise.
