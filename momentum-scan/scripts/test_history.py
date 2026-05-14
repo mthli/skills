@@ -1142,3 +1142,45 @@ def test_longest_streak_ignores_unknown_run_ids():
     # Run ids not in the master `runs` list should never contribute.
     runs = ["r1", "r2", "r3"]
     assert scan._longest_consecutive_streak(["rX", "rY"], runs) == 0
+
+
+# ---- Schema migration: old-schema files gain score_rank, columns reorder ---
+
+
+def test_append_history_migrates_old_schema_file(history_file):
+    """An existing CSV without score_rank should gain the column on first
+    write and end up with the canonical HISTORY_COLS order (not score_rank
+    tacked on at the end after concat). This is the regression for the
+    column-drift bug surfaced in review."""
+    # Write an old-schema file by hand — same shape as pre-upgrade history.
+    old_rows = pd.DataFrame([
+        {
+            "run_id": "20260511",
+            "run_date": datetime(2026, 5, 11, 20, 0, 0,
+                                  tzinfo=timezone.utc).isoformat(),
+            "ticker": "AAPL", "rank": 1, "score": 5.0,
+            "return_pct": 50.0, "max_dd_pct": -10.0,
+            "ann_vol_pct": 30.0, "from_high_pct": -1.0,
+        },
+    ])
+    history_file.write_text(old_rows.to_csv(index=False))
+    # Confirm the seed file is genuinely old-schema (no score_rank column).
+    seeded = pd.read_csv(history_file)
+    assert "score_rank" not in seeded.columns
+
+    # Append one new-schema row. The pick has score_rank set explicitly.
+    new_pick = _pick("MSFT", 1)
+    new_pick["score_rank"] = 1
+    run = datetime(2026, 5, 12, 20, 0, 0, tzinfo=timezone.utc)
+    scan.append_history([new_pick], "20260512", run)
+
+    df = pd.read_csv(history_file)
+    # score_rank column now exists, populated for the new row, NaN for old.
+    assert "score_rank" in df.columns
+    aapl = df[df["ticker"] == "AAPL"].iloc[0]
+    msft = df[df["ticker"] == "MSFT"].iloc[0]
+    assert pd.isna(aapl["score_rank"])
+    assert int(msft["score_rank"]) == 1
+    # Column order: HISTORY_COLS prefix preserved (score_rank between
+    # `rank` and `score`, not at the end after `from_high_pct`).
+    assert df.columns.tolist()[:len(scan.HISTORY_COLS)] == scan.HISTORY_COLS

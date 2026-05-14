@@ -60,6 +60,9 @@ uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy>=1.24,<3' \
 
 # High-vol regime — relax the smoothness band so 2-3% noise doesn't kill scores
 ... python <SKILL_DIR>/scripts/scan.py --smoothness-band-pct 3.0
+
+# Disable the vol-collapse acquisition-target filter (keep buyouts in the table — see parameter table)
+... python <SKILL_DIR>/scripts/scan.py --vol-collapse-ratio 0
 ```
 
 ## Parameters
@@ -75,7 +78,7 @@ uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy>=1.24,<3' \
 | `--top-n` | 30 | How many candidates to display + log to history. |
 | `--min-market-cap` | 5e9 | Universe market-cap floor. Lower to include small-cap setups (which are richer in this pattern but noisier). |
 | `--min-volume` | 1e6 | Universe avg-3mo-volume floor (liquidity filter). |
-| `--universe-count` | 250 | Universe size from Yahoo's screener. Paginated in 250-name pages; up to ~1000 is practically supported before Yahoo's screener returns fewer results per page. |
+| `--universe-count` | (all matches) | Universe size pulled from Yahoo's screener. Default unset = pull every match the screener reports (currently ~1000 US large caps at default mcap/volume floors). The screener returns at most **250 rows per request** (Yahoo's hard cap; `yf.screen` raises `ValueError` above that), so the universe is paginated automatically in 250-row pages with `offset` — at default filters that's ~5 paginated requests, taking a few extra seconds, but only on cache refresh (every 7 days). Pass an explicit positive integer to cap the universe (e.g. `250` for a one-request refresh, `500` for a middle ground); 0 / negative values are rejected by argparse. If you raise `--universe-count` above the number of tickers already in `state/universe.txt`, the cache is force-refreshed even within TTL — otherwise you'd silently get the smaller cached pool. Older yfinance versions (without `offset` support) fall back to a single 250-row page. |
 | `--ticker` | — | Single-ticker check mode (e.g. `--ticker AAPL`). Bypasses the universe scan; shows which funnel stage the ticker passes/fails (Trend Template → Base detection → Score → ATR stops) with all per-stage metrics. **Works for any US ticker yfinance can fetch** — large-cap, small-cap, ADR, even foreign-listed — the universe is not consulted. ~2-5s vs ~30-60s for a full scan. Honors `--format json` for structured output. No history is written. Mutually exclusive with `--show-history` (if both are passed, `--show-history` wins and `--ticker` is silently ignored). |
 | `--refresh-universe` / `--no-refresh-universe` | (TTL 7d) | Force-refresh / use cache regardless of age. |
 | `--show-history` | — | Print history summary, no new scan. |
@@ -88,6 +91,7 @@ uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy>=1.24,<3' \
 | `--regime-gate` | warn | `off` skips SPY trend + breadth calculation. `warn` shows the regime banner + RISK-OFF caveat but still prints top-N. `strict` suppresses top-N when RISK-OFF (history still saved). RISK-ON requires SPY > 200DMA *and* 200DMA slope over the last 20 trading days above a small `-0.05%` dead band. Base breakouts have higher failure rates in RISK-OFF markets — most bases break *down*, not up. |
 | `--atr-stop-mult` | 2.5 | ATR-based stop multiplier. Computes 14-day ATR per pick and adds a `Stop@trigger` column showing `pivot - mult × ATR` (the stop level you'd set if entering at the pivot breakout, which is the canonical entry for these setups). Typical values: 2.0 tight, 2.5 standard, 3.0 loose. Pass `0` to disable the column. (Unlike momentum-scan there's no TrailStop — trailing is for already-running positions; base setups haven't even triggered yet.) |
 | `--no-sectors` | — | Skip sector tagging. Default fetches sector/industry from yfinance for top-N picks (cached, 30-day TTL) and shows a Sector column + breakdown line. |
+| `--vol-collapse-ratio` | 0.2 | Acquisition-target / lock-in filter. A locked stock (cash buyout pending shareholder vote) looks **identical to a perfect base** — tight width, vol dryup, BB squeeze, RS rating high (post-gap), Trend Template passes (MAs all aligned below the gapped-up price). Without this filter, base-breakout-scan would flag every announced-but-not-closed merger as a top breakout candidate. Verified empirically: MASI on 2026-05-14 scored 88 (would be #1) but is correctly excluded by the default ratio. The check: annualized realized vol of the **first half** vs. **second half** of a fixed 3-month lookback. A locked stock has `v2/v1 ≈ 0.02`; a real base has both halves similar. **Raise** to `0.3` (hard cap `1.0`) to catch more lock-ins (more false positives on calmly-drifting earnings-pop names); **lower** to `0.15` to require a more dramatic collapse. Pass `0` or negative to disable. Excluded names print in a dedicated section above the Top-N table with their pre/post vol ratio; excluded entries carry `rank: null`, `pre_filter_rank`, `score_rank`, `vol_first_pct`, `vol_second_pct`, `vol_ratio`. The filter has the same "gap-in-second-half" failure mode as in momentum-scan — see Known limitations. |
 | `--persistent-min-streak` | 4 | Streak threshold used by the **Maturing bases** section. Default 4 ≈ "survived one trading week" for daily users, or "4 weeks" for weekly runners. A maturing base is the highest-conviction signal — it means the geometry has held through actual market noise. |
 | `--recent-breakout-days` | 10 | Lookback window for the **Recent breakouts** section. Names that triggered the pivot on volume in the last N days (but aren't currently in the watchlist) get listed in a separate section, split by whether they're still above the pivot (working) or fell back below (failed). Set to `0` to disable the section. |
 | `--broke-out-pct` | 0.5 | Dropout-reason threshold: a dropped name with current price ≥ `pivot × (1 + this/100)` is labeled `broke_out` in the **Dropouts** section. Bump to 2.0 for stricter "confirmed breakout" labeling. |
@@ -96,17 +100,17 @@ uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy>=1.24,<3' \
 
 ## Output shape
 
-A funnel-summary line (stderr), regime banner, sector breakdown, then an optional `🚀 Breakouts today` block, the main top-N table, and 2-4 discovery sections (dropouts with reasons, recent breakouts split by working/failed, new setups, maturing bases). Empty sections are skipped entirely. Sample below (illustrative — picks change daily; the exact tickers, scores, and counts will be different on your run):
+A funnel-summary line (stderr), regime banner, sector breakdown, an optional **Excluded by vol-collapse filter** section (printed between the Regime banner and the Top-N table when the filter rejects anything — see the `--vol-collapse-ratio` parameter), then an optional `🚀 Breakouts today` block, the main top-N table, and 2-4 discovery sections (dropouts with reasons, recent breakouts split by working/failed, new setups, maturing bases). Empty sections are skipped entirely. The Dropouts section gets a fifth reason category — **Vol-collapse filtered** — when a prior-run pick is excluded by the filter this run; it prints first in Dropouts (above broke_out/broke_down/deduped/faded) since it's the strongest "this is not a real signal" categorization. Sample below (illustrative — picks change daily; the exact tickers, scores, and counts will be different on your run):
 
 ```
-Funnel: 250 → 74 (RS≥70) → 57 (TT) → 33 (valid base) → 15 (score≥40) → 14 (after dedup, -1)
+Funnel: ~1000 → ~280 (RS≥70) → ~200 (TT) → ~130 (valid base) → ~50 (score≥40) → ~48 (after dedup, -1)
 
 # Base-breakout scan — 2026-05-12 17:10 UTC
 
 **Params**: base=6-40wks, max_width=25%, max_to_52w_high=15%, min_rs=70, min_score=40
-**Universe**: 250 tickers · **Passed filter**: 14 · **Prior runs**: 1
+**Universe**: ~1000 tickers · **Passed filter**: ~48 (vol-collapse: 0 excluded) · **Prior runs**: 1
 **Regime**: SPY 733.3 vs 200DMA 671.6 (+9.2%) · 50DMA > 200DMA · 200DMA slope (20d): +1.48% · Breadth: 66% > 200DMA → **RISK-ON**
-**Sectors**: Financial Services 5 · Energy 5 · Basic Materials 1 · Communication Services 1 · Industrials 1 · Other 1
+**Sectors**: Financial Services 9 · Energy 7 · Technology 5 · Basic Materials 4 · Communication Services 2 · Other 3
 
 ## Top 30
 
@@ -190,7 +194,7 @@ A trailing `*` after a Sig glyph (e.g. `🚀*` or `📊*`) means the base ended 
 
 ### Single-ticker check (`--ticker AAPL`)
 
-Bypasses the universe scan and prints a 4-stage diagnostic + ATR stop levels for one ticker. Works for any US ticker yfinance can fetch (large-cap, small-cap, ADR, foreign-listed). Runtime ~2-5 seconds (vs ~30-60s for a full scan). Honors `--format json` for structured output. Sample (illustrative; values will differ on your run):
+Bypasses the universe scan and prints a 4-stage diagnostic + ATR stop levels for one ticker. Works for any US ticker yfinance can fetch (large-cap, small-cap, ADR, foreign-listed). Runtime ~2-5 seconds (vs ~30-60s for a full scan). Honors `--format json` for structured output. Also runs the vol-collapse check (when `--vol-collapse-ratio > 0`) and surfaces a prominent `⚠️ VOL-COLLAPSE WARNING` block at the top if the ticker shows the acquisition-lock signature — appears even when the ticker fails earlier stages (TT-fail, no base), so a user asking "is MASI a good base?" can't accidentally miss the warning. Sample (illustrative; values will differ on your run):
 
 ```
 # Single-ticker check: HSBC
@@ -231,6 +235,27 @@ _(using fast RS-vs-SPY proxy in place of universe-relative RS Rating)_
 
 → **HSBC would appear in the standard watchlist.**
 ```
+
+When the vol-collapse filter triggers, the warning prints at the top of the report — before any stage analysis — so a user can't accidentally proceed to "valid base" framing without seeing the alarm:
+
+```
+# Single-ticker check: MASI _(Healthcare / Medical Devices)_
+_(using fast RS-vs-SPY proxy in place of universe-relative RS Rating; run the full scan if you need the exact percentile)_
+
+> ⚠️ **VOL-COLLAPSE WARNING**: 2nd-half annualized vol = 1.9% (1st-half was 98.0%); ratio = 0.019, below the 0.20 threshold.
+>
+> This is the canonical signature of an acquisition target locked at a cash offer price — the chart will look like a perfect base, but the stock won't actually move.
+>
+> Verify via `yfinance` skill: `sec_filings --type PREM14A,DEFM14A` is the smoking gun for a pending merger. Treat any 'valid base' framing below with skepticism until verified.
+
+**RS proxy (vs SPY)**: ~65/99 (approximate)
+
+## Stage 1: Minervini Trend Template
+❌ **FAIL** — reason: `fail_rs_rating`
+...
+```
+
+The warning appears even when the ticker fails Stage 1 (TT-fail, no base) because the vol-collapse check runs early in the pipeline, before any short-circuit. The numbers in the warning are stated unambiguously: vol values are annualized percentages (1.9% / 98.0%); ratio and threshold are decimals (0.019 / 0.20).
 
 The RS Rating in `--ticker` mode is an approximation (RS-vs-SPY proxy mapping weighted excess return through a ±30% band onto a 1-99 scale) rather than the exact universe-relative percentile — this avoids fetching the full 250-ticker universe and is the reason for the ~15× speedup. The proxy is within ~10-15 percentile points of the true rating in practice — close enough to be a TT gate, not close enough to publish as a ranked figure. For the exact RS Rating, run the full scan (without `--ticker`) and read the RS column.
 
@@ -299,5 +324,9 @@ For automatic recurring runs, use a local scheduler (macOS `launchd`, or `cron`)
 - **`--regime-gate` reduces bear-market downside but can't catch fast regime flips.** A 200DMA slope that turns negative requires ~20 trading days to register; a 1-week crash (Aug 2024, March 2020, Feb 2018) blows through the gate before the slope flips. Treat the regime banner as helpful framing, not a defensive moat.
 - **Volume dry-up ratio uses 20d/60d SMA, which lags.** Fast regime changes (M&A talk, earnings surprises) spike volume in days; our ratio takes weeks to fully reflect. Treat the metric as "is supply slowly drying up" rather than "what's volume doing today".
 - **The "broke_out" / "broke_down" labels in dropouts use a simple 0.5% / 8% threshold from the pivot.** A name that broke out by 0.3% and reversed isn't a confirmed breakout — but we'd label it "no_longer_qualifies" only if it's below the threshold today. Treat the dropout reasons as a heuristic, not as an audit trail.
+- **Vol-collapse filter has a "gap-in-second-half" blind spot.** `--vol-collapse-ratio` compares the realized vol of two halves of a fixed 3-month lookback. It catches lock-ins when the announcement gap falls in the **first** half (typical case: gap happened 1-3 months ago). When the gap day lands in the **second** half (announcement was within the last ~6 weeks), the gap inflates `v2` above `v1`, ratio > 1, name passes through. Failure mode is **late detection, not silent miss**: by a few weeks later the gap drifts into the first half and the filter catches it. The 5%-annualized minimum first-half vol guard prevents already-low-vol names from being flagged on noise. False-positive direction: names that gapped on an earnings beat and then drifted calmly higher with very orderly daily ranges can compress 2nd-half vol enough to trip the filter; lower `--vol-collapse-ratio` to 0.15 to reduce these. The filter doesn't catch tender-offer situations that don't involve a single-day gap (slow accumulation of shares at small premiums) — those produce a normal-looking price chart with no anomaly to detect. **Identification heuristic for a leak**: any base with `MaxDD%` improbably small (< -1%) *and* `width%` < 2% is suspect. Cross-check with `yfinance` skill: `sec_filings --type PREM14A,DEFM14A` is the smoking gun (proxy filings relating to a merger); `8-K` / `DEFA14A` is suggestive but not conclusive.
+- **Single-ticker mode (`--ticker MASI`) has the same gap-in-second-half blind spot, with worse practical impact.** Asking the scanner "is MASI a good base?" on the day a merger is announced will pass through without the warning — the gap is at the end of the window, inflates `v2`, ratio > 1, no trigger. The universe scan is forgiving (many tickers, signal redundancy) but single-ticker mode answers a high-stakes "should I trade this name today?" question. By the time the gap drifts into the first half (~2-3 weeks later) the warning fires, but day-1 false positive is the worst failure mode. There's no clean fix using only the split-half geometry — a complementary "did the most recent N days have a single move > 20%?" check would catch announcement-day gaps, but adds a separate detection pattern. For now, when running `--ticker` on any recently-gapping name (visible from a quick `history` chart check), manually verify via `sec_filings --type PREM14A,DEFM14A` before treating it as a tradeable base.
 - **No fundamental check.** The screen is 100% price/volume; it doesn't know if the company has decelerating earnings, regulatory overhang, or executive turnover during the base. The literature's 40-50% win rate is *without* a fundamental filter — adding even a simple "EPS growth not declining" check would lift it materially. The user should at minimum eyeball the latest earnings before acting on any pick.
 - **Pivot is the in-base high, which may be conservative.** Some chart traders prefer the high of the *handle* (a sub-pattern inside a cup-with-handle base) as the actual pivot, which is typically a few percent below the full cup high. Our pivot uses the full base high — slightly more conservative trigger, slightly worse entries, slightly lower false-breakout rate.
+- **Universe pagination has a hard stop at `SCREENER_MAX_PAGES` (20 pages = ~5000 tickers)** — this only matters if Yahoo's response stops including the `total` field (schema drift), in which case the script falls back to per-page heuristics (short page / zero new tickers) to detect end-of-results. The 20-page cap is the absolute backstop; if it ever triggers you'll see `refresh_universe: hit SCREENER_MAX_PAGES=20 backstop` on stderr and the universe will be capped at ~5000 — well above any realistic large-cap match count, so triggering it is a strong signal something is wrong upstream.
+- **Universe size affects historical rank comparability** — if you raise `--universe-count` (or the underlying universe grows from market-cap drift) between runs, ranks recorded in `state/history.csv` from before the change aren't directly comparable to ranks after. A larger universe means more names can pass the funnel, which can demote previously-high-ranked names not because their setups weakened but because new entrants were added to the pool. `Streak` and `FirstSeen` survive (a ticker is still "in the top N" or not), but `RankΔ` across a universe-size change should be read with that caveat. If you want clean before/after comparison, run `--clear-history` after changing universe size.

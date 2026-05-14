@@ -27,6 +27,7 @@ Usage:
 import argparse
 import json
 import sys
+import time
 import warnings
 from datetime import date, datetime, timezone
 from pathlib import Path
@@ -49,14 +50,22 @@ UNIVERSE_FILE = STATE_DIR / "universe.txt"
 HISTORY_FILE = STATE_DIR / "history.csv"
 SECTORS_FILE = STATE_DIR / "sectors.json"
 UNIVERSE_TTL_DAYS = 7
+SCREENER_PAGE_SIZE = 250  # Yahoo's hard cap per request — yf.screen raises ValueError above this
+SCREENER_PAGE_SLEEP_SEC = 0.2  # small gap between pages so a 5-page sweep doesn't trip Yahoo throttling
+SCREENER_MAX_PAGES = 20  # absolute backstop (~5000 tickers) for the case where Yahoo's `total` field is missing and only the per-page guards stop the loop. 5000 is already 5× the realistic US large-cap match count, so hitting this is a strong signal something is wrong upstream.
 SECTORS_TTL_DAYS = 30  # sectors change slowly; long TTL keeps repeat runs fast
 MARKET_TZ = ZoneInfo("America/New_York")  # one snapshot per US market day
 
 HISTORY_COLS = [
-    "run_id", "run_date", "ticker", "rank", "base_score",
+    "run_id", "run_date", "ticker", "rank", "score_rank", "base_score",
     "base_weeks", "width_pct", "bb_pctile", "vol_dryup_ratio",
     "rs_slope_pct_per_wk", "to_pivot_pct", "pivot_price", "signal",
 ]
+# `rank` = display position after dedup + vol-collapse filter (contiguous
+# 1..N). `score_rank` = canonical pre-filter score-based ordering (survives
+# both filters), used by enrich_with_persistence so rank_delta reflects real
+# score movement, not filter-induced shift. Old history rows without
+# score_rank fall back to rank in enrich_with_persistence.
 
 
 # ─── NYSE calendar ───────────────────────────────────────────────────────
@@ -89,17 +98,55 @@ def is_nyse_trading_day(d: date) -> bool:
 
 
 # ─── Universe ────────────────────────────────────────────────────────────
-YF_SCREEN_PAGE_SIZE = 250  # yf.screen hard cap per call; raises ValueError above
 
 
-def refresh_universe(min_market_cap: float, min_volume: int, count: int) -> list[str]:
-    """Pull current US large caps via yfinance's screener. Caches to file.
+def _screen_with_offset(query, page_size, offset):
+    """Wrap yf.screen with a fallback for older yfinance versions that don't
+    accept the `offset` kwarg.
 
-    Paginates with `offset` when `count` > 250 (yf.screen's per-call cap).
-    Up to 4 pages = 1000 names is supported by Yahoo before results dry up;
-    in practice the per-page cap is the hard ceiling and the screener
-    returns fewer than `size` for the deepest page when results are
-    exhausted, which we accept as the natural stop."""
+    Returns (raw_response, supports_offset). When the first call raises a
+    TypeError that mentions `offset`, retries without `offset` and reports
+    `supports_offset=False` so the caller can stop paginating after this
+    page. Any other TypeError (e.g. wrong query type, unrelated kwarg
+    mismatch) propagates — we only smooth over the one specific
+    incompatibility we can positively identify, otherwise we'd silently
+    degrade real bugs into single-page scans. If the retry call itself
+    TypeErrors (a different cause this time), that also propagates."""
+    try:
+        return yf.screen(query, sortField="intradaymarketcap",
+                         sortAsc=False, size=page_size, offset=offset), True
+    except TypeError as e:
+        if "offset" not in str(e):
+            raise
+        return yf.screen(query, sortField="intradaymarketcap",
+                         sortAsc=False, size=page_size), False
+
+
+def refresh_universe(min_market_cap: float, min_volume: int,
+                     count: int | None) -> list[str]:
+    """Pull current US large caps via yfinance's screener and cache to disk.
+
+    Paginates with `offset` in `SCREENER_PAGE_SIZE` (250) row pages — Yahoo's
+    per-request cap. With `count=None` the loop targets the response's `total`
+    field; with an explicit positive `count` it stops at that many tickers
+    (or earlier if the screener exhausts).
+
+    Stop conditions, in priority order:
+      1. `len(tickers) >= target`  — reached the requested / total count.
+      2. Empty page (no quotes)    — screener returned nothing more.
+      3. Short page (< page_size)  — natural end of results.
+      4. Zero new tickers added    — duplicate page, prevents infinite loop
+                                      when `total` is missing.
+      5. `pages >= SCREENER_MAX_PAGES` — hard backstop; emits a stderr warning
+                                      and returns whatever was collected.
+      6. Old yfinance lacks `offset` — silently stop after page 1 (single-
+                                      page mode, capped at SCREENER_PAGE_SIZE).
+
+    Writes go through a sibling `.tmp` file + atomic rename so a crash mid-write
+    can't truncate `universe.txt`. Failure to fetch any tickers raises
+    RuntimeError *before* the cache file is touched, so a transient Yahoo
+    outage can't poison the cache.
+    """
     query = EquityQuery("and", [
         EquityQuery("eq", ["region", "us"]),
         EquityQuery("gt", ["intradaymarketcap", min_market_cap]),
@@ -108,42 +155,80 @@ def refresh_universe(min_market_cap: float, min_volume: int, count: int) -> list
     tickers: list[str] = []
     seen: set[str] = set()
     offset = 0
-    while len(tickers) < count:
-        page_size = min(YF_SCREEN_PAGE_SIZE, count - len(tickers))
-        try:
-            raw = yf.screen(query, sortField="intradaymarketcap",
-                            sortAsc=False, size=page_size, offset=offset)
-        except TypeError:
-            # Older yfinance versions don't accept `offset` — fall back to
-            # single-page mode and accept the 250-cap behavior silently.
-            if offset == 0:
-                raw = yf.screen(query, sortField="intradaymarketcap",
-                                sortAsc=False, size=page_size)
-            else:
-                break
-        quotes = raw.get("quotes") or []
-        page_tickers = [q.get("symbol") for q in quotes if q.get("symbol")]
-        # Dedupe across pages (Yahoo can return overlaps near pagination
-        # boundaries when the underlying ranking has ties).
-        new = [t for t in page_tickers if t not in seen]
-        if not new:
-            # Yahoo returned no new names — end of available data, stop.
+    target = count  # None = pull everything Yahoo reports
+    started = time.monotonic()
+    pages = 0
+    truncated = False
+    while target is None or len(tickers) < target:
+        if pages >= SCREENER_MAX_PAGES:
+            # Backstop for the case where Yahoo's `total` is missing/zero and
+            # the per-page guards never trigger.
+            print(f"refresh_universe: hit SCREENER_MAX_PAGES={SCREENER_MAX_PAGES} "
+                  f"backstop at {len(tickers)} tickers (Yahoo did not report a "
+                  f"`total`). Returning what we have.", file=sys.stderr)
+            truncated = True
             break
-        tickers.extend(new)
-        seen.update(new)
+        if pages > 0:
+            # Spacer before the 2nd+ request — multi-page bursts against
+            # Yahoo's screener can trip rate limits intermittently. Sleep at
+            # the loop top means we don't sleep when about to exit via break
+            # or the while condition.
+            time.sleep(SCREENER_PAGE_SLEEP_SEC)
+        page_size = (SCREENER_PAGE_SIZE if target is None
+                     else min(SCREENER_PAGE_SIZE, target - len(tickers)))
+        raw, supports_offset = _screen_with_offset(query, page_size, offset)
+        pages += 1
+        if target is None:
+            reported_total = raw.get("total")
+            if isinstance(reported_total, int) and reported_total > 0:
+                target = reported_total
+        quotes = raw.get("quotes") or []
+        if not quotes:
+            break  # screener exhausted
+        added = 0
+        for q in quotes:
+            sym = q.get("symbol")
+            if sym and sym not in seen:
+                seen.add(sym)
+                tickers.append(sym)
+                added += 1
+        if not supports_offset:
+            # Old yfinance — pagination is unavailable, stop after page 1.
+            break
+        # Defensive stops: short page = end of results; zero new = duplicate
+        # page (would loop forever). Both are the natural end of the screener.
+        if len(quotes) < page_size or added == 0:
+            break
         offset += page_size
     if not tickers:
         raise RuntimeError(
             "Yahoo screener returned no results — possibly rate-limited or "
             "API drift. Try again in a few minutes."
         )
-    UNIVERSE_FILE.write_text("\n".join(tickers))
+    # Atomic write: tmp + rename, mirroring history.csv / sectors.json. A
+    # crash mid-write would otherwise leave universe.txt truncated and the
+    # next run would see a partial cache (within TTL → no auto-refresh).
+    tmp_path = UNIVERSE_FILE.with_suffix(".txt.tmp")
+    tmp_path.write_text("\n".join(tickers))
+    tmp_path.replace(UNIVERSE_FILE)
+    status = "Refreshed universe (TRUNCATED)" if truncated else "Refreshed universe"
+    print(f"{status}: {len(tickers)} tickers in {pages} request(s), "
+          f"{time.monotonic() - started:.1f}s.", file=sys.stderr)
     return tickers
 
 
-def load_universe(min_market_cap: float, min_volume: int, count: int,
+def load_universe(min_market_cap: float, min_volume: int, count: int | None,
                   refresh_mode) -> list[str]:
-    """refresh_mode: None = TTL-based (default), True = force, False = use cache as-is."""
+    """Return the universe ticker list, refreshing from Yahoo when needed.
+
+    count: None = pull all matches Yahoo reports; positive int = cap at that
+        many tickers. If the on-disk cache has fewer rows than the requested
+        `count`, force a refresh — otherwise the user would silently get an
+        undersized universe (e.g. asking for 500 but cached 250 from a prior
+        smaller run still being inside its TTL).
+    refresh_mode: None = TTL-based (default), True = force refresh,
+        False = use cache as-is regardless of TTL (offline / testing).
+    """
     if not UNIVERSE_FILE.exists():
         return refresh_universe(min_market_cap, min_volume, count)
     if refresh_mode is True:
@@ -151,6 +236,10 @@ def load_universe(min_market_cap: float, min_volume: int, count: int,
     cached = [t for t in UNIVERSE_FILE.read_text().splitlines() if t.strip()]
     if refresh_mode is False:
         return cached
+    if count is not None and len(cached) < count:
+        print(f"Universe cache has {len(cached)} tickers but {count} requested, "
+              f"refreshing...", file=sys.stderr)
+        return refresh_universe(min_market_cap, min_volume, count)
     age_days = (datetime.now().timestamp() - UNIVERSE_FILE.stat().st_mtime) / 86400
     if age_days > UNIVERSE_TTL_DAYS:
         print(f"Universe cache stale ({age_days:.1f}d), refreshing...", file=sys.stderr)
@@ -918,6 +1007,115 @@ def render_regime_banner(regime: dict | None) -> str:
     return f"**Regime**: {' · '.join(parts)} → **{verdict}**"
 
 
+# ─── Vol-collapse filter ────────────────────────────────────────────────
+# A "base" is by definition tight, low-vol consolidation. That's exactly the
+# signature of an acquisition target locked at the cash offer price — and
+# unlike the momentum-scan use case, base-breakout-scan would happily flag
+# any locked stock as "valid base ready to break out" (which it will never
+# do, because shares are pinned at the deal price). All 5 base gates pass:
+# Width%, vol_dryup_ratio, BB%ile, RS rating (post-gap), Trend Template
+# (price stays above MAs because the gap was big). Without this filter,
+# every announced-but-not-closed merger in the universe would surface as a
+# breakout candidate.
+#
+# Method: compare annualized realized vol of the first vs. second half of
+# a fixed 3-month lookback. A real base (low-vol post-prior-uptrend) has
+# both halves at similar vol. A locked stock has v1 dominated by the
+# announcement gap and v2 dominated by post-deal pinning — ratio ~0.02.
+VOL_COLLAPSE_LOOKBACK_MONTHS = 3   # fixed window, independent of base_weeks
+VOL_COLLAPSE_MIN_FIRST_VOL_PCT = 5.0  # require ≥ 5% annualized in 1st half
+# before the ratio is meaningful — names already at very low vol have an
+# unstable ratio and probably aren't being locked anyway.
+VOL_COLLAPSE_MIN_RETURNS_PER_HALF = 10  # need enough returns per half for
+# std to be meaningful; below this we skip the check rather than risk false
+# flags (matches momentum-scan).
+
+
+def compute_vol_halves(price_series: pd.Series) -> tuple[float, float] | None:
+    """Annualized realized vol for the first and second half of `price_series`.
+    Returns (vol_first_pct, vol_second_pct) or None if too short to split."""
+    daily = price_series.pct_change().dropna()
+    n = len(daily)
+    if n < 2 * VOL_COLLAPSE_MIN_RETURNS_PER_HALF:
+        return None
+    mid = n // 2
+    v1 = float(daily.iloc[:mid].std() * np.sqrt(252) * 100)
+    v2 = float(daily.iloc[mid:].std() * np.sqrt(252) * 100)
+    return v1, v2
+
+
+def _check_vol_collapse(
+    series: pd.Series, ratio_threshold: float | None,
+    lookback_months: int = VOL_COLLAPSE_LOOKBACK_MONTHS,
+) -> tuple[bool, float | None, float | None, float | None]:
+    """Pure vol-collapse predicate. Returns (triggered, v1_pct, v2_pct, ratio).
+
+    `triggered=True` means v1 ≥ MIN_FIRST_VOL_PCT *and* v2/v1 < ratio_threshold.
+
+    When `ratio_threshold ≤ 0` (filter disabled) or the series is too short
+    to split, returns (False, None, None, None).
+
+    When v1 is below the floor (kept silently in the main filter), returns
+    (False, v1, v2, None) — caller can read v1/v2 if needed but ratio is
+    None to signal 'not meaningfully comparable'.
+
+    Single source of truth for the predicate; previously inlined in
+    filter_vol_collapse, _run_single_ticker_pipeline, and the inline
+    recent_breakouts loop.
+    """
+    if ratio_threshold is None or ratio_threshold <= 0:
+        return False, None, None, None
+    trading_days = max(int(round(lookback_months * 21)), 21)
+    window = series.tail(trading_days).dropna()
+    halves = compute_vol_halves(window)
+    if halves is None:
+        return False, None, None, None
+    v1, v2 = halves
+    if v1 < VOL_COLLAPSE_MIN_FIRST_VOL_PCT:
+        return False, v1, v2, None
+    ratio = v2 / v1 if v1 > 0 else 1.0
+    return ratio < ratio_threshold, v1, v2, ratio
+
+
+def filter_vol_collapse(
+    picks: list[dict], closes: dict[str, pd.Series],
+    lookback_months: int, ratio_threshold: float,
+) -> tuple[list[dict], list[dict]]:
+    """Split picks into (kept, excluded) by the vol-collapse signature.
+
+    Excluded when vol_first_half ≥ MIN_FIRST_VOL_PCT *and* vol_second_half /
+    vol_first_half < ratio_threshold. Each excluded pick gets `vol_first_pct`,
+    `vol_second_pct`, `vol_ratio` attached so callers can surface the reason.
+    The excluded pick's `rank` is set to None (rank is only meaningful in the
+    kept list) and the pre-filter score-based rank is preserved as
+    `pre_filter_rank` for diagnostic display.
+
+    Kept picks are re-ranked so #1..#N stay contiguous after exclusion."""
+    if ratio_threshold is None or ratio_threshold <= 0:
+        return picks, []
+    kept, excluded = [], []
+    for p in picks:
+        t = p["ticker"]
+        series = closes.get(t)
+        if series is None:
+            kept.append(p)
+            continue
+        triggered, v1, v2, ratio = _check_vol_collapse(
+            series, ratio_threshold, lookback_months)
+        if triggered:
+            p["vol_first_pct"] = round(v1, 1)
+            p["vol_second_pct"] = round(v2, 1)
+            p["vol_ratio"] = round(ratio, 3)
+            p["pre_filter_rank"] = p.get("rank")
+            p["rank"] = None
+            excluded.append(p)
+        else:
+            kept.append(p)
+    for i, p in enumerate(kept, 1):
+        p["rank"] = i
+    return kept, excluded
+
+
 # ─── ATR for stops ───────────────────────────────────────────────────────
 ATR_PERIOD_DAYS = 14
 
@@ -1168,6 +1366,11 @@ def prune_non_trading_days() -> tuple[int, int]:
     run_ids_removed = int(history.loc[~trading_mask, "run_id"].nunique())
     kept = history[trading_mask].copy()
     kept["run_date"] = kept["run_date"].apply(lambda dt: dt.isoformat())
+    # Match append_history's column ordering — keeps prune output consistent
+    # with normal writes. Without this, pruning an old-schema file leaves it
+    # in old-schema order even if the file has gained score_rank rows since.
+    canonical = HISTORY_COLS + [c for c in kept.columns if c not in HISTORY_COLS]
+    kept = kept.reindex(columns=canonical)
     tmp_path = HISTORY_FILE.with_suffix(".csv.tmp")
     kept.to_csv(tmp_path, index=False)
     tmp_path.replace(HISTORY_FILE)
@@ -1198,6 +1401,10 @@ def append_history(picks: list[dict], run_id: str, run_date: datetime,
                 "run_date": run_date.isoformat(),
                 "ticker": p["ticker"],
                 "rank": p["rank"],
+                # Fall back to rank if score_rank is missing — shouldn't
+                # happen after score_tickers but defends against in-flight
+                # refactors.
+                "score_rank": p.get("score_rank", p["rank"]),
                 "base_score": p.get("base_score"),
                 "base_weeks": p.get("base_weeks"),
                 "width_pct": p.get("width_pct"),
@@ -1238,6 +1445,13 @@ def append_history(picks: list[dict], run_id: str, run_date: datetime,
     combined = (combined
                 .sort_values(["run_date", "rank"], kind="stable")
                 .reset_index(drop=True))
+    # Lock column order to HISTORY_COLS (any extra columns trail at end).
+    # Without this, an old-schema file gaining `score_rank` via concat ends
+    # up with score_rank appended at the end rather than at its canonical
+    # position after `rank`.
+    canonical = HISTORY_COLS + [c for c in combined.columns
+                                if c not in HISTORY_COLS]
+    combined = combined.reindex(columns=canonical)
     tmp_path = HISTORY_FILE.with_suffix(".csv.tmp")
     combined.to_csv(tmp_path, index=False)
     tmp_path.replace(HISTORY_FILE)
@@ -1245,7 +1459,13 @@ def append_history(picks: list[dict], run_id: str, run_date: datetime,
 
 def enrich_with_persistence(picks: list[dict], history: pd.DataFrame,
                             current_run_id: str) -> list[dict]:
-    """Add streak / first_seen / rank_delta from prior runs."""
+    """Add streak / first_seen / rank_delta from prior runs.
+
+    rank_delta is computed on `score_rank` (the pre-filter score-based rank)
+    so removing a pick via dedup or vol-collapse doesn't make every name below
+    it falsely show +1 ↗. For backward compatibility with history rows written
+    before the `score_rank` column existed (or where the column is NaN), falls
+    back to `rank`."""
     if history.empty:
         for p in picks:
             p.update({"streak": 1, "first_seen": "—", "prev_rank": None,
@@ -1261,6 +1481,7 @@ def enrich_with_persistence(picks: list[dict], history: pd.DataFrame,
 
     run_ids_ordered = (prior.sort_values("run_date")["run_id"]
                        .drop_duplicates().tolist())
+    has_score_rank_col = "score_rank" in prior.columns
 
     for p in picks:
         t = p["ticker"]
@@ -1272,7 +1493,16 @@ def enrich_with_persistence(picks: list[dict], history: pd.DataFrame,
         p["first_seen"] = appearances["run_date"].iloc[0].strftime("%Y-%m-%d")
         prev = appearances.iloc[-1]
         p["prev_rank"] = int(prev["rank"])
-        p["rank_delta"] = int(prev["rank"]) - p["rank"]
+        # Prefer score_rank for delta when present and non-NaN; fall back to
+        # rank for old-schema rows (pre-upgrade or mixed-schema files).
+        prev_score_rank = (prev["score_rank"]
+                           if has_score_rank_col else None)
+        if prev_score_rank is not None and not pd.isna(prev_score_rank):
+            prev_for_delta = int(prev_score_rank)
+        else:
+            prev_for_delta = int(prev["rank"])
+        cur_score_rank = p.get("score_rank", p["rank"])
+        p["rank_delta"] = prev_for_delta - cur_score_rank
         ticker_runs = set(appearances["run_id"].tolist())
         streak = 1
         for rid in reversed(run_ids_ordered):
@@ -1300,20 +1530,24 @@ def dropouts_with_reason(history: pd.DataFrame, current_picks: set[str],
                           current_prices: dict[str, pd.Series],
                           broke_out_pct: float = BROKE_OUT_THRESHOLD_PCT,
                           broke_down_pct: float = BROKE_DOWN_THRESHOLD_PCT,
+                          excluded_tickers: set[str] | None = None,
                           ) -> list[dict]:
     """Names in prior run's top N but missing now. Where possible, infer
-    *why*: broke out above pivot (good), broke down below base (bad),
-    deduped against a same-issuer pair (neither good nor bad — just hidden
-    by the rule), or no longer qualifies for some other reason (faded).
+    *why*: vol-collapse filter excluded this run (acquisition/lock-in),
+    deduped against a same-issuer pair, broke out above pivot (good),
+    broke down below base (bad), or no longer qualifies for some other
+    reason (faded).
 
     Thresholds are tunable for users who want stricter "confirmed" criteria
     (e.g. broke_out_pct=2.0 only counts breakouts ≥ 2% above pivot).
 
-    Note on dedup: a ticker that fell out *because of* same-issuer dedup
-    (PBR dropped because PBR-A scored higher) is labeled `deduped` so the
-    user doesn't read it as a real signal. The check is structural — if
-    the dropped ticker has a same-issuer partner that IS in current_picks,
-    we assume the dedup rule is the cause regardless of price action."""
+    Priority order: vol_collapse > deduped > broke_out/broke_down > faded.
+    vol-collapse takes precedence because the ticker isn't really "faded" —
+    it was structurally filtered out as a non-tradeable base (deal-pinned
+    stock). Dedup takes precedence over price-based reasons because a
+    deduped ticker isn't really "broke_out" or "faded" in any meaningful
+    sense, just hidden by the same-issuer rule. The vol-collapse check is
+    membership-based (was this ticker in excluded_vol_collapse this run)."""
     prior = history[history["run_id"] != current_run_id]
     if prior.empty:
         return []
@@ -1341,10 +1575,14 @@ def dropouts_with_reason(history: pd.DataFrame, current_picks: set[str],
         if ticker in current_prices and not current_prices[ticker].empty:
             current_close = float(current_prices[ticker].iloc[-1])
 
-        # Dedup takes precedence over price-based reasons — a deduped
-        # ticker isn't really "broke_out" or "faded" in any meaningful
-        # sense, just hidden by the same-issuer rule.
-        if ticker in deduped_against:
+        # Priority: vol_collapse > deduped > broke_out/broke_down > faded.
+        # vol_collapse takes precedence because this ticker was structurally
+        # filtered out (not faded, not a real breakout — just the wrong kind
+        # of stock for a base-breakout scan). Dedup is next, then price-
+        # based reasons, then faded as the fallback.
+        if excluded_tickers and ticker in excluded_tickers:
+            reason = "vol_collapse"
+        elif ticker in deduped_against:
             reason = "deduped"
         else:
             reason = "faded"
@@ -1470,6 +1708,12 @@ def score_tickers(closes: dict[str, pd.Series],
         })
 
     results.sort(key=lambda r: -r["base_score"])
+    # Assign score_rank BEFORE any filter — captures the immutable pre-filter
+    # score ordering. Downstream filters (dedup, vol-collapse) re-number the
+    # `rank` (display) field, but score_rank stays put so rank_delta math is
+    # immune to filter-induced shifts.
+    for i, r in enumerate(results, 1):
+        r["score_rank"] = i
     pre_dedup_count = len(results)
     results, _ = _dedup_same_issuer(results)  # dropped list isn't returned;
     # the kept pick's `dedup_sibling` field carries the runner-up forward.
@@ -1747,6 +1991,21 @@ def _run_single_ticker_pipeline(args) -> dict:
     volume = volumes.get(ticker)
     result["last_close"] = float(close.iloc[-1])
 
+    # Vol-collapse check FIRST — must run before any early return so failing
+    # tickers (TT-fail, no-base, etc.) still get the warning. Without this,
+    # `--ticker MASI` could short-circuit on TT fail and miss the warning
+    # entirely. Attaches `vol_collapse_warning` to the result dict; the
+    # renderer surfaces it prominently before stage breakdowns.
+    triggered, v1, v2, ratio = _check_vol_collapse(
+        close, args.vol_collapse_ratio)
+    if triggered:
+        result["vol_collapse_warning"] = {
+            "vol_first_pct": round(v1, 1),
+            "vol_second_pct": round(v2, 1),
+            "vol_ratio": round(ratio, 3),
+            "threshold": args.vol_collapse_ratio,
+        }
+
     # SPY for RS slope (during base) and RS Rating proxy.
     try:
         spy_bars = yf.download("SPY", period=f"{DEFAULT_HISTORY_MONTHS}mo",
@@ -1833,6 +2092,7 @@ def _run_single_ticker_pipeline(args) -> dict:
                     (stop_trigger / base["pivot_price"] - 1) * 100, 2
                 ),
             }
+
     return result
 
 
@@ -1855,6 +2115,30 @@ def _render_single_ticker_markdown(args, result: dict) -> None:
     if "error" in result:
         print(f"\n❌ {result['error']}")
         return
+
+    # Surface vol-collapse warning at the TOP, before any "valid base" framing
+    # — otherwise a user scanning the report sees "base_score 88, signal 🔥"
+    # and misses the warning further down. Multi-line blockquote (with empty
+    # `> ` paragraph breaks) renders as one bordered block with three
+    # paragraphs: (a) the numeric trigger, (b) what the signature means,
+    # (c) how to verify. Numbers are stated unambiguously: vol values are
+    # annualized percents (with %), ratio and threshold are decimals (no %).
+    vcw = result.get("vol_collapse_warning")
+    if vcw is not None:
+        print(f"\n> ⚠️ **VOL-COLLAPSE WARNING**: 2nd-half annualized vol = "
+              f"{vcw['vol_second_pct']:.1f}% "
+              f"(1st-half was {vcw['vol_first_pct']:.1f}%); "
+              f"ratio = {vcw['vol_ratio']:.3f}, "
+              f"below the {vcw['threshold']:.2f} threshold.")
+        print(f"> ")
+        print(f"> This is the canonical signature of an acquisition target "
+              f"locked at a cash offer price — the chart will look like a "
+              f"perfect base, but the stock won't actually move.")
+        print(f"> ")
+        print(f"> Verify via `yfinance` skill: `sec_filings --type "
+              f"PREM14A,DEFM14A` is the smoking gun for a pending merger. "
+              f"Treat any 'valid base' framing below with skepticism until "
+              f"verified.")
 
     rs_rating = result.get("rs_proxy")
     if rs_rating is not None:
@@ -2009,6 +2293,37 @@ def run_single_ticker_check(args) -> None:
         _render_single_ticker_markdown(args, result)
 
 
+def _positive_int(s: str) -> int:
+    """argparse type for flags that must be a positive integer (no 0/negative)."""
+    try:
+        v = int(s)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"must be an integer, got {s!r}")
+    if v <= 0:
+        raise argparse.ArgumentTypeError(
+            f"must be a positive integer, got {v}"
+        )
+    return v
+
+
+def _vol_collapse_ratio(s: str) -> float:
+    """argparse type for --vol-collapse-ratio. Hard-reject values > 1.0:
+    the ratio is `vol_second / vol_first`, and for the realistic equity
+    universe v2/v1 is essentially always ≤ ~3, so any threshold > 1 would
+    exclude essentially every name. Values ≤ 0 mean 'disable filter'."""
+    try:
+        v = float(s)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"must be a number, got {s!r}")
+    if v > 1.0:
+        raise argparse.ArgumentTypeError(
+            f"must be ≤ 1.0 (a 2nd-half / 1st-half vol ratio); got {v}. "
+            f"Values > 1.0 would exclude essentially every name. Pass 0 "
+            f"or a negative value to disable the filter."
+        )
+    return v
+
+
 def build_argparser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser()
     ap.add_argument("--min-base-weeks", type=float, default=DEFAULT_MIN_BASE_WEEKS,
@@ -2041,11 +2356,16 @@ def build_argparser() -> argparse.ArgumentParser:
                     help="How many candidates to display + log.")
     ap.add_argument("--min-market-cap", type=float, default=5e9)
     ap.add_argument("--min-volume", type=int, default=1_000_000)
-    ap.add_argument("--universe-count", type=int, default=250,
-                    help=("Universe size pulled from Yahoo's screener. "
-                          "Paginated in 250-name pages; up to ~1000 is "
-                          "practically supported before Yahoo's screener "
-                          "returns fewer results per page."))
+    ap.add_argument("--universe-count", type=_positive_int, default=None,
+                    help=("Universe size pulled from Yahoo's screener. Default "
+                          "(unset) pulls every match the screener reports "
+                          "(currently ~1000 US large caps at default mcap/"
+                          "volume floors). The screener returns at most 250 "
+                          "rows per request, so larger values are paginated "
+                          "automatically with `offset`. Pass an explicit "
+                          "positive integer to cap the universe (e.g. 250 for "
+                          "a one-request refresh, 500 for a middle ground); "
+                          "0 / negative values are rejected."))
     ap.add_argument("--ticker", type=str, default=None,
                     help=("Single-ticker check mode. Bypass the universe "
                           "scan; show this ticker's funnel stage (which "
@@ -2098,6 +2418,24 @@ def build_argparser() -> argparse.ArgumentParser:
                           "AND 200DMA slope > -0.05%% dead band. "
                           "off=no banner, warn=show banner + still print "
                           "top-N (default), strict=suppress top-N if RISK-OFF."))
+    ap.add_argument("--vol-collapse-ratio", type=_vol_collapse_ratio,
+                    default=0.2,
+                    help=("Exclude names whose 2nd-half realized vol (over a "
+                          "fixed 3-month lookback) is less than this fraction "
+                          "of their 1st-half vol — the canonical signature of "
+                          "an acquisition target locked at the cash offer "
+                          "price (single-day gap up, then daily range "
+                          "collapses). A locked stock looks identical to a "
+                          "perfect base (tight range, vol dryup, BB squeeze), "
+                          "so without this filter every announced-but-not-"
+                          "closed merger would surface as a breakout "
+                          "candidate. Default 0.2 (2nd half < 20%% of 1st "
+                          "half). Raise to 0.3 to catch more lock-ins (also "
+                          "more false positives); lower to 0.15 to require a "
+                          "more dramatic collapse. A first-half vol floor of "
+                          "5%% annualized prevents already-low-vol names from "
+                          "being flagged. Hard cap is 1.0 (argparse rejects "
+                          "above). Pass 0 or a negative value to disable."))
     ap.add_argument("--atr-stop-mult", type=float, default=2.5,
                     help=("ATR-based stop multiplier (default 2.5). Computes "
                           "14-day ATR per pick and adds a Stop column. "
@@ -2198,6 +2536,12 @@ def main():
         verbose=args.verbose,
     )
 
+    # Vol-collapse filter runs AFTER score_tickers (and its inner dedup), so
+    # excluded entries already have their pre-dedup score_rank attached.
+    picks, excluded_vol_collapse = filter_vol_collapse(
+        picks, closes, VOL_COLLAPSE_LOOKBACK_MONTHS, args.vol_collapse_ratio,
+    )
+
     history = load_history()
     now = datetime.now(timezone.utc)
     run_id = make_run_id(now, allow_same_day=args.allow_same_day)
@@ -2213,10 +2557,12 @@ def main():
         picks = attach_sectors(picks, args.top_n, sectors)
 
     current_set = {p["ticker"] for p in picks[: args.top_n]}
+    excluded_vol_collapse_set = {p["ticker"] for p in excluded_vol_collapse}
     drops = dropouts_with_reason(
         history, current_set, run_id, args.top_n, closes,
         broke_out_pct=args.broke_out_pct,
         broke_down_pct=args.broke_down_pct,
+        excluded_tickers=excluded_vol_collapse_set,
     )
 
     # Recent breakouts: names with fresh breakouts in the last N days that
@@ -2269,6 +2615,24 @@ def main():
             rb.pop("base_score", None)
             rb.pop("dedup_sibling", None)  # not surfaced in this section
 
+        # Vol-collapse filter on recent_breakouts: detect_recent_breakout
+        # flags any "close > prior_high * 1.002 + vol > 1.7×" day, which is
+        # exactly what an announcement gap looks like. Without this check,
+        # a recently announced acquisition would surface as a "working
+        # breakout" with massive follow-through. Uses the shared
+        # _check_vol_collapse predicate; recent_breakouts uses its own
+        # dict shape so we don't route through filter_vol_collapse.
+        kept_breakouts = []
+        for rb in recent_breakouts:
+            close_s = closes.get(rb["ticker"])
+            triggered = False
+            if close_s is not None:
+                triggered, *_ = _check_vol_collapse(
+                    close_s, args.vol_collapse_ratio)
+            if not triggered:
+                kept_breakouts.append(rb)
+        recent_breakouts = kept_breakouts
+
     today_et = now.astimezone(MARKET_TZ).date()
     today_is_trading = is_nyse_trading_day(today_et)
 
@@ -2311,6 +2675,7 @@ def main():
             "picks": [] if suppress_picks else picks[: args.top_n],
             "dropouts_since_last_run": [] if suppress_picks else drops,
             "recent_breakouts": [] if suppress_picks else recent_breakouts,
+            "excluded_vol_collapse": excluded_vol_collapse,
         }, indent=2, default=str))
         return
 
@@ -2321,8 +2686,26 @@ def main():
           f"max_to_52w_high={args.max_to_52w_high:.0f}%, "
           f"min_rs={args.min_rs_rating:.0f}, "
           f"min_score={args.min_base_score:.0f}")
+    # Banner shows funnel when filter is active (parallels momentum-scan):
+    #   - filter disabled (ratio ≤ 0): single "Passed filter: N"
+    #   - filter active, 0 excluded:   "Passed filter: N (vol-collapse: 0
+    #     excluded)"
+    #   - filter active, some excluded: "Passed filter: M (vol-collapse: K
+    #     excluded of N)" where M = final, K = exclusions, N = pre-filter.
+    if args.vol_collapse_ratio > 0:
+        n_excluded = len(excluded_vol_collapse)
+        n_passed_score = len(picks) + n_excluded
+        if n_excluded == 0:
+            passed_segment = (f"**Passed filter**: {len(picks)} "
+                              f"(vol-collapse: 0 excluded)")
+        else:
+            passed_segment = (f"**Passed filter**: {len(picks)} "
+                              f"(vol-collapse: {n_excluded} excluded of "
+                              f"{n_passed_score})")
+    else:
+        passed_segment = f"**Passed filter**: {len(picks)}"
     print(f"**Universe**: {len(universe)} tickers · "
-          f"**Passed filter**: {len(picks)} · "
+          f"{passed_segment} · "
           f"**Prior runs**: {n_prior}")
     if args.regime_gate != "off":
         print(render_regime_banner(regime))
@@ -2341,6 +2724,23 @@ def main():
         sector_line = render_sector_breakdown(picks, args.top_n)
         if sector_line is not None:
             print(sector_line)
+
+    # Excluded-by-vol-collapse section prints BEFORE suppress_picks so the
+    # diagnostic is visible even in strict+RISK-OFF mode. The exclusions are
+    # warnings about names that look like valid bases but aren't (locked at
+    # a deal price) — useful regardless of regime.
+    if excluded_vol_collapse:
+        ratio_pct_str = f"{args.vol_collapse_ratio * 100:g}%"
+        print(f"\n## Excluded by vol-collapse filter "
+              f"({len(excluded_vol_collapse)})")
+        print(f"_2nd-half realized vol < {ratio_pct_str} of 1st-half — "
+              f"likely acquisition / lock-in, not a tradable base._")
+        for p in sorted(excluded_vol_collapse, key=lambda x: x["vol_ratio"]):
+            print(f"- **{p['ticker']}** (base_score {p.get('base_score', 0):.0f}, "
+                  f"width {p.get('width_pct', 0):.1f}%, "
+                  f"vol {p['vol_first_pct']:.1f}% → "
+                  f"{p['vol_second_pct']:.1f}%, "
+                  f"ratio {p['vol_ratio']:.2f})")
 
     if suppress_picks:
         return
@@ -2374,11 +2774,19 @@ def main():
               f"cross above prior range._")
 
     if drops:
+        vol_collapse_drops = [d for d in drops if d["reason"] == "vol_collapse"]
         broke_out = [d for d in drops if d["reason"] == "broke_out"]
         broke_down = [d for d in drops if d["reason"] == "broke_down"]
         deduped = [d for d in drops if d["reason"] == "deduped"]
         faded = [d for d in drops if d["reason"] == "faded"]
         print(f"\n## Dropouts since last run ({len(drops)})")
+        if vol_collapse_drops:
+            # Print first — these are structurally filtered (not real moves)
+            # and the user should read the Excluded section above for detail.
+            print(f"**Vol-collapse filtered** ({len(vol_collapse_drops)}, "
+                  f"see Excluded section above):")
+            for d in vol_collapse_drops:
+                print(f"- **{d['ticker']}** (was #{d['prev_rank']})")
         if broke_out:
             print(f"**Broke out** ({len(broke_out)}):")
             for d in broke_out:

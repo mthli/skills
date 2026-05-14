@@ -17,6 +17,7 @@ Usage:
 import argparse
 import json
 import sys
+import time
 import warnings
 from datetime import date, datetime, timezone
 from pathlib import Path
@@ -39,13 +40,21 @@ UNIVERSE_FILE = STATE_DIR / "universe.txt"
 HISTORY_FILE = STATE_DIR / "history.csv"
 SECTORS_FILE = STATE_DIR / "sectors.json"
 UNIVERSE_TTL_DAYS = 7
+SCREENER_PAGE_SIZE = 250  # Yahoo's hard cap per request — yf.screen raises ValueError above this
+SCREENER_PAGE_SLEEP_SEC = 0.2  # small gap between pages so a 5-page sweep doesn't trip Yahoo throttling
+SCREENER_MAX_PAGES = 20  # absolute backstop (~5000 tickers) for the case where Yahoo's `total` field is missing and only the per-page guards stop the loop. 5000 is already 5× the realistic US large-cap match count, so hitting this is a strong signal something is wrong upstream.
 SECTORS_TTL_DAYS = 30  # sectors rarely change — long TTL keeps repeat runs fast
 MARKET_TZ = ZoneInfo("America/New_York")  # one snapshot per US market day
 
 HISTORY_COLS = [
-    "run_id", "run_date", "ticker", "rank", "score",
+    "run_id", "run_date", "ticker", "rank", "score_rank", "score",
     "return_pct", "max_dd_pct", "ann_vol_pct", "from_high_pct",
 ]
+# `rank` is the display position the user sees (post-vol-collapse, contiguous
+# 1..N). `score_rank` is the canonical pre-filter score-based rank — survives
+# vol-collapse re-numbering, so rank_delta computed against it doesn't get a
+# +1 nudge every time the filter removes someone above. Old history files
+# without score_rank fall back to rank in enrich_with_persistence.
 
 
 class _NYSECalendar(AbstractHolidayCalendar):
@@ -76,28 +85,139 @@ def is_nyse_trading_day(d: date) -> bool:
     return _NYSECalendar().holidays(start=ts, end=ts).empty
 
 
-def refresh_universe(min_market_cap: float, min_volume: int, count: int) -> list[str]:
-    """Pull current US large caps via yfinance's screener. Caches to file."""
+def _screen_with_offset(query, page_size, offset):
+    """Wrap yf.screen with a fallback for older yfinance versions that don't
+    accept the `offset` kwarg.
+
+    Returns (raw_response, supports_offset). When the first call raises a
+    TypeError that mentions `offset`, retries without `offset` and reports
+    `supports_offset=False` so the caller can stop paginating after this
+    page. Any other TypeError (e.g. wrong query type, unrelated kwarg
+    mismatch) propagates — we only smooth over the one specific
+    incompatibility we can positively identify, otherwise we'd silently
+    degrade real bugs into single-page scans. If the retry call itself
+    TypeErrors (a different cause this time), that also propagates."""
+    try:
+        return yf.screen(query, sortField="intradaymarketcap",
+                         sortAsc=False, size=page_size, offset=offset), True
+    except TypeError as e:
+        if "offset" not in str(e):
+            raise
+        return yf.screen(query, sortField="intradaymarketcap",
+                         sortAsc=False, size=page_size), False
+
+
+def refresh_universe(min_market_cap: float, min_volume: int,
+                     count: int | None) -> list[str]:
+    """Pull current US large caps via yfinance's screener and cache to disk.
+
+    Paginates with `offset` in `SCREENER_PAGE_SIZE` (250) row pages — Yahoo's
+    per-request cap. With `count=None` the loop targets the response's `total`
+    field; with an explicit positive `count` it stops at that many tickers
+    (or earlier if the screener exhausts).
+
+    Stop conditions, in priority order:
+      1. `len(tickers) >= target`  — reached the requested / total count.
+      2. Empty page (no quotes)    — screener returned nothing more.
+      3. Short page (< page_size)  — natural end of results.
+      4. Zero new tickers added    — duplicate page, prevents infinite loop
+                                      when `total` is missing.
+      5. `pages >= SCREENER_MAX_PAGES` — hard backstop; emits a stderr warning
+                                      and returns whatever was collected.
+      6. Old yfinance lacks `offset` — silently stop after page 1 (single-
+                                      page mode, capped at SCREENER_PAGE_SIZE).
+
+    Writes go through a sibling `.tmp` file + atomic rename so a crash mid-write
+    can't truncate `universe.txt`. Failure to fetch any tickers raises
+    RuntimeError *before* the cache file is touched, so a transient Yahoo
+    outage can't poison the cache.
+    """
     query = EquityQuery("and", [
         EquityQuery("eq", ["region", "us"]),
         EquityQuery("gt", ["intradaymarketcap", min_market_cap]),
         EquityQuery("gt", ["avgdailyvol3m", min_volume]),
     ])
-    raw = yf.screen(query, sortField="intradaymarketcap", sortAsc=False, size=count)
-    quotes = raw.get("quotes") or []
-    tickers = [q.get("symbol") for q in quotes if q.get("symbol")]
+    tickers: list[str] = []
+    seen: set[str] = set()
+    offset = 0
+    target = count  # None = pull everything Yahoo reports
+    started = time.monotonic()
+    pages = 0
+    truncated = False
+    while target is None or len(tickers) < target:
+        if pages >= SCREENER_MAX_PAGES:
+            # Backstop for the case where Yahoo's `total` is missing/zero and
+            # the per-page guards never trigger — without this the loop could
+            # run hundreds of pages before exhausting.
+            print(f"refresh_universe: hit SCREENER_MAX_PAGES={SCREENER_MAX_PAGES} "
+                  f"backstop at {len(tickers)} tickers (Yahoo did not report a "
+                  f"`total`). Returning what we have.", file=sys.stderr)
+            truncated = True
+            break
+        if pages > 0:
+            # Spacer before the 2nd+ request — a multi-page burst against
+            # Yahoo's screener has been observed to trip rate limits
+            # intermittently. Putting it at the loop top (rather than after
+            # the last successful page) means we don't sleep when about to
+            # exit via `break` or the while condition. The skill only
+            # paginates on cache refresh (every 7d), so amortized latency
+            # is ~0.2s × (pages-1), negligible.
+            time.sleep(SCREENER_PAGE_SLEEP_SEC)
+        page_size = (SCREENER_PAGE_SIZE if target is None
+                     else min(SCREENER_PAGE_SIZE, target - len(tickers)))
+        raw, supports_offset = _screen_with_offset(query, page_size, offset)
+        pages += 1
+        if target is None:
+            reported_total = raw.get("total")
+            if isinstance(reported_total, int) and reported_total > 0:
+                target = reported_total
+        quotes = raw.get("quotes") or []
+        if not quotes:
+            break  # screener exhausted
+        added = 0
+        for q in quotes:
+            sym = q.get("symbol")
+            if sym and sym not in seen:
+                seen.add(sym)
+                tickers.append(sym)
+                added += 1
+        if not supports_offset:
+            # Old yfinance — pagination is unavailable, stop after page 1.
+            break
+        # Defensive stops: short page = end of results; zero new = duplicate
+        # page (would loop forever). Both are the natural end of the screener.
+        if len(quotes) < page_size or added == 0:
+            break
+        offset += page_size
     if not tickers:
         raise RuntimeError(
             "Yahoo screener returned no results — possibly rate-limited or "
             "API drift. Try again in a few minutes."
         )
-    UNIVERSE_FILE.write_text("\n".join(tickers))
+    # Atomic write: tmp + rename, mirroring history.csv / sectors.json. A
+    # crash mid-write would otherwise leave universe.txt truncated and the
+    # next run would see a partial cache (within TTL → no auto-refresh).
+    tmp_path = UNIVERSE_FILE.with_suffix(".txt.tmp")
+    tmp_path.write_text("\n".join(tickers))
+    tmp_path.replace(UNIVERSE_FILE)
+    status = "Refreshed universe (TRUNCATED)" if truncated else "Refreshed universe"
+    print(f"{status}: {len(tickers)} tickers in {pages} request(s), "
+          f"{time.monotonic() - started:.1f}s.", file=sys.stderr)
     return tickers
 
 
-def load_universe(min_market_cap: float, min_volume: int, count: int,
+def load_universe(min_market_cap: float, min_volume: int, count: int | None,
                   refresh_mode) -> list[str]:
-    """refresh_mode: None = TTL-based (default), True = force, False = use cache as-is."""
+    """Return the universe ticker list, refreshing from Yahoo when needed.
+
+    count: None = pull all matches Yahoo reports; positive int = cap at that
+        many tickers. If the on-disk cache has fewer rows than the requested
+        `count`, force a refresh — otherwise the user would silently get an
+        undersized universe (e.g. asking for 500 but cached 250 from a prior
+        smaller run still being inside its TTL).
+    refresh_mode: None = TTL-based (default), True = force refresh,
+        False = use cache as-is regardless of TTL (offline / testing).
+    """
     if not UNIVERSE_FILE.exists():
         return refresh_universe(min_market_cap, min_volume, count)
     if refresh_mode is True:
@@ -105,6 +225,10 @@ def load_universe(min_market_cap: float, min_volume: int, count: int,
     cached = [t for t in UNIVERSE_FILE.read_text().splitlines() if t.strip()]
     if refresh_mode is False:
         return cached
+    if count is not None and len(cached) < count:
+        print(f"Universe cache has {len(cached)} tickers but {count} requested, "
+              f"refreshing...", file=sys.stderr)
+        return refresh_universe(min_market_cap, min_volume, count)
     age_days = (datetime.now().timestamp() - UNIVERSE_FILE.stat().st_mtime) / 86400
     if age_days > UNIVERSE_TTL_DAYS:
         print(f"Universe cache stale ({age_days:.1f}d), refreshing...", file=sys.stderr)
@@ -116,7 +240,7 @@ def fetch_bars(tickers: list[str], window_months: int,
                min_period_months: int = 0) -> pd.DataFrame:
     """Pull the full OHLCV MultiIndex frame from yfinance. ATR/sector
     consumers reuse this single download via `extract_closes` — a second
-    round-trip for the same 250 tickers would cost another ~10 sec."""
+    round-trip for the same ~1000 tickers would cost another ~30 sec."""
     months_needed = max(window_months + 1, 4, min_period_months)
     period = f"{months_needed}mo"
     print(f"Fetching {len(tickers)} tickers, period={period}...", file=sys.stderr)
@@ -752,7 +876,92 @@ def score_tickers(prices: pd.DataFrame, window_months: int,
     results.sort(key=lambda r: r["score"], reverse=True)
     for i, r in enumerate(results, 1):
         r["rank"] = i
+        # score_rank is the immutable score-based ordering — survives any
+        # downstream filtering / re-numbering. Used by enrich_with_persistence
+        # so rank_delta reflects real score movement, not filter-induced shift.
+        r["score_rank"] = i
     return results
+
+
+# Vol-collapse filter: detect names whose realized vol crashed in the second
+# half of the scoring window — the canonical signature of an acquisition
+# target trading at the announced cash offer price (single-day gap up, then
+# daily range collapses to pennies as the stock is pinned at the deal price
+# and only M&A-arb spreads trade). Without this filter, the gap day inflates
+# the window return while the post-event flat tape gives a misleadingly tiny
+# max drawdown — together yielding an outlier Score that isn't tradable as
+# momentum. The same signature catches reverse-merger / SPAC lock-ins and
+# (less cleanly) some halted-into-cash situations.
+VOL_COLLAPSE_MIN_FIRST_VOL_PCT = 5.0  # require ≥ 5% annualized in the first
+# half before the ratio is meaningful — names already at very low vol have an
+# unstable ratio and probably aren't being locked anyway.
+VOL_COLLAPSE_MIN_RETURNS_PER_HALF = 10  # need enough returns per half for std
+# to be meaningful; below this we skip the check rather than risk false flags.
+
+
+def compute_vol_halves(price_series: pd.Series) -> tuple[float, float] | None:
+    """Annualized realized vol for the first and second half of `price_series`.
+    Returns (vol_first_pct, vol_second_pct) or None if too short to split."""
+    daily = price_series.pct_change().dropna()
+    n = len(daily)
+    if n < 2 * VOL_COLLAPSE_MIN_RETURNS_PER_HALF:
+        return None
+    mid = n // 2
+    v1 = float(daily.iloc[:mid].std() * np.sqrt(252) * 100)
+    v2 = float(daily.iloc[mid:].std() * np.sqrt(252) * 100)
+    return v1, v2
+
+
+def filter_vol_collapse(
+    picks: list[dict], prices: pd.DataFrame, window_months: int,
+    ratio_threshold: float,
+) -> tuple[list[dict], list[dict]]:
+    """Split picks into (kept, excluded) by the vol-collapse signature.
+
+    Excluded when vol_first_half ≥ MIN_FIRST_VOL_PCT *and* vol_second_half /
+    vol_first_half < ratio_threshold. Each excluded pick gets `vol_first_pct`,
+    `vol_second_pct`, `vol_ratio` attached so callers can surface the reason.
+    The excluded pick's `rank` is set to None (rank in the kept list is the
+    only meaningful display position) and the pre-filter score-based rank is
+    preserved as `pre_filter_rank` for diagnostic display.
+
+    Kept picks are re-ranked so #1..#N stay contiguous after exclusion."""
+    if ratio_threshold is None or ratio_threshold <= 0:
+        return picks, []
+    trading_days = max(int(round(window_months * 21)), 21)
+    window = prices.tail(trading_days)
+    kept, excluded = [], []
+    for p in picks:
+        t = p["ticker"]
+        if t not in window.columns:
+            kept.append(p)
+            continue
+        halves = compute_vol_halves(window[t].dropna())
+        if halves is None:
+            kept.append(p)
+            continue
+        v1, v2 = halves
+        if v1 < VOL_COLLAPSE_MIN_FIRST_VOL_PCT:
+            kept.append(p)
+            continue
+        ratio = v2 / v1 if v1 > 0 else 1.0
+        if ratio < ratio_threshold:
+            p["vol_first_pct"] = round(v1, 1)
+            p["vol_second_pct"] = round(v2, 1)
+            p["vol_ratio"] = round(ratio, 3)
+            # Preserve the score-based pre-filter position for display, then
+            # clear `rank` — a JSON consumer reading rank=1 on an excluded
+            # entry would otherwise think this name is the top pick.
+            p["pre_filter_rank"] = p.get("rank")
+            p["rank"] = None
+            excluded.append(p)
+        else:
+            kept.append(p)
+    # Re-number display rank on kept picks; score_rank stays put (set in
+    # score_tickers) so persistence delta math is immune to this renumbering.
+    for i, p in enumerate(kept, 1):
+        p["rank"] = i
+    return kept, excluded
 
 
 def make_run_id(now: datetime, allow_same_day: bool = False) -> str:
@@ -840,6 +1049,10 @@ def append_history(picks: list[dict], run_id: str, run_date: datetime,
                 "run_date": run_date.isoformat(),
                 "ticker": p["ticker"],
                 "rank": p["rank"],
+                # Fall back to rank if score_rank is missing — shouldn't
+                # happen for kept picks after score_tickers, but defends
+                # against an in-flight refactor.
+                "score_rank": p.get("score_rank", p["rank"]),
                 "score": p["score"],
                 "return_pct": p["return_pct"],
                 "max_dd_pct": p["max_dd_pct"],
@@ -882,6 +1095,13 @@ def append_history(picks: list[dict], run_id: str, run_date: datetime,
     combined = (combined
                 .sort_values(["run_date", "rank"], kind="stable")
                 .reset_index(drop=True))
+    # Lock column order to HISTORY_COLS (any future extra columns trail at
+    # the end). Without this, an old-schema file gaining `score_rank` via
+    # concat ends up with `score_rank` appended after `from_high_pct` rather
+    # than at its canonical position after `rank`.
+    canonical = HISTORY_COLS + [c for c in combined.columns
+                                if c not in HISTORY_COLS]
+    combined = combined.reindex(columns=canonical)
     tmp_path = HISTORY_FILE.with_suffix(".csv.tmp")
     combined.to_csv(tmp_path, index=False)
     tmp_path.replace(HISTORY_FILE)
@@ -894,7 +1114,13 @@ def enrich_with_persistence(picks: list[dict], history: pd.DataFrame,
     rank_delta compares against the *latest prior appearance*, not the
     *immediately previous run*. A ticker that fell out for a few runs and
     is now back will show the delta against its last-seen rank — `streak`
-    and the dropouts/new-entrants sections cover the gap separately."""
+    and the dropouts/new-entrants sections cover the gap separately.
+
+    The delta is computed on `score_rank` (the pre-vol-collapse score-based
+    rank), so removing a top pick by vol-collapse doesn't make every name
+    below it falsely show +1 ↗. For backward compatibility with history rows
+    written before the `score_rank` column existed (or rows where the column
+    is NaN), falls back to `rank`."""
     if history.empty:
         for p in picks:
             p.update({"streak": 1, "first_seen": "—", "prev_rank": None,
@@ -910,6 +1136,7 @@ def enrich_with_persistence(picks: list[dict], history: pd.DataFrame,
 
     run_ids_ordered = (prior.sort_values("run_date")["run_id"]
                        .drop_duplicates().tolist())
+    has_score_rank_col = "score_rank" in prior.columns
 
     for p in picks:
         t = p["ticker"]
@@ -921,7 +1148,17 @@ def enrich_with_persistence(picks: list[dict], history: pd.DataFrame,
         p["first_seen"] = appearances["run_date"].iloc[0].strftime("%Y-%m-%d")
         prev = appearances.iloc[-1]
         p["prev_rank"] = int(prev["rank"])
-        p["rank_delta"] = int(prev["rank"]) - p["rank"]  # positive = rising
+        # Prefer score_rank for delta when both sides have it. Falls back to
+        # rank when (a) the column doesn't exist in the file (pre-upgrade),
+        # or (b) the value is NaN for this specific row (mixed-schema file).
+        prev_score_rank = (prev["score_rank"]
+                           if has_score_rank_col else None)
+        if prev_score_rank is not None and not pd.isna(prev_score_rank):
+            prev_for_delta = int(prev_score_rank)
+        else:
+            prev_for_delta = int(prev["rank"])
+        cur_score_rank = p.get("score_rank", p["rank"])
+        p["rank_delta"] = prev_for_delta - cur_score_rank  # positive = rising
         ticker_runs = set(appearances["run_id"].tolist())
         streak = 1
         for rid in reversed(run_ids_ordered):
@@ -1076,12 +1313,34 @@ def show_history_summary(history: pd.DataFrame):
     for t, n in longest_historical[:10]:
         print(f"  {t:<8} {n} runs")
 
-    # Rank movement over the most recent comparable pair of runs.
+    # Rank movement over the most recent comparable pair of runs. Compute
+    # delta on score_rank (when available) instead of display rank, so a
+    # vol-collapse exclusion of a top pick doesn't produce N false "+1
+    # climbers" in the output. Mirrors the same fix in enrich_with_persistence.
     if len(runs) >= 2:
-        latest = history[history["run_id"] == runs[-1]][["ticker", "rank"]]
-        prev = history[history["run_id"] == runs[-2]][["ticker", "rank"]]
+        use_score_rank = "score_rank" in history.columns
+
+        def _slice_for_delta(run_id: str) -> pd.DataFrame:
+            """Pull a (ticker, rank, _delta_rank) frame for one run. Display
+            `rank` is preserved as-is for the climber/dropper display lines;
+            `_delta_rank` is what the delta arithmetic uses (score_rank when
+            present, fall back to rank when missing or NaN). Building
+            `_delta_rank` from a fresh column avoids the duplicate-column
+            trap of selecting `[..., "rank", "rank"]` and then renaming."""
+            mask = history["run_id"] == run_id
+            df = history.loc[mask, ["ticker", "rank"]].reset_index(drop=True)
+            if use_score_rank:
+                sr = history.loc[mask, "score_rank"].reset_index(drop=True)
+                df["_delta_rank"] = sr.fillna(df["rank"])
+            else:
+                df["_delta_rank"] = df["rank"]
+            return df
+
+        latest = _slice_for_delta(runs[-1])
+        prev = _slice_for_delta(runs[-2])
         merged = latest.merge(prev, on="ticker", suffixes=("_now", "_prev"))
-        merged["delta"] = merged["rank_prev"] - merged["rank_now"]
+        merged["delta"] = (merged["_delta_rank_prev"]
+                           - merged["_delta_rank_now"])
         climbers = [r for _, r in merged.sort_values("delta", ascending=False)
                     .head(5).iterrows() if r["delta"] > 0]
         droppers = [r for _, r in merged.sort_values("delta", ascending=True)
@@ -1109,6 +1368,52 @@ def show_history_summary(history: pd.DataFrame):
         print(f"  {t:<8} {c} appearances")
 
 
+def _positive_int(s: str) -> int:
+    """argparse type for flags that must be a positive integer (no 0/negative)."""
+    try:
+        v = int(s)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"must be an integer, got {s!r}")
+    if v <= 0:
+        raise argparse.ArgumentTypeError(
+            f"must be a positive integer, got {v}"
+        )
+    return v
+
+
+def _maybe_short_window_warning(window_months: int,
+                                vol_collapse_ratio: float) -> str | None:
+    """Returns the stderr warning string when the scoring window is too
+    short for reliable vol-collapse half-vol estimation, else None. Extracted
+    as a helper so tests can verify the warning text and triggering predicate
+    without re-implementing the logic inline."""
+    if window_months < 2 and vol_collapse_ratio > 0:
+        return (f"Warning: --window-months {window_months} means each "
+                f"vol-collapse half has only ~{window_months * 21 // 2} "
+                f"returns; std estimates are noisy at this size. Consider "
+                f"--vol-collapse-ratio 0 to disable if you see false flags.")
+    return None
+
+
+def _vol_collapse_ratio(s: str) -> float:
+    """argparse type for --vol-collapse-ratio. Hard-reject values > 1.0:
+    the ratio is `vol_second / vol_first`, and for the realistic equity
+    universe v2/v1 is essentially always ≤ ~3, so any threshold > 1 would
+    exclude essentially every name. Values ≤ 0 mean 'disable filter' and
+    are allowed (and explicitly documented as the off switch)."""
+    try:
+        v = float(s)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"must be a number, got {s!r}")
+    if v > 1.0:
+        raise argparse.ArgumentTypeError(
+            f"must be ≤ 1.0 (a 2nd-half / 1st-half vol ratio); got {v}. "
+            f"Values > 1.0 would exclude essentially every name. Pass 0 "
+            f"or a negative value to disable the filter."
+        )
+    return v
+
+
 def build_argparser() -> argparse.ArgumentParser:
     """Construct the CLI parser. Split out from main() so tests can verify
     flag registration / parsing without invoking the full scan."""
@@ -1119,7 +1424,15 @@ def build_argparser() -> argparse.ArgumentParser:
     ap.add_argument("--max-dd-pct", type=float, default=20.0)
     ap.add_argument("--min-market-cap", type=float, default=5e9)
     ap.add_argument("--min-volume", type=int, default=1_000_000)
-    ap.add_argument("--universe-count", type=int, default=250)
+    ap.add_argument("--universe-count", type=_positive_int, default=None,
+                    help=("Universe size pulled from Yahoo's screener. Default "
+                          "(unset) pulls every match the screener reports "
+                          "(currently ~1000 US large caps at the default mcap/"
+                          "volume floors). The screener returns at most 250 "
+                          "rows per request, so larger values are paginated "
+                          "automatically with `offset`. Pass an explicit "
+                          "integer to cap the universe (e.g. 250 for a faster "
+                          "refresh, 500 for the previous default)."))
     ap.add_argument("--refresh-universe", dest="refresh_universe",
                     action="store_const", const=True, default=None,
                     help="Force-refresh universe (ignore cache).")
@@ -1163,6 +1476,21 @@ def build_argparser() -> argparse.ArgumentParser:
                           "Weight%% column using equal-risk-contribution × "
                           "leverage. Typical institutional target is 10–15. "
                           "Off by default."))
+    ap.add_argument("--vol-collapse-ratio", type=_vol_collapse_ratio,
+                    default=0.2,
+                    help=("Exclude names whose 2nd-half realized vol (over the "
+                          "scoring window) is less than this fraction of their "
+                          "1st-half vol — the canonical signature of an "
+                          "acquisition target locked at the cash offer price "
+                          "(single-day gap up, then daily range collapses). "
+                          "Default 0.2 (2nd half < 20%% of 1st half). Raise to "
+                          "0.3 to catch more lock-ins (also more false "
+                          "positives); lower to 0.15 to require a more "
+                          "dramatic collapse before excluding (fewer "
+                          "exclusions). A first-half vol floor of 5%% "
+                          "annualized prevents already-low-vol names from "
+                          "being flagged. Hard cap is 1.0 (argparse rejects "
+                          "above). Pass 0 or a negative value to disable."))
     ap.add_argument("--atr-stop-mult", type=float, default=2.5,
                     help=("ATR-based stop loss multiplier (default 2.5). "
                           "Computes 14-day ATR per top-N pick and adds a Stop "
@@ -1214,6 +1542,11 @@ def main():
         show_history_summary(load_history())
         return
 
+    short_window_warning = _maybe_short_window_warning(
+        args.window_months, args.vol_collapse_ratio)
+    if short_window_warning:
+        print(short_window_warning, file=sys.stderr)
+
     universe = load_universe(args.min_market_cap, args.min_volume,
                              args.universe_count, args.refresh_universe)
     # When the regime gate is active we need ≥ 200 trading days for the 200DMA
@@ -1226,6 +1559,9 @@ def main():
     regime = compute_regime(prices) if args.regime_gate != "off" else None
     picks = score_tickers(prices, args.window_months,
                           args.min_return_pct, args.max_dd_pct)
+    picks, excluded_vol_collapse = filter_vol_collapse(
+        picks, prices, args.window_months, args.vol_collapse_ratio,
+    )
     history = load_history()
     now = datetime.now(timezone.utc)
     run_id = make_run_id(now, allow_same_day=args.allow_same_day)
@@ -1291,6 +1627,7 @@ def main():
             "picks_suppressed_by_gate": suppress_picks,
             "picks": [] if suppress_picks else picks[: args.top_n],
             "dropouts_since_last_run": [] if suppress_picks else drops,
+            "excluded_vol_collapse": excluded_vol_collapse,
         }, indent=2, default=str))
         return
 
@@ -1299,9 +1636,28 @@ def main():
     print(f"\n**Params**: window={args.window_months}mo, "
           f"min_return={args.min_return_pct}%, "
           f"max_dd={args.max_dd_pct}%, mcap>{args.min_market_cap:.0e}")
-    print(f"**Universe**: {len(universe)} tickers · "
-          f"**Passed filter**: {len(picks)} · "
-          f"**Prior runs**: {n_prior}")
+    # Banner reflects filter state with one unified pattern when active:
+    #   - filter disabled (ratio ≤ 0): single "Passed filter: N"
+    #   - filter active (any N):       "Passed filter: M (vol-collapse: K
+    #     excluded of N)"  where M = final, K = exclusions, N = pre-filter
+    # Zero-exclusion case still includes the parenthetical so the user can
+    # distinguish "filter ran and found nothing" from the disabled case.
+    if args.vol_collapse_ratio > 0:
+        n_excluded = len(excluded_vol_collapse)
+        n_passed_score = len(picks) + n_excluded
+        if n_excluded == 0:
+            passed_segment = (f"**Passed filter**: {len(picks)} "
+                              f"(vol-collapse: 0 excluded)")
+        else:
+            passed_segment = (f"**Passed filter**: {len(picks)} "
+                              f"(vol-collapse: {n_excluded} excluded of "
+                              f"{n_passed_score})")
+    else:
+        passed_segment = f"**Passed filter**: {len(picks)}"
+    universe_line = (f"**Universe**: {len(universe)} tickers · "
+                     f"{passed_segment} · "
+                     f"**Prior runs**: {n_prior}")
+    print(universe_line)
     if args.regime_gate != "off":
         print(render_regime_banner(regime))
         if regime is not None and not regime["risk_on"]:
@@ -1325,18 +1681,45 @@ def main():
         if sector_line is not None:
             print(sector_line)
 
+    w = args.window_months
+    # Excluded-by-vol-collapse section prints *before* the suppress_picks gate
+    # so the count in the universe banner always has a matching detail block.
+    # In strict+RISK-OFF mode this is the one thing still shown — exclusions
+    # aren't buy signals, they're warnings about names that look like
+    # momentum but aren't, which is useful regardless of regime.
+    if excluded_vol_collapse:
+        print(f"\n## Excluded by vol-collapse filter "
+              f"({len(excluded_vol_collapse)})")
+        # Use :g on (ratio*100) so 0.2 renders as "20%" (no trailing zero) but
+        # 0.155 renders as "15.5%" (preserves the precision the user set).
+        ratio_pct_str = f"{args.vol_collapse_ratio * 100:g}%"
+        print(f"_2nd-half realized vol < "
+              f"{ratio_pct_str} of 1st-half — likely "
+              f"acquisition / lock-in, not tradable momentum._")
+        for p in sorted(excluded_vol_collapse, key=lambda x: x["vol_ratio"]):
+            print(f"- **{p['ticker']}** ({w}m {p['return_pct']:+.1f}%, "
+                  f"MaxDD {p['max_dd_pct']:.1f}%, "
+                  f"vol {p['vol_first_pct']:.1f}% → "
+                  f"{p['vol_second_pct']:.1f}%, "
+                  f"ratio {p['vol_ratio']:.2f})")
+
     if suppress_picks:
         return
 
     print(f"\n## Top {args.top_n}\n")
     print(render_table(picks, args.top_n, args.window_months))
 
-    w = args.window_months
+    # Tickers excluded by vol-collapse this run that were in the prior run's
+    # top-N will surface in dropouts; label them so the reason is visible
+    # (otherwise a +34% name silently "dropping out" is confusing).
+    excluded_tickers = {p["ticker"] for p in excluded_vol_collapse}
     if drops:
         print(f"\n## Dropouts since last run ({len(drops)})")
         for d in drops:
+            suffix = (" · *filtered by vol-collapse this run*"
+                      if d["ticker"] in excluded_tickers else "")
             print(f"- **{d['ticker']}** (was #{d['prev_rank']}, "
-                  f"{w}m={d['prev_return_pct']:+.1f}%)")
+                  f"{w}m={d['prev_return_pct']:+.1f}%){suffix}")
 
     if not history.empty:
         new_entries = [p for p in picks[: args.top_n] if p.get("prev_rank") is None]
