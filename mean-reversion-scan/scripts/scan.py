@@ -947,6 +947,15 @@ def resolve_outcomes(history: pd.DataFrame, bars: pd.DataFrame,
             continue
         # bars index is tz-naive; convert signal_date to a comparable form.
         sig_ts = pd.Timestamp(signal_date).tz_convert(None) if signal_date.tz is not None else pd.Timestamp(signal_date)
+        # Align datetime unit to the index's unit — pandas 2.x rejects
+        # searchsorted with a mismatched-precision Timestamp ("Cannot
+        # losslessly convert units"). Daily bars at midnight have no sub-second
+        # precision to lose, so as_unit with default round_ok=True is safe.
+        try:
+            idx_unit = high_series.index.unit
+            sig_ts = sig_ts.as_unit(idx_unit)
+        except (AttributeError, ValueError):
+            sig_ts = pd.Timestamp(sig_ts.date())
         # Find the index of the signal date in the bars (closest trading day
         # at or before sig_ts; we use bars indexed AFTER the signal day).
         # Use searchsorted to find first bar strictly after the signal date.
