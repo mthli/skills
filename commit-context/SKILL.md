@@ -36,23 +36,108 @@ git log --oneline -5
   - Abort
 - If there are **no changes at all** → tell the user there's nothing to commit and stop.
 
-### 2. Synthesize the commit message
+### 2. Load the module registry & map changes
+
+When the `# Decisions` block in Step 5 is written, every decision must be tagged with a `MODULE` that
+exists in `.claude/MODULES.md` — the registry that makes `git log --grep="MODULE: <id>"` mechanical.
+(The block may also be skipped entirely; see the conditions below.)
+
+**First check whether Decisions apply at all**. Skip the entire `# Decisions` block (and the rest of
+this step) when **any** of the following holds — the prose body in Step 3 still needs one line on
+motivation, but no structured decisions:
+
+- The diff is genuinely trivial: pure typo / comment-only / formatting / single-line obvious bug fix.
+  Heuristic: ≤5 net lines changed in `git diff --stat`, and (for source-code files) no new imports,
+  methods, or classes. For non-code files (markdown, YAML, JSON, configs) just use the line-count
+  threshold.
+- The repo has no `.claude/MODULES.md` and the user declines to bootstrap one (see below).
+
+**Otherwise, work the registry**:
+
+1. **Look for `.claude/MODULES.md` at the repo root.**
+   - **Exists** → parse out the `<id>` entries (lines like `- \`<id>\` — description` under any
+     H2 section, typically `## Structural modules` and `## Cross-cutting concerns`). Treat these
+     as the legal module set.
+   - **Missing** → tell the user "this repo has no module registry yet" and offer to bootstrap one.
+     Infer 1–3 candidate modules from the current diff (group by directory + cross-cutting concern)
+     and show the draft. Only write the file if the user approves. If they decline, skip the
+     Decisions block for this commit (see the rule above). If they approve, the **one-time setup
+     hook** at the end of this step will fire after items 2 and 3.
+
+2. **Map the current diff to module(s):**
+   - For **structural modules**, match by changed file paths under the module's real directory.
+   - For **cross-cutting concerns** (`tracking`, `build`, `dependencies`, etc.), match by semantics
+     of the change, not by path.
+   - A single commit can touch multiple modules → multiple Decisions.
+
+3. **If no registered module matches**, reverse-question the user:
+   *"This change doesn't match any module in `.claude/MODULES.md`. What's the new module called?
+   Should I add it to the registry?"*
+   - Naming constraints (reject and re-ask if violated, **do not auto-fix**):
+     - ASCII only, lowercase, hyphens for word separation, slashes for hierarchy
+       (e.g. `live-call/role-dialog`)
+     - no mixed case, no spaces, no non-ASCII characters
+   - Mention the current registry size; the doc suggests keeping it to 15–25 entries.
+   - On approval, append the new entry to `.claude/MODULES.md` and `git add` that file so it
+     ships with this commit.
+
+**One-time setup hook: read-rules in `CLAUDE.md`**. Fires **only** in the same `/commit-context`
+invocation that just bootstrapped `.claude/MODULES.md` (item 1's "Missing" branch, above). Ask one
+separate yes/no question:
+*"Also install the read-rules block into the project's `CLAUDE.md` so future sessions actually
+consume what gets written?"*
+
+Show the draft block (below), tell the user whether it will be **appended to an existing
+`<repo-root>/CLAUDE.md`** or **used to create a new one**, and write only on explicit approval.
+After this bootstrap moment — whether the user said yes or no — **never raise this question again
+for this repo**. Subsequent `/commit-context` invocations skip it entirely (heuristic: once
+`.claude/MODULES.md` exists, the bootstrap moment is over). If the user approved, `git add` the
+`CLAUDE.md` change alongside `.claude/MODULES.md` so both ship in this commit.
+
+**Language handling**: if an existing `CLAUDE.md` is in a non-English language, translate the prose
+of the draft block to match. But **keep these tokens verbatim** (they're literal identifiers used
+by the structured-decisions parser and other tooling — translating them silently breaks future
+distillation): `MODULE`, `WHY`, `ALTERNATIVES`, `CHOSEN`, `TRADEOFFS`, `RISKS`, `SUPERSEDES`,
+`DECISIONS.md`, `/commit-context`, `git log`, `git show`, and any field name in ALL CAPS.
+
+**Indentation note**: the fenced block below is shown at the document's left margin. The actual
+content injected into `CLAUDE.md` has **no leading whitespace** — paste it flush-left.
+
+Draft block (use a top-level H2 so it doesn't collide with existing sections):
+
+````markdown
+## Knowledge Loop Conventions
+
+### Before editing code
+1. Look for a `DECISIONS.md` in the current directory or an ancestor. If it exists, read it.
+2. Run `git log --oneline -10 -- <path>` for the file(s) you're about to change.
+3. If recent commits contain `MODULE: <current module>` blocks, `git show` those bodies.
+
+### After finishing a task
+- When using `/commit-context`, fill all six fields in each Decision block — don't skip
+  `ALTERNATIVES` or `RISKS`.
+- If this change overrides a prior `DECISIONS.md` entry, add `SUPERSEDES:` to the Decision.
+````
+
+### 3. Synthesize the commit message
 
 Look back through the conversation and identify:
 
 - **What task** the user was working on (bug fix, new feature, refactor, docs, tests, config, etc.)
-- **Key decisions** made during the session (e.g. "chose JWT over session cookies", "switched from
-  REST to GraphQL")
 - **Problems encountered and solved** (e.g. "race condition in the cache layer")
 - **The motivation** — why the change was needed
+
+Key decisions / tradeoffs / alternatives belong in the structured `# Decisions` block (Step 5),
+**not** in the prose body. Don't duplicate them here.
 
 Combine this with the actual diff to produce a commit message in this format:
 
 ```
 <type>(<optional-scope>): <summary under 72 chars>
 
-<body: 2-5 lines summarizing the session context — the why, key decisions,
-and any non-obvious choices. Written in imperative mood.>
+<body: 2-5 lines on the task and motivation — what was being worked on and why.
+Imperative mood. Don't list specific decisions/tradeoffs here — those live in
+the structured # Decisions block.>
 ```
 
 **Type** follows Conventional Commits: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `style`,
@@ -60,22 +145,23 @@ and any non-obvious choices. Written in imperative mood.>
 
 **Scope** is optional — use it when the change clearly belongs to one module/component.
 
-**Summary line rules:**
+**Summary line rules**:
 - Imperative mood ("add", not "added" or "adds")
 - No period at the end
 - Under 72 characters total (including the `type(scope): ` prefix)
 
-**Body guidelines:**
+**Body guidelines**:
 - Focus on *why* the change was made, not *what* files were touched (the diff handles that)
-- Mention key decisions or tradeoffs from the conversation
-- Keep it to 2-5 lines — concise but informative
+- Decisions, tradeoffs, alternatives → go in `# Decisions` (Step 5), not here. Don't duplicate.
+- Length: 2-5 lines for normal commits; **1 line is fine for trivial commits** (those that skipped
+  Decisions per Step 2)
 - Use imperative mood
 
-### 3. Retrieve token usage with ccusage
+### 4. Retrieve token usage with ccusage
 
 Use [`ccusage`](https://github.com/ryoppippi/ccusage) to get the **current session's** token usage.
 
-**Important:** ccusage's default `session` command aggregates all sessions under the same project
+**Important**: ccusage's default `session` command aggregates all sessions under the same project
 path. To get the token usage for **this specific session only**, you must find the current session's
 UUID and query it with the `-i` flag.
 
@@ -105,7 +191,7 @@ and strips the `.jsonl` suffix to get `SESSION_UUID` — do not pipe through `he
 #### Step 3: Query token usage for this session (raw JSON)
 
 ```bash
-npx ccusage session -i "<SESSION_UUID>" --json -O --no-color
+npx ccusage claude session -i "<SESSION_UUID>" --json -O --no-color
 ```
 
 Substitute the `SESSION_UUID` from Step 2. This prints JSON with a `sessionId`, `totalTokens`,
@@ -129,21 +215,21 @@ If any step fails (ccusage not installed, no `.jsonl` files found, JSON empty, e
 **omit the `# Token Usage` section entirely** from the commit message — do not add a
 placeholder or error note.
 
-### 4. Append conversation log to the commit message
+### 5. Append conversation log, Decisions, and metadata
 
-After the body, add a `---` separator and a structured conversation log that captures the full
-session context. This makes the reasoning permanently part of the commit history (unlike git notes
-which are local-only and easily lost).
+After the body, add a `---` separator and the structured sections below. This makes the reasoning
+permanently part of the commit history (unlike git notes which are local-only and easily lost).
 
-If token usage was successfully retrieved in step 3, include it as the last section.
+If token usage was successfully retrieved in step 4, include it as the last section before the
+trailer.
 
 The full commit message format:
 
 ```
 <type>(<optional-scope>): <summary under 72 chars>
 
-<body: 2-5 lines summarizing the session context — the why, key decisions,
-and any non-obvious choices. Written in imperative mood.>
+<body: 2-5 lines on the task and motivation. Imperative mood.
+No decisions/tradeoffs here — those live in # Decisions below.>
 
 ---
 
@@ -157,17 +243,27 @@ and any non-obvious choices. Written in imperative mood.>
 (List the core dialog nodes in chronological order. Skip pure tool-call noise
 and redundant back-and-forth — focus on intent, decisions, and turning points.)
 
-# Key Decisions
+# Decisions
 
-- <decision 1 and its rationale>
-- <decision 2 and its rationale>
+## Decision 1
+- MODULE: <id from .claude/MODULES.md — must match exactly>
+- WHY: <one-line motivation>
+- ALTERNATIVES: <other approaches considered, separated by " / ">
+- CHOSEN: <the approach actually taken>
+- TRADEOFFS: <what was given up>
+- RISKS: <what to watch out for later>
+- SUPERSEDES: <OPTIONAL — only if this overrides a prior decision; format: "<old summary> (commit <hash>)">
 
 # Files Modified
 
 - <file path> — <one-line semantic description of what changed and why>
 - ...
 (Summarize each file's change in plain language — what the edit accomplishes,
-not what lines were touched. Derive from the diff + conversation context.)
+not what lines were touched. Derive from the diff + conversation context.
+If `.claude/MODULES.md` or `CLAUDE.md` were added/changed as part of Step 2's
+one-time bootstrap, label them explicitly as such — e.g.
+"`.claude/MODULES.md` — one-time knowledge-loop bootstrap (module registry)"
+— so a future reader doesn't mistake the infrastructure addition for feature work.)
 
 # Token Usage (only include if ccusage succeeds)
 
@@ -187,13 +283,24 @@ from the preceding section by a blank line. Match the model name to the actual m
 running the session (check the environment block — e.g. `Claude Opus 4.7 (1M context)`,
 `Claude Sonnet 4.6`, etc.).
 
-**Conversation log guidelines:**
+**Conversation log guidelines**:
 - Extract **key dialog nodes**, not every message verbatim. Keep it readable for someone skimming
   months later.
 - **Scrub sensitive information** — if API keys, passwords, tokens, or other secrets appeared in
   the conversation, omit or redact them. Never persist credentials into version control.
 
-### 5. Commit
+**Decisions block format rules** (these enable future scripted distillation — keep them strict):
+- Each Decision is a level-2 heading (`## Decision N`).
+- One Decision per module touched. Cross-cutting commits get multiple Decisions.
+- Field names are **ALL CAPS**, one field per line, exact prefix `- KEY: `. Required fields:
+  `MODULE`, `WHY`, `ALTERNATIVES`, `CHOSEN`, `TRADEOFFS`, `RISKS`. Optional: `SUPERSEDES`.
+- `MODULE` value must exactly match an `<id>` from `.claude/MODULES.md`. No paraphrasing, no
+  inventing new ones inline — go back to Step 2's reverse-question flow instead.
+- A value may span multiple lines, but the next field must still start with `- KEY: ` on its own line.
+- Omit the whole `# Decisions` section when Step 2's skip conditions apply (trivial change or
+  declined MODULES.md bootstrap) — don't leave an empty section or write "n/a".
+
+### 6. Commit
 
 Write the message to a temp file with the `Write` tool, then pass it to
 `git commit -F`. The `Write` tool writes bytes verbatim — `$`, `` ` ``, `\`,
@@ -218,7 +325,13 @@ step, show `git log -1 --stat` so the user sees the final commit.
   warning the user first.
 - If the conversation context is very short or unclear, lean more heavily on the diff to write the
   message, but still try to infer intent.
-- The conversation log in the commit message should extract **key dialog nodes**, not copy every
-  message verbatim. Keep it readable and useful for someone skimming months later.
-- **Scrub sensitive information** — if API keys, passwords, tokens, or other secrets appeared in
-  the conversation, omit or redact them. Never persist credentials into version control.
+- **Module-registry discipline** — new entries in `.claude/MODULES.md` are only added after the
+  user explicitly approves. Don't auto-create modules. If a proposed name violates the naming
+  constraints (mixed case / spaces / non-ASCII / etc.), go back and reverse-question the user — do
+  not silently rewrite it. The registry is meant to stay small (~15–25 entries); flag it when the
+  user is about to push past that.
+- **CLAUDE.md scope guard** — the only time this skill touches the project's `CLAUDE.md` is the
+  one-shot read-rules bootstrap in Step 2, immediately after a `.claude/MODULES.md` bootstrap, on
+  explicit user approval. Once that moment has passed (signal: `.claude/MODULES.md` exists), never
+  re-prompt and never modify `CLAUDE.md` again. The skill's job is writing commits, not managing
+  project config.
