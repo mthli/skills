@@ -10,6 +10,7 @@ Personal skills used in Claude Code 🤖
 ## Finance
 
 - `base-breakout-scan` - Scan US large-cap equities for tight pre-breakout bases and track which setups persist across runs.
+- `cross-scan` - Cross-reference outputs from the four sister scans (momentum, base-breakout, mean-reversion, unusual-options) to surface tickers appearing in 2+ on the same day — the highest-conviction "agreement" picks.
 - [`edgartools`](https://github.com/dgunning/edgartools) - Access and analyze SEC Edgar filings, XBRL financial statements, 10-K, 10-Q, and 8-K reports.
 - `mean-reversion-scan` - Scan US large-cap equities for short-term oversold reversals inside confirmed long-term uptrends (Connors-style RSI(2) setups), and track running win rates on past picks.
 - `momentum-scan` - Scan US large-cap equities for smooth uptrends and track which names persist across runs.
