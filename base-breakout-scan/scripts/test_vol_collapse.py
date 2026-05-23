@@ -159,10 +159,14 @@ def test_argparse_ratio_validator_rejects_above_one():
 
 def test_argparse_ratio_validator_accepts_one_and_below():
     ap = scan.build_argparser()
-    assert ap.parse_args(["--vol-collapse-ratio", "1.0"]).vol_collapse_ratio == 1.0
-    assert ap.parse_args(["--vol-collapse-ratio", "0.2"]).vol_collapse_ratio == 0.2
-    assert ap.parse_args(["--vol-collapse-ratio", "0"]).vol_collapse_ratio == 0.0
-    assert ap.parse_args(["--vol-collapse-ratio", "-1"]).vol_collapse_ratio == -1.0
+    assert ap.parse_args(["--vol-collapse-ratio", "1.0"]
+                         ).vol_collapse_ratio == 1.0
+    assert ap.parse_args(["--vol-collapse-ratio", "0.2"]
+                         ).vol_collapse_ratio == 0.2
+    assert ap.parse_args(["--vol-collapse-ratio", "0"]
+                         ).vol_collapse_ratio == 0.0
+    assert ap.parse_args(["--vol-collapse-ratio", "-1"]
+                         ).vol_collapse_ratio == -1.0
 
 
 # ---- enrich_with_persistence: score_rank semantics ------------------------
@@ -211,7 +215,8 @@ def test_enrich_falls_back_per_row_on_nan_score_rank():
     # Mixed-schema: one row has score_rank, the other has NaN.
     history = pd.DataFrame([
         _history_row("D1", "2026-05-13T00:00:00Z", "OLD", rank=3),
-        _history_row("D1", "2026-05-13T00:00:00Z", "NEW", rank=4, score_rank=4),
+        _history_row("D1", "2026-05-13T00:00:00Z",
+                     "NEW", rank=4, score_rank=4),
     ])
     history.loc[0, "score_rank"] = float("nan")
     picks = [
@@ -308,8 +313,10 @@ def test_single_ticker_pipeline_attaches_vol_collapse_warning(monkeypatch):
     # in the LAST 3 months — that's the window compute_vol_halves slices.
     rng = np.random.RandomState(0)
     pre = list(rng.normal(0.0, 0.02, 200))   # 200 bars of normal trading
-    noisy = list(rng.normal(0.0, 0.05, 32))  # 32 bars of pre-deal noise (1st half of last 63)
-    locked = [0.00001] * 31                   # 31 bars locked (2nd half of last 63)
+    # 32 bars of pre-deal noise (1st half of last 63)
+    noisy = list(rng.normal(0.0, 0.05, 32))
+    # 31 bars locked (2nd half of last 63)
+    locked = [0.00001] * 31
     series = _series_from_returns(pre + noisy + locked)
     assert len(series) >= 220, f"need ≥ 220 bars, got {len(series)}"
 
@@ -374,7 +381,8 @@ def test_prune_non_trading_days_reindexes_old_schema_file(history_file, monkeypa
     # should have canonical column order (which would add score_rank as
     # a NaN column at the canonical position).
     sat = datetime(2026, 5, 9, 20, 0, 0, tzinfo=timezone.utc)   # Saturday
-    fri = datetime(2026, 5, 8, 20, 0, 0, tzinfo=timezone.utc)   # Friday (trading)
+    # Friday (trading)
+    fri = datetime(2026, 5, 8, 20, 0, 0, tzinfo=timezone.utc)
     rows = pd.DataFrame([
         {
             "run_id": "20260508",
@@ -447,7 +455,7 @@ def test_append_history_migrates_old_schema_file(history_file):
         {
             "run_id": "20260511",
             "run_date": datetime(2026, 5, 11, 20, 0, 0,
-                                  tzinfo=timezone.utc).isoformat(),
+                                 tzinfo=timezone.utc).isoformat(),
             "ticker": "AAPL", "rank": 1, "base_score": 60.0,
             "base_weeks": 8.0, "width_pct": 5.0, "bb_pctile": 5.0,
             "vol_dryup_ratio": 0.7, "rs_slope_pct_per_wk": 0.5,

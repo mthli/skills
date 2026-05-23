@@ -7,6 +7,10 @@ a single bad symbol does not poison the batch. Field schema lives in the
 *_KEYS / *_CSV_COLS constants below.
 """
 from __future__ import annotations
+import yfinance as yf
+from helpers import (
+    RESULT_META, emit_json_or_ndjson, safe_float, safe_int, safe_str, with_retry,
+)
 
 import argparse
 import sys
@@ -16,12 +20,6 @@ from pathlib import Path
 # Allow this script to be run directly OR imported as a module: ensure
 # sibling `helpers.py` is importable regardless of how Python was invoked.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-
-from helpers import (
-    RESULT_META, emit_json_or_ndjson, safe_float, safe_int, safe_str, with_retry,
-)
-
-import yfinance as yf
 
 
 # Earnings only fire for actual operating companies — ETFs / indexes /
@@ -84,9 +82,9 @@ _SUMMARY_KEYS = ("next_date", "next_eps_estimate",
 # Final CSV column orders. Tuple-concat for immutability + cheap reuse.
 _DEFAULT_CSV_COLS = _BASE_KEYS + _PER_ROW_KEYS + RESULT_META
 _SUMMARY_CSV_COLS = (_SUMMARY_BASE_KEYS
-                    + ("note", "coverage_note")
-                    + _SUMMARY_KEYS
-                    + RESULT_META)
+                     + ("note", "coverage_note")
+                     + _SUMMARY_KEYS
+                     + RESULT_META)
 
 # `--estimates` schema. Yahoo's analyst panel surfaces five DataFrames, all
 # indexed by period code ('0q' = current quarter / upcoming report; '+1q' =
@@ -289,10 +287,13 @@ def _fetch_estimates(symbol: str) -> tuple[list, dict | None, int, str | None]:
                          sources failed).
     """
     ticker = yf.Ticker(symbol)
-    eps_df, eps_kind, eps_attempts = with_retry(lambda: ticker.earnings_estimate)
-    rev_df, rev_kind, rev_attempts = with_retry(lambda: ticker.revenue_estimate)
+    eps_df, eps_kind, eps_attempts = with_retry(
+        lambda: ticker.earnings_estimate)
+    rev_df, rev_kind, rev_attempts = with_retry(
+        lambda: ticker.revenue_estimate)
     trend_df, _, trend_attempts = with_retry(lambda: ticker.eps_trend)
-    revisions_df, _, revisions_attempts = with_retry(lambda: ticker.eps_revisions)
+    revisions_df, _, revisions_attempts = with_retry(
+        lambda: ticker.eps_revisions)
     growth_df, _, growth_attempts = with_retry(lambda: ticker.growth_estimates)
     max_attempts = max(eps_attempts, rev_attempts, trend_attempts,
                        revisions_attempts, growth_attempts)
@@ -352,7 +353,8 @@ def _fetch_estimates(symbol: str) -> tuple[list, dict | None, int, str | None]:
             eps_currency = safe_str(eps_row.get("currency"))
         if eps_currency is None and trend_row is not None:
             eps_currency = safe_str(trend_row.get("currency"))
-        revenue_currency = safe_str(rev_row.get("currency")) if rev_row is not None else None
+        revenue_currency = safe_str(rev_row.get(
+            "currency")) if rev_row is not None else None
 
         rows.append({
             "period": period,
@@ -515,20 +517,21 @@ def _summarize(full: dict) -> dict:
     # "small flat dict for peer comparison" promise intact: ~9 extra
     # fields × 1 row vs ~24 fields × 4 rows.
     if "estimates" in full:
-        zero_q = next((r for r in full["estimates"] if r.get("period") == "0q"), None)
+        zero_q = next(
+            (r for r in full["estimates"] if r.get("period") == "0q"), None)
         for k in _CONSENSUS_SUMMARY_KEYS:
             base[k] = None
         if zero_q is not None:
-            base["consensus_eps_avg"]            = zero_q.get("eps_avg")
-            base["consensus_eps_low"]            = zero_q.get("eps_low")
-            base["consensus_eps_high"]           = zero_q.get("eps_high")
-            base["consensus_eps_growth_yoy"]     = zero_q.get("eps_growth")
-            base["consensus_eps_analysts"]       = zero_q.get("eps_analysts")
-            base["consensus_eps_currency"]       = zero_q.get("eps_currency")
-            base["consensus_revenue_avg"]        = zero_q.get("revenue_avg")
+            base["consensus_eps_avg"] = zero_q.get("eps_avg")
+            base["consensus_eps_low"] = zero_q.get("eps_low")
+            base["consensus_eps_high"] = zero_q.get("eps_high")
+            base["consensus_eps_growth_yoy"] = zero_q.get("eps_growth")
+            base["consensus_eps_analysts"] = zero_q.get("eps_analysts")
+            base["consensus_eps_currency"] = zero_q.get("eps_currency")
+            base["consensus_revenue_avg"] = zero_q.get("revenue_avg")
             base["consensus_revenue_growth_yoy"] = zero_q.get("revenue_growth")
-            base["consensus_revenue_analysts"]   = zero_q.get("revenue_analysts")
-            base["consensus_revenue_currency"]   = zero_q.get("revenue_currency")
+            base["consensus_revenue_analysts"] = zero_q.get("revenue_analysts")
+            base["consensus_revenue_currency"] = zero_q.get("revenue_currency")
     if _LONG_TERM_GROWTH_KEY in full:
         base[_LONG_TERM_GROWTH_KEY] = full[_LONG_TERM_GROWTH_KEY]
     if "estimates_error" in full:
@@ -707,7 +710,7 @@ def fetch(symbol: str, limit: int = LIMIT_DEFAULT,
         # Parse to tz-aware datetime: ISO lex compare is only safe within
         # a single tz offset, and DST-spanning windows mix `-04:00` /
         # `-05:00` for ET-listed tickers. Sort cost is trivial (≤100 rows).
-        _key = lambda r: datetime.fromisoformat(r["date"])
+        def _key(r): return datetime.fromisoformat(r["date"])
         future_rows = sorted([r for r in rows if r["is_future"]], key=_key)
         past_rows = sorted([r for r in rows if not r["is_future"]],
                            key=_key, reverse=True)
@@ -845,10 +848,10 @@ def main() -> None:
     )
     ap.add_argument("--limit", type=int, default=LIMIT_DEFAULT, metavar="N",
                     help=f"Default mode: max rows in output. --summary mode: "
-                         f"fetch hint — yfinance buckets to page sizes "
-                         f"25/50/100, so --limit 1–25 are equivalent (all "
-                         f"fetch ~25 rows). Range [{LIMIT_MIN},{LIMIT_MAX}], "
-                         f"default %(default)s. Includes future + past.")
+                    f"fetch hint — yfinance buckets to page sizes "
+                    f"25/50/100, so --limit 1–25 are equivalent (all "
+                    f"fetch ~25 rows). Range [{LIMIT_MIN},{LIMIT_MAX}], "
+                    f"default %(default)s. Includes future + past.")
     ap.add_argument("--summary", action="store_true",
                     help="Project earnings list to flat per-ticker dict for peer comparison.")
     ap.add_argument("--estimates", action="store_true",

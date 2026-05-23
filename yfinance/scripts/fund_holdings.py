@@ -15,6 +15,11 @@ via the standard retry path; on that path `quote_type` is null
 constants below.
 """
 from __future__ import annotations
+from yfinance.exceptions import YFDataException
+import yfinance as yf
+from helpers import (
+    RESULT_META, emit_json_or_ndjson, safe_float, safe_int, safe_str, with_retry,
+)
 
 import argparse
 import sys
@@ -23,13 +28,6 @@ from pathlib import Path
 # Allow this script to be run directly OR imported as a module: ensure
 # sibling `helpers.py` is importable regardless of how Python was invoked.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-
-from helpers import (
-    RESULT_META, emit_json_or_ndjson, safe_float, safe_int, safe_str, with_retry,
-)
-
-import yfinance as yf
-from yfinance.exceptions import YFDataException
 
 
 # Yahoo's funds_data endpoint covers ETFs and mutual funds. Empirically
@@ -258,12 +256,15 @@ def _project_operations(df) -> dict:
         except (KeyError, AttributeError):
             return None
 
-    out["expense_ratio"]                          = _get("Annual Report Expense Ratio", sym_col)
-    out["expense_ratio_category_avg"]             = _get("Annual Report Expense Ratio", cat_col)
-    out["turnover"]                               = _get("Annual Holdings Turnover",    sym_col)
-    out["turnover_category_avg"]                  = _get("Annual Holdings Turnover",    cat_col)
-    out["total_net_assets_millions"]              = _get("Total Net Assets",            sym_col)
-    out["total_net_assets_category_avg_millions"] = _get("Total Net Assets",            cat_col)
+    out["expense_ratio"] = _get("Annual Report Expense Ratio", sym_col)
+    out["expense_ratio_category_avg"] = _get(
+        "Annual Report Expense Ratio", cat_col)
+    out["turnover"] = _get("Annual Holdings Turnover",    sym_col)
+    out["turnover_category_avg"] = _get("Annual Holdings Turnover",    cat_col)
+    out["total_net_assets_millions"] = _get(
+        "Total Net Assets",            sym_col)
+    out["total_net_assets_category_avg_millions"] = _get(
+        "Total Net Assets",            cat_col)
     return out
 
 
@@ -380,24 +381,25 @@ def _summarize(full: dict) -> dict:
     out["quote_type"] = full.get("quote_type")
     overview = full.get("fund_overview") or {}
     out["category"] = overview.get("category")
-    out["family"]   = overview.get("family")
+    out["family"] = overview.get("family")
 
     ops = full.get("operations") or {}
-    out["expense_ratio"]              = ops.get("expense_ratio")
-    out["turnover"]                   = ops.get("turnover")
-    out["total_net_assets_millions"]  = ops.get("total_net_assets_millions")
+    out["expense_ratio"] = ops.get("expense_ratio")
+    out["turnover"] = ops.get("turnover")
+    out["total_net_assets_millions"] = ops.get("total_net_assets_millions")
 
     assets = full.get("asset_classes") or {}
     out["stock_pct"] = assets.get("stock_pct")
-    out["bond_pct"]  = assets.get("bond_pct")
-    out["cash_pct"]  = assets.get("cash_pct")
+    out["bond_pct"] = assets.get("bond_pct")
+    out["cash_pct"] = assets.get("cash_pct")
 
     holdings = full.get("top_holdings") or []
     out["holdings_returned"] = len(holdings)
     if holdings:
         out["top_holding_symbol"] = holdings[0].get("symbol")
         out["top_holding_weight"] = holdings[0].get("weight")
-        weights = [h.get("weight") for h in holdings if h.get("weight") is not None]
+        weights = [h.get("weight")
+                   for h in holdings if h.get("weight") is not None]
         out["holdings_concentration"] = sum(weights) if weights else None
 
     sectors = full.get("sector_weightings") or {}
@@ -405,13 +407,13 @@ def _summarize(full: dict) -> dict:
         items = [(k, v) for k, v in sectors.items() if v is not None]
         if items:
             top = max(items, key=lambda kv: kv[1])
-            out["top_sector"]        = top[0]
+            out["top_sector"] = top[0]
             out["top_sector_weight"] = top[1]
 
     em = full.get("equity_metrics") or {}
-    out["pe_ratio"]            = em.get("pe_ratio")
-    out["pb_ratio"]            = em.get("pb_ratio")
-    out["earnings_growth_3y"]  = em.get("earnings_growth_3y")
+    out["pe_ratio"] = em.get("pe_ratio")
+    out["pb_ratio"] = em.get("pb_ratio")
+    out["earnings_growth_3y"] = em.get("earnings_growth_3y")
 
     bm = full.get("bond_metrics") or {}
     out["duration_years"] = bm.get("duration_years")

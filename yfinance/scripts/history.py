@@ -6,6 +6,11 @@ on stdout, one entry per ticker; failed tickers carry an "error" field instead
 of data so a single bad symbol does not poison the batch.
 """
 from __future__ import annotations
+import yfinance as yf
+from helpers import (
+    RESULT_META, emit_json_or_ndjson, infer_exchange_tz, safe_float, safe_int,
+    with_retry,
+)
 
 import argparse
 import json
@@ -18,14 +23,9 @@ from pathlib import Path
 # sibling `helpers.py` is importable regardless of how Python was invoked.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from helpers import (
-    RESULT_META, emit_json_or_ndjson, infer_exchange_tz, safe_float, safe_int,
-    with_retry,
-)
 
-import yfinance as yf
-
-VALID_PERIODS = {"1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max"}
+VALID_PERIODS = {"1d", "5d", "1mo", "3mo",
+                 "6mo", "1y", "2y", "5y", "10y", "ytd", "max"}
 VALID_INTERVALS = {"1m", "2m", "5m", "15m", "30m", "60m", "90m", "1h",
                    "1d", "5d", "1wk", "1mo", "3mo"}
 
@@ -250,7 +250,8 @@ def _build_result(symbol: str, df, period: str | None, start: str | None,
     #              tz_convert to its own tz is effectively a no-op, so the
     #              pre-batch behavior is preserved.
     if df.index.tz is not None:
-        target = exchange_tz if (not intraday and exchange_tz is not None) else output_tz
+        target = exchange_tz if (
+            not intraday and exchange_tz is not None) else output_tz
         if target is not None:
             df = df.tz_convert(target)
 
@@ -287,7 +288,8 @@ def _build_result(symbol: str, df, period: str | None, start: str | None,
         end_close = safe_float(closes.iloc[-1])
         if start_close is not None and end_close is not None:
             change_abs = end_close - start_close
-            change_pct = (change_abs / start_close * 100) if start_close else None
+            change_pct = (change_abs / start_close *
+                          100) if start_close else None
         else:
             change_abs = None
             change_pct = None
@@ -501,7 +503,8 @@ def _detect_splits(series) -> list[dict]:
                 # `d` is a `datetime.date` after groupby-dedup, or a
                 # `pd.Timestamp` for never-deduped paths. Both expose
                 # strftime; use it uniformly.
-                date_str = d.strftime("%Y-%m-%d") if hasattr(d, "strftime") else str(d)
+                date_str = d.strftime(
+                    "%Y-%m-%d") if hasattr(d, "strftime") else str(d)
                 out.append({
                     "date": date_str,
                     "prev_shares": prev_v,
@@ -673,7 +676,8 @@ def fetch_shares(symbol: str, period: str | None, start: str | None,
         )
         return base
 
-    base["timezone"] = str(series.index.tz) if series.index.tz is not None else None
+    base["timezone"] = str(
+        series.index.tz) if series.index.tz is not None else None
 
     # Dedup same-calendar-date observations — keep the last value Yahoo
     # emitted for the date. groupby(date) collapses the DatetimeIndex into
@@ -1310,7 +1314,8 @@ def _emit(results: list, fmt: str, *, summary: bool,
         # narrow window) carries its disambiguator into CSV; default
         # summary doesn't expose `note` (its empty path is `error`).
         if shares:
-            cols = base_keys + list(_SHARES_SUMMARY_KEYS) + ["note"] + list(RESULT_META)
+            cols = base_keys + list(_SHARES_SUMMARY_KEYS) + \
+                ["note"] + list(RESULT_META)
         else:
             cols = base_keys + list(_SUMMARY_KEYS) + list(RESULT_META)
         writer.writerow(cols)

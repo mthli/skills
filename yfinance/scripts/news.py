@@ -8,6 +8,8 @@ tickers carry an "error" field instead of articles so a single bad
 symbol does not poison the batch.
 """
 from __future__ import annotations
+import yfinance as yf
+from helpers import RESULT_META, emit_json_or_ndjson, safe_bool, safe_str, with_retry
 
 import argparse
 import sys
@@ -17,9 +19,6 @@ from pathlib import Path
 # sibling `helpers.py` is importable regardless of how Python was invoked.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from helpers import RESULT_META, emit_json_or_ndjson, safe_bool, safe_str, with_retry
-
-import yfinance as yf
 
 # Per-article output fields, in emit order. title / summary / pub_date /
 # provider / url answer "what happened, when, who said it, where do I read
@@ -172,10 +171,12 @@ def _emit(results: list, fmt: str) -> None:
         # `.get(c, "")` so any column missing from the merged dict
         # collapses to empty string in CSV.
         if not articles:
-            writer.writerow([{"symbol": symbol, **carry}.get(c, "") for c in cols])
+            writer.writerow([{"symbol": symbol, **carry}.get(c, "")
+                            for c in cols])
             continue
         for a in articles:
-            writer.writerow([{"symbol": symbol, **a, **carry}.get(c, "") for c in cols])
+            writer.writerow(
+                [{"symbol": symbol, **a, **carry}.get(c, "") for c in cols])
 
 
 if __name__ == "__main__":

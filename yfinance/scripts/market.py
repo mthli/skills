@@ -29,6 +29,15 @@ Doesn't take a ticker — keys are region strings. Distinct from
 `calendars` (event timeline) and `screener` (filter predicates).
 """
 from __future__ import annotations
+from helpers import (
+    RESULT_META,
+    safe_bool,
+    safe_float,
+    safe_int,
+    safe_str,
+    with_retry,
+)
+import yfinance as yf
 
 import argparse
 import contextlib
@@ -42,17 +51,6 @@ from pathlib import Path
 
 # Allow this script to be run directly OR imported as a module.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-
-import yfinance as yf
-
-from helpers import (
-    RESULT_META,
-    safe_bool,
-    safe_float,
-    safe_int,
-    safe_str,
-    with_retry,
-)
 
 
 # Canonical region keys accepted by `yf.Market(<key>)`. Sourced from

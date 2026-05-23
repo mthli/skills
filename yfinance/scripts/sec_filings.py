@@ -8,6 +8,11 @@ a "note" field instead of filings so a single bad symbol does not poison
 the batch. Field schema lives in the *_KEYS / *_CSV_COLS constants below.
 """
 from __future__ import annotations
+import yfinance as yf
+from helpers import (
+    RESULT_META, emit_json_or_ndjson, epoch_to_date, safe_int, safe_str,
+    with_retry,
+)
 
 import argparse
 import sys
@@ -17,13 +22,6 @@ from pathlib import Path
 # Allow this script to be run directly OR imported as a module: ensure
 # sibling `helpers.py` is importable regardless of how Python was invoked.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-
-from helpers import (
-    RESULT_META, emit_json_or_ndjson, epoch_to_date, safe_int, safe_str,
-    with_retry,
-)
-
-import yfinance as yf
 
 
 # Yahoo's `sec_filings` covers SEC-registered securities. Empirically
@@ -155,6 +153,8 @@ _RECENCY_WINDOW_DAYS = 90
 # their familiar form name (`latest_10k_date`); multi-form buckets get
 # a category name (`latest_proxy_date`) plus a `_type` companion to
 # recover the form. Documented in references/sec_filings.md.
+
+
 def _build_headline_fields() -> tuple[str, ...]:
     fields: list[str] = []
     for type_bucket, field_name in _HEADLINE_TYPES:
@@ -701,7 +701,8 @@ def _emit_default(results: list, fmt: str) -> None:
         filings = r.get("filings") or []
         carry = {k: r[k] for k in _CSV_CARRY_KEYS if k in r}
         if not filings:
-            writer.writerow([{"symbol": symbol, **carry}.get(c, "") for c in cols])
+            writer.writerow([{"symbol": symbol, **carry}.get(c, "")
+                            for c in cols])
             continue
         for f in filings:
             # Drop `exhibits` dict before merge (it's not in cols anyway,

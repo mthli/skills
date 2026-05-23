@@ -84,7 +84,8 @@ def test_vol_halves_second_half_dominant():
 def _prices_with(returns_by_ticker: dict[str, list[float]]) -> pd.DataFrame:
     """Build a wide prices DataFrame where each column is built from its
     returns list. All columns share the same bdate_range index."""
-    series_map = {t: _series_from_returns(r) for t, r in returns_by_ticker.items()}
+    series_map = {t: _series_from_returns(r)
+                  for t, r in returns_by_ticker.items()}
     return pd.DataFrame(series_map)
 
 
@@ -209,8 +210,10 @@ def test_filter_argparse_ratio_validator_accepts_one_point_zero():
 
 def test_filter_argparse_ratio_validator_accepts_zero_and_negative():
     ap = scan.build_argparser()
-    assert ap.parse_args(["--vol-collapse-ratio", "0"]).vol_collapse_ratio == 0.0
-    assert ap.parse_args(["--vol-collapse-ratio", "-1"]).vol_collapse_ratio == -1.0
+    assert ap.parse_args(["--vol-collapse-ratio", "0"]
+                         ).vol_collapse_ratio == 0.0
+    assert ap.parse_args(["--vol-collapse-ratio", "-1"]
+                         ).vol_collapse_ratio == -1.0
 
 
 # ---- enrich_with_persistence: mixed-schema fallback ----------------------
@@ -241,7 +244,8 @@ def test_enrich_persistence_uses_score_rank_when_present():
     # above it). Today: same — NOK still score_rank=2. Delta should be 0,
     # NOT +1 (which is what raw rank would give: 1 - 1).
     history = pd.DataFrame([
-        _history_row("D1", "2026-05-13T00:00:00Z", "NOK", rank=1, score_rank=2),
+        _history_row("D1", "2026-05-13T00:00:00Z",
+                     "NOK", rank=1, score_rank=2),
     ])
     picks = [{"ticker": "NOK", "rank": 1, "score_rank": 2}]
     out = scan.enrich_with_persistence(picks, history, current_run_id="D2")
@@ -266,7 +270,8 @@ def test_enrich_persistence_falls_back_per_row_on_nan_score_rank():
     # should be per-row, not all-or-nothing.
     history = pd.DataFrame([
         _history_row("D1", "2026-05-13T00:00:00Z", "OLD", rank=3),
-        _history_row("D1", "2026-05-13T00:00:00Z", "NEW", rank=4, score_rank=4),
+        _history_row("D1", "2026-05-13T00:00:00Z",
+                     "NEW", rank=4, score_rank=4),
     ])
     # Force a NaN in OLD's score_rank (simulating mid-upgrade state).
     history.loc[0, "score_rank"] = float("nan")
@@ -328,7 +333,8 @@ def test_show_history_summary_works_with_old_schema_no_score_rank_column(capsys)
     # has no score_rank column, the climber/dropper computation must still
     # work without KeyError. Falls back to display rank for delta.
     rows = [
-        _history_row("D1", "2026-05-12T00:00:00Z", "X", rank=2),  # no score_rank
+        _history_row("D1", "2026-05-12T00:00:00Z",
+                     "X", rank=2),  # no score_rank
         _history_row("D1", "2026-05-12T00:00:00Z", "Y", rank=3),
         _history_row("D2", "2026-05-13T00:00:00Z", "X", rank=1),
         _history_row("D2", "2026-05-13T00:00:00Z", "Y", rank=4),

@@ -7,6 +7,10 @@ single bad symbol does not poison the batch. Field schema lives in the
 *_FIELDS / SUMMARY_* constants below.
 """
 from __future__ import annotations
+import yfinance as yf
+from helpers import (
+    RESULT_META, emit_json_or_ndjson, safe_float, safe_str, with_retry,
+)
 
 import argparse
 import sys
@@ -16,12 +20,6 @@ from typing import Any
 # Allow this script to be run directly OR imported as a module: ensure
 # sibling `helpers.py` is importable regardless of how Python was invoked.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-
-from helpers import (
-    RESULT_META, emit_json_or_ndjson, safe_float, safe_str, with_retry,
-)
-
-import yfinance as yf
 
 
 # Financials only meaningful for actual operating companies. ETFs / indexes
@@ -91,18 +89,22 @@ INCOME_FIELDS: list[tuple[str, str]] = [
 BALANCE_FIELDS: list[tuple[str, str]] = [
     ("total_assets",                                     "Total Assets"),
     ("current_assets",                                   "Current Assets"),
-    ("cash_and_cash_equivalents",                        "Cash And Cash Equivalents"),
-    ("cash_cash_equivalents_and_short_term_investments", "Cash Cash Equivalents And Short Term Investments"),
+    ("cash_and_cash_equivalents",
+     "Cash And Cash Equivalents"),
+    ("cash_cash_equivalents_and_short_term_investments",
+     "Cash Cash Equivalents And Short Term Investments"),
     ("receivables",                                      "Receivables"),
     ("inventory",                                        "Inventory"),
     ("net_ppe",                                          "Net PPE"),
-    ("total_non_current_assets",                         "Total Non Current Assets"),
+    ("total_non_current_assets",
+     "Total Non Current Assets"),
     ("current_liabilities",                              "Current Liabilities"),
     ("accounts_payable",                                 "Accounts Payable"),
     ("long_term_debt",                                   "Long Term Debt"),
     ("total_debt",                                       "Total Debt"),
     ("net_debt",                                         "Net Debt"),
-    ("total_liabilities",                                "Total Liabilities Net Minority Interest"),
+    ("total_liabilities",
+     "Total Liabilities Net Minority Interest"),
     ("retained_earnings",                                "Retained Earnings"),
     ("stockholders_equity",                              "Stockholders Equity"),
     ("working_capital",                                  "Working Capital"),
@@ -432,7 +434,8 @@ def _df_to_periods(df: Any, fields: list[tuple[str, str]],
         return []
     periods: list[dict] = []
     for col in df.columns:
-        period_end = col.strftime("%Y-%m-%d") if hasattr(col, "strftime") else str(col)
+        period_end = col.strftime(
+            "%Y-%m-%d") if hasattr(col, "strftime") else str(col)
         row: dict = {"period_end": period_end}
         for out_key, src_key in fields:
             if src_key in df.index:

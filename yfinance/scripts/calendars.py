@@ -22,6 +22,17 @@ Date window: defaults to today + 7 days. Override with --start /
 --end (ISO dates) or --days N (today through today+N).
 """
 from __future__ import annotations
+import yfinance as yf
+import pandas as pd
+from helpers import (
+    RESULT_META,
+    epoch_to_date,
+    safe_bool,
+    safe_float,
+    safe_int,
+    safe_str,
+    with_retry,
+)
 
 import argparse
 import csv as _csv
@@ -36,19 +47,6 @@ from pathlib import Path
 # Allow this script to be run directly OR imported as a module: ensure
 # sibling `helpers.py` is importable regardless of how Python was invoked.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-
-from helpers import (
-    RESULT_META,
-    epoch_to_date,
-    safe_bool,
-    safe_float,
-    safe_int,
-    safe_str,
-    with_retry,
-)
-
-import pandas as pd
-import yfinance as yf
 
 
 # Per-type schema. Keys define both the JSON projection order and the
@@ -464,8 +462,8 @@ def fetch(
         # cells still get ISO-stringified so the JSON is serializable.
         out["results"] = [
             {_snake(k): (_iso_dt(v) if isinstance(v, pd.Timestamp)
-                          else (None if pd.isna(v) and not isinstance(v, bool)
-                                else v))
+                         else (None if pd.isna(v) and not isinstance(v, bool)
+                               else v))
              for k, v in r.items()}
             for r in records
         ]
@@ -678,7 +676,8 @@ def _emit_summary(envelopes: list[dict], fmt: str) -> None:
 
     if fmt == "json":
         if len(rolled) == 1:
-            print(_json.dumps(rolled[0], indent=2, default=str, ensure_ascii=False))
+            print(_json.dumps(rolled[0], indent=2,
+                  default=str, ensure_ascii=False))
         else:
             print(_json.dumps(rolled, indent=2, default=str, ensure_ascii=False))
         return

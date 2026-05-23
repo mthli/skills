@@ -37,9 +37,11 @@ def test_first_write_creates_file(history_file):
 
 
 def test_same_et_day_overwrites(history_file):
-    run1 = datetime(2026, 5, 12, 20, 0, 0, tzinfo=timezone.utc)  # 16:00 ET 5/12
+    run1 = datetime(2026, 5, 12, 20, 0, 0,
+                    tzinfo=timezone.utc)  # 16:00 ET 5/12
     scan.append_history([_pick("AAPL", 1), _pick("MSFT", 2)], "20260512", run1)
-    run2 = datetime(2026, 5, 12, 22, 0, 0, tzinfo=timezone.utc)  # 18:00 ET 5/12
+    run2 = datetime(2026, 5, 12, 22, 0, 0,
+                    tzinfo=timezone.utc)  # 18:00 ET 5/12
     scan.append_history([_pick("NVDA", 1)], "20260512", run2)
     df = pd.read_csv(history_file)
     assert len(df) == 1
@@ -58,12 +60,15 @@ def test_different_et_day_appends(history_file):
 
 def test_utc_late_night_still_same_et_day(history_file):
     # 03:00 UTC May 13 = 23:00 EDT May 12 — still ET date 5/12
-    run1 = datetime(2026, 5, 12, 20, 0, 0, tzinfo=timezone.utc)  # 16:00 ET 5/12
+    run1 = datetime(2026, 5, 12, 20, 0, 0,
+                    tzinfo=timezone.utc)  # 16:00 ET 5/12
     scan.append_history([_pick("AAPL", 1)], "20260512", run1)
-    run2 = datetime(2026, 5, 13, 3, 0, 0, tzinfo=timezone.utc)   # 23:00 ET 5/12
+    run2 = datetime(2026, 5, 13, 3, 0, 0,
+                    tzinfo=timezone.utc)   # 23:00 ET 5/12
     scan.append_history([_pick("NVDA", 1)], "20260512", run2)
     df = pd.read_csv(history_file)
-    assert len(df) == 1, "both runs share ET date 2026-05-12 despite straddling UTC midnight"
+    assert len(
+        df) == 1, "both runs share ET date 2026-05-12 despite straddling UTC midnight"
     assert df.iloc[0]["ticker"] == "NVDA"
 
 
@@ -101,9 +106,11 @@ def test_dst_spring_forward(history_file):
 
 def test_dst_fall_back(history_file):
     # 2026-11-01: 02:00 EDT rolls back to 01:00 EST. Both occurrences are 11/1 ET.
-    run1 = datetime(2026, 11, 1, 5, 30, 0, tzinfo=timezone.utc)  # 01:30 EDT (1st)
+    run1 = datetime(2026, 11, 1, 5, 30, 0,
+                    tzinfo=timezone.utc)  # 01:30 EDT (1st)
     scan.append_history([_pick("AAPL", 1)], "20261101", run1)
-    run2 = datetime(2026, 11, 1, 6, 30, 0, tzinfo=timezone.utc)  # 01:30 EST (2nd)
+    run2 = datetime(2026, 11, 1, 6, 30, 0,
+                    tzinfo=timezone.utc)  # 01:30 EST (2nd)
     scan.append_history([_pick("NVDA", 1)], "20261101", run2)
     df = pd.read_csv(history_file)
     assert len(df) == 1
@@ -136,7 +143,8 @@ def test_history_sorted_after_backfill(history_file):
     scan.append_history([_pick("EARLY", 1)], "20260511", run_early)
     df = pd.read_csv(history_file)
     dates = pd.to_datetime(df["run_date"], utc=True).tolist()
-    assert dates == sorted(dates), "history.csv rows should be in chronological order"
+    assert dates == sorted(
+        dates), "history.csv rows should be in chronological order"
 
 
 def test_clear_history_removes_tmp(history_file):
@@ -293,7 +301,8 @@ def test_vol_target_returns_none_when_too_few_tickers_match_prices():
     prices = _synthetic_prices(100, 3, daily_vol=0.02)
     # Pick a ticker not in prices columns + one that is. Only 1 match.
     picks = [_vol_pick("MISSING", 1, 30.0), _vol_pick("T0", 2, 30.0)]
-    assert scan.compute_vol_target(prices, picks, 5, target_vol_pct=15.0) is None
+    assert scan.compute_vol_target(
+        prices, picks, 5, target_vol_pct=15.0) is None
 
 
 def test_assign_weights_no_op_when_vol_target_none():
@@ -716,7 +725,8 @@ def test_load_sectors_empty_when_no_file(sectors_file):
 
 
 def test_save_then_load_sectors_roundtrip(sectors_file):
-    scan.save_sectors({"FOO": {"sector": "Tech", "industry": "Software", "ts": 0}})
+    scan.save_sectors(
+        {"FOO": {"sector": "Tech", "industry": "Software", "ts": 0}})
     out = scan.load_sectors()
     assert out == {"FOO": {"sector": "Tech", "industry": "Software", "ts": 0}}
 
@@ -742,7 +752,8 @@ def test_attach_sectors_handles_missing_tickers():
         {"ticker": "BAR", "rank": 2, "score": 1.0, "return_pct": 0,
          "max_dd_pct": 0, "ann_vol_pct": 0, "from_high_pct": 0},
     ]
-    sectors = {"FOO": {"sector": "Technology", "industry": "Software", "ts": 0}}
+    sectors = {"FOO": {"sector": "Technology",
+                       "industry": "Software", "ts": 0}}
     out = scan.attach_sectors(picks, 2, sectors)
     assert out[0]["sector"] == "Technology"
     assert out[0]["industry"] == "Software"
@@ -879,7 +890,8 @@ def test_enrich_streak_breaks_on_gap():
     picks = [_pick("AAA", 1)]
     out = scan.enrich_with_persistence(picks, history, "20260512")
     assert out[0]["streak"] == 2  # 20260511 + current; 20260509 doesn't count
-    assert out[0]["first_seen"] == "2026-05-09"  # but first_seen is the earliest
+    # but first_seen is the earliest
+    assert out[0]["first_seen"] == "2026-05-09"
 
 
 def test_enrich_new_ticker_marked():
@@ -923,7 +935,8 @@ def test_dropouts_finds_missing_names_from_last_run():
 def test_dropouts_respects_top_n():
     history = _make_history([
         _hist_row("20260511", "2026-05-11T20:00:00+00:00", "AAA", 1),
-        _hist_row("20260511", "2026-05-11T20:00:00+00:00", "BBB", 11),  # outside top_n=10
+        _hist_row("20260511", "2026-05-11T20:00:00+00:00",
+                  "BBB", 11),  # outside top_n=10
     ])
     out = scan.dropouts(history, set(), "20260512", top_n=10)
     tickers = {d["ticker"] for d in out}
@@ -950,7 +963,7 @@ def test_score_filters_by_return_floor():
     bbb = np.linspace(100, 110, n)
     prices = _score_prices(n, {"AAA": aaa, "BBB": bbb})
     out = scan.score_tickers(prices, window_months=3,
-                              min_return_pct=30.0, max_dd_pct=20.0)
+                             min_return_pct=30.0, max_dd_pct=20.0)
     tickers = {r["ticker"] for r in out}
     assert "AAA" in tickers
     assert "BBB" not in tickers
@@ -961,10 +974,10 @@ def test_score_filters_by_max_drawdown():
     n = 80
     aaa = np.linspace(100, 200, n)
     bbb = np.concatenate([np.linspace(100, 150, 40), np.linspace(150, 100, 20),
-                           np.linspace(100, 200, 20)])
+                          np.linspace(100, 200, 20)])
     prices = _score_prices(n, {"AAA": aaa, "BBB": bbb})
     out = scan.score_tickers(prices, window_months=3,
-                              min_return_pct=30.0, max_dd_pct=20.0)
+                             min_return_pct=30.0, max_dd_pct=20.0)
     tickers = {r["ticker"] for r in out}
     assert "AAA" in tickers
     assert "BBB" not in tickers
@@ -977,7 +990,7 @@ def test_score_rank_by_score_descending():
     bbb = np.linspace(100, 150, n)
     prices = _score_prices(n, {"AAA": aaa, "BBB": bbb})
     out = scan.score_tickers(prices, window_months=3,
-                              min_return_pct=30.0, max_dd_pct=20.0)
+                             min_return_pct=30.0, max_dd_pct=20.0)
     assert out[0]["ticker"] == "AAA"
     assert out[0]["rank"] == 1
     assert out[0]["score"] > out[1]["score"]
@@ -988,7 +1001,7 @@ def test_score_skips_short_history():
     n = 30
     prices = _score_prices(n, {"AAA": np.linspace(100, 200, n)})
     out = scan.score_tickers(prices, window_months=3,
-                              min_return_pct=30.0, max_dd_pct=20.0)
+                             min_return_pct=30.0, max_dd_pct=20.0)
     assert out == []
 
 
@@ -1112,13 +1125,15 @@ def test_compute_sector_breakdown_none_when_no_tags():
 def test_longest_streak_all_present():
     # Ticker present in every run → longest streak == len(runs).
     runs = ["r1", "r2", "r3", "r4"]
-    assert scan._longest_consecutive_streak(["r1", "r2", "r3", "r4"], runs) == 4
+    assert scan._longest_consecutive_streak(
+        ["r1", "r2", "r3", "r4"], runs) == 4
 
 
 def test_longest_streak_with_gap():
     # Two separate streaks of 2 → longest is 2, not 4.
     runs = ["r1", "r2", "r3", "r4", "r5"]
-    assert scan._longest_consecutive_streak(["r1", "r2", "r4", "r5"], runs) == 2
+    assert scan._longest_consecutive_streak(
+        ["r1", "r2", "r4", "r5"], runs) == 2
 
 
 def test_longest_streak_picks_max_of_multiple_runs():
@@ -1157,7 +1172,7 @@ def test_append_history_migrates_old_schema_file(history_file):
         {
             "run_id": "20260511",
             "run_date": datetime(2026, 5, 11, 20, 0, 0,
-                                  tzinfo=timezone.utc).isoformat(),
+                                 tzinfo=timezone.utc).isoformat(),
             "ticker": "AAPL", "rank": 1, "score": 5.0,
             "return_pct": 50.0, "max_dd_pct": -10.0,
             "ann_vol_pct": 30.0, "from_high_pct": -1.0,

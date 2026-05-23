@@ -9,6 +9,10 @@ entry per ticker; failed / non-applicable tickers carry an "error" or a
 batch. Field schema lives in the *_KEYS / *_CSV_COLS constants below.
 """
 from __future__ import annotations
+import yfinance as yf
+from helpers import (
+    RESULT_META, emit_json_or_ndjson, safe_float, safe_int, safe_str, with_retry,
+)
 
 import argparse
 import sys
@@ -17,12 +21,6 @@ from pathlib import Path
 # Allow this script to be run directly OR imported as a module: ensure
 # sibling `helpers.py` is importable regardless of how Python was invoked.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-
-from helpers import (
-    RESULT_META, emit_json_or_ndjson, safe_float, safe_int, safe_str, with_retry,
-)
-
-import yfinance as yf
 
 
 # Yahoo's holders endpoint covers operating-company equities. Empirically
@@ -165,7 +163,8 @@ def _project_summary(major_df) -> dict:
             v = major_df.loc[raw_key, "Value"]
             # institutions_count is conceptually int; the others are
             # fractions in [0, 1] — keep float to preserve precision.
-            out[our_key] = safe_int(v) if our_key == "institutions_count" else safe_float(v)
+            out[our_key] = safe_int(
+                v) if our_key == "institutions_count" else safe_float(v)
     return out
 
 
@@ -216,7 +215,8 @@ def _summarize(full: dict) -> dict:
         # Sum whatever's available up to 5; skip None entries so a single
         # missing pct_held doesn't poison the whole sum (rare — Yahoo
         # populates pctHeld consistently in the observed payloads).
-        top5 = [r.get("pct_held") for r in inst[:5] if r.get("pct_held") is not None]
+        top5 = [r.get("pct_held")
+                for r in inst[:5] if r.get("pct_held") is not None]
         out["top5_institutions_pct"] = sum(top5) if top5 else None
 
     mf = full.get("mutualfund") or []
@@ -224,7 +224,8 @@ def _summarize(full: dict) -> dict:
     if mf:
         out["top_mutualfund"] = mf[0].get("holder")
         out["top_mutualfund_pct"] = mf[0].get("pct_held")
-        top5 = [r.get("pct_held") for r in mf[:5] if r.get("pct_held") is not None]
+        top5 = [r.get("pct_held")
+                for r in mf[:5] if r.get("pct_held") is not None]
         out["top5_mutualfunds_pct"] = sum(top5) if top5 else None
 
     for k in ("note", *RESULT_META):

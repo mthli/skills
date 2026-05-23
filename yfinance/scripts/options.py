@@ -9,6 +9,11 @@ poison the batch. Field schema lives in the *_KEYS / *_CSV_COLS
 constants below.
 """
 from __future__ import annotations
+import yfinance as yf
+from helpers import (
+    RESULT_META, emit_json_or_ndjson,
+    safe_bool, safe_float, safe_int, safe_str, with_retry,
+)
 
 import argparse
 import math
@@ -19,13 +24,6 @@ from pathlib import Path
 # Allow this script to be run directly OR imported as a module: ensure
 # sibling `helpers.py` is importable regardless of how Python was invoked.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-
-from helpers import (
-    RESULT_META, emit_json_or_ndjson,
-    safe_bool, safe_float, safe_int, safe_str, with_retry,
-)
-
-import yfinance as yf
 
 
 # Yahoo lists options for most US equities and ETFs (and a handful of
@@ -438,7 +436,7 @@ def fetch(symbol: str, expiry: str | None = None) -> dict:
         return {
             "symbol": symbol,
             "error": f"expiry {expiry!r} not in available list "
-                     f"(call without --expiry to see expirations)",
+            f"(call without --expiry to see expirations)",
             "error_kind": "not_found",
             "attempts": attempts,
             "expiry_requested": expiry,
@@ -470,7 +468,8 @@ def fetch(symbol: str, expiry: str | None = None) -> dict:
     # underlying dict carries the spot snapshot (regularMarketPrice) and
     # contract currency. Both are None-safe — Yahoo occasionally serves a
     # stripped underlying (rare); we still return the chain in that case.
-    spot = safe_float(underlying.get("regularMarketPrice")) if underlying else None
+    spot = safe_float(underlying.get("regularMarketPrice")
+                      ) if underlying else None
     currency = safe_str(underlying.get("currency")) if underlying else None
     quote_type = safe_str(underlying.get("quoteType")) if underlying else None
     # Empty-chain-but-valid-expiry edge case (verified reachable via
@@ -594,15 +593,15 @@ def _summarize(full: dict, moneyness: float | None) -> dict:
     atm_call = _atm_row(calls, spot)
     if atm_call:
         out["atm_call_strike"] = atm_call.get("strike")
-        out["atm_call_iv"]     = atm_call.get("implied_vol")
+        out["atm_call_iv"] = atm_call.get("implied_vol")
         out["atm_call_volume"] = atm_call.get("volume")
-        out["atm_call_oi"]     = atm_call.get("open_interest")
+        out["atm_call_oi"] = atm_call.get("open_interest")
     atm_put = _atm_row(puts, spot)
     if atm_put:
         out["atm_put_strike"] = atm_put.get("strike")
-        out["atm_put_iv"]     = atm_put.get("implied_vol")
+        out["atm_put_iv"] = atm_put.get("implied_vol")
         out["atm_put_volume"] = atm_put.get("volume")
-        out["atm_put_oi"]     = atm_put.get("open_interest")
+        out["atm_put_oi"] = atm_put.get("open_interest")
 
     cv = _sum_int(calls, "volume")
     pv = _sum_int(puts, "volume")

@@ -12,6 +12,7 @@ the scoring function, and signal classification.
 They do NOT cover: yfinance fetch, regime banner, history I/O — those
 have integration-style risk that's better validated via live runs.
 """
+import scan
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -21,7 +22,6 @@ import pandas as pd
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import scan
 
 
 # ─── Helpers ─────────────────────────────────────────────────────────────
@@ -162,7 +162,8 @@ class TestDetectBase:
         # 60 days swinging between 150 and 200 — 25% width, at the ceiling.
         # With max_width=20%, should be rejected.
         uptrend = list(np.linspace(100, 200, 200))
-        swings = list(np.linspace(200, 150, 30)) + list(np.linspace(150, 200, 30))
+        swings = list(np.linspace(200, 150, 30)) + \
+            list(np.linspace(150, 200, 30))
         close = make_close(uptrend + swings)
         vol = make_volume(len(close))
         base = scan.detect_base(close, vol, max_base_width_pct=20)
@@ -203,7 +204,8 @@ class TestDetectRecentBreakout:
         # 60 days flat at 100, then 5 days ago broke to 105 on 2x vol, holding.
         uptrend = list(np.linspace(80, 100, 200))
         flat = [100.0] * 55
-        followthrough = [105.0, 104.0, 106.0, 105.5, 105.8]  # last 5 days, all > 100
+        followthrough = [105.0, 104.0, 106.0,
+                         105.5, 105.8]  # last 5 days, all > 100
         close = make_close(uptrend + flat + followthrough)
         # Vol: constant 1M for the whole series, plus a 2M spike on the day
         # the breakout occurred (5 days ago = index len-5).
@@ -283,7 +285,7 @@ class TestComputeBaseScore:
         base = self._base(width_pct=5.0, vol_dryup_ratio=0.55,
                           to_pivot_pct=-2.0, smoothness_pct=70.0)
         score = scan.compute_base_score(base, bb_pctile=0.0, rs_slope=2.5,
-                                         three_wk_tight=True)
+                                        three_wk_tight=True)
         assert score == 100.0
 
     def test_worst_setup_zero(self):
@@ -292,7 +294,7 @@ class TestComputeBaseScore:
         base = self._base(width_pct=25.0, vol_dryup_ratio=1.10,
                           to_pivot_pct=-20.0, smoothness_pct=20.0)
         score = scan.compute_base_score(base, bb_pctile=50.0, rs_slope=-1.0,
-                                         three_wk_tight=False)
+                                        three_wk_tight=False)
         # Most components at 0, pivot proximity bell at -20 with ideal=-2,
         # falloff=4 is also near 0.
         assert score < 5
@@ -302,7 +304,7 @@ class TestComputeBaseScore:
         base = self._base(width_pct=0.0, vol_dryup_ratio=0.0,
                           to_pivot_pct=-2.0, smoothness_pct=100.0)
         score = scan.compute_base_score(base, bb_pctile=0.0, rs_slope=5.0,
-                                         three_wk_tight=True)
+                                        three_wk_tight=True)
         assert score <= 100.0
 
     def test_rs_slope_no_longer_saturates(self):
@@ -310,11 +312,11 @@ class TestComputeBaseScore:
         # gave both the same 20pt cap; new logic should differentiate.
         b = self._base()
         score_modest = scan.compute_base_score(b, bb_pctile=10.0,
-                                                rs_slope=1.0,
-                                                three_wk_tight=False)
+                                               rs_slope=1.0,
+                                               three_wk_tight=False)
         score_strong = scan.compute_base_score(b, bb_pctile=10.0,
-                                                rs_slope=3.0,
-                                                three_wk_tight=False)
+                                               rs_slope=3.0,
+                                               three_wk_tight=False)
         assert score_strong > score_modest
 
 
@@ -422,7 +424,8 @@ class TestDedupSameIssuer:
         ]
         kept, _ = scan._dedup_same_issuer(results)
         pbr = next(r for r in kept if r["ticker"] == "PBR")
-        assert pbr.get("dedup_sibling") == {"ticker": "PBR-A", "base_score": 60}
+        assert pbr.get("dedup_sibling") == {
+            "ticker": "PBR-A", "base_score": 60}
 
 
 # ─── BB squeeze percentile ───────────────────────────────────────────────
@@ -434,7 +437,8 @@ class TestComputeBbPctile:
     def test_tight_present_low_pctile(self):
         # 200 days normal vol, then 20 days extremely flat → current BB
         # width should be at the very low end of the 6mo distribution.
-        normal = list(np.linspace(100, 200, 200) + np.random.RandomState(0).randn(200) * 2)
+        normal = list(np.linspace(100, 200, 200) +
+                      np.random.RandomState(0).randn(200) * 2)
         flat = [200.0] * 20
         close = make_close(normal + flat)
         pct = scan.compute_bb_pctile(close)
@@ -445,7 +449,7 @@ class TestComputeBbPctile:
 # ─── RS-vs-SPY proxy ─────────────────────────────────────────────────────
 class TestComputeRsProxy:
     def _series_with_total_return(self, total_return: float, n_days: int = 260
-                                    ) -> pd.Series:
+                                  ) -> pd.Series:
         """Build a smoothly-trending series with the given total return
         over n_days. Used to construct ticker / SPY pairs with controlled
         excess return for proxy testing."""

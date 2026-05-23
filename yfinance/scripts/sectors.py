@@ -30,6 +30,16 @@ pull the multi-section payload into a flat row stream — same pattern
 as `fund_holdings.py` and `calendars.py --type all`.
 """
 from __future__ import annotations
+from yfinance.const import SECTOR_INDUSTY_MAPPING_LC
+import yfinance as yf
+import pandas as pd
+from helpers import (
+    RESULT_META,
+    safe_float,
+    safe_int,
+    safe_str,
+    with_retry,
+)
 
 import argparse
 import contextlib
@@ -43,18 +53,6 @@ from pathlib import Path
 # Allow this script to be run directly OR imported as a module: ensure
 # sibling `helpers.py` is importable regardless of how Python was invoked.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-
-from helpers import (
-    RESULT_META,
-    safe_float,
-    safe_int,
-    safe_str,
-    with_retry,
-)
-
-import pandas as pd
-import yfinance as yf
-from yfinance.const import SECTOR_INDUSTY_MAPPING_LC
 
 
 # Canonical key sets, lifted from yfinance.const so we stay aligned with
@@ -73,7 +71,9 @@ def _normalize_key(k: str) -> str:
     """Em-dash → hyphen + strip + lowercase. Idempotent."""
     return k.replace("—", "-").strip().lower()
 
-SECTOR_KEYS = tuple(sorted(_normalize_key(k) for k in SECTOR_INDUSTY_MAPPING_LC))
+
+SECTOR_KEYS = tuple(sorted(_normalize_key(k)
+                    for k in SECTOR_INDUSTY_MAPPING_LC))
 INDUSTRY_KEYS = tuple(sorted({
     _normalize_key(ind)
     for inds in SECTOR_INDUSTY_MAPPING_LC.values() for ind in inds
@@ -385,7 +385,8 @@ def fetch(
         applicable_sections = (
             SECTOR_SECTIONS if kind == "sector" else INDUSTRY_SECTIONS
         )
-        invalid_for_kind = [s for s in sections if s not in applicable_sections]
+        invalid_for_kind = [
+            s for s in sections if s not in applicable_sections]
         if invalid_for_kind:
             out["coverage_note"] = (
                 f"section(s) {invalid_for_kind} not applicable to "
@@ -473,7 +474,8 @@ def summarize(env: dict) -> dict:
                                     if industries else None)
         flat["top_industry_weight"] = (industries[0].get("market_weight")
                                        if industries else None)
-        flat["top_etf_symbol"] = top_etfs[0].get("symbol") if top_etfs else None
+        flat["top_etf_symbol"] = top_etfs[0].get(
+            "symbol") if top_etfs else None
         flat["top_mutual_fund_symbol"] = (top_mfs[0].get("symbol")
                                           if top_mfs else None)
     else:  # industry
@@ -561,7 +563,7 @@ def _emit_csv(envelopes: list[dict]) -> None:
                       "market_weight", "employee_count", "description"):
                 row[k] = ov.get(k)
             writer.writerow([row.get(c, "") if row.get(c) is not None
-                              else "" for c in CSV_COLS])
+                             else "" for c in CSV_COLS])
             continue
 
         # Meta row (overview).
@@ -574,7 +576,7 @@ def _emit_csv(envelopes: list[dict]) -> None:
                "employee_count":   ov.get("employee_count"),
                "description":      ov.get("description")}
         writer.writerow([row.get(c, "") if row.get(c) is not None
-                          else "" for c in CSV_COLS])
+                         else "" for c in CSV_COLS])
 
         # Per-section rows. Map each section to its record_class +
         # field-rename so they all funnel through the same CSV_COLS.
@@ -624,7 +626,7 @@ def _emit_csv(envelopes: list[dict]) -> None:
                     row["ytd_return"] = r.get("ytd_return")
                     row["growth_estimate"] = r.get("growth_estimate")
                 writer.writerow([row.get(c, "") if row.get(c) is not None
-                                  else "" for c in CSV_COLS])
+                                 else "" for c in CSV_COLS])
 
         # research_reports (separate loop because field names diverge).
         for r in env.get("research_reports") or []:
@@ -638,7 +640,7 @@ def _emit_csv(envelopes: list[dict]) -> None:
                    "report_target_price":        r.get("target_price"),
                    "report_target_price_status": r.get("target_price_status")}
             writer.writerow([row.get(c, "") if row.get(c) is not None
-                              else "" for c in CSV_COLS])
+                             else "" for c in CSV_COLS])
 
 
 def _emit_summary_csv(envelopes: list[dict]) -> None:
@@ -813,7 +815,8 @@ def _peers(industry_key: str, fmt: str) -> None:
         )
         sys.exit(2)
     parent_sec = INDUSTRY_TO_SECTOR[ind]
-    siblings = [_normalize_key(s) for s in SECTOR_INDUSTY_MAPPING_LC[parent_sec]]
+    siblings = [_normalize_key(s)
+                for s in SECTOR_INDUSTY_MAPPING_LC[parent_sec]]
     rows = [
         {
             "sector_key": parent_sec,
@@ -1026,7 +1029,8 @@ def main() -> None:
     }
     enabled = [name for name, on in discovery_flags.items() if on]
     if len(enabled) > 1:
-        ap.error(f"discovery flags are mutually exclusive: {', '.join(enabled)}")
+        ap.error(
+            f"discovery flags are mutually exclusive: {', '.join(enabled)}")
     if enabled and args.keys:
         ap.error(f"{enabled[0]} cannot be combined with positional keys")
 

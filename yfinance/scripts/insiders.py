@@ -9,6 +9,10 @@ entry per ticker; failed / non-applicable tickers carry an "error" or a
 batch. Field schema lives in the *_KEYS / *_CSV_COLS constants below.
 """
 from __future__ import annotations
+import yfinance as yf
+from helpers import (
+    RESULT_META, emit_json_or_ndjson, safe_float, safe_int, safe_str, with_retry,
+)
 
 import argparse
 import re
@@ -18,12 +22,6 @@ from pathlib import Path
 # Allow this script to be run directly OR imported as a module: ensure
 # sibling `helpers.py` is importable regardless of how Python was invoked.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-
-from helpers import (
-    RESULT_META, emit_json_or_ndjson, safe_float, safe_int, safe_str, with_retry,
-)
-
-import yfinance as yf
 
 
 # Yahoo's three insider properties cover operating-company equities. Empirically
@@ -247,7 +245,8 @@ def _project_purchases(df) -> dict:
     # The `\b` word boundary anchors to the start so we strip only the
     # leading boilerplate, not any in-string occurrence.
     if isinstance(label_col, str):
-        stripped = re.sub(r'^\s*insider\s+purchases\s*', '', label_col, flags=re.I).strip()
+        stripped = re.sub(r'^\s*insider\s+purchases\s*',
+                          '', label_col, flags=re.I).strip()
         out["period_label"] = stripped if stripped else None
     else:
         out["period_label"] = None

@@ -7,6 +7,11 @@ so a single bad symbol does not poison the batch. Field schema lives in the
 SECTIONS / SUMMARY_FIELDS constants below.
 """
 from __future__ import annotations
+import yfinance as yf
+from helpers import (
+    RESULT_META, emit_json_or_ndjson, epoch_to_date, safe_float, safe_int,
+    safe_str, with_retry,
+)
 
 import argparse
 import sys
@@ -16,13 +21,6 @@ from typing import Any, Callable
 # Allow this script to be run directly OR imported as a module: ensure
 # sibling `helpers.py` is importable regardless of how Python was invoked.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-
-from helpers import (
-    RESULT_META, emit_json_or_ndjson, epoch_to_date, safe_float, safe_int,
-    safe_str, with_retry,
-)
-
-import yfinance as yf
 
 
 # No-coverage sentinels Yahoo has been observed to return (lowercased).
@@ -109,7 +107,8 @@ SECTIONS: dict[str, list[tuple[str, str, Callable[[Any], Any]]]] = {
         ("ex_dividend_date", "exDividendDate", epoch_to_date),
         ("five_year_avg_dividend_yield", "fiveYearAvgDividendYield", safe_float),
         ("trailing_annual_dividend_rate", "trailingAnnualDividendRate", safe_float),
-        ("trailing_annual_dividend_yield", "trailingAnnualDividendYield", safe_float),
+        ("trailing_annual_dividend_yield",
+         "trailingAnnualDividendYield", safe_float),
     ],
     "analyst": [
         ("recommendation_key", "recommendationKey", _normalize_recommendation_key),
@@ -172,6 +171,7 @@ SUMMARY_FIELDS = [
     ("five_year_avg_return",            "fund.five_year_avg_return"),
 ]
 
+
 def _validate_summary_fields() -> None:
     """Sanity check at module load: every path in SUMMARY_FIELDS must resolve
     to a real entry in SECTIONS (or a known top-level key), so renames in
@@ -181,11 +181,14 @@ def _validate_summary_fields() -> None:
         if "." in path:
             section, field = path.split(".", 1)
             if section not in SECTIONS:
-                raise RuntimeError(f"SUMMARY_FIELDS: unknown section {section!r} in path {path!r}")
+                raise RuntimeError(
+                    f"SUMMARY_FIELDS: unknown section {section!r} in path {path!r}")
             if not any(out == field for out, _src, _conv in SECTIONS[section]):
-                raise RuntimeError(f"SUMMARY_FIELDS: path {path!r} not found in SECTIONS[{section!r}]")
+                raise RuntimeError(
+                    f"SUMMARY_FIELDS: path {path!r} not found in SECTIONS[{section!r}]")
         elif path not in top_level:
-            raise RuntimeError(f"SUMMARY_FIELDS: top-level key {path!r} not in {top_level}")
+            raise RuntimeError(
+                f"SUMMARY_FIELDS: top-level key {path!r} not in {top_level}")
 
 
 _validate_summary_fields()

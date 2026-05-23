@@ -12,6 +12,8 @@ call) and spotty hit rate even on liquid US names. See
 references/fast_info.md "ISIN lookup" caveat for details.
 """
 from __future__ import annotations
+import yfinance as yf
+from helpers import RESULT_META, denan, emit_json_or_ndjson, with_retry
 
 import argparse
 import re
@@ -22,9 +24,6 @@ from pathlib import Path
 # sibling `helpers.py` is importable regardless of how Python was invoked.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from helpers import RESULT_META, denan, emit_json_or_ndjson, with_retry
-
-import yfinance as yf
 
 FIELDS = [
     "last_price",
@@ -143,7 +142,8 @@ def _fetch_isin(symbol: str) -> dict:
 
 
 def fetch(symbol: str, with_isin: bool = False) -> dict:
-    fields, err_kind, attempts = with_retry(lambda: _materialize_fields(symbol))
+    fields, err_kind, attempts = with_retry(
+        lambda: _materialize_fields(symbol))
     if err_kind:
         return {
             "symbol": symbol,

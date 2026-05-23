@@ -23,6 +23,10 @@ warning. Smoke tests check the row labels and column count; if they
 fail, the scrape probably broke upstream.
 """
 from __future__ import annotations
+import yfinance as yf
+from helpers import (
+    RESULT_META, emit_json_or_ndjson, safe_float, with_retry,
+)
 
 import argparse
 import sys
@@ -32,12 +36,6 @@ from pathlib import Path
 # Allow this script to be run directly OR imported as a module: ensure
 # sibling `helpers.py` is importable regardless of how Python was invoked.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-
-from helpers import (
-    RESULT_META, emit_json_or_ndjson, safe_float, with_retry,
-)
-
-import yfinance as yf
 
 
 # All non-equity quote types return an empty DataFrame at the
@@ -317,7 +315,8 @@ def _summarize(full: dict) -> dict:
 
     # Oldest snapshot: walk all dated periods and take the min date.
     # The current row (period_date=None) is excluded by construction.
-    dated = [p["period_date"] for p in periods if p.get("period_date") is not None]
+    dated = [p["period_date"]
+             for p in periods if p.get("period_date") is not None]
     if dated:
         out["oldest_period_date"] = min(dated)
 

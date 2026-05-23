@@ -7,6 +7,7 @@ Run from the skill root via:
     uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy>=1.24,<3' \
       --with 'pytest' pytest scripts/
 """
+import scan
 import argparse
 import sys
 from pathlib import Path
@@ -15,7 +16,6 @@ from unittest.mock import MagicMock
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import scan
 
 
 def _page(symbols, total=None):
@@ -149,7 +149,8 @@ def test_normal_completion_not_marked_truncated(universe_file, mock_screen, caps
     scan.refresh_universe(5e9, 1_000_000, None)
 
     captured = capsys.readouterr()
-    assert "Refreshed universe:" in captured.err  # plain form, not "(TRUNCATED)"
+    # plain form, not "(TRUNCATED)"
+    assert "Refreshed universe:" in captured.err
     assert "TRUNCATED" not in captured.err
 
 
@@ -216,7 +217,8 @@ def test_old_yfinance_falls_back_to_single_page(universe_file, mock_screen, caps
     (TRUNCATED) marker (otherwise users would think something went wrong)."""
     def fake_screen(query, **kwargs):
         if "offset" in kwargs:
-            raise TypeError("screen() got an unexpected keyword argument 'offset'")
+            raise TypeError(
+                "screen() got an unexpected keyword argument 'offset'")
         return _page([f"T{i:04d}" for i in range(250)])
 
     mock = mock_screen(fake_screen)

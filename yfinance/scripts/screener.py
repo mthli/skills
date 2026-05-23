@@ -34,6 +34,16 @@ result. Output formats:
            failure.
 """
 from __future__ import annotations
+from yfinance import EquityQuery, ETFQuery, FundQuery
+import yfinance as yf
+from helpers import (
+    RESULT_META,
+    epoch_to_date,
+    safe_float,
+    safe_int,
+    safe_str,
+    with_retry,
+)
 
 import argparse
 import json
@@ -44,17 +54,6 @@ from pathlib import Path
 # sibling `helpers.py` is importable regardless of how Python was invoked.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from helpers import (
-    RESULT_META,
-    epoch_to_date,
-    safe_float,
-    safe_int,
-    safe_str,
-    with_retry,
-)
-
-import yfinance as yf
-from yfinance import EquityQuery, ETFQuery, FundQuery
 
 # yfinance dispatches on the Query subclass to set the screener's
 # `quoteType` filter (EQUITY / MUTUALFUND / ETF). Map our user-facing
@@ -92,6 +91,7 @@ def _make_sample(cls):
     / valid_values without running a screener call."""
     op, operand = _SAMPLE_QUERY_INIT[cls]
     return cls(op, operand)
+
 
 # Hand-curated descriptions for `--list-predefined`. yfinance's
 # PREDEFINED_SCREENER_QUERIES dict doesn't carry descriptions (Yahoo
@@ -506,7 +506,8 @@ def fetch(
             "no matches — filters may be too restrictive, or this predefined "
             "screen has zero hits in current market state"
         )
-    out["quotes"] = quotes_raw if full else [_project_quote(qq) for qq in quotes_raw]
+    out["quotes"] = quotes_raw if full else [
+        _project_quote(qq) for qq in quotes_raw]
     return out
 
 
@@ -837,7 +838,8 @@ def _emit(result: dict, fmt: str) -> None:
         writer.writerow([carry.get(c, "") for c in cols])
         return
     for q in quotes:
-        writer.writerow([q.get(c, "") if c in QUOTE_FIELDS else "" for c in cols])
+        writer.writerow(
+            [q.get(c, "") if c in QUOTE_FIELDS else "" for c in cols])
 
 
 if __name__ == "__main__":

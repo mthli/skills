@@ -10,6 +10,10 @@ does not poison the batch. Field schema lives in the *_KEYS / *_CSV_COLS
 constants below.
 """
 from __future__ import annotations
+import yfinance as yf
+from helpers import (
+    RESULT_META, emit_json_or_ndjson, safe_float, safe_int, safe_str, with_retry,
+)
 
 import argparse
 import sys
@@ -19,12 +23,6 @@ from pathlib import Path
 # Allow this script to be run directly OR imported as a module: ensure
 # sibling `helpers.py` is importable regardless of how Python was invoked.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-
-from helpers import (
-    RESULT_META, emit_json_or_ndjson, safe_float, safe_int, safe_str, with_retry,
-)
-
-import yfinance as yf
 
 
 # `Ticker.recommendations` and `Ticker.recommendations_summary` are
@@ -447,7 +445,8 @@ def _summarize(full: dict) -> dict:
         out["latest_event_firm"] = latest.get("firm")
         out["latest_event_action"] = latest.get("action")
         out["latest_event_to_grade"] = latest.get("to_grade")
-        out["latest_event_current_price_target"] = latest.get("current_price_target")
+        out["latest_event_current_price_target"] = latest.get(
+            "current_price_target")
         # Latest RATING CHANGE (filter to action ∈ {up, down}). Returns
         # null fields when no rating changes exist in Yahoo's history
         # — common for stocks with target-only revisions.
@@ -460,7 +459,8 @@ def _summarize(full: dict) -> dict:
             out["latest_rating_change_date"] = rc_iso[:10] or None
             out["latest_rating_change_firm"] = latest_rc.get("firm")
             out["latest_rating_change_action"] = latest_rc.get("action")
-            out["latest_rating_change_from_grade"] = latest_rc.get("from_grade")
+            out["latest_rating_change_from_grade"] = latest_rc.get(
+                "from_grade")
             out["latest_rating_change_to_grade"] = latest_rc.get("to_grade")
             out["latest_rating_change_current_price_target"] = (
                 latest_rc.get("current_price_target"))
