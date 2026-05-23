@@ -55,7 +55,7 @@ motivation, but no structured decisions:
 **Otherwise, work the registry**:
 
 1. **Look for `.claude/MODULES.md` at the repo root.**
-   - **Exists** → parse out the `<id>` entries (lines like `- \`<id>\` — description` under any
+   - **Exists** → parse out the `<id>` entries (lines like ``- `<id>` — description`` under any
      H2 section, typically `## Structural modules` and `## Cross-cutting concerns`). Treat these
      as the legal module set.
    - **Missing** → tell the user "this repo has no module registry yet" and offer to bootstrap one.
