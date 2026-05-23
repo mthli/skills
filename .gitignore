@@ -144,7 +144,5 @@ vite.config.ts.timestamp-*
 
 # Others
 **/__pycache__/
-**/state/history.csv
-**/state/sectors.json
-**/state/universe.txt
+**/state/*
 .DS_Store
