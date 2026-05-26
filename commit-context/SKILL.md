@@ -55,7 +55,7 @@ motivation, but no structured decisions:
 **Otherwise, work the registry**:
 
 1. **Look for `.claude/MODULES.md` at the repo root.**
-   - **Exists** → parse out the `<id>` entries (lines like ``- `<id>` — description`` under any
+   - **Exists** → parse out the `<id>` entries (lines like `- \`<id>\` — description` under any
      H2 section, typically `## Structural modules` and `## Cross-cutting concerns`). Treat these
      as the legal module set.
    - **Missing** → tell the user "this repo has no module registry yet" and offer to bootstrap one.
@@ -98,7 +98,8 @@ for this repo**. Subsequent `/commit-context` invocations skip it entirely (heur
 of the draft block to match. But **keep these tokens verbatim** (they're literal identifiers used
 by the structured-decisions parser and other tooling — translating them silently breaks future
 distillation): `MODULE`, `WHY`, `ALTERNATIVES`, `CHOSEN`, `TRADEOFFS`, `RISKS`, `SUPERSEDES`,
-`DECISIONS.md`, `/commit-context`, `git log`, `git show`, and any field name in ALL CAPS.
+`.claude/decisions/`, `.claude/MODULES.md`, `/commit-context`, `git log`, `git show`, and any
+field name in ALL CAPS.
 
 **Indentation note**: the fenced block below is shown at the document's left margin. The actual
 content injected into `CLAUDE.md` has **no leading whitespace** — paste it flush-left.
@@ -109,14 +110,19 @@ Draft block (use a top-level H2 so it doesn't collide with existing sections):
 ## Knowledge Loop Conventions
 
 ### Before editing code
-1. Look for a `DECISIONS.md` in the current directory or an ancestor. If it exists, read it.
+
+1. Read `.claude/decisions/<module>.md` for any module(s) your change touches. Module IDs
+   live in `.claude/MODULES.md`; `/` in IDs maps to subdirectories (e.g., `module/key` →
+   `.claude/decisions/module/key.md`).
 2. Run `git log --oneline -10 -- <path>` for the file(s) you're about to change.
 3. If recent commits contain `MODULE: <current module>` blocks, `git show` those bodies.
 
 ### After finishing a task
+
 - When using `/commit-context`, fill all six fields in each Decision block — don't skip
   `ALTERNATIVES` or `RISKS`.
-- If this change overrides a prior `DECISIONS.md` entry, add `SUPERSEDES:` to the Decision.
+- If this change overrides a prior decision in `.claude/decisions/`, add `SUPERSEDES:` to the
+  new Decision.
 ````
 
 ### 3. Synthesize the commit message
