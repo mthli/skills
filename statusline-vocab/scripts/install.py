@@ -100,11 +100,13 @@ def _validate_lang_or_exit(raw: str) -> str:
 def check_prereqs() -> list[str]:
     issues = []
     if not shutil.which("claude"):
-        issues.append("`claude` CLI not found on PATH — required by the Stop hook")
+        issues.append(
+            "`claude` CLI not found on PATH — required by the Stop hook")
     if not shutil.which("jq"):
         issues.append("`jq` not found on PATH — required by hook + statusline")
     if not CLAUDE.is_dir():
-        issues.append(f"{CLAUDE} does not exist — has Claude Code ever run on this machine?")
+        issues.append(
+            f"{CLAUDE} does not exist — has Claude Code ever run on this machine?")
     return issues
 
 
@@ -121,7 +123,8 @@ def load_settings() -> dict:
         try:
             return json.loads(SETTINGS.read_text())
         except json.JSONDecodeError as e:
-            print(f"  ! {SETTINGS} is not valid JSON ({e}). Aborting.", file=sys.stderr)
+            print(
+                f"  ! {SETTINGS} is not valid JSON ({e}). Aborting.", file=sys.stderr)
             sys.exit(2)
     return {}
 
@@ -163,7 +166,8 @@ def register_hook() -> None:
         "async": True,
     })
     save_settings(data, ".bak-vocab")
-    check(f"hook registered in {SETTINGS}", True, "added; backup at *.bak-vocab")
+    check(f"hook registered in {SETTINGS}",
+          True, "added; backup at *.bak-vocab")
 
 
 def install_statusline() -> str:
@@ -171,15 +175,18 @@ def install_statusline() -> str:
     if not STATUSLINE.exists() or STATUSLINE.read_text().strip() == "":
         STATUSLINE.write_text(SRC_DEFAULT_STATUSLINE.read_text())
         STATUSLINE.chmod(0o755)
-        check(f"statusline installed at {STATUSLINE}", True, "wrote bundled default")
+        check(f"statusline installed at {STATUSLINE}",
+              True, "wrote bundled default")
         return "installed-default"
 
     content = STATUSLINE.read_text()
     if VOCAB_MARKER in content:
-        check(f"statusline at {STATUSLINE}", True, "vocab section already present")
+        check(f"statusline at {STATUSLINE}", True,
+              "vocab section already present")
         return "already"
 
-    check(f"statusline at {STATUSLINE}", False, "custom file detected — manual step needed")
+    check(f"statusline at {STATUSLINE}", False,
+          "custom file detected — manual step needed")
     print()
     print("  Your statusline already exists and the installer will NOT auto-modify it.")
     print("  Read the file, then insert the snippet below somewhere that lets `$vocab_part`")
@@ -217,9 +224,11 @@ def cmd_install(lang: str | None = None) -> None:
     elif not VOCAB_CONFIG.exists():
         # First install with no flag → write default so the user can see/edit it.
         set_lang(DEFAULT_LANG)
-        check(f"language defaulted to {DEFAULT_LANG}", True, f"wrote {VOCAB_CONFIG}")
+        check(f"language defaulted to {DEFAULT_LANG}",
+              True, f"wrote {VOCAB_CONFIG}")
     print()
-    print(f"target language: {current_lang()}  (change with: install.py config --lang <name>)")
+    print(
+        f"target language: {current_lang()}  (change with: install.py config --lang <name>)")
     print()
     if statusline_state == "manual-needed":
         print("Almost done — finish the statusline integration above, then run:")
@@ -280,7 +289,8 @@ def cmd_status() -> None:
                       f"{v.get('pos', '')}  {v.get('meaning', '')}")
                 print(f"  saved at:     {v.get('ts', 'unknown')}")
             else:
-                print(f"current word:   (null — extractor ran but found no suitable word)")
+                print(
+                    f"current word:   (null — extractor ran but found no suitable word)")
         except json.JSONDecodeError:
             print(f"current word:   (failed to parse {current})")
     else:
@@ -313,7 +323,8 @@ def cmd_uninstall() -> None:
         ]
         if changed:
             save_settings(data, ".bak-vocab-uninstall")
-            check(f"hook removed from {SETTINGS}", True, "backup at *.bak-vocab-uninstall")
+            check(f"hook removed from {SETTINGS}",
+                  True, "backup at *.bak-vocab-uninstall")
         else:
             check(f"hook entry in {SETTINGS}", True, "nothing to remove")
 
@@ -342,15 +353,19 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="statusline-vocab installer")
     sub = parser.add_subparsers(dest="cmd", required=True)
 
-    p_install = sub.add_parser("install", help="install or re-install (idempotent)")
-    p_install.add_argument("--lang", help=f'translation language for the meaning field (default: {DEFAULT_LANG}). Examples: Chinese, Japanese, Spanish, French, German, Korean')
+    p_install = sub.add_parser(
+        "install", help="install or re-install (idempotent)")
+    p_install.add_argument(
+        "--lang", help=f'translation language for the meaning field (default: {DEFAULT_LANG}). Examples: Chinese, Japanese, Spanish, French, German, Korean')
 
     sub.add_parser("status", help="report what's installed and current word")
 
-    p_config = sub.add_parser("config", help="change settings without reinstalling")
+    p_config = sub.add_parser(
+        "config", help="change settings without reinstalling")
     p_config.add_argument("--lang", help="set the translation language")
 
-    sub.add_parser("uninstall", help="remove hook + script (preserves history)")
+    sub.add_parser(
+        "uninstall", help="remove hook + script (preserves history)")
 
     args = parser.parse_args()
 
