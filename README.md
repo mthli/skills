@@ -10,6 +10,10 @@ Personal skills used in Claude Code 🤖
 - `review-iterate` - Multi-round structured review of work-in-progress code or docs, with severity-tagged findings the user prioritizes and a stopping rule that prevents padding nitpicks.
 - `sparse-checkout` - Personally hide files or directories from a git repo's working tree via `git sparse-checkout` — per-clone, reversible, and invisible to teammates (no `.gitignore` changes).
 
+## Learning
+
+- `statusline-vocab` - Surface a "word of the conversation" segment on the Claude Code statusline — a `Stop` hook picks one English word worth learning from each turn and renders `{emoji} {word} /IPA/ pos. {translation}` (translation language configurable; Chinese by default) so you passively build vocabulary from your own work.
+
 ## Finance
 
 - `base-breakout-scan` - Scan US large-cap equities for tight pre-breakout bases and track which setups persist across runs.
