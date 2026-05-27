@@ -99,7 +99,7 @@ if [ -f "$vocab_file" ]; then
     v_ipa=$(jq -r '.ipa // ""' "$vocab_file" 2>/dev/null)
     v_pos=$(jq -r '.pos // ""' "$vocab_file" 2>/dev/null)
     v_meaning=$(jq -r '.meaning // ""' "$vocab_file" 2>/dev/null)
-    vocab_part=" · ${v_emoji} \033[1;34m${v_word}\033[0m \033[2m${v_ipa}\033[0m \033[0;33m${v_pos}\033[0m ${v_meaning}"
+    vocab_part=" · ${v_emoji} \033[1;94m${v_word}\033[0m \033[2m${v_ipa}\033[0m \033[0;33m${v_pos}\033[0m ${v_meaning}"
   fi
 fi
 # vocab:end
