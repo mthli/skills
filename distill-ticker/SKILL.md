@@ -68,8 +68,11 @@ Read **two sources**:
    without a TICKER field (those are general lessons, not per-ticker) or with a different
    ticker.
 
-Both files share the same block format: a chronological sequence of blocks separated by
-`---`, each beginning with an H2 `## YYYY-MM-DD — <Type>` heading. Parse out:
+Both files share the same block format: a sequence of blocks, **each identified by its H2
+`## YYYY-MM-DD — <Type>` heading** (this is the parser anchor — locate blocks by scanning
+for H2, not by splitting on `---`). Between adjacent blocks: a `---` horizontal-rule
+separator. The first block in a file sits directly under the file's H1 (e.g. `# ARM`,
+`# Postmortems`) with no leading `---`. Parse out:
 
 | Block type      | Source file              | Required fields                                                              |
 | --------------- | ------------------------ | ---------------------------------------------------------------------------- |

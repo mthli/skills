@@ -154,7 +154,6 @@ session context, not by guessing.
 #### Thesis block (goes in `positions/<TICKER>.md`)
 
 ```markdown
----
 ## YYYY-MM-DD — Thesis
 
 - TICKER: <SYMBOL>
@@ -178,7 +177,6 @@ session context, not by guessing.
 #### Observation block (goes in `positions/<TICKER>.md`)
 
 ```markdown
----
 ## YYYY-MM-DD — Observation
 
 - TICKER: <SYMBOL>
@@ -196,7 +194,6 @@ session context, not by guessing.
 #### Macro block (goes in `macro.md`)
 
 ```markdown
----
 ## YYYY-MM-DD — Macro
 
 - REGIME: <one-line regime label — e.g., "late-cycle tightening", "post-pivot easing">
@@ -220,7 +217,6 @@ themes (e.g., pure FX or rate-curve commentary), omit the field.
 #### Lesson block (goes in `postmortems.md`)
 
 ```markdown
----
 ## YYYY-MM-DD — Lesson
 
 - TICKER: <SYMBOL, if a specific trade — else omit>
@@ -237,7 +233,6 @@ themes (e.g., pure FX or rate-curve commentary), omit the field.
 #### Methodology block (goes in `methodology.md`)
 
 ```markdown
----
 ## YYYY-MM-DD — Methodology
 
 - RULE: <one-line rule or principle>
@@ -288,18 +283,47 @@ it.
 edit an existing block, the right move is a new block with `SUPERSEDES:` pointing at the old
 one — not editing history.
 
+**File structure**:
+
+Each journal file uses a top-level H1 as its subject anchor, then one or more dated blocks
+beneath it as H2 headings, separated by `---` horizontal rules:
+
+```markdown
+# <subject>
+
+## YYYY-MM-DD — Thesis
+- TICKER: ...
+...
+
+---
+## YYYY-MM-DD — Thesis
+- TICKER: ...
+...
+```
+
+The H1 subject by file:
+- `positions/<TICKER>.md` → `# <TICKER>` (e.g., `# ARM`, `# NVDA`, `# BRK-B`)
+- `macro.md` → `# Macro`
+- `methodology.md` → `# Methodology`
+- `postmortems.md` → `# Postmortems`
+
+The `---` is a between-block separator, NOT part of the block itself. The first block in a
+file has no `---` above it — the H1 provides the structural break.
+
 **Mechanics**:
 
+- **Brand-new files** — use `Write` with `# <subject>\n\n` + new block. No leading `---`
+  — the H1 is the only thing above the first block. Critically, this avoids the dangling
+  YAML-frontmatter ambiguity that markdown renderers (GitHub, Obsidian, Hugo) hit when a
+  file starts with `---`.
 - **Small journals (under ~500 lines)** — use the `Read` tool to load the file, then `Write`
-  the full new contents: existing content + `\n\n` + new block. The `\n\n` produces the
-  blank-line separator above the new block's leading `---`. Make sure the existing content
-  ends with a single trailing newline before concatenating; otherwise you'll get only one
-  blank line where you want one.
+  the full new contents: existing content + `\n\n---\n` + new block. The `\n\n---\n`
+  produces the blank-line + horizontal-rule separator above the new block's H2. Make sure
+  the existing content ends with a single trailing newline before concatenating; otherwise
+  you'll get only one blank line where you want one.
 - **Larger journals** — use the `Edit` tool to insert at end of file. Pass the last existing
-  block's trailing line as `old_string` and `old_string + "\n\n" + new_block` as
+  block's trailing line as `old_string` and `old_string + "\n\n---\n" + new_block` as
   `new_string`. This avoids re-sending the whole file to the model on every append.
-- **Brand-new files** — use `Write` with just the new block (no leading `---` blank line
-  needed since the block starts with `---`).
 
 For multi-block / multi-ticker commits, append all blocks in step 5 before composing the
 commit message in step 6 — that way the commit covers every file change in one atomic move.
