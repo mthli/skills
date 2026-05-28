@@ -22,8 +22,8 @@ Personal skills used in Claude Code 🤖
 - `unusual-options-scan` - Scan US large-cap equities for unusual options activity (Vol/OI spikes, far-OTM short-DTE accumulation, extreme call/put skew) and confirm yesterday's flags via overnight OI growth.
 - `cross-scan` - Cross-reference outputs from the four sister scans (momentum, base-breakout, mean-reversion, unusual-options) to surface tickers appearing in 2+ on the same day — the highest-conviction "agreement" picks.
 - `commit-invest` - Distill an investment discussion into structured Thesis / Observation / Macro / Lesson / Methodology blocks, append them to per-ticker or per-topic files, and commit — the journal layer of the investment knowledge loop.
-- `distill-ticker` - Roll up `positions/<TICKER>.md` (plus ticker-tagged lessons in `postmortems.md`) into a per-ticker current-consensus snapshot at `.claude/decisions/positions/<TICKER>.md` — the view future discussions load before forming new opinions.
-- `distill-theme` - Aggregate Thesis/Observation blocks across all per-ticker journals and `RELATED_THEMES`-tagged Macro blocks into a per-theme snapshot at `.claude/decisions/themes/<theme>.md` — the cross-ticker view (which names express the theme, what's driving it).
+- `distill-ticker` - Roll up `positions/<TICKER>.md` (plus ticker-tagged lessons in `postmortems.md`) into a per-ticker current-consensus snapshot at `.claude/snapshots/positions/<TICKER>.md` — the view future discussions load before forming new opinions.
+- `distill-theme` - Aggregate Thesis/Observation blocks across all per-ticker journals and `RELATED_THEMES`-tagged Macro blocks into a per-theme snapshot at `.claude/snapshots/themes/<theme>.md` — the cross-ticker view (which names express the theme, what's driving it).
 - `yfinance` - Fetch stock/ETF/index quotes and historical OHLCV data from Yahoo Finance.
 - [`edgartools`](https://github.com/dgunning/edgartools) - Access and analyze SEC Edgar filings, XBRL financial statements, 10-K, 10-Q, and 8-K reports.
 

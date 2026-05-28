@@ -1,8 +1,9 @@
 ---
 name: distill-ticker
 description: >
-  Roll up the append-only Thesis / Observation / Lesson blocks in `positions/<TICKER>.md`
-  into a single current-consensus snapshot at `.claude/snapshots/positions/<TICKER>.md` —
+  Roll up the append-only Thesis / Observation blocks in `positions/<TICKER>.md` (plus
+  ticker-tagged Lesson blocks in `postmortems.md`) into a single current-consensus snapshot
+  at `.claude/snapshots/positions/<TICKER>.md` —
   the view that future investment discussions load before forming new opinions. Use this
   skill whenever the user says "/distill-ticker", "distill ticker", "refresh the snapshot
   for <TICKER>", or asks to consolidate a ticker's recent views. This skill should NOT
