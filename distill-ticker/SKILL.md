@@ -2,7 +2,7 @@
 name: distill-ticker
 description: >
   Roll up the append-only Thesis / Observation / Lesson blocks in `positions/<TICKER>.md`
-  into a single current-consensus snapshot at `.claude/decisions/positions/<TICKER>.md` —
+  into a single current-consensus snapshot at `.claude/snapshots/positions/<TICKER>.md` —
   the view that future investment discussions load before forming new opinions. Use this
   skill whenever the user says "/distill-ticker", "distill ticker", "refresh the snapshot
   for <TICKER>", or asks to consolidate a ticker's recent views. This skill should NOT
@@ -13,7 +13,7 @@ description: >
 
 Convert the chronological journal in `positions/<TICKER>.md` (and its mirror in
 `git log -- positions/<TICKER>.md`) into a single current-consensus snapshot at
-`.claude/decisions/positions/<TICKER>.md`. Future investment discussions load that snapshot
+`.claude/snapshots/positions/<TICKER>.md`. Future investment discussions load that snapshot
 before forming new views, so they pick up the current stance without having to page through
 every block ever written about the ticker.
 
@@ -21,7 +21,7 @@ This skill is the **Layer 1 → Layer 2** step in the investment knowledge loop:
 
 - **Layer 1** (immutable journal): structured blocks inside `positions/<TICKER>.md`, written
   by `/commit-invest` and committed to git.
-- **Layer 2** (current consensus): `.claude/decisions/positions/<TICKER>.md` — an active doc
+- **Layer 2** (current consensus): `.claude/snapshots/positions/<TICKER>.md` — an active doc
   that gets re-distilled every few new blocks.
 
 The append-only journal is the **source of truth**. The snapshot is a derived, regenerable
@@ -50,9 +50,9 @@ If the user invokes the skill without a target ticker, ask. Don't guess.
    filename for tickers like `BRK.B` → `positions/BRK-B.md`).
    - **Missing** → tell the user "no journal for <TICKER> yet — has it been discussed and
      committed via `/commit-invest`?" and stop. Don't create the file from here.
-2. **Resolve the destination path**: always `.claude/decisions/positions/<TICKER>.md` at the
+2. **Resolve the destination path**: always `.claude/snapshots/positions/<TICKER>.md` at the
    repo root, mirroring the journal filename. Create intermediate directories
-   (`.claude/decisions/positions/`) as needed.
+   (`.claude/snapshots/positions/`) as needed.
 3. **Read the existing destination if any.** If the snapshot already exists from a prior
    distill, read it now and keep it in working memory — it drives the diff-against-existing
    draft in step 5 and gives you the date of the last distill (which scopes "new since
@@ -338,7 +338,7 @@ If a hand-edit conflicts with the freshly distilled content, flag at review time
 silently overwrite.
 
 **Working tree has uncommitted changes.** Fine — this skill only reads the journal and the
-existing snapshot, and writes to `.claude/decisions/positions/<TICKER>.md`. The user
+existing snapshot, and writes to `.claude/snapshots/positions/<TICKER>.md`. The user
 decides when to stage and commit.
 
 **A ticker has been renamed or merged with another** (e.g., FB → META). Treat them as

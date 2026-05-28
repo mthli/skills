@@ -3,7 +3,7 @@ name: distill-theme
 description: >
   Aggregate every Thesis and Observation tagged with a given theme across all `positions/*.md`
   journal files (and `macro.md` for regime context) into a single theme-level snapshot at
-  `.claude/decisions/themes/<theme>.md` — the view that surfaces "what do I think about this
+  `.claude/snapshots/themes/<theme>.md` — the view that surfaces "what do I think about this
   theme overall, and which names express it". Use this skill whenever the user says
   "/distill-theme", "distill theme", "refresh the snapshot for <theme>", or asks for a
   cross-ticker view on a theme. This skill should NOT auto-trigger — only invoke it when the
@@ -14,7 +14,7 @@ description: >
 
 Pull every Thesis and Observation block tagged with a given theme (across every per-ticker
 journal in `positions/`, plus relevant Macro blocks in `macro.md`) into a single theme-level
-snapshot at `.claude/decisions/themes/<theme>.md`. The snapshot answers two questions a
+snapshot at `.claude/snapshots/themes/<theme>.md`. The snapshot answers two questions a
 future discussion will routinely ask:
 
 - **What's my overall view on this theme?** (sentiment, what's driving it)
@@ -51,8 +51,8 @@ guess.
    - If the user supplied a theme not in the registry, list the available themes and ask.
      Don't auto-create.
    - Theme IDs are ASCII, lowercase, hyphen-separated (e.g., `ai-infra`, `fed-policy`).
-3. **Resolve the destination path**: `.claude/decisions/themes/<theme>.md` at the repo
-   root. Create the intermediate `.claude/decisions/themes/` directory as needed.
+3. **Resolve the destination path**: `.claude/snapshots/themes/<theme>.md` at the repo
+   root. Create the intermediate `.claude/snapshots/themes/` directory as needed.
 4. **Read the existing destination if any.** If the snapshot already exists from a prior
    distill, read it for the diff in step 5 and for the "Last distilled" timestamp.
 
@@ -145,7 +145,7 @@ updates" point at unsaved changes.
 For each ticker that appears in the parsed set, you need its **current view on this theme**
 — not every view ever held. Two passes:
 
-1. **Use the per-ticker snapshot** at `.claude/decisions/positions/<TICKER>.md` if it
+1. **Use the per-ticker snapshot** at `.claude/snapshots/positions/<TICKER>.md` if it
    exists *and is current*. Compare the snapshot's `Last distilled` date to the journal's
    latest block date — you already parsed the journal in step 2's Path A, so reuse those
    parsed blocks rather than re-reading the file. The most recent block's date is the
@@ -270,7 +270,7 @@ Drafting rules:
 
 - **One line per ticker in "Names exposed"**. The reader is doing cross-name scanning, not
   reading individual theses. Anyone who wants the full thesis on a name goes to
-  `.claude/decisions/positions/<TICKER>.md` (linkable mentally, even if not literally
+  `.claude/snapshots/positions/<TICKER>.md` (linkable mentally, even if not literally
   hyperlinked).
 - **Theme stance is one line, qualitative.** Don't try to be quantitative; the user already
   knows the stances of individual names — what they want here is the gestalt.
@@ -359,7 +359,7 @@ in "Names exposed". If the latest Thesis is still on the same theme but with a d
 stance, use the latest. If the ticker has no remaining live view on the theme, optionally
 list under Closed with "no longer tagged <theme>".
 
-**`.claude/decisions/positions/<TICKER>.md` exists but is stale relative to the journal.**
+**`.claude/snapshots/positions/<TICKER>.md` exists but is stale relative to the journal.**
 Mention it in step 6 ("the per-ticker snapshot for AAPL is from 3 months ago, while the
 journal has 4 newer blocks — you may want to run `/distill-ticker AAPL` first"). But don't
 block — the per-ticker snapshots are convenience reads; the journals are authoritative.

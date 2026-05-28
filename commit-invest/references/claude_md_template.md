@@ -22,7 +22,7 @@ If the existing `CLAUDE.md` is in a non-English language, translate the prose to
 `CONVICTION`, `ENTRY_PRICE`, `EXIT_PRICE`, `SUPERSEDES`, `REGIME`, `DRIVERS`,
 `IMPLICATIONS`, `RELATED_THEMES`, `RELATED_TICKERS`, `WHAT_HAPPENED`, `WHAT_WORKED`,
 `WHAT_DIDNT`, `GENERAL_LESSON`, `RULE`, `WHY`, `HOW_TO_APPLY`, `WHAT`, `WHY_IT_MATTERS`,
-`.claude/THEMES.md`, `.claude/decisions/`, `/commit-invest`, `/distill-ticker`,
+`.claude/THEMES.md`, `.claude/snapshots/`, `/commit-invest`, `/distill-ticker`,
 `/distill-theme`, `git log`, and any field name in ALL CAPS.
 
 ---
@@ -32,10 +32,10 @@ If the existing `CLAUDE.md` is in a non-English language, translate the prose to
 ### Before any discussion
 
 1. Identify the ticker(s) and theme(s) involved in the question.
-2. For each ticker, read `.claude/decisions/positions/<TICKER>.md` (current consensus
+2. For each ticker, read `.claude/snapshots/positions/<TICKER>.md` (current consensus
    snapshot). If the journal has had blocks added since the snapshot, also read
    `positions/<TICKER>.md` in full — it's the source of truth.
-3. For each theme, read `.claude/decisions/themes/<theme>.md`. If macro context applies,
+3. For each theme, read `.claude/snapshots/themes/<theme>.md`. If macro context applies,
    read `macro.md` in full.
 4. If a snapshot doesn't exist yet, fall back to the raw journal file. If neither exists,
    say so explicitly before forming new views — don't pretend prior context that isn't
