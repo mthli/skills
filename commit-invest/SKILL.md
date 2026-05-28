@@ -247,13 +247,16 @@ themes (e.g., pure FX or rate-curve commentary), omit the field.
 
 **Conversation log guidelines** (the conversation-log subsection in every block):
 
-- **Subheading language**: the templates show `### Conversation Log` as the default.
-  Substitute it when generating, don't transcribe it verbatim. Use the user's working
-  language — match whatever language the existing journal file already uses (run a quick
-  `head` on `positions/<TICKER>.md` if unsure); for brand-new files, match the language
-  the user has been speaking in the current session. Example substitutions:
-  `### Conversation Log` (English), `### 对话纪要` (Chinese), `### 会話ログ` (Japanese).
-  The body content's language follows the same rule.
+- **Subheading is always `### Conversation Log` in English** — treat it as a structural
+  label like the ALL CAPS field keys (`TICKER:`, `THEMES:`, etc.), not translated content.
+  This keeps `grep "### Conversation Log"` reliable across multi-language journals and
+  removes a per-file language judgment call.
+- **Body content follows the user's working language** — match whatever language the
+  existing journal file already uses (run a quick `head` on `positions/<TICKER>.md` if
+  unsure); for brand-new files, match the language the user has been speaking in the
+  current session. Field values (THESIS, CATALYSTS, INVALIDATION, etc.) follow the same
+  rule. Structural labels (the H1, the H2 dated headings, the `### Conversation Log`
+  subheading, and the ALL CAPS field keys) stay English regardless.
 - Extract **key dialog turns**, not every message verbatim. Aim for ~5–15 lines. Skip pure
   tool-call noise and redundant back-and-forth — focus on intent, decisions, and turning
   points.
