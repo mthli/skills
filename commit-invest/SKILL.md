@@ -2,7 +2,7 @@
 name: commit-invest
 description: >
   Distill an investment discussion into one or more structured blocks (Thesis / Observation /
-  Macro / Lesson), append them to per-ticker or per-topic files in an investment-notes repo, and
+  Macro / Lesson / Methodology), append them to per-ticker or per-topic files in an investment-notes repo, and
   commit with a rich message that preserves the full conversation. Use this skill whenever the
   user says "/commit-invest", "commit invest", "commit this discussion", or asks to persist an
   investment conversation into the notes repo. This skill should NOT auto-trigger — only invoke
@@ -345,8 +345,8 @@ For each just-appended block, scan three severity tiers:
 **🔴 Internal numeric inconsistency** (must fix before committing):
 
 - Same indicator appears as different numbers within one block. E.g.: THESIS says
-  `\$200B order` but the same block's Conversation Log says `\$20B order` and `\$2B` —
-  three different figures.
+  `\$20B order` but the same block's Conversation Log says `\$2B` and `\$2 billion` —
+  the structured field is the lone outlier against two agreeing log mentions.
 - Same date written differently across fields (e.g., `2026-07-29` in CATALYSTS vs
   `2026-06-29` in the Conversation Log).
 - Ticker mismatch (TICKER field vs prose / Conversation Log).
@@ -355,15 +355,14 @@ For each just-appended block, scan three severity tiers:
 
 **🟡 Plausibility flags** (surface to user, don't auto-block):
 
-- A standalone large number worth sanity-checking against a known constraint.
-  Specifically: if a single-source figure is `≥ 2× the company's annual revenue`
-  (e.g., `\$X B order book`), flag it for the user to corroborate.
+- A single-source large claim worth corroborating before persisting — these have a high
+  typo / hallucination rate. Two signals that warrant a flag: the figure is `≥ 2× the
+  company's annual revenue` (e.g., `\$X B order book`), or it's attributed to one specific
+  event ("the May X earnings call") with no corroborating mention anywhere else in the
+  conversation.
 - An earnings date / catalyst date already in the past, written as upcoming.
 - ENTRY_PRICE / EXIT_PRICE / current-price levels that conflict with the ticker's recent
   trading range as discussed in the conversation.
-- A specific claim attributed to "the May X earnings call" (or similar) when no
-  corroborating source for that exact figure appears anywhere else in the conversation
-  — single-source large claims have a high typo / hallucination rate.
 
 **🟢 Polish** (surface but don't block):
 
@@ -377,10 +376,10 @@ For each just-appended block, scan three severity tiers:
 ```
 Self-consistency check found:
 
-- 🔴 positions/ARM.md (2026-05-29 Thesis): THESIS says "\$200B order" but
-  Conversation Log says "\$20B" and "\$2B" — three different figures.
-  Likely correct: \$2B, based on internal majority + plausibility.
-- 🟡 positions/ARM.md (2026-05-29 Thesis): "\$200B order" represents ~4× ARM's
+- 🔴 positions/ARM.md (2026-05-29 Thesis): THESIS says "\$20B order" but
+  Conversation Log says "\$2B" and "\$2 billion" — the structured field disagrees
+  with both log mentions. Likely correct: \$2B, based on internal majority + plausibility.
+- 🟡 positions/ARM.md (2026-05-29 Thesis): "\$20B order" represents ~4× ARM's
   annual revenue — single-source claim, worth corroborating against the May 6
   earnings transcript before persisting.
 ```
@@ -494,8 +493,13 @@ The structured blocks below carry the details — don't duplicate them here.>
 - Total cost: <totalCost as USD, e.g. $0.1234 — omit if missing or 0>
 - Models used: <modelsUsed>
 
-Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
+Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
 ```
+
+The `Co-Authored-By` trailer must be the **last line** of the commit message. Match the
+model name to the actual model running the session (check the environment block — e.g.
+`Claude Opus 4.8 (1M context)`, `Claude Sonnet 4.6`, etc.) rather than copying the literal
+above.
 
 #### Type and scope rules
 
