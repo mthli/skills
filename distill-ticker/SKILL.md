@@ -103,7 +103,7 @@ For each parsed block, also record:
 - Any `SUPERSEDES:` value (date + commit hash of the prior block)
 
 **If a block has malformed fields** (missing required keys, wrong nesting, fields outside
-ALL-CAPS), surface them as warnings in step 6. Don't silently skip — the user may want to
+ALL-CAPS), surface them as warnings in step 7. Don't silently skip — the user may want to
 fix the next round's input by writing better blocks going forward.
 
 **Cross-reference with git log** for hash resolution (needed both for validating
@@ -128,7 +128,7 @@ them two ways:
 **Tie-breaking when multiple commits share a date** (rare but possible — e.g., two
 `/commit-invest`s on the same day each appended a block): disambiguate by `git show <sha>`
 and matching the block's TICKER / STANCE / THESIS content against the commit body. If you
-still can't disambiguate, accept the latest matching commit and flag in step 6. If a
+still can't disambiguate, accept the latest matching commit and flag in step 7. If a
 block has no matching commit (uncommitted journal edits, or hand-edited content), record
 `<uncommitted>` instead of a sha — don't hallucinate.
 
@@ -257,10 +257,90 @@ Drafting rules:
   is a different document.
 - **Diff against the existing snapshot** if there is one. Only surface what changed (new
   live thesis, newly superseded, new open questions, new lessons) when presenting to the
-  user in step 6. Don't rewrite unchanged sections from scratch — that produces a
+  user in step 7. Don't rewrite unchanged sections from scratch — that produces a
   meaningless diff and erases hand edits.
 
-### 6. Show the user
+### 6. Self-consistency check (snapshot vs. journal)
+
+Before showing the draft, re-read it against the blocks you parsed and confirm the snapshot
+**faithfully represents its source**. This is the distillation analog of `/commit-invest`'s
+self-consistency step — but the failure mode is different. `/commit-invest` guards freshly
+*authored* content against internal typos (two fields disagreeing about a number). This skill
+produces a *derived* view, so what can go wrong is **drift from the journal it summarizes**: a
+paraphrase that invents a figure, a `Stance` label that contradicts the latest Thesis, a cite
+pointing at the wrong commit. That matters more here than a typo in the journal, because future
+discussions load this snapshot as the current consensus and won't cross-check the underlying
+blocks — a corrupted snapshot silently misleads every session that reads it until someone
+re-distills.
+
+The journal is trusted (append-only, already committed). So the check runs in **one
+direction**: every claim in the draft must trace back to a parsed block — not the reverse.
+Problems *in* the journal (malformed blocks, broken `SUPERSEDES`) are already collected as
+warnings in steps 2–3 and surface in step 7; don't re-litigate them here.
+
+**Scope the check to content you generated or regenerated this round.** When step 5 used the
+diff-against-existing approach, sections carried over from the prior snapshot — including any
+hand edits (a personal note, a manually added figure) — are out of scope: a hand edit traces
+back to no block by design, and the "every claim must trace back" rule would otherwise flag it
+as a 🔴 fabrication and overwrite the very annotation step 5 worked to preserve. If a hand edit
+*conflicts* with freshly distilled content, don't auto-correct it — route it to the
+hand-edited-snapshot edge case (flag at review time, don't silently overwrite).
+
+Scan three severity tiers:
+
+**🔴 Fidelity violation** (the draft contradicts or invents against the source — correct before
+showing):
+
+- **Stance label wrong.** The `Stance` line doesn't match the latest non-superseded Thesis under
+  the step-4 mapping (e.g. latest Thesis is `STANCE: exit` with `EXIT_PRICE:` filled but the
+  draft says `Long`; or `STANCE: watch` rendered as anything but `Watching`).
+- **Fabricated figure in the paraphrase.** A number, price, date, percentage, or multiplier in
+  `Live thesis` / `Catalysts` / `Invalidation` that appears in *no* source field it's derived
+  from. Paraphrasing the THESIS prose is expected; introducing a quantity the source Thesis
+  never states is not.
+- **Wrong "As of" date or citation.** The `As of` date isn't the latest Thesis's H2 date, or a
+  `(commit <short-sha>)` cite points to a sha that doesn't match that block's originating commit
+  as resolved in step 2.
+- **Live / superseded inversion.** `Live thesis` paraphrases a Thesis the step-3 chain marked
+  superseded, or a still-live Thesis was filed under `Superseded theses`.
+- **Catalysts / invalidation from the wrong Thesis.** Pulled from a superseded Thesis instead of
+  the latest, when step 4 didn't call for merging them.
+- **Lesson reworded.** A `Lessons` line is supposed to be the verbatim `GENERAL_LESSON`, but the
+  draft paraphrased it.
+
+**🟡 Coverage / drift flags** (surface, don't auto-correct):
+
+- An Observation newer than the latest Thesis is missing from `Open questions` — a dropped open
+  item.
+- Themes on recent blocks have drifted from the live Thesis's framing (also noted in the edge
+  cases).
+
+**🟢 Polish** (surface but don't block):
+
+- Unit / format drift across sections (`\$200B` vs `\$200bn` vs `\$200 billion`).
+- An empty section left in the draft instead of omitted per step 5's "omit empty sections" rule.
+
+**Handling findings — this is where it diverges from `/commit-invest`.** There, a 🔴 is
+genuinely ambiguous (which of two conflicting numbers is right?), so the skill blocks and asks.
+Here a 🔴 has a **mechanically-determined correct value** — the source journal — so don't block:
+**fix the draft in place** to match the source (re-paraphrase, correct the label, repoint the
+cite), then record the correction so it shows up in the step-7 review. Never "fix" by editing
+the journal — it's append-only and authoritative; a genuinely wrong source block is corrected by
+a new `SUPERSEDES:` block via `/commit-invest`, never from here. After correcting, re-scan the
+changed sections.
+
+🟡 and 🟢 items are judgment calls or matters of taste, not mechanical corrections — a missing
+open question might have been legitimately folded into the thesis; a unit convention is
+preference — so leave them for the user. They fold into the step-7 call-out list,
+severity-tagged and keyed to the draft section. If the scan finds nothing beyond 🟢, just
+proceed to step 7.
+
+**Escape hatch**: if the user says "skip the check" / "the journal's fine", go straight to the
+step-7 review. (Step 7 still runs — it's the mandatory approval gate; the escape hatch skips the
+fidelity scan, not the user's sign-off.) This is for re-distills of journals the user already
+trusts.
+
+### 7. Show the user
 
 Present the draft (or, if the destination exists, the diff against it) for review.
 Explicitly call out:
@@ -273,17 +353,20 @@ Explicitly call out:
   - Ambiguous or unresolvable `SUPERSEDES` targets
   - Cases where Observations newer than the latest Thesis hint that the live thesis may be
     stale (e.g., 3 contradictory observations sitting unaddressed)
+- **Self-consistency results** (step 6): any 🔴 fidelity violations you corrected in the draft
+  and what changed — so the user can confirm the source actually says what you reconciled to —
+  plus any 🟡 coverage/drift or 🟢 polish flags left for them to weigh.
 - The destination path and whether it's a create or an update
 
 Ask: "Write this to `<path>`?"
 
 Three responses to handle:
 
-- **Yes** → proceed to step 7.
+- **Yes** → proceed to step 8.
 - **Edits** → apply the user's edits to the draft, re-show, ask again.
 - **No / abort** → drop the draft. Don't write anything.
 
-### 7. Write
+### 8. Write
 
 Write the file with the `Write` tool. **Do not** `git add`, `git commit`, or push. The
 user commits it themselves.
@@ -305,7 +388,7 @@ After writing, surface the path and tell them:
 - **Never auto-create a journal file.** If `positions/<TICKER>.md` doesn't exist, send the
   user to `/commit-invest`. Journal creation is one workflow.
 - **Never silently swallow malformed blocks.** Surface them as warnings.
-- **Never write the snapshot without explicit user approval.** Step 6 is mandatory; this is
+- **Never write the snapshot without explicit user approval.** Step 7 is mandatory; this is
   a destructive write to a tracked file.
 - **Never auto-trigger.** Run only on explicit user invocation.
 
@@ -316,14 +399,14 @@ will say "No thesis formed" and list the observations as open questions. The rea
 benefits from seeing the data points that have been logged.
 
 **The latest Thesis is months old and many recent Observations contradict it.** Surface
-this in step 6 as a warning: "The live thesis is from <date>, but <N> observations since
+this in step 7 as a warning: "The live thesis is from <date>, but <N> observations since
 then suggest reconsideration." Don't rewrite the thesis — that's the user's job. Just
 flag.
 
 **The journal has Thesis blocks across multiple themes that have diverged** (e.g., long
 for ai-infra reasons but the discussion has moved to data-center power constraints). The
 snapshot reflects the **latest** Thesis only; cross-theme reconciliation is the user's job
-when writing the next Thesis. Note in step 6 if the themes have drifted.
+when writing the next Thesis. Note in step 7 if the themes have drifted.
 
 **SUPERSEDES references a commit that doesn't exist in git log** (typo, wrong hash, or a
 commit that got squashed). Surface as a warning. Don't fail the distillation — the user
