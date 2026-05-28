@@ -328,10 +328,80 @@ file has no `---` above it — the H1 provides the structural break.
   block's trailing line as `old_string` and `old_string + "\n\n---\n" + new_block` as
   `new_string`. This avoids re-sending the whole file to the model on every append.
 
-For multi-block / multi-ticker commits, append all blocks in step 5 before composing the
-commit message in step 6 — that way the commit covers every file change in one atomic move.
+For multi-block / multi-ticker commits, append all blocks in step 5 before running the
+consistency check (step 6) and composing the commit message (step 8) — that way the check
+sees every file change at once and the commit covers all of them atomically.
 
-### 6. Retrieve token usage with ccusage
+### 6. Self-consistency check
+
+Before pulling token usage and composing the commit, re-read every block you just appended
+and scan for self-inconsistencies. Numbers in journal blocks are load-bearing — they're
+what `/distill-*` surfaces as the "current view" months from now, and they shape entry /
+exit decisions. A typo that survives this skill corrupts the journal until someone catches
+it by hand.
+
+For each just-appended block, scan three severity tiers:
+
+**🔴 Internal numeric inconsistency** (must fix before committing):
+
+- Same indicator appears as different numbers within one block. E.g.: THESIS says
+  `\$200 亿订单` but the same block's Conversation Log says `\$20 亿订单` and `\$2B` —
+  three different figures.
+- Same date written differently across fields (e.g., `2026-07-29` in CATALYSTS vs
+  `2026-06-29` in the Conversation Log).
+- Ticker mismatch (TICKER field vs prose / Conversation Log).
+- Percentages / ratios / multipliers that contradict (`2× royalty` in one sentence,
+  `三倍版税` in another).
+
+**🟡 Plausibility flags** (surface to user, don't auto-block):
+
+- A standalone large number worth sanity-checking against a known constraint.
+  Specifically: if a single-source figure is `≥ 2× the company's annual revenue`
+  (e.g., `\$X B order book`), flag it for the user to corroborate.
+- An earnings date / catalyst date already in the past, written as upcoming.
+- ENTRY_PRICE / EXIT_PRICE / current-price levels that conflict with the ticker's recent
+  trading range as discussed in the conversation.
+- A specific claim attributed to "the May X earnings call" (or similar) when no
+  corroborating source for that exact figure appears anywhere else in the conversation
+  — single-source large claims have a high typo / hallucination rate.
+
+**🟢 Polish** (surface but don't block):
+
+- Inconsistent unit conventions in mixed Chinese-English (`\$200B` vs `\$200亿` used
+  interchangeably without anchoring on one).
+- Minor formatting drift (one block uses `—` em-dash separators, the next uses ` - `).
+
+**Output format**: list findings per file + block, severity-tagged. If zero 🔴 and zero
+🟡, proceed silently to step 7. Otherwise surface them in chat like:
+
+```
+Self-consistency check found:
+
+- 🔴 positions/ARM.md (2026-05-29 Thesis): THESIS says "\$200 亿订单" but
+  Conversation Log says "\$20 亿" and "\$2B" — three different figures.
+  Likely correct: \$20 亿 (\$2B), based on internal majority + plausibility.
+- 🟡 positions/ARM.md (2026-05-29 Thesis): "\$200 亿订单" represents ~4× ARM's
+  annual revenue — single-source claim, worth corroborating against the May 6
+  earnings transcript before persisting.
+```
+
+Then wait for the user to direct: "fix all 🔴, ignore 🟡", "I've verified, proceed", or
+specific picks. After applying fixes (**in-place edits** to the just-appended blocks, NOT
+new SUPERSEDES blocks — these are typos caught before commit, not view changes), re-run
+the scan on the corrected content. Once clean, proceed to step 7.
+
+**Escape hatch**: if the user says "skip the check" / "just commit" / similar, proceed
+directly to step 7. This is for rapid logging of known-correct material where the check
+overhead isn't worth it.
+
+**Why this is in the workflow rather than a separate `/review-iterate` invocation**: typo /
+inconsistency detection on freshly-written journal content is a one-shot need with a narrow
+checklist. Building it inline means future-you doesn't have to remember to chain
+`/review-iterate` before `/commit-invest` — the protection is automatic, and the failure
+mode this catches (Conversation Log says one thing, THESIS says another) is exactly the
+kind of error that's invisible from outside the just-written content.
+
+### 7. Retrieve token usage with ccusage
 
 Use [`ccusage`](https://github.com/ryoppippi/ccusage) to get the **current session's** token
 usage. This is identical to the `/commit-context` flow; the same constraints apply.
@@ -340,7 +410,7 @@ usage. This is identical to the `/commit-context` flow; the same constraints app
 > transforms itself between steps. This keeps every call matching a stable Bash allowlist
 > prefix so the user is not re-prompted for permission.
 
-#### Step 6.1: Get the working directory
+#### Step 7.1: Get the working directory
 
 ```bash
 pwd
@@ -350,7 +420,7 @@ Then **Claude transforms the path itself**: replace every `/`, `.`, `_`, and spa
 derive `PROJECT_ID`. Example: `/Users/me/GitHub/invest-notes` →
 `-Users-me-GitHub-invest-notes`.
 
-#### Step 6.2: List session files for this project
+#### Step 7.2: List session files for this project
 
 ```bash
 ls -t ~/.claude/projects/<PROJECT_ID>/
@@ -359,7 +429,7 @@ ls -t ~/.claude/projects/<PROJECT_ID>/
 The first `.jsonl` filename is the current session. Claude parses the output and strips the
 `.jsonl` suffix to get `SESSION_UUID`.
 
-#### Step 6.3: Query token usage for this session
+#### Step 7.3: Query token usage for this session
 
 ```bash
 npx ccusage claude session -i "<SESSION_UUID>" --json -O --no-color
@@ -379,7 +449,7 @@ Parse the JSON in Claude (do not pipe to `python3` or `jq`). Sum across `entries
 If any step fails (ccusage not installed, no `.jsonl` found, JSON empty), **omit the
 `# Token Usage` section entirely** from the commit message — no placeholder.
 
-### 7. Write the commit message
+### 8. Write the commit message
 
 The full commit message format:
 
@@ -481,7 +551,7 @@ personally identifiable financial info appeared, omit or redact them. Investment
 generally less risky than code (no secrets *should* be in there), but err on the side of
 caution.
 
-### 8. Commit
+### 9. Commit
 
 Write the message to a temp file with the `Write` tool, then pass it to `git commit -F`.
 
