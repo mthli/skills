@@ -94,7 +94,7 @@ parsing — don't trust grep alone.
 **Fallback for old Macro blocks** written before `RELATED_THEMES:` was introduced (or
 written by hand without the field): they won't be picked up by the grep above. If the user
 specifically asks for older Macro context, scan `macro.md` for blocks where the prose
-(IMPLICATIONS / DRIVERS) names the theme, and flag those in step 6 for the user to confirm
+(IMPLICATIONS / DRIVERS) names the theme, and flag those in step 7 for the user to confirm
 relevance. Default behavior is mechanical match only — don't fuzzy-scan unless asked.
 
 **Path C — optional fallback to git log** if the user wants to surface views that have
@@ -135,9 +135,9 @@ commit. **If multiple commits share the same date for the same file** (e.g., two
 `/commit-invest`s on the same day each appended a block to `positions/NVDA.md`),
 disambiguate by `git show <sha>` and matching the block's TICKER / STANCE / THESIS content
 against the commit body. If you still can't disambiguate, accept the latest matching
-commit and flag in step 6. If a block has no matching commit (uncommitted journal edits,
+commit and flag in step 7. If a block has no matching commit (uncommitted journal edits,
 or hand-edited content), record `<uncommitted>` instead of a sha — don't hallucinate.
-Surface the `<uncommitted>` count in step 6 as a warning so the user knows some "recent
+Surface the `<uncommitted>` count in step 7 as a warning so the user knows some "recent
 updates" point at unsaved changes.
 
 ### 3. Resolve currency for each ticker
@@ -153,7 +153,7 @@ For each ticker that appears in the parsed set, you need its **current view on t
    - **Snapshot is current** (no journal blocks newer than `Last distilled`): trust it.
      Read STANCE, HORIZON, CONVICTION directly.
    - **Snapshot is stale** (journal has newer blocks): fall back to parsing the journal
-     for the latest Thesis. Note the staleness for the warnings list in step 6.
+     for the latest Thesis. Note the staleness for the warnings list in step 7.
    - **Snapshot doesn't exist**: parse the journal for the latest Thesis. **Don't run
      `/distill-ticker` from here** — it's a separate workflow.
 2. **Filter the parsed blocks for this ticker** to the latest Thesis tagged with this
@@ -282,7 +282,89 @@ Drafting rules:
 - **"Macro context" is short** — 2-4 lines. The full Macro block lives in `macro.md`; this
   is just the theme-relevant excerpt.
 
-### 6. Show the user
+### 6. Self-consistency check (snapshot vs. journals)
+
+Before showing the draft, re-read it against the blocks you parsed and confirm the snapshot
+**faithfully represents its sources**. Same motivation as `/distill-ticker`'s self-consistency
+step: this is a *derived* view that future discussions load as the consensus and won't
+cross-check, so a draft that drifts from the journals silently misleads every session until
+someone re-distills. The check runs in **one direction** — every claim in the draft must trace
+back to a parsed block (live journal beats git history, per step 2's path tags). Problems *in*
+the journals (contradicting tickers, soft prose-matched Macro, Path C blocks missing from the
+working tree) are already collected for step 7's warnings; don't re-litigate them here.
+
+**The headline differs from `/distill-ticker` in one way.** There, the `Stance` label is a
+mechanical map from a single Thesis, so a wrong label is a 🔴 with one correct value. Here the
+**Theme stance is a judgment** — conviction-weighted, horizon-aware (step 4) — so there's no
+single mechanical string to snap it to. The fidelity check only catches when the one-liner
+*flatly contradicts its own mechanical groupings* (e.g. `Net short` above a `Names exposed` list
+that is all Long). The conviction-weighting nuance itself stays a 🟡 judgment for the user.
+
+**Scope the check to content you generated this round.** In the diff-against-existing flow,
+sections carried over from the prior snapshot — including hand edits (analyst notes, reordering)
+— are out of scope: a hand edit traces back to no block by design, and the trace-back rule would
+otherwise flag it as a 🔴 fabrication and overwrite the annotation step 5 preserved. If a hand
+edit *conflicts* with freshly distilled content, route it to the hand-edited-snapshot edge case
+(flag at review, don't overwrite).
+
+Scan three severity tiers:
+
+**🔴 Fidelity violation** (the draft contradicts or invents against the source — correct before
+showing):
+
+- **Wrong stance group.** A ticker sits under a `Names exposed` group that doesn't match its
+  step-3 resolved stance (a resolved `STANCE: long` listed under `### Short`; a `STANCE: exit`
+  not under `### Closed`).
+- **Theme stance contradicts its groupings.** The one-line `Theme stance` points the opposite
+  way from the Long / Short / Watching / Closed split beneath it — direction only, not the
+  conviction nuance.
+- **Wrong annotation.** A `(HORIZON, CONVICTION)` tag, or a `### Closed` exit date, doesn't match
+  the source Thesis's field.
+- **Fabricated membership.** A ticker appears in `Names exposed` with no block actually tagged
+  with this theme, or a `Recent updates` line cites a block that isn't theme-tagged.
+- **Fabricated figure.** A number, price, date, or multiplier in a per-ticker gist / `Drivers` /
+  `Risks` / `Macro context` that appears in no source field it's derived from.
+- **Wrong cite or order.** A `Recent updates` `(commit <short-sha>)` doesn't match the block's
+  originating commit (per step 2), or the feed isn't the genuine 5 most recent in reverse-
+  chronological order.
+- **Wrong-priority source.** A stance / gist drawn from a superseded git-history (Path C) block
+  when the live journal carries the current view (live journal beats git history, per step 2), or
+  from a *stale* per-ticker snapshot when a newer live-journal block exists (step 3's currency
+  rule).
+
+**🟡 Coverage / judgment flags** (surface, don't auto-correct):
+
+- A ticker with a *live* theme-tagged view is missing from `Names exposed` — unless its only view
+  is superseded or it moved off the theme, which is a legitimate omission per step 3 and the edge
+  cases.
+- The `Theme stance` one-liner is defensible but, weighting conviction / horizon, you'd have read
+  it differently — flag your alternative for the user.
+
+**🟢 Polish** (surface but don't block):
+
+- Unit / format drift across sections (`\$200B` vs `\$200bn` vs `\$200 billion`).
+- A `Drivers` or `Risks` bullet that restates a phrase the `Macro context` narrative already uses
+  (step 4 says avoid duplicating).
+- An empty section left in the draft instead of omitted per step 5's "omit empty sections" rule.
+
+**Handling.** A 🔴 with a mechanical correct value (stance group, annotation, cite, membership,
+source priority) — **fix the draft in place** to match the source, then record the correction so
+it shows up in the step-7 review. The one non-mechanical 🔴 (theme stance contradicting its
+groupings) — re-synthesize the one-liner so its *direction* is consistent with the groupings, but
+leave the conviction nuance to the user. Never "fix" by editing a journal — it's append-only and
+authoritative; a genuinely wrong source block is corrected by a new `SUPERSEDES:` block via
+`/commit-invest`, never from here. After correcting, re-scan the changed sections. 🟡 and 🟢
+items are judgment calls or matters of taste, not mechanical corrections — whether a name's view
+is still live, how conviction tilts the stance — so leave them for the user. They fold into the
+step-7 call-out list, severity-tagged and keyed to the draft section. If the scan finds nothing
+beyond 🟢, just proceed to step 7.
+
+**Escape hatch**: if the user says "skip the check" / "the journals are fine", go straight to the
+step-7 review. (Step 7 still runs — it's the mandatory approval gate; the escape hatch skips the
+fidelity scan, not the user's sign-off.) This is for re-distills of journals the user already
+trusts.
+
+### 7. Show the user
 
 Present the draft (or diff against the existing snapshot) for review. Explicitly call out:
 
@@ -297,17 +379,20 @@ Present the draft (or diff against the existing snapshot) for review. Explicitly
     relevance
   - Blocks parsed from `git log` (Path C) that don't appear in the current journal files
     (could indicate hand-edited journals or git history out of sync with working tree)
+- **Self-consistency results** (step 6): any 🔴 fidelity violations you corrected in the draft
+  and what changed — so the user can confirm the journals actually say what you reconciled to —
+  plus any 🟡 coverage/judgment or 🟢 polish flags left for them to weigh.
 - The destination path and whether it's a create or an update
 
 Ask: "Write this to `<path>`?"
 
 Three responses to handle:
 
-- **Yes** → proceed to step 7.
+- **Yes** → proceed to step 8.
 - **Edits** → apply user edits, re-show, ask again.
 - **No / abort** → drop the draft.
 
-### 7. Write
+### 8. Write
 
 Write the file with the `Write` tool. **Do not** `git add`, `git commit`, or push. The user
 commits it themselves.
@@ -328,9 +413,9 @@ After writing, surface the path and tell them:
 - **Never run `/distill-ticker` from inside this skill** to bring snapshots up to date.
   That's a separate workflow with its own user-review gate. If a per-ticker snapshot is
   missing or stale, fall back to parsing the journal directly and mention the staleness in
-  step 6.
+  step 7.
 - **Never silently swallow malformed blocks.** Surface them as warnings.
-- **Never write the snapshot without explicit user approval.** Step 6 is mandatory.
+- **Never write the snapshot without explicit user approval.** Step 7 is mandatory.
 - **Never auto-trigger.** Run only on explicit user invocation.
 
 ## Edge cases
@@ -350,7 +435,7 @@ design — themes are non-exclusive lenses on the same underlying view.
 
 **The latest per-ticker view contradicts the latest theme-level Macro view** (e.g., Macro
 says "ai-infra bubble", but the latest NVDA thesis is `STANCE: long high-conviction`).
-Surface this as a warning in step 6 — it's exactly the kind of contradiction the user
+Surface this as a warning in step 7 — it's exactly the kind of contradiction the user
 benefits from seeing before forming new views.
 
 **A ticker's only block on this theme has been SUPERSEDED.** If the latest Thesis on the
@@ -360,7 +445,7 @@ stance, use the latest. If the ticker has no remaining live view on the theme, o
 list under Closed with "no longer tagged <theme>".
 
 **`.claude/snapshots/positions/<TICKER>.md` exists but is stale relative to the journal.**
-Mention it in step 6 ("the per-ticker snapshot for AAPL is from 3 months ago, while the
+Mention it in step 7 ("the per-ticker snapshot for AAPL is from 3 months ago, while the
 journal has 4 newer blocks — you may want to run `/distill-ticker AAPL` first"). But don't
 block — the per-ticker snapshots are convenience reads; the journals are authoritative.
 
