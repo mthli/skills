@@ -345,13 +345,13 @@ For each just-appended block, scan three severity tiers:
 **🔴 Internal numeric inconsistency** (must fix before committing):
 
 - Same indicator appears as different numbers within one block. E.g.: THESIS says
-  `\$200 亿订单` but the same block's Conversation Log says `\$20 亿订单` and `\$2B` —
+  `\$200B order` but the same block's Conversation Log says `\$20B order` and `\$2B` —
   three different figures.
 - Same date written differently across fields (e.g., `2026-07-29` in CATALYSTS vs
   `2026-06-29` in the Conversation Log).
 - Ticker mismatch (TICKER field vs prose / Conversation Log).
 - Percentages / ratios / multipliers that contradict (`2× royalty` in one sentence,
-  `三倍版税` in another).
+  `3× royalty` in another).
 
 **🟡 Plausibility flags** (surface to user, don't auto-block):
 
@@ -367,7 +367,7 @@ For each just-appended block, scan three severity tiers:
 
 **🟢 Polish** (surface but don't block):
 
-- Inconsistent unit conventions in mixed Chinese-English (`\$200B` vs `\$200亿` used
+- Inconsistent unit conventions (`\$200B` vs `\$200bn` vs `\$200 billion` used
   interchangeably without anchoring on one).
 - Minor formatting drift (one block uses `—` em-dash separators, the next uses ` - `).
 
@@ -377,10 +377,10 @@ For each just-appended block, scan three severity tiers:
 ```
 Self-consistency check found:
 
-- 🔴 positions/ARM.md (2026-05-29 Thesis): THESIS says "\$200 亿订单" but
-  Conversation Log says "\$20 亿" and "\$2B" — three different figures.
-  Likely correct: \$20 亿 (\$2B), based on internal majority + plausibility.
-- 🟡 positions/ARM.md (2026-05-29 Thesis): "\$200 亿订单" represents ~4× ARM's
+- 🔴 positions/ARM.md (2026-05-29 Thesis): THESIS says "\$200B order" but
+  Conversation Log says "\$20B" and "\$2B" — three different figures.
+  Likely correct: \$2B, based on internal majority + plausibility.
+- 🟡 positions/ARM.md (2026-05-29 Thesis): "\$200B order" represents ~4× ARM's
   annual revenue — single-source claim, worth corroborating against the May 6
   earnings transcript before persisting.
 ```
