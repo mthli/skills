@@ -281,12 +281,12 @@ one-time bootstrap, label them explicitly as such — e.g.
 - Total cost: <totalCost as USD, e.g. $0.1234 — omit this line if missing or 0>
 - Models used: <modelsUsed>
 
-Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
+Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
 ```
 
 The `Co-Authored-By` trailer must be the **last line** of the commit message, separated
 from the preceding section by a blank line. Match the model name to the actual model
-running the session (check the environment block — e.g. `Claude Opus 4.7 (1M context)`,
+running the session (check the environment block — e.g. `Claude Opus 4.8 (1M context)`,
 `Claude Sonnet 4.6`, etc.).
 
 **Conversation log guidelines**:
