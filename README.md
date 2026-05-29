@@ -10,10 +10,6 @@ Personal skills used in Claude Code 🤖
 - `review-iterate` - Multi-round structured review of work-in-progress code or docs, with severity-tagged findings the user prioritizes and a stopping rule that prevents padding nitpicks.
 - `sparse-checkout` - Personally hide files or directories from a git repo's working tree via `git sparse-checkout` — per-clone, reversible, and invisible to teammates (no `.gitignore` changes).
 
-## Learning
-
-- `statusline-vocab` - Surface a "word of the conversation" segment on the Claude Code statusline — a `Stop` hook picks one English word worth learning from each turn and renders `{emoji} {word} /IPA/ pos. {translation}` (translation language configurable; Chinese by default) so you passively build vocabulary from your own work.
-
 ## Finance
 
 - `base-breakout-scan` - Scan US large-cap equities for tight pre-breakout bases and track which setups persist across runs.
@@ -26,6 +22,11 @@ Personal skills used in Claude Code 🤖
 - `distill-theme` - Aggregate Thesis/Observation blocks across all per-ticker journals and `RELATED_THEMES`-tagged Macro blocks into a per-theme snapshot at `.claude/snapshots/themes/<theme>.md` — the cross-ticker view (which names express the theme, what's driving it).
 - `yfinance` - Fetch stock/ETF/index quotes and historical OHLCV data from Yahoo Finance.
 - [`edgartools`](https://github.com/dgunning/edgartools) - Access and analyze SEC Edgar filings, XBRL financial statements, 10-K, 10-Q, and 8-K reports.
+
+## Misc
+
+- `hackernews` - Browse Hacker News from inside Claude Code — top stories and other feeds (new/best/Ask/Show/jobs), threaded comment views for any story, and keyword search, via a dependency-free script over the HN Firebase + Algolia APIs.
+- `statusline-vocab` - Surface a "word of the conversation" segment on the Claude Code statusline — a `Stop` hook picks one English word worth learning from each turn and renders `{emoji} {word} /IPA/ pos. {translation}` (translation language configurable; Chinese by default) so you passively build vocabulary from your own work.
 
 ## License
 
