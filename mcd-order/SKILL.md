@@ -36,6 +36,31 @@ in** — Chinese for a Chinese speaker, English for an English one — not hardc
 `<SKILL_DIR>` below is the directory containing this `SKILL.md` — substitute its
 absolute path when running.
 
+## Execution style — heads-down by default, present once
+
+Run the whole pipeline (Steps 1–7) **silently**: don't narrate each batch, don't
+post intermediate findings, don't walk through the combinatorics in prose as you
+go. The user sees exactly one thing — the final plan in Step 8. The **dominant
+wall-clock cost** on this task is the work *between* tool calls — your own
+reasoning plus the text you generate — not the remote MCP calls, which take only
+seconds per batch. So cut both: don't just go quiet, also think less (lean on the
+solver, per the first bullet).
+
+- **Lean on the solver; don't re-derive the optimum by hand.** `optimize.py` does
+  the combinatorics — your job is to feed it real prices, not to hand-prove the
+  answer in prose first (that doubles the work).
+- **Probe every candidate in the single Step 5b batch.** Price *all* the
+  containers you might use (every four-piece / 随心选 / three-piece code), not just
+  the obvious ones — you already hold every `productCode` from `query-meals`.
+  Missing one (e.g. a burger's four-piece) forces a second `calculate-price`
+  round-trip mid-solve. Step 5b already mandates one batch; the point here is
+  completeness within it.
+- **Speak mid-run only when blocked** — an ambiguous SKU, a tool error, the server
+  missing. Otherwise stay quiet until the plan.
+
+This is the default. If the user explicitly asks you to show your work / explain
+the reasoning, narrate freely instead.
+
 ## Step 0 — Require the mcd-mcp server (install gate)
 
 Everything here depends on the **mcd-mcp** server (tools named `mcp__mcd-mcp__*`,

@@ -141,7 +141,8 @@ def optimize(demand, variants, resources, policy, topK, node_cap):
 
     balance = resources["points"]["balance"]
     expiring = resources["points"]["expiringSoon"]
-    mcs = policy.get("minCashSavedPer100Points")   # fen per 100 non-expiring pts
+    # fen per 100 non-expiring pts
+    mcs = policy.get("minCashSavedPer100Points")
     if mcs is None:
         # No opportunity-cost estimate -> only the free expiring points are
         # spendable; never burn the user's non-expiring stash on a guess.
