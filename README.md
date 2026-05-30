@@ -26,6 +26,7 @@ Personal skills used in Claude Code 🤖
 ## Misc
 
 - `hackernews` - Browse Hacker News from inside Claude Code — top stories and other feeds (new/best/Ask/Show/jobs), threaded comment views for any story, and keyword search, via a dependency-free script over the HN Firebase + Algolia APIs.
+- `wallstreetbets` - Browse r/wallstreetbets from inside Claude Code — read DD (due-diligence) posts, filter by any flair (News/Gain/Loss/YOLO/Daily Discussion), keyword-search the sub, and open any post's full body or comments, via a dependency-free script over Reddit's RSS feeds (no auth, no blocked JSON API).
 - `statusline-vocab` - Surface a "word of the conversation" segment on the Claude Code statusline — a `Stop` hook picks one English word worth learning from each turn and renders `{emoji} {word} /IPA/ pos. {translation}` (translation language configurable; Chinese by default) so you passively build vocabulary from your own work.
 
 ## License
