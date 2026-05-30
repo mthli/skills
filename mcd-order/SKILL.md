@@ -66,11 +66,19 @@ server — the whole point is real numbers.
 0. Confirm mcd-mcp is connected (else: install gate above)
 1. Gather the order: who's eating + each person's exact items, the scenario, store/address
 2. Lock scenario + store  -> orderType / beType / storeCode / beCode
-3. Pull the menu          -> query-meals (+ query-meal-detail for combo components & swaps)
+3. Pull the menu          -> query-meals (buyable products, sticker prices, productCodes)
 4. Pull coupons           -> query-store-coupons (usable here) + query-my-coupons
 5. Pull points            -> query-my-account (balance + expiring) + mall-points-products
-6. Build the solver input JSON  -> run scripts/optimize.py  -> top-K candidate baskets
-7. Verify real prices     -> calculate-price on each top-K basket; re-rank by true cash
+   ⮑ 3/4/5 only depend on the locked store — issue them as ONE parallel batch.
+     mcd-mcp is remote; the number of sequential round-trips, not of calls, costs
+     wall-clock.
+5b. Detail + price-probe BEFORE solving (ONE batch) -> query-meal-detail +
+    calculate-price on the candidate container combos & key singles; both need only
+    the query-meals codes, not each other. Use the REAL probed prices, not the
+    sticker prices query-meals returned — auto-promos can be ~50%+ off and change
+    WHICH combo wins, not just the total (see Step 3 for the sticker-price trap).
+6. Build the solver input JSON (using the 5b real prices)  -> run scripts/optimize.py
+7. Verify real prices     -> calculate-price on the winning basket(s); re-rank by true cash
 8. Present the plan        (advisor only; offer to place it on explicit request)
 ```
 
@@ -122,14 +130,26 @@ the scenario changes.
 - `query-meals` (with the locked orderType/beType/storeCode/beCode) → the list of
   buyable products with prices and `productCode`s. These become the solver's
   `single` and `combo` options.
-- For each **combo** the group might use, `query-meal-detail` → its components and
-  any swappable slots. This is what lets the solver redistribute components and
-  model free swaps (interpretation A). Without it a combo is an opaque price and
-  the core insight can't fire.
+- For each **combo** the group might use, `query-meal-detail` → its **default**
+  components, one per round (it returns the default fill, **not** the full swap menu
+  — see `references/modeling.md` §6). This is still what lets the solver redistribute
+  components and model free swaps (interpretation A). Without it a combo is an opaque
+  price and the core insight can't fire. Fetch it in the **Step 5b** batch (it needs
+  the `query-meals` codes), not in this menu pull.
 
 Normalize both demand-side items and combo components to **one SKU namespace**
 (prefer `productCode`; fall back to `name|size` when a combo's component code
 doesn't line up with its standalone code) — see `references/modeling.md`.
+
+**`query-meals` prices are STICKER prices — do not optimize on them.** Large auto-
+promotions (套餐立减 on 四件套 / 随心选, 限定特惠, McCafé 立减) plus an order-level
+member discount are applied only by `calculate-price`, and routinely knock 30–50%+
+off — e.g. a ¥57 四件套 ringing up at ¥28, a ¥21 冰奶铁 at ¥9.9 (both just over 50%).
+A discount that
+large changes *which* container is cheapest, not just the final total, so solving
+on sticker prices can pick a "cheap on paper" combo a hidden promo has already
+beaten. Before you solve, **price-probe** every plausible container combo and key
+single with `calculate-price` (Step 5b), batched, and feed those real numbers in.
 
 ## Step 4 — Pull coupons
 
@@ -168,10 +188,29 @@ If the user has **no non-expiring points**, or you genuinely can't estimate any
 redemption value, **omit** `minCashSavedPer100Points` entirely — the solver then
 spends only the free expiring points and never burns the stash on a guess.
 
+## Step 5b — Price-probe the candidates (before solving)
+
+`query-meals` prices are sticker prices (Step 3). Before you build the solver input,
+fire **one batch** that fetches `query-meal-detail` for every plausible container
+combo **and** `calculate-price` for those combos plus the key singles — both depend
+only on the `query-meals` codes, not on each other, so they share one round-trip.
+
+Read each line's **product-level `subtotal`** as that option's real unit price and
+feed those into the solver (Step 6) instead of the sticker prices. Do **not** treat
+a per-call `calculate-price` total as a unit price: order-level discounts (会员立减,
+满减) ride on the whole basket, so if you price candidates in separate calls each
+one carries that order-level cut and summing them double-counts it. Unit price =
+line `subtotal`; order-level effects are confirmed only on the full basket at Step 7.
+
+This is what stops the solver from picking a combo a hidden promo has already beaten,
+and folds detail-fetch + pricing into a single round-trip.
+
 ## Step 6 — Run the solver
 
 Build the input JSON exactly as specified in `references/modeling.md` (all cash
-in **fen**), then:
+in **fen**). Set each option's `cashPrice` to its **Step 5b probed price**, not the
+sticker price from `query-meals` — otherwise the solver mis-ranks containers a
+hidden promo has re-priced. Then:
 
 ```bash
 python3 <SKILL_DIR>/scripts/optimize.py --input /tmp/mcd_problem.json --pretty
@@ -238,6 +277,14 @@ order for you?") — and only call `create-order` if the user explicitly says ye
   coupons, and sometimes `productCode` — re-pull menu/coupons and re-run, don't reuse.
 - **Don't invent data**: if a tool fails, report it and retry/ask — never fill
   in plausible prices or coupons. A wrong number defeats the purpose.
+- **Round-trips dominate wall-clock**: mcd-mcp is a remote server, so cost scales
+  with the number of *sequential* batches, not the number of calls. Put every call
+  with no unmet dependency in one parallel batch — all store-scoped reads
+  (menu/coupons/account/points) together, then `query-meal-detail` +
+  `calculate-price` probes for the candidates together (both need only the menu
+  codes, not each other). A clean run is ~4 batches. The classic time
+  sink is optimizing on sticker prices, then re-doing the whole plan after
+  `calculate-price` reveals a promo — price-probe first (Step 5b) and that vanishes.
 - **Re-runs are cheap**: tweaking the group's items, scenario, or the points
   threshold just means rebuilding the JSON and re-running `optimize.py`.
 - For the full input/output schema and the mcd-mcp field mapping, read

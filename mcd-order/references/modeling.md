@@ -236,8 +236,13 @@ store/orderType:
 - `storeCode`, `orderType`, `beType`, `beCode` (when the scenario needs it).
 - `items[]`: `{ productCode, quantity, couponId?, couponCode? }` — include the
   coupon fields for couponed lines (`consumes` tells you which).
-- For combos with a chosen swap, pass the productCode the order link expects for
-  that configuration (per `query-meal-detail`).
+- **Combo swaps can't be priced or ordered through this MCP.** `calculate-price`
+  (and `create-order`) take a flat `productCode` and price/order the combo's
+  **default** configuration — there is no field for a per-round choice
+  (e.g. 麦乐鸡4块 → 辣翅). So the verified combo price is always the *default* price.
+  Model a **free** in-combo swap in the plan for redistribution (the recipient still
+  ends up with their exact SKU), but present the swap as an in-app selection and say
+  the price was verified for the default config — never fabricate a swapped price.
 
 Returned prices are in **fen** — re-rank the plans by the verified total and
 present the verified numbers, not the local estimate. (Points redemptions are
@@ -258,5 +263,10 @@ Keep these in mind; lean on `calculate-price` and your own judgment for them:
   Model a paid upgrade, if needed, as a separate option with its own price.
 - **Combos whose composition you didn't fetch** — without `query-meal-detail` a
   combo is an opaque price and its components can't be redistributed.
+- **`query-meal-detail` shows only the DEFAULT choice per round**, not the full
+  swap menu — a "选择汉堡" round returns just the default burger, a 小食 round just
+  its default snack. You can't enumerate every legal swap from it, so lean on known
+  combo templates (三件套 = 主食 + 中薯 + 可乐; 四件套随心选 = 主食 + 中薯 +
+  第二份小食 + 可乐) plus the user's stated swap, and verify the *default* price.
 - **Cross-scenario comparison** (dine-in vs delivery cheaper?) — run the optimizer
   once per scenario and compare the results yourself.
