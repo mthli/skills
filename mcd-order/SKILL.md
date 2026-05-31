@@ -61,6 +61,45 @@ solver, per the first bullet).
 This is the default. If the user explicitly asks you to show your work / explain
 the reasoning, narrate freely instead.
 
+## Asking the user — offer a menu, not a blank prompt
+
+Whenever you need a decision from the user — the up-front ones (scenario, store)
+just as much as the mid-run blockers above — prefer the **AskUserQuestion** tool
+with concrete, selectable options over a typed question.
+The user taps a choice and hits Enter instead of spelling out a store name, a drink
+size, or a yes/no — it's faster, can't be mistyped, and shows them the choices that
+actually apply (real menu names, real nearby stores) rather than making them recall
+them. Free text stays the fallback only for input that can't be enumerated — a
+brand-new delivery address, or a city to search when nothing's on file yet. You
+rarely need a *separate* typed prompt for that: every AskUserQuestion already
+carries an "其他/Other" choice, so list the enumerable options and let "其他" absorb
+the open case inside the same prompt.
+
+Build the options from live data wherever a list already exists, and label them in
+the user's language (the menu/store names arrive in Chinese — leave those as-is):
+
+- **Scenario** → the four service types: 到店自取 / 得来速 / 麦乐送 / 团餐.
+- **Store** → what `query-nearby-stores` returns. Try favorites first (searchType 1):
+  if they have any, they pick one with zero typing. A question caps at **4 options**,
+  so when more stores come back, offer the nearest/favorite few and let the built-in
+  "其他" choice cover the rest — i.e. search by a typed city/keyword, the one part
+  that's unavoidably free text.
+- **Delivery address** → the saved addresses from `delivery-query-addresses`; only
+  ask them to type one when none exists.
+- **Ambiguous SKU** ("可乐" → which size? zero-sugar?) → the matching menu SKUs.
+- **Size/spec conflict** (wants a large coke, the combo includes medium) → the
+  resolutions, each with its price (e.g. 加钱升大杯 / 保留中杯 / 单点大杯).
+- **Claim coupons first?** → *only if you'd surface it at all* (it's optional, not a
+  default step — don't inject a prompt just to have one): a yes/no on auto-claiming
+  everything from 麦麦省 (`auto-bind-coupons`) before optimizing.
+- **Place the order** (Step 8) → the final go/no-go, and the pick between close plans.
+
+This serves "present once", it doesn't fight it: menus appear only at the real
+decision points above, never as chatter. AskUserQuestion can hold several questions
+in one prompt — batch the independent ones (e.g. the ambiguous-size question for two
+different people) so the user clears them in a single pass instead of one prompt
+each.
+
 ## Step 0 — Require the mcd-mcp server (install gate)
 
 Everything here depends on the **mcd-mcp** server (tools named `mcp__mcd-mcp__*`,
@@ -122,6 +161,8 @@ Get, in the user's own words:
 - **Scenario** — one of: dine-in (到店自取, beType 1) / drive-through (得来速,
   beType 5) / McDelivery (麦乐送, beType 2) / corporate group-meal (团餐,
   beType 6). Prices and coupons differ by scenario, so this must be fixed up front.
+  Offer these four as an AskUserQuestion menu, not a typed question (see "Asking the
+  user — offer a menu" above).
 - **Store or delivery address**, and any **budget / dietary** constraints.
 
 Two decisions are baked in (don't re-litigate them unless asked):
@@ -132,6 +173,8 @@ Two decisions are baked in (don't re-litigate them unless asked):
   with their exact SKU. Only ask the user when their phrasing is **ambiguous**
   (just "cola" → which size? zero-sugar?) or when a **size/spec conflicts** (wants
   a *large* coke but the combo only includes a *medium*) — surface it, don't guess.
+  When you do, present the candidate SKUs (or the size/spec resolutions, each priced)
+  as an AskUserQuestion menu so the user taps the answer instead of typing it.
 - **Waste allowed + reported** — the optimizer may buy a combo and leave a
   component unused if that's still cheapest; whatever's unused is reported as a
   leftover list so the user decides.
@@ -144,6 +187,11 @@ Two decisions are baked in (don't re-litigate them unless asked):
 - McDelivery / group-meal → `delivery-query-addresses` (or
   `delivery-create-address` to add one), then `delivery-query-stores` to get the
   deliverable store + `beCode`.
+
+Whichever path you take, present the returned stores / addresses as an
+AskUserQuestion menu (favorites & saved addresses first) rather than asking for a
+typed identifier — see "Asking the user — offer a menu" above for the 4-option cap
+and the "其他"-to-search fallback.
 
 Record `orderType` (1 for dine-in/drive-through, 2 for delivery/group-meal),
 `beType`, `storeCode`, and `beCode` (when present). Every later call needs them,
@@ -290,9 +338,10 @@ that went unused (so they can decide to spend them). If `plans` has more than on
 close option, mention the runner-up so the user can trade (e.g. "¥1 more but no
 coupon needed").
 
-End with a single soft offer in the user's language (e.g. "Want me to place this
-order for you?") — and only call `create-order` if the user explicitly says yes
-(it spends real money). Default is advice only.
+End with the go/no-go as an AskUserQuestion in the user's language — options like
+"按这个方案下单" / "先不下单", plus one option per close runner-up so they can pick the
+plan they prefer right there. Only call `create-order` if they explicitly choose to
+place it — it spends real money. Default is advice only; "先不下单" just ends the turn.
 
 ## Notes
 
