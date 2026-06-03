@@ -973,10 +973,12 @@ def render_repeat_offenders(today_contracts: list[dict],
             strike) else f"{strike:g}"
         type_letter = "C" if c["type"] == "call" else "P"
         contract = f"${strike_str}{type_letter} {c['expiry'][5:]}"
+        vol_oi = c.get("vol_oi")
+        vol_oi_str = f"{vol_oi:.1f}" if vol_oi is not None else "new"
         lines.append(f"- **{c['ticker']} {contract}** — "
                      f"flagged {s + 1} days running. "
                      f"Today: vol {c['vol']:,}, OI {c['oi']:,}, "
-                     f"Vol/OI {c.get('vol_oi', 0):.1f}.")
+                     f"Vol/OI {vol_oi_str}.")
     lines.append("")
     return "\n".join(lines)
 
