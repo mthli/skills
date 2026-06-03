@@ -1019,6 +1019,15 @@ def load_history() -> pd.DataFrame:
     df = pd.read_csv(HISTORY_FILE)
     if df.empty:
         return df
+    # run_id is an identifier (an ET date stamp like "20260603", or
+    # "20260603T143000Z" under --allow-same-day), not a number — but read_csv
+    # infers int64 for the all-numeric default-mode files. make_run_id and every
+    # current_run_id comparison use str, and `int64_col != "20260603"` is
+    # silently always-true, so an int64 run_id breaks the current-run exclusion
+    # in enrich_with_persistence / dropouts. Normalize to str here, at the single
+    # entry point, so the in-memory frame matches the str semantics the rest of
+    # the module (and HISTORY_COLS' type hints) already assume.
+    df["run_id"] = df["run_id"].astype(str)
     # format='ISO8601' tolerates rows with and without microseconds in the same
     # file (pre-upgrade rows used microsecond precision; new ones don't).
     df["run_date"] = pd.to_datetime(df["run_date"], utc=True, format="ISO8601")
@@ -1269,6 +1278,63 @@ def _longest_consecutive_streak(run_ids_for_ticker: list[str],
         else:
             cur = 0
     return best
+
+
+SPARK_TICKS = "▁▂▃▄▅▆▇█"
+
+
+def rank_sparkline(history: pd.DataFrame, ticker: str,
+                   current_rank: int | None, top_n: int,
+                   current_run_id: str | None = None,
+                   max_points: int = 10) -> str:
+    """Unicode sparkline of a ticker's leaderboard position over recent runs.
+
+    Pulls the ticker's past `score_rank` from history (falling back to display
+    `rank` for old rows that predate the column), chronologically ordered, then
+    appends the current run's rank. Rows whose run_id matches `current_run_id`
+    are dropped first: on a same-ET-day re-run, load_history() (which runs
+    before append_history() in main()) returns a frame that still holds this
+    morning's now-stale snapshot, and without this guard the trajectory would
+    show "today" twice. The run_id comparison casts both sides to str
+    defensively — load_history() already normalizes run_id to str, but this
+    standalone helper doesn't trust its caller's dtype (a raw read_csv frame
+    infers int64 for all-numeric run_ids, and `int64_col != "20260603"` is
+    silently always-true).
+
+    Heights are normalized against a FIXED 1..top_n leaderboard scale (not the
+    name's own min/max), so a block's height is comparable across names: #1 is
+    always the tallest block, #top_n the shortest, and ranks worse than top_n
+    clamp to the floor. A name hovering near #1 reads as a near-flat row of tall
+    blocks; one that swings deep reads as a tall-to-short plunge. Orientation is
+    inverted so a *better* rank maps to a *taller* block — a rising line means
+    climbing. Returns '' with fewer than two points (nothing to trend)."""
+    series: list[int] = []
+    if history is not None and not history.empty:
+        rows = history[history["ticker"] == ticker]
+        if current_run_id is not None:
+            rows = rows[rows["run_id"].astype(str) != str(current_run_id)]
+        rows = rows.sort_values("run_date")
+        col = "score_rank" if "score_rank" in rows.columns else "rank"
+        for v in rows[col].tolist():
+            if pd.notna(v):
+                series.append(int(v))
+    if current_rank is not None:
+        series.append(int(current_rank))
+    series = series[-max_points:]
+    if len(series) < 2:
+        return ""
+    if top_n <= 1:
+        # Degenerate 1-name leaderboard: the only possible rank is #1 (the best),
+        # so every block is the tallest. Guards both the div-by-zero and the
+        # frac=(1-1)/1=0 inversion that would otherwise floor #1 to ▁.
+        return SPARK_TICKS[-1] * len(series)
+    span = top_n - 1
+    out = []
+    for v in series:
+        # #1 -> 1.0 (tallest), #top_n -> 0.0; clamp ranks outside [1, top_n]
+        frac = min(1.0, max(0.0, (top_n - v) / span))
+        out.append(SPARK_TICKS[round(frac * (len(SPARK_TICKS) - 1))])
+    return "".join(out)
 
 
 def show_history_summary(history: pd.DataFrame):
@@ -1732,8 +1798,14 @@ def main():
         sticky = [p for p in picks[: args.top_n] if p.get("streak", 1) >= min_streak]
         if sticky:
             print(f"\n## Persistent leaders (streak ≥ {min_streak} runs)")
+            print(f"_rank trajectory vs top {args.top_n}: █ = #1 · "
+                  f"▁ = #{args.top_n} or worse; rising = climbing_")
             for p in sorted(sticky, key=lambda x: -x["streak"]):
-                line = (f"- **{p['ticker']}** — streak {p['streak']}, "
+                spark = rank_sparkline(
+                    history, p["ticker"], p.get("score_rank", p.get("rank")),
+                    args.top_n, current_run_id=run_id)
+                spark_prefix = f"`{spark}` " if spark else ""
+                line = (f"- {spark_prefix}**{p['ticker']}** — streak {p['streak']}, "
                         f"first seen {p.get('first_seen', '—')}, "
                         f"now #{p['rank']}")
                 # TrailStop attaches at the same min_streak threshold, so

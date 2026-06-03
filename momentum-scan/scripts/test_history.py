@@ -949,6 +949,51 @@ def test_dropouts_empty_when_no_prior_runs():
     assert scan.dropouts(history, {"AAA"}, "20260512", top_n=10) == []
 
 
+# ─── run_id dtype round-trip (CSV path) ──────────────────────────────────────
+# The in-memory enrich/dropouts tests above build run_id as a Python str, so
+# `run_id != current_run_id` compares str-to-str and passes even on buggy code.
+# Real frames come from read_csv, which infers int64 for all-numeric run_ids —
+# and `int64_col != "20260512"` is silently always-true. These go through the
+# CSV path to catch that; they fail if load_history doesn't coerce run_id to str.
+
+def test_load_history_coerces_numeric_run_id_to_str(history_file):
+    pd.DataFrame([
+        _hist_row("20260601", "2026-06-01T20:00:00+00:00", "AAA", 1),
+        _hist_row("20260602", "2026-06-02T20:00:00+00:00", "AAA", 1),
+    ], columns=scan.HISTORY_COLS).to_csv(history_file, index=False)
+    h = scan.load_history()
+    assert h["run_id"].dtype == object
+    assert h["run_id"].tolist() == ["20260601", "20260602"]  # not "20260602.0"
+
+
+def test_enrich_excludes_current_run_through_csv_path(history_file):
+    # Same-ET-day re-run: history.csv already holds this morning's snapshot
+    # (run_id 20260602). After load_history (int64 -> str), enrich must exclude
+    # it so streak counts only the genuinely-prior 20260601 — not today twice.
+    pd.DataFrame([
+        _hist_row("20260601", "2026-06-01T20:00:00+00:00", "AAA", 2),
+        _hist_row("20260602", "2026-06-02T20:00:00+00:00", "AAA", 1),  # stale today
+    ], columns=scan.HISTORY_COLS).to_csv(history_file, index=False)
+    out = scan.enrich_with_persistence([_pick("AAA", 1)], scan.load_history(),
+                                       "20260602")
+    assert out[0]["streak"] == 2          # not 3 (which double-counts today)
+    assert out[0]["first_seen"] == "2026-06-01"
+    assert out[0]["prev_rank"] == 2        # from 20260601, not today's stale #1
+
+
+def test_dropouts_excludes_current_run_through_csv_path(history_file):
+    # On a same-day re-run, dropouts must compare against yesterday (20260601),
+    # not this morning's stale save (20260602) — else BBB, which dropped between
+    # yesterday and this morning, is silently missed.
+    pd.DataFrame([
+        _hist_row("20260601", "2026-06-01T20:00:00+00:00", "AAA", 1),
+        _hist_row("20260601", "2026-06-01T20:00:00+00:00", "BBB", 2),
+        _hist_row("20260602", "2026-06-02T20:00:00+00:00", "AAA", 1),  # BBB gone
+    ], columns=scan.HISTORY_COLS).to_csv(history_file, index=False)
+    out = scan.dropouts(scan.load_history(), {"AAA"}, "20260602", top_n=10)
+    assert [d["ticker"] for d in out] == ["BBB"]
+
+
 # ─── score_tickers ───────────────────────────────────────────────────────────
 
 def _score_prices(n_days: int, columns: dict[str, np.ndarray]) -> pd.DataFrame:
@@ -1199,3 +1244,116 @@ def test_append_history_migrates_old_schema_file(history_file):
     # Column order: HISTORY_COLS prefix preserved (score_rank between
     # `rank` and `score`, not at the end after `from_high_pct`).
     assert df.columns.tolist()[:len(scan.HISTORY_COLS)] == scan.HISTORY_COLS
+
+
+def _hist_rows(ticker_ranks: list[tuple[str, str, int]]) -> pd.DataFrame:
+    """Build a minimal history frame from (run_id, ticker, score_rank) triples.
+    run_id is stored as int64 to mirror the *raw* read_csv inference for an
+    all-numeric column — which load_history() now normalizes to str, but which
+    rank_sparkline still defensively re-casts as a standalone helper. Keeping
+    int64 here exercises that cast. run_date is derived from run_id so sort is
+    stable."""
+    rows = []
+    for run_id, ticker, sr in ticker_ranks:
+        rows.append({
+            "run_id": int(run_id),
+            "run_date": pd.Timestamp(f"{run_id[:4]}-{run_id[4:6]}-{run_id[6:8]}",
+                                     tz="UTC"),
+            "ticker": ticker, "rank": sr, "score_rank": sr, "score": 1.0,
+            "return_pct": 50.0, "max_dd_pct": -10.0,
+            "ann_vol_pct": 30.0, "from_high_pct": -1.0,
+        })
+    return pd.DataFrame(rows)
+
+
+def test_rank_sparkline_orientation_better_rank_is_taller():
+    # Ranks improve over time: 8 -> 4 -> 1, then current run #1 (top_n=10).
+    h = _hist_rows([("20260501", "AAA", 8), ("20260502", "AAA", 4),
+                    ("20260503", "AAA", 1)])
+    spark = scan.rank_sparkline(h, "AAA", 1, 10)
+    assert len(spark) == 4
+    # #1 anchors to the tallest block on the absolute 1..top_n scale.
+    assert spark[-1] == scan.SPARK_TICKS[-1]
+    # Improving rank (8 -> 1) -> non-decreasing, strictly-rising tick heights.
+    idxs = [scan.SPARK_TICKS.index(c) for c in spark]
+    assert idxs == sorted(idxs)
+    assert idxs[0] < idxs[-1]
+
+
+def test_rank_sparkline_absolute_scale_is_independent_of_window():
+    # A name parked at #1-#2 reads near-flat-tall; a name swinging #1->#9 reads
+    # as a real plunge — even though both windows span the same rank delta in
+    # raw terms. This is the cross-name comparability the absolute scale buys.
+    calm = scan.rank_sparkline(_hist_rows([("20260501", "C", 1)]), "C", 2, 10)
+    wild = scan.rank_sparkline(_hist_rows([("20260501", "W", 1)]), "W", 9, 10)
+    calm_idxs = [scan.SPARK_TICKS.index(c) for c in calm]
+    wild_idxs = [scan.SPARK_TICKS.index(c) for c in wild]
+    assert max(calm_idxs) - min(calm_idxs) < max(wild_idxs) - min(wild_idxs)
+
+
+def test_rank_sparkline_appends_current_run():
+    # Only the current rank plus one prior point -> two-char sparkline.
+    h = _hist_rows([("20260501", "BBB", 5)])
+    spark = scan.rank_sparkline(h, "BBB", 2, 10)
+    assert len(spark) == 2
+    # Current #2 is better than prior #5, so the last block is taller.
+    assert scan.SPARK_TICKS.index(spark[-1]) > scan.SPARK_TICKS.index(spark[0])
+
+
+def test_rank_sparkline_too_few_points_returns_empty():
+    # No history and no current rank -> nothing to trend.
+    assert scan.rank_sparkline(pd.DataFrame(), "X", None, 10) == ""
+    # A single point (current only) is still not a trajectory.
+    assert scan.rank_sparkline(pd.DataFrame(), "X", 3, 10) == ""
+
+
+def test_rank_sparkline_flat_series_holds_absolute_height():
+    # Held #4 every run -> every block is the absolute tick for #4 (not a
+    # neutral mid block): a steady good rank looks steadily good.
+    h = _hist_rows([("20260501", "CCC", 4), ("20260502", "CCC", 4)])
+    spark = scan.rank_sparkline(h, "CCC", 4, 10)
+    assert len(spark) == 3
+    expected = scan.SPARK_TICKS[round((10 - 4) / 9 * (len(scan.SPARK_TICKS) - 1))]
+    assert set(spark) == {expected}
+
+
+def test_rank_sparkline_clamps_rank_worse_than_top_n_to_floor():
+    # #50 with top_n=30 is off the bottom of the scale -> floor tick; #1 -> top.
+    h = _hist_rows([("20260501", "DEEP", 50)])
+    spark = scan.rank_sparkline(h, "DEEP", 1, 30)
+    assert spark[0] == scan.SPARK_TICKS[0]   # #50 clamps to ▁
+    assert spark[-1] == scan.SPARK_TICKS[-1]  # #1 -> █
+
+
+def test_rank_sparkline_degenerate_top_n_one_is_all_top():
+    # A 1-name leaderboard: the only possible rank is #1, so every block is the
+    # tallest — never the floored ▁ the raw (1-v)/span formula would produce.
+    h = _hist_rows([("20260501", "ONE", 1)])
+    spark = scan.rank_sparkline(h, "ONE", 1, 1)
+    assert len(spark) == 2
+    assert spark == scan.SPARK_TICKS[-1] * len(spark)
+
+
+def test_rank_sparkline_excludes_current_run_id():
+    # A same-ET-day re-run leaves this morning's stale snapshot in history.
+    # Passing current_run_id must drop it so "today" isn't plotted twice. The
+    # run_id column is int64 (see _hist_rows) and current_run_id is a str, so
+    # this also covers the str-normalized comparison.
+    h = _hist_rows([("20260601", "ZZZ", 6), ("20260603", "ZZZ", 9)])
+    # Without the guard the stale 20260603 row stays -> 3 points.
+    assert len(scan.rank_sparkline(h, "ZZZ", 2, 10)) == 3
+    # With it, only the 20260601 prior + current remain -> 2 points.
+    assert len(scan.rank_sparkline(h, "ZZZ", 2, 10, current_run_id="20260603")) == 2
+
+
+def test_rank_sparkline_respects_max_points():
+    rows = [(f"202605{d:02d}", "DDD", d) for d in range(1, 16)]  # 15 prior runs
+    h = _hist_rows(rows)
+    assert len(scan.rank_sparkline(h, "DDD", 1, 30, max_points=10)) == 10
+
+
+def test_rank_sparkline_falls_back_to_rank_without_score_rank_column():
+    h = _hist_rows([("20260501", "EEE", 6), ("20260502", "EEE", 2)])
+    h = h.drop(columns=["score_rank"])  # old-schema rows
+    spark = scan.rank_sparkline(h, "EEE", 2, 10)
+    assert spark and len(spark) == 3

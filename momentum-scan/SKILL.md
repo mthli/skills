@@ -113,10 +113,13 @@ A markdown table of the top N, plus three discovery sections. Sample (truncated)
 ...
 
 ## Persistent leaders (streak ≥ 3 runs)
-- **CIEN** — streak 4, first seen 2026-04-21, now #5 · trail stop $108.50 (-9.3% from spot, peak $120.30)
+_rank trajectory vs top 30: █ = #1 · ▁ = #30 or worse; rising = climbing_
+- `▆▆▇▇▇` **CIEN** — streak 4, first seen 2026-04-21, now #5 · trail stop $108.50 (-9.3% from spot, peak $120.30)
 ```
 
 (The `trail stop ...` suffix only appears when `--atr-stop-mult` is set *and* `Streak ≥ --persistent-min-streak` — which controls both the Persistent leaders threshold and the trail-stop attach threshold. Names below it skip the suffix cleanly.)
+
+The leading `` `▆▆▇▇▇` `` sparkline is the name's **leaderboard-rank trajectory** over its last ≤10 appearances (built from each run's `score_rank`, with the current run appended). Orientation is **inverted so a better rank — closer to #1 — is a taller block**: a rising line means the name is *climbing* the leaderboard, a falling line means it's slipping even while still persistent. Heights are normalized against a **fixed 1..`top_n` leaderboard scale**, not the name's own min/max — so block height is comparable *across* names: #1 is always the tallest block, #`top_n` the shortest, and any rank worse than `top_n` clamps to the floor. The practical effect: a name that hovers near #1 reads as a near-flat row of tall blocks (calm leader looks calm), while a name swinging from the top into the teens reads as a genuine plunge — two names you can compare at a glance. A name with fewer than two data points shows no sparkline (the prefix is omitted cleanly). This is a read-only display nicety — it doesn't affect scoring, ranking, or any saved state.
 
 Numbers above are illustrative; real `Stop%` spans roughly -5% (sedate) to -22% (high-vol breakouts). The sample doesn't include a 🔵 row because deep pullbacks in still-strong momentum names are uncommon — they appear primarily after sharp short-term sell-offs in otherwise-trending leaders.
 
