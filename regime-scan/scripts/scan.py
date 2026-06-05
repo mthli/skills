@@ -114,8 +114,10 @@ def is_nyse_trading_day(d: date) -> bool:
 def load_breadth_universe() -> list[str]:
     if not BREADTH_UNIVERSE_FILE.exists():
         return []
+    # Skip blank lines and `#` comments so the file can carry a provenance
+    # header (source / date / quarter) written by build_universe.py.
     return [t.strip() for t in BREADTH_UNIVERSE_FILE.read_text().splitlines()
-            if t.strip()]
+            if t.strip() and not t.lstrip().startswith("#")]
 
 
 def fetch_bars(tickers: list[str]) -> pd.DataFrame:

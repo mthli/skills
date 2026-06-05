@@ -156,3 +156,17 @@ def test_pct_above_ma():
     above = pd.Series([1.0] * 199 + [100.0])   # last bar spikes above its MA
     below = pd.Series([100.0] * 199 + [1.0])   # last bar craters below its MA
     assert scan.pct_above_ma({"A": above, "B": below}, 50) == 50.0
+
+
+def test_load_breadth_universe_skips_comments(tmp_path):
+    # The generated file carries a `#` provenance header; the loader must drop
+    # comment + blank lines and strip whitespace, leaving only tickers.
+    f = tmp_path / "u.txt"
+    f.write_text("# regime-scan breadth universe\n# generated 2026-Q2\n"
+                 "AAPL\n\n  MSFT  \n# trailing comment\nNVDA\n")
+    orig = scan.BREADTH_UNIVERSE_FILE
+    scan.BREADTH_UNIVERSE_FILE = f
+    try:
+        assert scan.load_breadth_universe() == ["AAPL", "MSFT", "NVDA"]
+    finally:
+        scan.BREADTH_UNIVERSE_FILE = orig
