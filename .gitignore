@@ -144,5 +144,11 @@ vite.config.ts.timestamp-*
 
 # Others
 **/__pycache__/
+# Scan runtime state: ignore regenerable caches (universe/sectors), but TRACK
+# accumulated history — these are point-in-time measurements (options Vol/OI,
+# market breadth, daily ranks) that yfinance can't reconstruct after the fact.
 **/state/*
+!**/state/history.csv
+!**/state/history/
+!**/state/history/**
 .DS_Store

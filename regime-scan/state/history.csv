@@ -1,0 +1,3 @@
+run_id,run_date,state,score,n_bull,n_bear,n_flags,spy_vs_200_pct,ma200_slope_pct,breadth_50_pct,breadth_200_pct,rsp_spy_pct,nhnl_pct,vix,vix_term,credit_pct,def_off_pct,flags
+20260604,2026-06-05T02:07:27.843817+00:00,RISK-ON,6,6,0,0,11.2,1.73,56.0,59.0,-0.2,3.0,15.4,0.8,0.0,-3.2,
+20260605,2026-06-05T13:21:46.086587+00:00,RISK-ON,6,6,0,0,11.2,1.73,56.0,58.0,-0.2,3.0,16.0,0.83,0.0,-3.4,
