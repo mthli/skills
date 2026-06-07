@@ -21,13 +21,16 @@ module.exports = {
       cron_restart: '0 8 * * 2-6', // 08:00 Beijing daily, Tue–Sat (after US Mon–Fri close).
       time: true,                  // prefix log lines with timestamps.
 
-      // pm2 cron may run with a minimal PATH; pin where ccp / node live.
+      // On boot, launchd resurrects the pm2 daemon with a minimal PATH, so pin the
+      // dirs the job needs up front, then fall back to the full PATH captured at
+      // `pm2 start` time (covers claude, node, python, and anything added later).
       env: {
         PATH: [
-          '/opt/homebrew/bin',
-          '/Users/matthew/.nvm/versions/node/v25.6.1/bin',
-          '/usr/bin', '/bin', '/usr/sbin', '/sbin',
-        ].join(':'),
+          path.dirname(process.execPath),    // node bin dir of the pm2 process — tracks nvm, no version pinned; kept ahead of homebrew node.
+          `${process.env.HOME}/.local/bin`,  // claude (native).
+          '/opt/homebrew/bin',               // tmux, jq.
+          process.env.PATH,                  // belt-and-suspenders: full PATH at start time.
+        ].join(path.delimiter),
       },
     },
   ],
