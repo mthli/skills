@@ -151,4 +151,7 @@ vite.config.ts.timestamp-*
 !**/state/history.csv
 !**/state/history/
 !**/state/history/**
+# premarket-brief personal positions (private account facts — keep the template
+# header in the repo, but never commit a user's real holdings)
+premarket-brief/positions.md
 .DS_Store
