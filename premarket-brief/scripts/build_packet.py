@@ -13,14 +13,19 @@ Everything price-related is best-effort and degrades to None cleanly (mirrors
 regime-scan's philosophy): one dead source must never sink the whole packet —
 the `errors` list records what failed so the briefing can say so honestly.
 
-The output is ONE JSON object on stdout (also saved to state/packets/). The
+The output is ONE JSON object on stdout. It is saved to state/packets/ when the
+run is inside the pre-open window (session.valid) — or out-of-window only with
+--save-invalid; otherwise an out-of-window run prints to stdout but is NOT saved,
+so a void packet (live/AH/stale prices mislabeled as a pre-open gap) can't litter
+the snapshot dir or be mistaken for a real input. The
 LLM half (SKILL.md) reads it, layers in positions + the regime/names caches,
 and writes the actual briefing.
 
 Usage:
   uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' python build_packet.py
   ... python build_packet.py --date 2026-06-08  # override "today" (testing/backfill)
-  ... python build_packet.py --no-save          # don't write state/packets/
+  ... python build_packet.py --no-save          # never write state/packets/
+  ... python build_packet.py --save-invalid     # save even when out-of-window
 """
 import argparse
 import json
@@ -811,7 +816,11 @@ def main(argv=None) -> int:
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--date", default=None, help="Override today (YYYY-MM-DD)")
     ap.add_argument("--no-save", action="store_true",
-                    help="Don't write a copy to state/packets/")
+                    help="Never write a copy to state/packets/")
+    ap.add_argument("--save-invalid", action="store_true",
+                    help="Save the packet even when out-of-window (session.valid "
+                         "is false). Default: out-of-window runs print to stdout "
+                         "but are NOT saved.")
     ap.add_argument("--actuals", default=None, metavar="YYYY-MM-DD",
                     help="Reconciliation mode: print the realized session result "
                          "for that past day (index proxies + sectors), not a packet.")
@@ -833,11 +842,24 @@ def main(argv=None) -> int:
     out = json.dumps(packet, indent=2, default=str)
 
     # Out-of-window warning to stderr (the packet carries the structured version).
-    # Same-day re-runs intentionally overwrite the packet snapshot, silently.
-    if not packet["session"]["valid"]:
+    valid = packet["session"]["valid"]
+    if not valid:
         print(f"WARNING: {packet['session']['warning']}", file=sys.stderr)
 
-    if not args.no_save:
+    # Save policy: skip the snapshot when out-of-window so a void packet can't
+    # litter state/packets/ or be mistaken for a real briefing input. --no-save
+    # never saves; --save-invalid forces a save even out-of-window (testing/backfill).
+    # A same-day in-window re-run overwrites the snapshot.
+    if args.no_save:
+        save = False
+    elif not valid and not args.save_invalid:
+        save = False
+        print("NOTE: out-of-window — packet NOT saved to state/packets/ "
+              "(pass --save-invalid to override)", file=sys.stderr)
+    else:
+        save = True
+
+    if save:
         PACKET_DIR.mkdir(parents=True, exist_ok=True)
         (PACKET_DIR / f"{today.isoformat()}.json").write_text(out)
 

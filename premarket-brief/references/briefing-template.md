@@ -146,13 +146,16 @@ prediction dressed as a plan — rewrite it as scenarios.
 
 ## Output honesty rules
 
-- **Run window first (`session`).** If `session.valid` is false, you're
-  out-of-window — lead with `session.warning` and treat **every** premarket block
-  as **void** (single names, sectors, indices, market-wide gappers — each carries
-  the stamped warning), not as a gap read. `intraday` → `premkt` is a live
-  regular-hours price; `after-hours` → an AH price; `pre-dawn` → still the prior
-  session's close. Futures + the overnight tape stay valid; fall back to them.
-  Never present a 2pm tick as a pre-open gap.
+- **Run window first (`session`).** If `session.valid` is false you should have
+  already **stopped at SKILL.md step 3** — an out-of-window run does not build or
+  archive a briefing. The only time you reach this template out-of-window is on an
+  **explicit user-requested** out-of-window read; in that case lead with
+  `session.warning` and treat **every** premarket block as **void** (single names,
+  sectors, indices, market-wide gappers — each carries the stamped warning), not
+  as a gap read. `intraday` → `premkt` is a live regular-hours price;
+  `after-hours` → an AH price; `pre-dawn` → still the prior session's close.
+  Futures + the overnight tape stay valid; fall back to them. Never present a 2pm
+  tick as a pre-open gap — and even then, don't archive it as the day's briefing.
 - **Pre-market single-stock prints are thin and noisy.** Weight the futures gap,
   Europe, and sector ETFs over individual premarket moves; a single name's
   premarket % can be one odd-lot trade. The packet's `premarket_movers.note`

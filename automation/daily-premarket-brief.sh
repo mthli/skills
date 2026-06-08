@@ -39,12 +39,23 @@ fi
 # portable across BSD/GNU date and sidestep date-string parsing.
 et_now_secs=$((10#$et_h * 3600 + 10#$et_m * 60 + 10#$et_s))
 sleep_secs=$((9 * 3600 - et_now_secs))
+open_secs=$((9 * 3600 + 30 * 60)) # 09:30 ET cash open = first tick past the pre-open window.
 
 if [ "$sleep_secs" -gt 7200 ]; then
 	# Never legitimately more than ~1h early (08:00 EST is the worst case). A gap
 	# this large means a misfired cron or a bad clock — skip rather than run hours
 	# off-target.
 	echo "ET now $et_now — ${sleep_secs}s until 09:00 ET is implausibly early; skipping" >&2
+	exit 0
+elif [ "$et_now_secs" -ge "$open_secs" ]; then
+	# At/after the 09:30 cash open — the pre-open window is over (09:30:00 is the
+	# open, matching the skill's `mins < 09:30` pre-open boundary). This fires when pm2
+	# runs the one-shot immediately on `pm2 start`/restart/boot-resurrect at an
+	# arbitrary wall-clock time (e.g. mid-session). A brief built intraday has no
+	# valid overnight-gap data — the packet's session.valid would be false — so
+	# skip rather than archive a void briefing. The scheduled 21:00-Beijing cron
+	# fire still lands inside the window and runs normally.
+	echo "ET now $et_now — past the 09:30 open; pre-open window over, skipping" >&2
 	exit 0
 elif [ "$sleep_secs" -gt 0 ]; then
 	echo "ET now $et_now — sleeping ${sleep_secs}s until 09:00 ET" >&2

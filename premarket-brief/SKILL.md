@@ -71,9 +71,11 @@ uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' \
   python <SKILL_DIR>/scripts/build_packet.py
 ```
 
-It prints the packet JSON to stdout and saves a copy to
-`state/packets/<today>.json`. **Read that file** — it's the single source of
-facts for everything below. It already contains: overnight tape (incl. live VIX
+It prints the packet JSON to stdout and — **only when the run is in-window** —
+saves a copy to `state/packets/<today>.json` (an out-of-window run prints but is
+not saved; see step 3). **First check `session.valid` in the stdout (step 3).**
+If valid, **read the saved file** — it's the single source of facts for
+everything below. It already contains: overnight tape (incl. live VIX
 term structure — VIX9D/VIX/VIX3M levels plus the VIX/VIX3M ratio & `shape`),
 premarket movers, market-wide premarket gappers (`premarket_gappers` — top
 large-cap movers outside your book, via TradingView), today's econ calendar +
@@ -83,19 +85,29 @@ Greed, the regime-scan state row, the cross-scan overlap names, your parsed
 positions (with `reports_today` / `in_overlap` joins), special-day flags, and an
 `errors` list.
 
-### 3. Sanity-check the packet before you trust it
+### 3. Gate on the run window — STOP if out-of-window
 
-The packet is raw facts; your job is to not get fooled by them. Check these:
+Check `session.valid` first. The skill is built for the 04:00–09:30 ET pre-open
+window. If `session.valid` is **false** (phase `intraday` / `after-hours` /
+`pre-dawn` / `overnight` / `non-trading-day` / `date-override`), the `premkt`
+fields are **not** overnight gaps — they're live RTH / after-hours / stale prices,
+and there is no valid pre-open tape to brief on. In that case **do not build,
+synthesize, or archive a briefing**:
 
-- **Run window.** Check `session.valid`. The skill is built for the 04:00–09:30 ET
-  pre-open window; if `session.phase` is `intraday` / `after-hours` / `pre-dawn` /
-  `non-trading-day`, the `premkt` fields are **not** overnight gaps — they're live
-  RTH or after-hours prices (the packet already stamps `session.warning` onto the
-  premarket blocks' `note`). Do **not** build a gap-based briefing on them: lead
-  with `session.warning`, treat **all** the premarket blocks as void — single
-  names, sectors, indices, and the market-wide gappers (the code stamps the
-  warning onto every one) — and fall back to futures + the overnight tape (which
-  are still valid). Don't silently present a 2pm tick as a pre-open gap.
+- Report `session.warning` to the user in 1–2 lines (which phase, why it's being
+  skipped), and **STOP** — skip steps 4–6 entirely.
+- The packet is intentionally **not saved** to `state/packets/` (the script
+  enforces this), so there's nothing to clean up.
+- Step 1's reconciliation still stands — grading a *past* briefing is independent
+  of today's window, so keep that result; only today's forward briefing is skipped.
+- **Override only on an explicit user request** for an out-of-window read. Then
+  say so plainly, lead with `session.warning`, treat **all** premarket blocks as
+  void, lean on futures + the overnight tape — and still **do not** archive it as
+  the day's official briefing.
+
+If `session.valid` is **true**, continue — the packet is raw facts and your job is
+to not get fooled by them. Check these:
+
 - **Internal consistency.** The classic trap: a big `vix.pct` move with the
   futures barely budging. ^VIX overnight/early prints are thin and can be stale
   or spike on low volume — if VIX says +40% but ES/NQ are ±0.3% and Europe is
@@ -127,6 +139,7 @@ date, state what was missing, times in ET).
 
 ### 6. Archive it
 
-Write the finished briefing to `archive/<today>.md`. That file is the durable,
-git-tracked record the next run reconciles against. A same-day re-run simply
-overwrites it — one briefing per day, last run wins.
+Only reached when `session.valid` was true (step 3 stops out-of-window runs
+before here). Write the finished briefing to `archive/<today>.md`. That file is
+the durable, git-tracked record the next run reconciles against. A same-day
+re-run simply overwrites it — one briefing per day, last run wins.
