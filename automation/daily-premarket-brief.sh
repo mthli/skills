@@ -73,7 +73,7 @@ cd "$REPO"
 # separate tmux server — survives. ccp then refuses the name collision forever
 # after. This job owns the name and runs never overlap, so a pre-existing
 # session is always such an orphan.
-tmux kill-session -t daily-premarket-brief 2>/dev/null || true
+tmux kill-session -t '=daily-premarket-brief' 2>/dev/null || true # '=' = exact match, never tmux's prefix fallback
 
 # exec so pm2's stop signal reaches ccp itself: its INT/TERM trap kills the
 # tmux session and exits promptly instead of escalating to SIGKILL.
