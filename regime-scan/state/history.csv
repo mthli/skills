@@ -5,3 +5,4 @@ run_id,run_date,state,score,n_bull,n_bear,n_flags,spy_vs_200_pct,ma200_slope_pct
 20260609,2026-06-10T00:00:40.702758+00:00,CAUTION,5,6,1,2,8.0,1.72,59.0,61.0,2.9,5.0,19.9,0.93,0.2,3.7,Defensive rotation: defensives outran offensives over 20d by +3.7pp ; VIX 5-day spike +26%
 20260610,2026-06-11T00:00:49.319447+00:00,CAUTION,3,4,1,2,6.2,1.7,52.0,59.0,3.1,0.0,22.2,0.97,-0.0,3.6,Defensive rotation: defensives outran offensives over 20d by +3.6pp ; VIX 5-day spike +38%
 20260611,2026-06-12T00:44:28.896437+00:00,CAUTION,4,6,2,3,7.9,1.69,57.0,61.0,4.0,4.0,19.4,0.91,-0.3,2.2,Credit weakening: HYG/LQD -0.3%/20d — credit not confirming equities ; Defensive rotation: defensives outran offensives over 20d by +2.2pp ; VIX 5-day spike +26%
+20260612,2026-06-13T00:00:41.696975+00:00,RISK-ON,6,7,1,1,8.4,1.68,61.0,62.0,4.8,7.0,17.7,0.86,-0.2,2.8,Defensive rotation: defensives outran offensives over 20d by +2.8pp
