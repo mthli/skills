@@ -853,7 +853,13 @@ def score_tickers(prices: pd.DataFrame, window_months: int,
     results = []
     for t in window.columns:
         s = window[t].dropna()
-        if len(s) < 60:
+        # Minimum-observations guard. The historical hard-coded 60 was tuned for
+        # the 3mo default (~63 sessions); it silently zeroed out every name for
+        # any window < ~3mo (tail(trading_days) can never reach 60 rows). Scale
+        # it to the window — allow up to 3 missing sessions below the cap — while
+        # capping at 60 so the ≥3mo behavior is byte-for-byte unchanged
+        # (min(60, 63-3)=60; longer windows stay pinned at the 60 floor).
+        if len(s) < min(60, trading_days - 3):
             continue
         ret = (s.iloc[-1] / s.iloc[0] - 1) * 100
         max_dd = ((s / s.cummax() - 1).min()) * 100

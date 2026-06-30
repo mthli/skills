@@ -962,7 +962,13 @@ def test_load_history_coerces_numeric_run_id_to_str(history_file):
         _hist_row("20260602", "2026-06-02T20:00:00+00:00", "AAA", 1),
     ], columns=scan.HISTORY_COLS).to_csv(history_file, index=False)
     h = scan.load_history()
-    assert h["run_id"].dtype == object
+    # The bug this guards against is run_id being inferred as a *numeric* dtype
+    # (int64/float64), which makes `run_id != current_run_id` silently always
+    # true. Both pandas' legacy `object` and the pandas-3.0 default `StringDtype`
+    # satisfy the real requirement (string, not numeric), so assert non-numeric
+    # + str elements rather than a specific dtype that drifts across versions.
+    assert not pd.api.types.is_numeric_dtype(h["run_id"])
+    assert all(isinstance(x, str) for x in h["run_id"])
     assert h["run_id"].tolist() == ["20260601", "20260602"]  # not "20260602.0"
 
 
@@ -1042,12 +1048,64 @@ def test_score_rank_by_score_descending():
 
 
 def test_score_skips_short_history():
-    # Only 30 bars — score_tickers requires ≥ 60.
+    # 3mo window's min-obs guard is min(60, 63-3)=60; only 30 bars → skipped.
     n = 30
     prices = _score_prices(n, {"AAA": np.linspace(100, 200, n)})
     out = scan.score_tickers(prices, window_months=3,
                              min_return_pct=30.0, max_dd_pct=20.0)
     assert out == []
+
+
+def test_score_one_month_window_returns_picks():
+    # Regression: window_months < 3 used to silently return [] because of a
+    # hard-coded `len(s) < 60` guard that tail(trading_days) could never reach
+    # (1mo → 21 sessions). The guard is now min(60, trading_days - 3) = 18 here.
+    # tail(21) sees a clean +40% rise → must surface, not be silently dropped.
+    n = 80
+    aaa = np.concatenate([np.full(59, 100.0), np.linspace(100, 140, 21)])
+    prices = _score_prices(n, {"AAA": aaa})
+    out = scan.score_tickers(prices, window_months=1,
+                             min_return_pct=30.0, max_dd_pct=20.0)
+    assert {r["ticker"] for r in out} == {"AAA"}, \
+        "1mo window must not be silently empty"
+    assert out[0]["return_pct"] == pytest.approx(40.0, abs=0.5)
+
+
+def test_score_two_month_window_returns_picks():
+    # 2mo → 42 sessions; min-obs guard = min(60, 42-3) = 39. Same regression
+    # class as the 1mo case — both were zeroed out by the old hard-coded 60.
+    n = 80
+    bbb = np.concatenate([np.full(38, 100.0), np.linspace(100, 140, 42)])
+    prices = _score_prices(n, {"BBB": bbb})
+    out = scan.score_tickers(prices, window_months=2,
+                             min_return_pct=30.0, max_dd_pct=20.0)
+    assert {r["ticker"] for r in out} == {"BBB"}
+
+
+def test_score_short_window_still_guards_truly_insufficient():
+    # The fix scales the min-obs guard, it doesn't remove it. 1mo needs ≥ 18
+    # sessions (min(60, 21-3)); 15 bars is genuinely too thin → still skipped,
+    # so a near-IPO with a handful of prints can't slip through on noise.
+    n = 15
+    prices = _score_prices(n, {"AAA": np.linspace(100, 200, n)})
+    out = scan.score_tickers(prices, window_months=1,
+                             min_return_pct=30.0, max_dd_pct=20.0)
+    assert out == []
+
+
+def test_score_caps_guard_at_60_for_long_windows():
+    # The other half of the contract: ≥3mo keeps the 60-session floor — the
+    # guard does NOT scale up to trading_days - 3 (= 123 at 6mo). A name with
+    # only ~100 of the 126-session window (e.g. a ~5-month-old listing, NaNs
+    # before it started trading) clears 60 but would fail a naive 123 guard, so
+    # it must still surface. Locks the min(60, …) cap: dropping it later would
+    # silently exclude recent listings from long-window scans, and this fails.
+    n = 126
+    vals = np.concatenate([np.full(26, np.nan), np.linspace(100, 140, 100)])
+    prices = _score_prices(n, {"AAA": vals})
+    out = scan.score_tickers(prices, window_months=6,
+                             min_return_pct=30.0, max_dd_pct=20.0)
+    assert {r["ticker"] for r in out} == {"AAA"}
 
 
 # ─── NYSE trading-day calendar ───────────────────────────────────────────────
