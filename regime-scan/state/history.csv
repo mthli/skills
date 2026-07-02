@@ -15,3 +15,4 @@ run_id,run_date,state,score,n_bull,n_bear,n_flags,spy_vs_200_pct,ma200_slope_pct
 20260626,2026-06-27T00:00:40.260562+00:00,CAUTION,4,6,2,2,6.1,1.55,65.0,65.0,4.7,10.0,18.4,0.91,-0.6,9.9,Credit weakening: HYG/LQD -0.6%/20d — credit not confirming equities ; Defensive rotation: defensives outran offensives over 20d by +9.9pp
 20260629,2026-06-30T00:00:43.505011+00:00,CAUTION,5,7,2,2,7.8,1.53,65.0,63.0,4.3,8.0,17.6,0.9,-0.6,9.0,Credit weakening: HYG/LQD -0.6%/20d — credit not confirming equities ; Defensive rotation: defensives outran offensives over 20d by +9.0pp
 20260630,2026-07-01T00:00:34.736987+00:00,RISK-ON,7,8,1,1,8.6,1.52,62.0,61.0,3.4,3.0,16.5,0.87,0.0,8.6,Defensive rotation: defensives outran offensives over 20d by +8.6pp
+20260701,2026-07-02T00:00:48.454796+00:00,RISK-ON,7,8,1,1,8.4,1.5,64.0,64.0,3.6,8.0,16.6,0.87,0.0,7.8,Defensive rotation: defensives outran offensives over 20d by +7.8pp
