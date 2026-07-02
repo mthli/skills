@@ -155,3 +155,8 @@ vite.config.ts.timestamp-*
 # header in the repo, but never commit a user's real holdings)
 premarket-brief/positions.md
 .DS_Store
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/

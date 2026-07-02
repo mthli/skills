@@ -7,6 +7,7 @@ Personal skills used in Claude Code 🤖
 - `commit-context` - Commit staged changes with a rich git message derived from the current conversation — captures the *why* alongside the diff, plus structured `MODULE`-tagged Decision blocks for downstream distillation.
 - `distill-module` - Roll up `MODULE: <id>` Decision blocks from `git log` into a per-module `.claude/decisions/<id>.md` snapshot — the current-consensus view that future sessions read before touching the module.
 - `distill-memory` - Scan `.claude/decisions/**` and the last month of `MODULE:`-tagged commits, then propose a handful of candidate Claude Code memory entries (cross-module patterns, recurring mistakes, binding constraints) for the user to review one-by-one.
+- `fable-mind` - Operating doctrine distilled from Claude Fable 5 as its retirement gift — Six Laws, a plan-act-verify loop, judgment heuristics, and a 14-entry failure-mode field guide that let smaller models do Fable-grade work; load it on hard or high-stakes tasks ("think like Fable").
 - `review-iterate` - Multi-round structured review of work-in-progress code or docs, with severity-tagged findings the user prioritizes and a stopping rule that prevents padding nitpicks.
 - `sparse-checkout` - Personally hide files or directories from a git repo's working tree via `git sparse-checkout` — per-clone, reversible, and invisible to teammates (no `.gitignore` changes).
 
