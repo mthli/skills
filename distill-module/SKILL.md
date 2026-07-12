@@ -188,6 +188,37 @@ Drafting rules:
 - **Diff against the existing file** if there is one. Only surface what changed (new Active
   entries, newly-Superseded entries, edited existing entries). Don't rewrite unchanged sections.
 
+### 5b. Oversized snapshots — the constraint-index split
+
+A snapshot that grows past **~30 Active entries** stops being readable as a pre-edit briefing
+(the read-rule in `CLAUDE.md` makes every session pay its full length). The remedy is a split,
+first applied to `app/android.md` on 2026-07-12:
+
+- `## Constraint index (compressed decisions)` sits ABOVE `## Active`: one bullet per settled
+  decision — `- **D<n>** — <the surviving constraint/trap/contract in one sentence> (<sha>)` —
+  distilled mostly from the entry's `Watch out`/`Tradeoffs`. IDs keep their numbers; nothing is
+  renumbered.
+- The full six-field text of compressed entries stays reachable through **git only** — pin the
+  pre-split snapshot in the index preamble (`git show <sha>:<path>`, where `<sha>` is any commit
+  still containing the last full version), and each index line already ends with its source
+  commit. Don't create a sibling archive file: it's never updated, so its stale full text
+  doubles every future grep hit while adding nothing git doesn't hold.
+- `## Active` keeps only full entries still governing in-flight work (dormant gates with
+  re-enable instructions, architecture the next features build on, the last distill round or
+  two).
+
+When re-distilling a file that already has this structure:
+
+- **Respect it.** New decisions append to `## Active` as usual; when an arc settles, demote its
+  entries to one-liners in the constraint index — the demoted full text remains in the snapshot
+  file's own git history. Each demotion round gets its **own** pinned sha appended to the
+  preamble (`D<a>–D<b>: git show <sha>:<path>`): no single commit holds full text for more than
+  one generation, so never *replace* the existing pin — the old generation's full text at the
+  new pin is already one-liners. Per-line source commits remain the ultimate fallback.
+- Keep the `Last distilled` header line to the **latest** distill only — prior deltas live in
+  git history of the snapshot file itself, not accumulated in the header.
+- If Active creeps past ~30 again, propose another demotion round at review time.
+
 ### 6. Show the user
 
 Present the draft (or, if the destination exists, the diff against it) for review. Explicitly
