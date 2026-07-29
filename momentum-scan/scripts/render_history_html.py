@@ -170,7 +170,7 @@ def build_payload(rows: list[dict], sectors: dict, top_n: int, days_window: int 
     }
 
 
-HTML_TEMPLATE = """<!doctype html>
+HTML_TEMPLATE = r"""<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -218,7 +218,7 @@ h1 { font-size: 21px; margin: 0 0 2px; }
   border-radius: 10px; padding: 18px 20px; margin: 16px 0;
 }
 .card h2 { font-size: 15px; margin: 0 0 2px; }
-.card .note { color: var(--muted); font-size: 12.5px; margin: 0 0 12px; }
+.card .note { color: var(--muted); font-size: 12.5px; margin: 0 0 12px; white-space: pre-line; }
 .kpis { display: flex; flex-wrap: wrap; gap: 12px; }
 .kpi {
   flex: 1 1 150px; min-width: 0; background: var(--surface); border: 1px solid var(--border);
@@ -236,6 +236,13 @@ svg text.dlabel { font-size: 11.5px; font-weight: 600; fill: var(--ink-2); }
 .legend .key { display: inline-flex; align-items: center; gap: 6px; }
 .legend .line { width: 14px; height: 2px; border-radius: 1px; }
 .legend .rect { width: 11px; height: 11px; border-radius: 3px; }
+.detail { display: none; grid-template-columns: auto 1fr; gap: 8px 20px; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--grid); }
+.detail .minis { display: flex; flex-wrap: wrap; gap: 20px; align-items: center; }
+.detail .dt-head { font-size: 13px; font-weight: 600; grid-row: span 2; }
+.detail .dt-note { grid-column: 2; font-size: 11.5px; color: var(--muted); }
+.dt-note code { font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; }
+.mini .mlbl { font-size: 11.5px; color: var(--muted); margin-bottom: 2px; }
+.mini .mlbl b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; margin-left: 4px; }
 .head { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin: 0 0 12px; }
 .head .note { margin-bottom: 0; }
 .head select {
@@ -277,6 +284,7 @@ svg a:hover text { text-decoration: underline; }
     <p class="note" id="bump-note"></p>
     <div class="scroll" id="bump"></div>
     <div class="legend" id="bump-legend"></div>
+    <div class="detail" id="bump-detail"></div>
   </div>
 
   <div class="card">
@@ -345,6 +353,12 @@ function tickerList(arr) {
   });
   return sp;
 }
+const dlt = (v, n) => {
+  let s = v.toFixed(n);
+  if (+s === 0) s = (0).toFixed(n);
+  return ` (${+s >= 0 ? "+" : ""}${s})`;
+};
+const gapTag = g => g > 1 ? ` · vs ${g} days earlier` : "";
 const tip = document.getElementById("tip");
 function showTip(x, y, build) {
   tip.textContent = "";
@@ -393,7 +407,7 @@ const BUMP_MIN_APPS = 5;
   const top8 = DATA.summary.filter(s => s.latest).sort((a,b)=>a.latest-b.latest).slice(0,8).map(s=>s.t);
   const plotted = DATA.series.filter(s => s.apps >= BUMP_MIN_APPS || top8.includes(s.t));
   document.getElementById("bump-note").textContent =
-    `${plotted.length} trajectories (≥${BUMP_MIN_APPS} days on board + current top 8; #1 at the top; ranks below #${N} clamp to the dashed floor). Current top 8 highlighted — hover to inspect, click to pin.` + WIN_TAG;
+    `${plotted.length} trajectories (≥${BUMP_MIN_APPS} days on board + current top 8 in color; #1 at the top; ranks below #${N} clamp to the dashed floor).\nHover to inspect; click a line to pin it and open its Score / Return / Drawdown strip.` + WIN_TAG;
   const ML = 34, MR = 78, MT = 12, MB = 26, DX = 19, RY = 15;
   const W = ML + (DAYS-1)*DX + MR, H = MT + N*RY + RY + MB;
   const xOf = d => ML + d*DX, yOf = r => MT + (Math.min(r, N+1) - 1) * RY;
@@ -439,6 +453,47 @@ const BUMP_MIN_APPS = 5;
   const k = div("key", leg); const l = div("line", k); l.style.background = "var(--ctx-line)";
   k.appendChild(document.createTextNode("Others"));
 
+  const det = document.getElementById("bump-detail");
+  const renderDetail = t => {
+    det.textContent = "";
+    det.style.display = t ? "grid" : "none";
+    if (!t) return;
+    const s = DATA.series.find(x => x.t === t);
+    if (!s) { det.style.display = "none"; return; }
+    const head = div("dt-head", det);
+    head.appendChild(tickerLink(t));
+    const minis = div("minis", det);
+    const col = colorOf(t) || "var(--ink-2)";
+    const last = s.pts[s.pts.length-1];
+    [["Score", p => p.s, v => v.toFixed(2)],
+     ["Return", p => p.ret, v => v.toFixed(1) + "%"],
+     ["Drawdown", p => p.dd, v => v.toFixed(1) + "%"]].forEach(([lbl, get, fmt]) => {
+      const m = div("mini", minis);
+      const l = div("mlbl", m, lbl);
+      const b = document.createElement("b"); b.textContent = fmt(get(last)); l.appendChild(b);
+      const W2 = 220, H2 = 34, PAD = 3;
+      const vals = s.pts.map(get);
+      let lo = Math.min(...vals), hi = Math.max(...vals);
+      if (hi - lo < 1e-9) { hi += 1; lo -= 1; }
+      const x2 = d => PAD + d / Math.max(DAYS - 1, 1) * (W2 - 2*PAD);
+      const y2 = v => PAD + (hi - v) / (hi - lo) * (H2 - 2*PAD);
+      const sv = el("svg", {width: W2, height: H2, viewBox: `0 0 ${W2} ${H2}`}, m);
+      let dstr = "", prev = null;
+      for (const p of s.pts) {
+        dstr += (prev !== null && p.d === prev + 1 ? "L" : "M") + x2(p.d).toFixed(1) + " " + y2(get(p)).toFixed(1);
+        prev = p.d;
+      }
+      el("path", {d: dstr, fill: "none", stroke: col, "stroke-width": 1.5,
+        "stroke-linecap": "round", "stroke-linejoin": "round"}, sv);
+      el("circle", {cx: x2(last.d).toFixed(1), cy: y2(get(last)).toFixed(1), r: 2.5, fill: col}, sv);
+    });
+    const fn = div("dt-note", det);
+    const fc = document.createElement("code");
+    fc.textContent = "Score = Return ÷ |Drawdown|";
+    fn.appendChild(fc);
+    fn.appendChild(document.createTextNode(" — return per 1% of drawdown endured (sub-1% drawdowns count as 1%)."));
+  };
+
   let pinned = null, lit = null;
   const restyle = t => {
     const c = colorOf(t);
@@ -461,14 +516,17 @@ const BUMP_MIN_APPS = 5;
     }
     if (best) {
       lit = best.s.t; restyle(pinned || lit);
+      const idx = best.s.pts.indexOf(best.p);
+      const pp = idx > 0 ? best.s.pts[idx-1] : null;
       showTip(ev.clientX, ev.clientY, t => tipRows(t,
         [best.s.t, `${DATA.days[d]} · Rank ${best.p.r <= N ? "#"+best.p.r : "#"+best.p.r+" (below cutoff)"}`,
-         `Score ${best.p.s.toFixed(2)} · Return ${best.p.ret.toFixed(1)}%`],
+         `Score ${best.p.s.toFixed(2)}${pp ? dlt(best.p.s - pp.s, 2) : ""} · Return ${best.p.ret.toFixed(1)}%${pp ? dlt(best.p.ret - pp.ret, 1) : ""}`,
+         `Drawdown ${best.p.dd.toFixed(1)}%${pp ? dlt(best.p.dd - pp.dd, 1) + gapTag(best.p.d - pp.d) : ""}`],
         colorOf(best.s.t) || "var(--ctx-line)"));
     } else { lit = null; restyle(pinned); hideTip(); }
   });
   svg.addEventListener("pointerleave", () => { cross.setAttribute("visibility","hidden"); restyle(pinned); hideTip(); });
-  svg.addEventListener("click", () => { pinned = (pinned === lit ? null : lit); restyle(pinned); });
+  svg.addEventListener("click", () => { pinned = (pinned === lit ? null : lit); restyle(pinned); renderDetail(pinned); });
 }
 
 // ---- sector stacked columns ----
@@ -532,12 +590,20 @@ function renderHeat(minApps) {
     const y = MT + ri*CH;
     const ra = el("a", {href: tickerUrl(s.t), target: "_blank", rel: "noopener"}, svg);
     el("text", {x: GL-8, y: y+CH-3, "text-anchor":"end", class:"tick"}, ra).textContent = s.t;
+    let hprev = null;
     for (const p of s.pts) {
       const bucket = p.r <= N ? Math.min(9, Math.floor((N - p.r) / N * 10)) : null;
       const r = el("rect", {x: GL + p.d*CW, y: y+1, width: CW-2, height: CH-2, rx: 2,
         fill: bucket === null ? "var(--hx)" : `var(--h${bucket})`}, svg);
       r.dataset.t = s.t; r.dataset.d = p.d; r.dataset.r = p.r;
       r.dataset.s = p.s; r.dataset.ret = p.ret; r.dataset.dd = p.dd;
+      if (hprev) {
+        r.dataset.gap = p.d - hprev.d;
+        r.dataset.ds = (p.s - hprev.s).toFixed(2);
+        r.dataset.dret = (p.ret - hprev.ret).toFixed(1);
+        r.dataset.ddd = (p.dd - hprev.dd).toFixed(1);
+      }
+      hprev = p;
     }
   });
   svg.addEventListener("pointermove", ev => {
@@ -546,7 +612,8 @@ function renderHeat(minApps) {
       showTip(ev.clientX, ev.clientY, tt => tipRows(tt,
         [t.dataset.t,
          `${DATA.days[+t.dataset.d]} · ${+t.dataset.r <= N ? "Rank #"+t.dataset.r : "#"+t.dataset.r+" (below cutoff)"}`,
-         `Score ${(+t.dataset.s).toFixed(2)} · Return ${(+t.dataset.ret).toFixed(1)}% · Drawdown ${(+t.dataset.dd).toFixed(1)}%`]));
+         `Score ${(+t.dataset.s).toFixed(2)}${t.dataset.ds ? dlt(+t.dataset.ds, 2) : ""} · Return ${(+t.dataset.ret).toFixed(1)}%${t.dataset.dret ? dlt(+t.dataset.dret, 1) : ""}`,
+         `Drawdown ${(+t.dataset.dd).toFixed(1)}%${t.dataset.ddd ? dlt(+t.dataset.ddd, 1) + gapTag(+t.dataset.gap) : ""}`]));
     } else hideTip();
   });
   svg.addEventListener("pointerleave", hideTip);
