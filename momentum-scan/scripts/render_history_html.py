@@ -21,7 +21,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 SKILL_DIR = Path(__file__).resolve().parent.parent
-TOP_SECTORS = 6  # sectors beyond the top 6 by cell-days fold into "Other"
+TOP_SECTORS = 6  # sectors beyond the top 6 by cell-days fold into "Others"
 
 
 def load_history(path: Path) -> list[dict]:
@@ -124,7 +124,7 @@ def build_payload(rows: list[dict], sectors: dict, top_n: int, days_window: int 
     sector_series = []
     for rid, counts in zip(win_ids, per_day_sec):
         row = [counts.get(s, 0) for s in top_secs]
-        row.append(sum(counts.values()) - sum(row))  # Other
+        row.append(sum(counts.values()) - sum(row))  # Others
         sector_series.append(row)
 
     # KPI facts.
@@ -157,7 +157,7 @@ def build_payload(rows: list[dict], sectors: dict, top_n: int, days_window: int 
         "window": {"total": len(run_ids), "shown": len(win_ids)},
         "series": series,
         "summary": summary,
-        "sectors": {"names": top_secs + ["Other"], "perDay": sector_series},
+        "sectors": {"names": top_secs + ["Others"], "perDay": sector_series},
         "kpi": {
             "runs": len(run_ids),
             "span": [f"{rid[:4]}-{rid[4:6]}-{rid[6:8]}" for rid in (run_ids[0], run_ids[-1])],
@@ -247,7 +247,7 @@ svg text.dlabel { font-size: 11.5px; font-weight: 600; fill: var(--ink-2); }
   position: fixed; pointer-events: none; z-index: 10; display: none;
   background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
   box-shadow: 0 4px 14px rgba(0,0,0,0.14); padding: 8px 11px; font-size: 12.5px;
-  color: var(--ink-2); max-width: 260px;
+  color: var(--ink-2); max-width: 340px;
 }
 #tip .v { color: var(--ink); font-weight: 600; font-size: 13.5px; }
 #tip .k { display: inline-block; width: 14px; height: 2px; border-radius: 1px; vertical-align: middle; margin-right: 6px; }
@@ -462,8 +462,8 @@ const BUMP_MIN_APPS = 5;
     if (best) {
       lit = best.s.t; restyle(pinned || lit);
       showTip(ev.clientX, ev.clientY, t => tipRows(t,
-        [best.s.t, `${DATA.days[d]} · rank ${best.p.r <= N ? "#"+best.p.r : "#"+best.p.r+" (below cutoff)"}`,
-         `score ${best.p.s.toFixed(2)} · return ${best.p.ret.toFixed(1)}%`],
+        [best.s.t, `${DATA.days[d]} · Rank ${best.p.r <= N ? "#"+best.p.r : "#"+best.p.r+" (below cutoff)"}`,
+         `Score ${best.p.s.toFixed(2)} · Return ${best.p.ret.toFixed(1)}%`],
         colorOf(best.s.t) || "var(--ctx-line)"));
     } else { lit = null; restyle(pinned); hideTip(); }
   });
@@ -545,8 +545,8 @@ function renderHeat(minApps) {
     if (t.tagName === "rect" && t.dataset.t) {
       showTip(ev.clientX, ev.clientY, tt => tipRows(tt,
         [t.dataset.t,
-         `${DATA.days[+t.dataset.d]} · ${+t.dataset.r <= N ? "rank #"+t.dataset.r : "#"+t.dataset.r+" (below cutoff)"}`,
-         `score ${(+t.dataset.s).toFixed(2)} · return ${(+t.dataset.ret).toFixed(1)}% · drawdown ${(+t.dataset.dd).toFixed(1)}%`]));
+         `${DATA.days[+t.dataset.d]} · ${+t.dataset.r <= N ? "Rank #"+t.dataset.r : "#"+t.dataset.r+" (below cutoff)"}`,
+         `Score ${(+t.dataset.s).toFixed(2)} · Return ${(+t.dataset.ret).toFixed(1)}% · Drawdown ${(+t.dataset.dd).toFixed(1)}%`]));
     } else hideTip();
   });
   svg.addEventListener("pointerleave", hideTip);
