@@ -11,6 +11,8 @@ HTML file (no external assets, no network) with:
   - a per-ticker summary table (the no-hover fallback for every value)
   - an English / 简体中文 / 繁體中文 / 日本語 / 한국어 language menu (top-right;
     choice kept in localStorage, first visit follows the browser language)
+  - SEO meta tags (description + Open Graph + Twitter card) filled from the
+    actual data span at render time
 
 Usage:
     python scripts/render_history_html.py [--top-n 30] [--days 60] [--out state/history.html]
@@ -184,6 +186,14 @@ HTML_TEMPLATE = r"""<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>momentum-scan history</title>
+<meta name="description" content="__META_DESC__">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="momentum-scan">
+<meta property="og:title" content="momentum-scan history">
+<meta property="og:description" content="__META_DESC__">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="momentum-scan history">
+<meta name="twitter:description" content="__META_DESC__">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
 <style>
 :root {
@@ -1012,9 +1022,17 @@ def main() -> None:
         Path(args.sectors)), args.top_n, args.days)
     generated = datetime.now(
         timezone.utc).astimezone().strftime("%Y-%m-%d %H:%M %Z")
+    k = payload["kpi"]
+    meta_desc = (
+        f"Daily top-{args.top_n} US large-cap momentum board, "
+        f"{k['span'][0]} to {k['span'][1]} ({k['runs']} trading days, "
+        f"{k['tracked']} tickers tracked): rank trajectories, board heatmap, "
+        "sector mix and a sortable roster of every name that made the board."
+    )
     data_json = json.dumps(payload, separators=(
         ",", ":")).replace("</", r"<\/")
     html = HTML_TEMPLATE.replace("__DATA_JSON__", data_json)
+    html = html.replace("__META_DESC__", meta_desc)
     html = html.replace("__GENERATED__", generated)
     out = Path(args.out)
     out.write_text(html)
