@@ -208,8 +208,8 @@ HTML_TEMPLATE = r"""<!doctype html>
     --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181;
     --s6: #008300; --s7: #9085e9; --s8: #e66767;
     --other: #55544d;
-    --h0: #cde2fb; --h1: #9ec5f4; --h2: #86b6ef; --h3: #6da7ec; --h4: #5598e7;
-    --h5: #3987e5; --h6: #2a78d6; --h7: #256abf; --h8: #1c5cab; --h9: #184f95;
+    --h0: #184f95; --h1: #1c5cab; --h2: #256abf; --h3: #2a78d6; --h4: #3987e5;
+    --h5: #5598e7; --h6: #6da7ec; --h7: #86b6ef; --h8: #9ec5f4; --h9: #cde2fb;
     --hx: #262624;
   }
 }
@@ -351,7 +351,7 @@ const I18N = {
     bumpTitle: "Rank trajectories",
     bumpNote: (m, min, n) => `${m} trajectories (≥${min} days on board + today's top ${n}; #1 at the top; ranks below #${n} clamp to the dashed floor). Top 8 in color; the right edge labels today's full board.\nHover to inspect; click a line to pin it and open its Score / Return / Drawdown strip.`,
     heatTitle: "Board heatmap",
-    heatNote: "Rows sorted by days on board — persistent leaders on top, one-day wonders at the bottom. Darker blue = better rank.\nClick a row to open its Score / Return / Drawdown strip.",
+    heatNote: "Rows sorted by days on board — persistent leaders on top, one-day wonders at the bottom. The more vivid the blue, the better the rank.\nClick a row to open its Score / Return / Drawdown strip.",
     heatFilterLabel: "Filter by days on board",
     geDays: n => `≥${n} days`, all: "All",
     heatLegendBelow: "Passed filter, below display cutoff",
@@ -384,7 +384,7 @@ const I18N = {
     bumpTitle: "排名轨迹",
     bumpNote: (m, min, n) => `共 ${m} 条轨迹（在榜 ≥${min} 天 + 今日 top ${n}；第 1 名在顶部；低于第 ${n} 名的排名压到虚线底线）。前 8 名着色；右缘标注今日完整榜单。\n悬停查看数值；点击一条线可固定并展开其评分 / 收益 / 回撤走势。`,
     heatTitle: "榜单热力图",
-    heatNote: "行按在榜天数排序 —— 常青领跑者在上，一日游在下。蓝色越深排名越好。\n点击任意行展开其评分 / 收益 / 回撤走势。",
+    heatNote: "行按在榜天数排序 —— 常青领跑者在上，一日游在下。蓝色越醒目排名越好。\n点击任意行展开其评分 / 收益 / 回撤走势。",
     heatFilterLabel: "按在榜天数筛选",
     geDays: n => `≥${n} 天`, all: "全部",
     heatLegendBelow: "通过筛选，但低于显示截断线",
@@ -422,7 +422,7 @@ const I18N = {
     bumpTitle: "排名軌跡",
     bumpNote: (m, min, n) => `共 ${m} 條軌跡（在榜 ≥${min} 天 + 今日 top ${n}；第 1 名在頂部；低於第 ${n} 名的排名壓到虛線底線）。前 8 名著色；右緣標註今日完整榜單。\n懸停查看數值；點擊一條線可固定並展開其評分 / 報酬 / 回撤走勢。`,
     heatTitle: "榜單熱力圖",
-    heatNote: "行按在榜天數排序 —— 常青領跑者在上，一日遊在下。藍色越深排名越好。\n點擊任意行展開其評分 / 報酬 / 回撤走勢。",
+    heatNote: "行按在榜天數排序 —— 常青領跑者在上，一日遊在下。藍色越醒目排名越好。\n點擊任意行展開其評分 / 報酬 / 回撤走勢。",
     heatFilterLabel: "按在榜天數篩選",
     geDays: n => `≥${n} 天`, all: "全部",
     heatLegendBelow: "通過篩選，但低於顯示截斷線",
