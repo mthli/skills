@@ -404,10 +404,12 @@ function tipRows(t, rows, keyColor) {
 // ---- bump chart ----
 const BUMP_MIN_APPS = 5;
 {
-  const top8 = DATA.summary.filter(s => s.latest).sort((a,b)=>a.latest-b.latest).slice(0,8).map(s=>s.t);
-  const plotted = DATA.series.filter(s => s.apps >= BUMP_MIN_APPS || top8.includes(s.t));
+  const board = DATA.summary.filter(s => s.latest).sort((a,b)=>a.latest-b.latest);
+  const top8 = board.slice(0,8).map(s=>s.t);
+  const onBoard = new Set(board.map(s=>s.t));
+  const plotted = DATA.series.filter(s => s.apps >= BUMP_MIN_APPS || onBoard.has(s.t));
   document.getElementById("bump-note").textContent =
-    `${plotted.length} trajectories (≥${BUMP_MIN_APPS} days on board + current top 8 in color; #1 at the top; ranks below #${N} clamp to the dashed floor).\nHover to inspect; click a line to pin it and open its Score / Return / Drawdown strip.` + WIN_TAG;
+    `${plotted.length} trajectories (≥${BUMP_MIN_APPS} days on board + today's top ${N}; #1 at the top; ranks below #${N} clamp to the dashed floor). Top 8 in color; the right edge labels today's full board.\nHover to inspect; click a line to pin it and open its Score / Return / Drawdown strip.` + WIN_TAG;
   const ML = 34, MR = 78, MT = 12, MB = 26, DX = 19, RY = 15;
   const W = ML + (DAYS-1)*DX + MR, H = MT + N*RY + RY + MB;
   const xOf = d => ML + d*DX, yOf = r => MT + (Math.min(r, N+1) - 1) * RY;
@@ -444,6 +446,16 @@ const BUMP_MIN_APPS = 5;
     const la = el("a", {href: tickerUrl(t), target: "_blank", rel: "noopener"}, svg);
     la.addEventListener("click", ev => ev.stopPropagation());
     el("text", {x: xOf(last.d)+10, y: yOf(last.r)+4, class:"dlabel"}, la).textContent = t;
+  });
+  board.slice(8).forEach(sm => {
+    const s = plotted.find(p => p.t === sm.t); if (!s) return;
+    const last = s.pts[s.pts.length-1];
+    if (last.d !== DAYS-1 || last.r > N) return;
+    el("circle", {cx: xOf(last.d), cy: yOf(last.r), r: 3, fill: "var(--ctx-line)",
+      stroke: "var(--surface)", "stroke-width": 2}, svg);
+    const la = el("a", {href: tickerUrl(sm.t), target: "_blank", rel: "noopener"}, svg);
+    la.addEventListener("click", ev => ev.stopPropagation());
+    el("text", {x: xOf(last.d)+10, y: yOf(last.r)+4, class:"tick"}, la).textContent = sm.t;
   });
   const leg = document.getElementById("bump-legend");
   top8.forEach(t => {
