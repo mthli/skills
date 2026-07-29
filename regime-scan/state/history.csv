@@ -32,3 +32,4 @@ run_id,run_date,state,score,n_bull,n_bear,n_flags,spy_vs_200_pct,ma200_slope_pct
 20260723,2026-07-24T00:00:57.207157+00:00,RISK-ON,4,5,1,1,6.2,1.33,60.0,65.0,0.1,1.0,18.7,0.91,2.3,4.8,Defensive rotation: defensives outran offensives over 20d by +4.8pp
 20260724,2026-07-25T00:00:46.337833+00:00,RISK-ON,4,5,1,1,6.3,1.31,66.0,66.0,0.2,5.0,18.6,0.91,2.4,4.4,Defensive rotation: defensives outran offensives over 20d by +4.4pp
 20260727,2026-07-28T00:00:35.729440+00:00,RISK-ON,5,6,1,1,6.2,1.31,70.0,70.0,0.9,6.0,18.7,0.92,2.2,2.3,Defensive rotation: defensives outran offensives over 20d by +2.3pp
+20260728,2026-07-29T00:00:35.148458+00:00,RISK-ON,5,6,1,1,6.4,1.29,73.0,72.0,2.2,12.0,18.2,0.92,2.0,5.4,Defensive rotation: defensives outran offensives over 20d by +5.4pp
