@@ -288,13 +288,6 @@ svg a:hover text { text-decoration: underline; }
   </div>
 
   <div class="card">
-    <h2>Sector mix</h2>
-    <p class="note" id="sec-note"></p>
-    <div class="scroll" id="secchart"></div>
-    <div class="legend" id="sec-legend"></div>
-  </div>
-
-  <div class="card">
     <div class="head">
       <div>
         <h2>Board heatmap</h2>
@@ -306,6 +299,13 @@ Click a row to open its Score / Return / Drawdown strip.</p>
     <div class="scroll" id="heat"></div>
     <div class="legend" id="heat-legend"></div>
     <div class="detail" id="heat-detail"></div>
+  </div>
+
+  <div class="card">
+    <h2>Sector mix</h2>
+    <p class="note" id="sec-note"></p>
+    <div class="scroll" id="secchart"></div>
+    <div class="legend" id="sec-legend"></div>
   </div>
 
   <div class="card">
