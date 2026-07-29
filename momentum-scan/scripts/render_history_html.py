@@ -298,12 +298,14 @@ svg a:hover text { text-decoration: underline; }
     <div class="head">
       <div>
         <h2>Board heatmap</h2>
-        <p class="note" id="heat-note">Rows sorted by days on board — persistent leaders on top, one-day wonders at the bottom. Darker = better rank.</p>
+        <p class="note" id="heat-note">Rows sorted by days on board — persistent leaders on top, one-day wonders at the bottom. Darker = better rank.
+Click a row to open its Score / Return / Drawdown strip.</p>
       </div>
       <select id="heat-filter" aria-label="Filter by days on board"></select>
     </div>
     <div class="scroll" id="heat"></div>
     <div class="legend" id="heat-legend"></div>
+    <div class="detail" id="heat-detail"></div>
   </div>
 
   <div class="card">
@@ -323,6 +325,9 @@ const N = DATA.topN, DAYS = DATA.days.length;
 const WIN_TAG = DATA.window.shown < DATA.window.total ? ` Charts show the last ${DATA.window.shown} of ${DATA.window.total} trading days.` : "";
 if (WIN_TAG) document.getElementById("heat-note").textContent += WIN_TAG;
 const SLOTS = ["--s1","--s2","--s3","--s4","--s5","--s6","--s7","--s8"];
+const BOARD = DATA.summary.filter(s => s.latest).sort((a, b) => a.latest - b.latest);
+const TOP8 = BOARD.slice(0, 8).map(s => s.t);
+const slotColorOf = t => { const i = TOP8.indexOf(t); return i < 0 ? null : `var(${SLOTS[i]})`; };
 const NS = "http://www.w3.org/2000/svg";
 function el(tag, attrs, parent) {
   const e = document.createElementNS(NS, tag);
@@ -359,6 +364,45 @@ const dlt = (v, n) => {
   return ` (${+s >= 0 ? "+" : ""}${s})`;
 };
 const gapTag = g => g > 1 ? ` · vs ${g} days earlier` : "";
+function renderDetail(det, t) {
+  det.textContent = "";
+  det.style.display = t ? "grid" : "none";
+  if (!t) return;
+  const s = DATA.series.find(x => x.t === t);
+  if (!s) { det.style.display = "none"; return; }
+  const head = div("dt-head", det);
+  head.appendChild(tickerLink(t));
+  const minis = div("minis", det);
+  const col = slotColorOf(t) || "var(--ink-2)";
+  const last = s.pts[s.pts.length-1];
+  [["Score", p => p.s, v => v.toFixed(2)],
+   ["Return", p => p.ret, v => v.toFixed(1) + "%"],
+   ["Drawdown", p => p.dd, v => v.toFixed(1) + "%"]].forEach(([lbl, get, fmt]) => {
+    const m = div("mini", minis);
+    const l = div("mlbl", m, lbl);
+    const b = document.createElement("b"); b.textContent = fmt(get(last)); l.appendChild(b);
+    const W2 = 220, H2 = 34, PAD = 3;
+    const vals = s.pts.map(get);
+    let lo = Math.min(...vals), hi = Math.max(...vals);
+    if (hi - lo < 1e-9) { hi += 1; lo -= 1; }
+    const x2 = d => PAD + d / Math.max(DAYS - 1, 1) * (W2 - 2*PAD);
+    const y2 = v => PAD + (hi - v) / (hi - lo) * (H2 - 2*PAD);
+    const sv = el("svg", {width: W2, height: H2, viewBox: `0 0 ${W2} ${H2}`}, m);
+    let dstr = "", prev = null;
+    for (const p of s.pts) {
+      dstr += (prev !== null && p.d === prev + 1 ? "L" : "M") + x2(p.d).toFixed(1) + " " + y2(get(p)).toFixed(1);
+      prev = p.d;
+    }
+    el("path", {d: dstr, fill: "none", stroke: col, "stroke-width": 1.5,
+      "stroke-linecap": "round", "stroke-linejoin": "round"}, sv);
+    el("circle", {cx: x2(last.d).toFixed(1), cy: y2(get(last)).toFixed(1), r: 2.5, fill: col}, sv);
+  });
+  const fn = div("dt-note", det);
+  const fc = document.createElement("code");
+  fc.textContent = "Score = Return ÷ |Drawdown|";
+  fn.appendChild(fc);
+  fn.appendChild(document.createTextNode(" — return per 1% of drawdown endured (sub-1% drawdowns count as 1%)."));
+};
 const tip = document.getElementById("tip");
 function showTip(x, y, build) {
   tip.textContent = "";
@@ -404,9 +448,7 @@ function tipRows(t, rows, keyColor) {
 // ---- bump chart ----
 const BUMP_MIN_APPS = 5;
 {
-  const board = DATA.summary.filter(s => s.latest).sort((a,b)=>a.latest-b.latest);
-  const top8 = board.slice(0,8).map(s=>s.t);
-  const onBoard = new Set(board.map(s=>s.t));
+  const onBoard = new Set(BOARD.map(s => s.t));
   const plotted = DATA.series.filter(s => s.apps >= BUMP_MIN_APPS || onBoard.has(s.t));
   document.getElementById("bump-note").textContent =
     `${plotted.length} trajectories (≥${BUMP_MIN_APPS} days on board + today's top ${N}; #1 at the top; ranks below #${N} clamp to the dashed floor). Top 8 in color; the right edge labels today's full board.\nHover to inspect; click a line to pin it and open its Score / Return / Drawdown strip.` + WIN_TAG;
@@ -426,28 +468,27 @@ const BUMP_MIN_APPS = 5;
   });
   const cross = el("line", {y1: MT-4, y2: yOf(N+1), stroke: "var(--axis)", "stroke-width":1, visibility:"hidden"}, svg);
   const paths = {};
-  const colorOf = t => { const i = top8.indexOf(t); return i < 0 ? null : `var(${SLOTS[i]})`; };
   plotted.forEach(s => {
     let dstr = "", prev = null;
     for (const p of s.pts) {
       dstr += (prev !== null && p.d === prev + 1 ? "L" : "M") + xOf(p.d) + " " + yOf(p.r);
       prev = p.d;
     }
-    const c = colorOf(s.t);
+    const c = slotColorOf(s.t);
     paths[s.t] = el("path", {d: dstr, fill: "none",
       stroke: c || "var(--ctx-line)", "stroke-width": c ? 2 : 1.25,
       "stroke-linecap": "round", "stroke-linejoin": "round", opacity: c ? 1 : 0.55}, svg);
   });
-  top8.forEach(t => {
+  TOP8.forEach(t => {
     const s = plotted.find(p => p.t === t); if (!s) return;
     const last = s.pts[s.pts.length-1];
-    el("circle", {cx: xOf(last.d), cy: yOf(last.r), r: 4.5, fill: colorOf(t),
+    el("circle", {cx: xOf(last.d), cy: yOf(last.r), r: 4.5, fill: slotColorOf(t),
       stroke: "var(--surface)", "stroke-width": 2}, svg);
     const la = el("a", {href: tickerUrl(t), target: "_blank", rel: "noopener"}, svg);
     la.addEventListener("click", ev => ev.stopPropagation());
     el("text", {x: xOf(last.d)+10, y: yOf(last.r)+4, class:"dlabel"}, la).textContent = t;
   });
-  board.slice(8).forEach(sm => {
+  BOARD.slice(8).forEach(sm => {
     const s = plotted.find(p => p.t === sm.t); if (!s) return;
     const last = s.pts[s.pts.length-1];
     if (last.d !== DAYS-1 || last.r > N) return;
@@ -458,59 +499,20 @@ const BUMP_MIN_APPS = 5;
     el("text", {x: xOf(last.d)+10, y: yOf(last.r)+4, class:"tick"}, la).textContent = sm.t;
   });
   const leg = document.getElementById("bump-legend");
-  top8.forEach(t => {
-    const k = div("key", leg); const l = div("line", k); l.style.background = colorOf(t);
+  TOP8.forEach(t => {
+    const k = div("key", leg); const l = div("line", k); l.style.background = slotColorOf(t);
     k.appendChild(tickerLink(t));
   });
   const k = div("key", leg); const l = div("line", k); l.style.background = "var(--ctx-line)";
   k.appendChild(document.createTextNode("Others"));
 
   const det = document.getElementById("bump-detail");
-  const renderDetail = t => {
-    det.textContent = "";
-    det.style.display = t ? "grid" : "none";
-    if (!t) return;
-    const s = DATA.series.find(x => x.t === t);
-    if (!s) { det.style.display = "none"; return; }
-    const head = div("dt-head", det);
-    head.appendChild(tickerLink(t));
-    const minis = div("minis", det);
-    const col = colorOf(t) || "var(--ink-2)";
-    const last = s.pts[s.pts.length-1];
-    [["Score", p => p.s, v => v.toFixed(2)],
-     ["Return", p => p.ret, v => v.toFixed(1) + "%"],
-     ["Drawdown", p => p.dd, v => v.toFixed(1) + "%"]].forEach(([lbl, get, fmt]) => {
-      const m = div("mini", minis);
-      const l = div("mlbl", m, lbl);
-      const b = document.createElement("b"); b.textContent = fmt(get(last)); l.appendChild(b);
-      const W2 = 220, H2 = 34, PAD = 3;
-      const vals = s.pts.map(get);
-      let lo = Math.min(...vals), hi = Math.max(...vals);
-      if (hi - lo < 1e-9) { hi += 1; lo -= 1; }
-      const x2 = d => PAD + d / Math.max(DAYS - 1, 1) * (W2 - 2*PAD);
-      const y2 = v => PAD + (hi - v) / (hi - lo) * (H2 - 2*PAD);
-      const sv = el("svg", {width: W2, height: H2, viewBox: `0 0 ${W2} ${H2}`}, m);
-      let dstr = "", prev = null;
-      for (const p of s.pts) {
-        dstr += (prev !== null && p.d === prev + 1 ? "L" : "M") + x2(p.d).toFixed(1) + " " + y2(get(p)).toFixed(1);
-        prev = p.d;
-      }
-      el("path", {d: dstr, fill: "none", stroke: col, "stroke-width": 1.5,
-        "stroke-linecap": "round", "stroke-linejoin": "round"}, sv);
-      el("circle", {cx: x2(last.d).toFixed(1), cy: y2(get(last)).toFixed(1), r: 2.5, fill: col}, sv);
-    });
-    const fn = div("dt-note", det);
-    const fc = document.createElement("code");
-    fc.textContent = "Score = Return ÷ |Drawdown|";
-    fn.appendChild(fc);
-    fn.appendChild(document.createTextNode(" — return per 1% of drawdown endured (sub-1% drawdowns count as 1%)."));
-  };
 
   let pinned = null, lit = null;
   const restyle = t => {
-    const c = colorOf(t);
+    const c = slotColorOf(t);
     Object.entries(paths).forEach(([tk,p]) => {
-      const base = colorOf(tk);
+      const base = slotColorOf(tk);
       if (t && tk === t) p.setAttribute("style", `stroke:${c || "var(--ink)"};stroke-width:2.5;opacity:1`);
       else p.setAttribute("style", t ? `opacity:${base?0.35:0.18}` : "");
     });
@@ -534,11 +536,11 @@ const BUMP_MIN_APPS = 5;
         [best.s.t, `${DATA.days[d]} · Rank ${best.p.r <= N ? "#"+best.p.r : "#"+best.p.r+" (below cutoff)"}`,
          `Score ${best.p.s.toFixed(2)}${pp ? dlt(best.p.s - pp.s, 2) : ""} · Return ${best.p.ret.toFixed(1)}%${pp ? dlt(best.p.ret - pp.ret, 1) : ""}`,
          `Drawdown ${best.p.dd.toFixed(1)}%${pp ? dlt(best.p.dd - pp.dd, 1) + gapTag(best.p.d - pp.d) : ""}`],
-        colorOf(best.s.t) || "var(--ctx-line)"));
+        slotColorOf(best.s.t) || "var(--ctx-line)"));
     } else { lit = null; restyle(pinned); hideTip(); }
   });
   svg.addEventListener("pointerleave", () => { cross.setAttribute("visibility","hidden"); restyle(pinned); hideTip(); });
-  svg.addEventListener("click", () => { pinned = (pinned === lit ? null : lit); restyle(pinned); renderDetail(pinned); });
+  svg.addEventListener("click", () => { pinned = (pinned === lit ? null : lit); restyle(pinned); renderDetail(det, pinned); });
 }
 
 // ---- sector stacked columns ----
@@ -588,6 +590,12 @@ const BUMP_MIN_APPS = 5;
 
 // ---- heatmap ----
 const heatBox = document.getElementById("heat");
+const heatDet = document.getElementById("heat-detail");
+let heatPinned = null;
+const highlightHeatRow = () => {
+  heatBox.querySelectorAll("text[data-t]").forEach(x =>
+    x.style.fill = x.dataset.t === heatPinned ? "var(--ink)" : "");
+};
 function renderHeat(minApps) {
   heatBox.textContent = "";
   const rows = DATA.series.filter(s => s.apps >= minApps);
@@ -601,7 +609,8 @@ function renderHeat(minApps) {
   rows.forEach((s, ri) => {
     const y = MT + ri*CH;
     const ra = el("a", {href: tickerUrl(s.t), target: "_blank", rel: "noopener"}, svg);
-    el("text", {x: GL-8, y: y+CH-3, "text-anchor":"end", class:"tick"}, ra).textContent = s.t;
+    const lt = el("text", {x: GL-8, y: y+CH-3, "text-anchor":"end", class:"tick"}, ra);
+    lt.textContent = s.t; lt.dataset.t = s.t;
     let hprev = null;
     for (const p of s.pts) {
       const bucket = p.r <= N ? Math.min(9, Math.floor((N - p.r) / N * 10)) : null;
@@ -629,6 +638,17 @@ function renderHeat(minApps) {
     } else hideTip();
   });
   svg.addEventListener("pointerleave", hideTip);
+  svg.addEventListener("click", ev => {
+    const t = ev.target;
+    if (t.tagName === "rect" && t.dataset.t) {
+      heatPinned = (heatPinned === t.dataset.t ? null : t.dataset.t);
+    } else if (t.tagName !== "text") {
+      heatPinned = null;
+    }
+    renderDetail(heatDet, heatPinned);
+    highlightHeatRow();
+  });
+  highlightHeatRow();
 }
 {
   const sel = document.getElementById("heat-filter");
