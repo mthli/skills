@@ -372,8 +372,8 @@ const I18N = {
   },
   zh: {
     htmlLang: "zh-CN",
-    title: "momentum-scan 历史记录",
-    h1Suffix: "历史记录",
+    title: "momentum-scan 历史",
+    h1Suffix: "历史",
     subtitle: (a, b, runs, n) => `${a} → ${b} · 共 ${runs} 个交易日 · 每日 top-${n} 榜单的持续性视图`,
     winTag: (s, t) => `图表仅显示最近 ${s} / ${t} 个交易日。`,
     kSpan: "历史跨度", kDays: n => `${n} 天`,
