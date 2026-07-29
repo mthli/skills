@@ -9,6 +9,8 @@ HTML file (no external assets, no network) with:
   - a sector-composition stacked column per run day
   - a date x ticker rank heatmap with a min-appearances filter
   - a per-ticker summary table (the no-hover fallback for every value)
+  - an English / 简体中文 / 繁體中文 language menu (top-right; choice kept in
+    localStorage, first visit follows the browser language)
 
 Usage:
     python scripts/render_history_html.py [--top-n 30] [--days 60] [--out state/history.html]
@@ -249,9 +251,11 @@ svg text.dlabel { font-size: 11.5px; font-weight: 600; fill: var(--ink-2); }
 .dt-note code { font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; }
 .mini .mlbl { font-size: 11.5px; color: var(--muted); margin-bottom: 2px; }
 .mini .mlbl b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; margin-left: 4px; }
+.topbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin: 0 0 20px; }
+.topbar .sub { margin-bottom: 0; }
 .head { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin: 0 0 12px; }
 .head .note { margin-bottom: 0; }
-.head select {
+select {
   font: 12.5px system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink);
   background: var(--surface); border: 1px solid var(--border); border-radius: 7px;
   padding: 4px 8px; flex: none; cursor: pointer;
@@ -281,12 +285,17 @@ svg a:hover text { text-decoration: underline; }
 </head>
 <body>
 <div class="wrap">
-  <h1><a href="https://github.com/mthli/skills/tree/master/momentum-scan" target="_blank" rel="noopener">momentum-scan</a> history</h1>
-  <p class="sub" id="subtitle"></p>
+  <div class="topbar">
+    <div>
+      <h1><a href="https://github.com/mthli/skills/tree/master/momentum-scan" target="_blank" rel="noopener">momentum-scan</a> <span id="h1-suffix">history</span></h1>
+      <p class="sub" id="subtitle"></p>
+    </div>
+    <select id="lang-menu" aria-label="Language"></select>
+  </div>
   <div class="kpis" id="kpis"></div>
 
   <div class="card">
-    <h2>Rank trajectories</h2>
+    <h2 id="bump-title">Rank trajectories</h2>
     <p class="note" id="bump-note"></p>
     <div class="scroll" id="bump"></div>
     <div class="legend" id="bump-legend"></div>
@@ -296,11 +305,10 @@ svg a:hover text { text-decoration: underline; }
   <div class="card">
     <div class="head">
       <div>
-        <h2>Board heatmap</h2>
-        <p class="note" id="heat-note">Rows sorted by days on board — persistent leaders on top, one-day wonders at the bottom. Darker = better rank.
-Click a row to open its Score / Return / Drawdown strip.</p>
+        <h2 id="heat-title">Board heatmap</h2>
+        <p class="note" id="heat-note"></p>
       </div>
-      <select id="heat-filter" aria-label="Filter by days on board"></select>
+      <select id="heat-filter"></select>
     </div>
     <div class="scroll" id="heat"></div>
     <div class="legend" id="heat-legend"></div>
@@ -308,15 +316,15 @@ Click a row to open its Score / Return / Drawdown strip.</p>
   </div>
 
   <div class="card">
-    <h2>Sector mix</h2>
+    <h2 id="sec-title">Sector mix</h2>
     <p class="note" id="sec-note"></p>
     <div class="scroll" id="secchart"></div>
     <div class="legend" id="sec-legend"></div>
   </div>
 
   <div class="card">
-    <h2>Roster</h2>
-    <p class="note">One row per name that ever made the board. Click a header to sort; click again to reverse. Every hover value from the charts is readable here.</p>
+    <h2 id="roster-title">Roster</h2>
+    <p class="note" id="roster-note"></p>
     <div class="scroll"><table id="tbl"></table></div>
   </div>
 
@@ -327,9 +335,157 @@ Click a row to open its Score / Return / Drawdown strip.</p>
 const DATA = __DATA_JSON__;
 const GENERATED = "__GENERATED__";
 
+// ---- i18n ----
+const I18N = {
+  en: {
+    htmlLang: "en",
+    title: "momentum-scan history",
+    h1Suffix: "history",
+    subtitle: (a, b, runs, n) => `${a} → ${b} · ${runs} trading days · persistence view of the daily top-${n} board`,
+    winTag: (s, t) => ` Charts show the last ${s} of ${t} trading days.`,
+    kSpan: "History span", kDays: n => `${n} days`,
+    kNo1: "Current #1", kScore: s => `Score ${s}`,
+    kStreak: "Longest streak",
+    kNew: "New entrants", kDrop: "Dropouts",
+    kTracked: "Names tracked", kTrackedSub: "Tickers with ≥1 day on the board",
+    bumpTitle: "Rank trajectories",
+    bumpNote: (m, min, n) => `${m} trajectories (≥${min} days on board + today's top ${n}; #1 at the top; ranks below #${n} clamp to the dashed floor). Top 8 in color; the right edge labels today's full board.\nHover to inspect; click a line to pin it and open its Score / Return / Drawdown strip.`,
+    heatTitle: "Board heatmap",
+    heatNote: "Rows sorted by days on board — persistent leaders on top, one-day wonders at the bottom. Darker = better rank.\nClick a row to open its Score / Return / Drawdown strip.",
+    heatFilterLabel: "Filter by days on board",
+    geDays: n => `≥${n} days`, all: "All",
+    heatLegendBelow: "Passed filter, below display cutoff",
+    secTitle: "Sector mix",
+    secNote: n => `Daily top-${n} counted by sector — watch which sector is taking over the board.`,
+    names: c => `${c} names`,
+    others: "Others",
+    rosterTitle: "Roster",
+    rosterNote: "One row per name that ever made the board. Click a header to sort; click again to reverse. Every hover value from the charts is readable here.",
+    cols: ["Ticker", "Sector", "Days on board", "Best rank", "Current rank", "Streak", "First seen", "Last seen", "Latest score"],
+    score: "Score", ret: "Return", dd: "Drawdown",
+    formula: "Score = Return ÷ |Drawdown|",
+    formulaNote: " — return per 1% of drawdown endured (sub-1% drawdowns count as 1%).",
+    rankAt: r => `Rank #${r}`, rankBelow: r => `Rank #${r} (below cutoff)`,
+    gapTag: g => ` · vs ${g} days earlier`,
+    genBy: "Generated by ", genAt: t => ` at ${t} · Source: `,
+    sectorNames: {},
+  },
+  zh: {
+    htmlLang: "zh-CN",
+    title: "momentum-scan 历史记录",
+    h1Suffix: "历史记录",
+    subtitle: (a, b, runs, n) => `${a} → ${b} · 共 ${runs} 个交易日 · 每日 top-${n} 榜单的持续性视图`,
+    winTag: (s, t) => `图表仅显示最近 ${s} / ${t} 个交易日。`,
+    kSpan: "历史跨度", kDays: n => `${n} 天`,
+    kNo1: "当前第 1 名", kScore: s => `评分 ${s}`,
+    kStreak: "最长连续在榜",
+    kNew: "新进榜", kDrop: "掉出榜",
+    kTracked: "追踪标的数", kTrackedSub: "至少上榜 1 天的标的",
+    bumpTitle: "排名轨迹",
+    bumpNote: (m, min, n) => `共 ${m} 条轨迹（在榜 ≥${min} 天 + 今日 top ${n}；第 1 名在顶部；低于第 ${n} 名的排名压到虚线底线）。前 8 名着色；右缘标注今日完整榜单。\n悬停查看数值；点击一条线可固定并展开其评分 / 收益 / 回撤走势。`,
+    heatTitle: "榜单热力图",
+    heatNote: "行按在榜天数排序 —— 常青领跑者在上，一日游在下。颜色越深排名越好。\n点击任意行展开其评分 / 收益 / 回撤走势。",
+    heatFilterLabel: "按在榜天数筛选",
+    geDays: n => `≥${n} 天`, all: "全部",
+    heatLegendBelow: "通过筛选，但低于显示截断线",
+    secTitle: "行业构成",
+    secNote: n => `每日 top-${n} 按行业计数 —— 观察哪个行业正在占领榜单。`,
+    names: c => `${c} 只`,
+    others: "其他",
+    rosterTitle: "上榜名录",
+    rosterNote: "每个曾经上榜的标的一行。点击表头排序；再次点击反向。图表中所有悬停数值在此均可查阅。",
+    cols: ["代码", "行业", "在榜天数", "最佳排名", "当前排名", "连续在榜", "首次上榜", "最近上榜", "最新评分"],
+    score: "评分", ret: "收益", dd: "回撤",
+    formula: "评分 = 收益 ÷ |回撤|",
+    formulaNote: " —— 每承受 1% 回撤换来的收益（回撤不足 1% 按 1% 计）。",
+    rankAt: r => `排名 #${r}`, rankBelow: r => `排名 #${r}（低于截断线）`,
+    gapTag: g => ` · 与 ${g} 天前相比`,
+    genBy: "由 ", genAt: t => ` 于 ${t} 生成 · 数据源：`,
+    sectorNames: {
+      "Technology": "科技", "Financial Services": "金融服务", "Healthcare": "医疗保健",
+      "Consumer Cyclical": "可选消费", "Consumer Defensive": "必需消费", "Industrials": "工业",
+      "Communication Services": "通信服务", "Energy": "能源", "Basic Materials": "基础材料",
+      "Real Estate": "房地产", "Utilities": "公用事业", "Unknown": "未知", "Others": "其他",
+    },
+  },
+  zht: {
+    htmlLang: "zh-Hant",
+    title: "momentum-scan 歷史",
+    h1Suffix: "歷史",
+    subtitle: (a, b, runs, n) => `${a} → ${b} · 共 ${runs} 個交易日 · 每日 top-${n} 榜單的持續性視圖`,
+    winTag: (s, t) => `圖表僅顯示最近 ${s} / ${t} 個交易日。`,
+    kSpan: "歷史跨度", kDays: n => `${n} 天`,
+    kNo1: "目前第 1 名", kScore: s => `評分 ${s}`,
+    kStreak: "最長連續在榜",
+    kNew: "新進榜", kDrop: "掉出榜",
+    kTracked: "追蹤標的數", kTrackedSub: "至少上榜 1 天的標的",
+    bumpTitle: "排名軌跡",
+    bumpNote: (m, min, n) => `共 ${m} 條軌跡（在榜 ≥${min} 天 + 今日 top ${n}；第 1 名在頂部；低於第 ${n} 名的排名壓到虛線底線）。前 8 名著色；右緣標註今日完整榜單。\n懸停查看數值；點擊一條線可固定並展開其評分 / 報酬 / 回撤走勢。`,
+    heatTitle: "榜單熱力圖",
+    heatNote: "行按在榜天數排序 —— 常青領跑者在上，一日遊在下。顏色越深排名越好。\n點擊任意行展開其評分 / 報酬 / 回撤走勢。",
+    heatFilterLabel: "按在榜天數篩選",
+    geDays: n => `≥${n} 天`, all: "全部",
+    heatLegendBelow: "通過篩選，但低於顯示截斷線",
+    secTitle: "產業構成",
+    secNote: n => `每日 top-${n} 按產業計數 —— 觀察哪個產業正在佔領榜單。`,
+    names: c => `${c} 檔`,
+    others: "其他",
+    rosterTitle: "上榜名錄",
+    rosterNote: "每個曾經上榜的標的一行。點擊表頭排序；再次點擊反向。圖表中所有懸停數值在此均可查閱。",
+    cols: ["代號", "產業", "在榜天數", "最佳排名", "目前排名", "連續在榜", "首次上榜", "最近上榜", "最新評分"],
+    score: "評分", ret: "報酬", dd: "回撤",
+    formula: "評分 = 報酬 ÷ |回撤|",
+    formulaNote: " —— 每承受 1% 回撤換來的報酬（回撤不足 1% 按 1% 計）。",
+    rankAt: r => `排名 #${r}`, rankBelow: r => `排名 #${r}（低於截斷線）`,
+    gapTag: g => ` · 與 ${g} 天前相比`,
+    genBy: "由 ", genAt: t => ` 於 ${t} 生成 · 資料來源：`,
+    sectorNames: {
+      "Technology": "科技", "Financial Services": "金融服務", "Healthcare": "醫療保健",
+      "Consumer Cyclical": "週期性消費", "Consumer Defensive": "防禦性消費", "Industrials": "工業",
+      "Communication Services": "通訊服務", "Energy": "能源", "Basic Materials": "原物料",
+      "Real Estate": "房地產", "Utilities": "公用事業", "Unknown": "未知", "Others": "其他",
+    },
+  },
+};
+const LANG = (() => {
+  try {
+    const s = localStorage.getItem("momentumScanLang");
+    if (I18N[s]) return s;
+  } catch (e) {}
+  const l = (navigator.language || "").toLowerCase();
+  if (!l.startsWith("zh")) return "en";
+  return /hant|tw|hk|mo/.test(l) ? "zht" : "zh";
+})();
+const T = I18N[LANG];
+const secName = s => T.sectorNames[s] || s;
+document.documentElement.lang = T.htmlLang;
+document.title = T.title;
+{
+  const sel = document.getElementById("lang-menu");
+  [["en", "English"], ["zh", "简体中文"], ["zht", "繁體中文"]].forEach(([v, lbl]) => {
+    const o = document.createElement("option");
+    o.value = v;
+    o.textContent = lbl;
+    sel.appendChild(o);
+  });
+  sel.value = LANG;
+  // The whole page renders once at load, so a language switch just re-runs it.
+  sel.addEventListener("change", () => {
+    try { localStorage.setItem("momentumScanLang", sel.value); } catch (e) {}
+    location.reload();
+  });
+  document.getElementById("h1-suffix").textContent = T.h1Suffix;
+  document.getElementById("bump-title").textContent = T.bumpTitle;
+  document.getElementById("heat-title").textContent = T.heatTitle;
+  document.getElementById("sec-title").textContent = T.secTitle;
+  document.getElementById("roster-title").textContent = T.rosterTitle;
+  document.getElementById("roster-note").textContent = T.rosterNote;
+  document.getElementById("heat-filter").setAttribute("aria-label", T.heatFilterLabel);
+}
+
 const N = DATA.topN, DAYS = DATA.days.length;
-const WIN_TAG = DATA.window.shown < DATA.window.total ? ` Charts show the last ${DATA.window.shown} of ${DATA.window.total} trading days.` : "";
-if (WIN_TAG) document.getElementById("heat-note").textContent += WIN_TAG;
+const WIN_TAG = DATA.window.shown < DATA.window.total ? T.winTag(DATA.window.shown, DATA.window.total) : "";
+document.getElementById("heat-note").textContent = T.heatNote + WIN_TAG;
 const SLOTS = ["--s1","--s2","--s3","--s4","--s5","--s6","--s7","--s8"];
 const BOARD = DATA.summary.filter(s => s.latest).sort((a, b) => a.latest - b.latest);
 const TOP8 = BOARD.slice(0, 8).map(s => s.t);
@@ -369,7 +525,8 @@ const dlt = (v, n) => {
   if (+s === 0) s = (0).toFixed(n);
   return ` (${+s >= 0 ? "+" : ""}${s})`;
 };
-const gapTag = g => g > 1 ? ` · vs ${g} days earlier` : "";
+const gapTag = g => g > 1 ? T.gapTag(g) : "";
+const rankTxt = r => r <= N ? T.rankAt(r) : T.rankBelow(r);
 function renderDetail(det, t) {
   det.textContent = "";
   det.style.display = t ? "grid" : "none";
@@ -381,9 +538,9 @@ function renderDetail(det, t) {
   const minis = div("minis", det);
   const col = slotColorOf(t) || "var(--ink-2)";
   const last = s.pts[s.pts.length-1];
-  [["Score", p => p.s, v => v.toFixed(2)],
-   ["Return", p => p.ret, v => v.toFixed(1) + "%"],
-   ["Drawdown", p => p.dd, v => v.toFixed(1) + "%"]].forEach(([lbl, get, fmt]) => {
+  [[T.score, p => p.s, v => v.toFixed(2)],
+   [T.ret, p => p.ret, v => v.toFixed(1) + "%"],
+   [T.dd, p => p.dd, v => v.toFixed(1) + "%"]].forEach(([lbl, get, fmt]) => {
     const m = div("mini", minis);
     const l = div("mlbl", m, lbl);
     const b = document.createElement("b"); b.textContent = fmt(get(last)); l.appendChild(b);
@@ -405,9 +562,9 @@ function renderDetail(det, t) {
   });
   const fn = div("dt-note", det);
   const fc = document.createElement("code");
-  fc.textContent = "Score = Return ÷ |Drawdown|";
+  fc.textContent = T.formula;
   fn.appendChild(fc);
-  fn.appendChild(document.createTextNode(" — return per 1% of drawdown endured (sub-1% drawdowns count as 1%)."));
+  fn.appendChild(document.createTextNode(T.formulaNote));
 };
 const tip = document.getElementById("tip");
 function showTip(x, y, build) {
@@ -430,7 +587,7 @@ function tipRows(t, rows, keyColor) {
 {
   const k = DATA.kpi;
   document.getElementById("subtitle").textContent =
-    `${k.span[0]} → ${k.span[1]} · ${k.runs} trading days · persistence view of the daily top-${N} board`;
+    T.subtitle(k.span[0], k.span[1], k.runs, N);
   const box = document.getElementById("kpis");
   const tile = (lbl, val, ...subs) => {
     const t = div("kpi", box);
@@ -443,12 +600,12 @@ function tipRows(t, rows, keyColor) {
       d.title = d.textContent;
     });
   };
-  tile("History span", `${k.runs} days`, `${k.span[0]} → ${k.span[1]}`);
-  if (k.no1) tile("Current #1", tickerLink(k.no1.t), `Score ${k.no1.s.toFixed(2)}`);
-  if (k.streak) tile("Longest streak", `${k.streak.n} days`, tickerLink(k.streak.t));
-  tile("New entrants", `${k.newEntrants.length}`, tickerList(k.newEntrants));
-  tile("Dropouts", `${k.dropouts.length}`, tickerList(k.dropouts));
-  tile("Names tracked", `${k.tracked}`, `Tickers with ≥1 day on the board`);
+  tile(T.kSpan, T.kDays(k.runs), `${k.span[0]} → ${k.span[1]}`);
+  if (k.no1) tile(T.kNo1, tickerLink(k.no1.t), T.kScore(k.no1.s.toFixed(2)));
+  if (k.streak) tile(T.kStreak, T.kDays(k.streak.n), tickerLink(k.streak.t));
+  tile(T.kNew, `${k.newEntrants.length}`, tickerList(k.newEntrants));
+  tile(T.kDrop, `${k.dropouts.length}`, tickerList(k.dropouts));
+  tile(T.kTracked, `${k.tracked}`, T.kTrackedSub);
 }
 
 // ---- bump chart ----
@@ -457,7 +614,7 @@ const BUMP_MIN_APPS = 5;
   const onBoard = new Set(BOARD.map(s => s.t));
   const plotted = DATA.series.filter(s => s.apps >= BUMP_MIN_APPS || onBoard.has(s.t));
   document.getElementById("bump-note").textContent =
-    `${plotted.length} trajectories (≥${BUMP_MIN_APPS} days on board + today's top ${N}; #1 at the top; ranks below #${N} clamp to the dashed floor). Top 8 in color; the right edge labels today's full board.\nHover to inspect; click a line to pin it and open its Score / Return / Drawdown strip.` + WIN_TAG;
+    T.bumpNote(plotted.length, BUMP_MIN_APPS, N) + WIN_TAG;
   const ML = 34, MR = 78, MT = 12, MB = 26, DX = 19, RY = 15;
   const W = ML + (DAYS-1)*DX + MR, H = MT + N*RY + RY + MB;
   const xOf = d => ML + d*DX, yOf = r => MT + (Math.min(r, N+1) - 1) * RY;
@@ -510,7 +667,7 @@ const BUMP_MIN_APPS = 5;
     k.appendChild(tickerLink(t));
   });
   const k = div("key", leg); const l = div("line", k); l.style.background = "var(--ctx-line)";
-  k.appendChild(document.createTextNode("Others"));
+  k.appendChild(document.createTextNode(T.others));
 
   const det = document.getElementById("bump-detail");
 
@@ -539,9 +696,9 @@ const BUMP_MIN_APPS = 5;
       const idx = best.s.pts.indexOf(best.p);
       const pp = idx > 0 ? best.s.pts[idx-1] : null;
       showTip(ev.clientX, ev.clientY, t => tipRows(t,
-        [best.s.t, `${DATA.days[d]} · Rank ${best.p.r <= N ? "#"+best.p.r : "#"+best.p.r+" (below cutoff)"}`,
-         `Score ${best.p.s.toFixed(2)}${pp ? dlt(best.p.s - pp.s, 2) : ""} · Return ${best.p.ret.toFixed(1)}%${pp ? dlt(best.p.ret - pp.ret, 1) : ""}`,
-         `Drawdown ${best.p.dd.toFixed(1)}%${pp ? dlt(best.p.dd - pp.dd, 1) + gapTag(best.p.d - pp.d) : ""}`],
+        [best.s.t, `${DATA.days[d]} · ${rankTxt(best.p.r)}`,
+         `${T.score} ${best.p.s.toFixed(2)}${pp ? dlt(best.p.s - pp.s, 2) : ""} · ${T.ret} ${best.p.ret.toFixed(1)}%${pp ? dlt(best.p.ret - pp.ret, 1) : ""}`,
+         `${T.dd} ${best.p.dd.toFixed(1)}%${pp ? dlt(best.p.dd - pp.dd, 1) + gapTag(best.p.d - pp.d) : ""}`],
         slotColorOf(best.s.t) || "var(--ctx-line)"));
     } else { lit = null; restyle(pinned); hideTip(); }
   });
@@ -552,8 +709,7 @@ const BUMP_MIN_APPS = 5;
 // ---- sector stacked columns ----
 {
   const names = DATA.sectors.names;
-  document.getElementById("sec-note").textContent =
-    `Daily top-${N} counted by sector — watch which sector is taking over the board.` + WIN_TAG;
+  document.getElementById("sec-note").textContent = T.secNote(N) + WIN_TAG;
   const ML = 30, MT = 8, MB = 26, DX = 19, BW = 13, SH = 6;
   const W = ML + DAYS*DX + 10, H = MT + N*SH + MB;
   const svg = el("svg", {width: W, height: H, viewBox: `0 0 ${W} ${H}`}, document.getElementById("secchart"));
@@ -580,14 +736,14 @@ const BUMP_MIN_APPS = 5;
   names.forEach((n,i) => {
     const k = div("key", leg); const r = div("rect", k);
     r.style.background = i < TOPSEC ? `var(${SLOTS[i]})` : "var(--other)";
-    k.appendChild(document.createTextNode(n));
+    k.appendChild(document.createTextNode(secName(n)));
   });
   svg.addEventListener("pointermove", ev => {
     const t = ev.target;
     if (t.tagName === "rect" && t.dataset.i !== undefined) {
       const i = +t.dataset.i;
       showTip(ev.clientX, ev.clientY, tt => tipRows(tt,
-        [`${t.dataset.c} names`, `${names[i]} · ${DATA.days[+t.dataset.d]}`],
+        [T.names(t.dataset.c), `${secName(names[i])} · ${DATA.days[+t.dataset.d]}`],
         i < TOPSEC ? `var(${SLOTS[i]})` : "var(--other)"));
     } else hideTip();
   });
@@ -638,9 +794,9 @@ function renderHeat(minApps) {
     if (t.tagName === "rect" && t.dataset.t) {
       showTip(ev.clientX, ev.clientY, tt => tipRows(tt,
         [t.dataset.t,
-         `${DATA.days[+t.dataset.d]} · ${+t.dataset.r <= N ? "Rank #"+t.dataset.r : "#"+t.dataset.r+" (below cutoff)"}`,
-         `Score ${(+t.dataset.s).toFixed(2)}${t.dataset.ds ? dlt(+t.dataset.ds, 2) : ""} · Return ${(+t.dataset.ret).toFixed(1)}%${t.dataset.dret ? dlt(+t.dataset.dret, 1) : ""}`,
-         `Drawdown ${(+t.dataset.dd).toFixed(1)}%${t.dataset.ddd ? dlt(+t.dataset.ddd, 1) + gapTag(+t.dataset.gap) : ""}`]));
+         `${DATA.days[+t.dataset.d]} · ${rankTxt(+t.dataset.r)}`,
+         `${T.score} ${(+t.dataset.s).toFixed(2)}${t.dataset.ds ? dlt(+t.dataset.ds, 2) : ""} · ${T.ret} ${(+t.dataset.ret).toFixed(1)}%${t.dataset.dret ? dlt(+t.dataset.dret, 1) : ""}`,
+         `${T.dd} ${(+t.dataset.dd).toFixed(1)}%${t.dataset.ddd ? dlt(+t.dataset.ddd, 1) + gapTag(+t.dataset.gap) : ""}`]));
     } else hideTip();
   });
   svg.addEventListener("pointerleave", hideTip);
@@ -660,7 +816,7 @@ function renderHeat(minApps) {
   const sel = document.getElementById("heat-filter");
   // Cut points scale with history length: >=5% attendance filters one-day noise, >=20% marks regulars (>=3 / >=10 at 48 days)
   const c5 = Math.ceil(DAYS * 0.05), c20 = Math.ceil(DAYS * 0.20);
-  new Map([[c5, `≥${c5} days`], [c20, `≥${c20} days`], [0, "All"]]).forEach((lbl, min) => {
+  new Map([[c5, T.geDays(c5)], [c20, T.geDays(c20)], [0, T.all]]).forEach((lbl, min) => {
     const o = document.createElement("option");
     o.value = min;
     o.textContent = lbl;
@@ -674,7 +830,7 @@ function renderHeat(minApps) {
   [9,7,5,2,0].forEach(b => { const r = div("rect", leg); r.style.background = `var(--h${b})`; });
   leg.appendChild(document.createTextNode("#" + N));
   const k = div("key", leg); const r = div("rect", k); r.style.background = "var(--hx)";
-  k.appendChild(document.createTextNode("Passed filter, below display cutoff"));
+  k.appendChild(document.createTextNode(T.heatLegendBelow));
 }
 
 // ---- table ----
@@ -682,15 +838,15 @@ function renderHeat(minApps) {
   const tbl = document.getElementById("tbl");
   // dir is each column's first-click direction: rank-like asc (best first), days/dates/score desc (largest/newest first)
   const COLS = [
-    {h: "Ticker",     v: s => s.t,              dir: 1},
-    {h: "Sector",       v: s => s.sec,            dir: 1},
-    {h: "Days on board", v: s => s.apps,          dir: -1},
-    {h: "Best rank",    v: s => s.best,           dir: 1},
-    {h: "Current rank", v: s => s.latest,         dir: 1},
-    {h: "Streak",       v: s => s.streak || null, dir: -1},
-    {h: "First seen",   v: s => s.firstD,         dir: -1},
-    {h: "Last seen",    v: s => s.lastD,          dir: -1},
-    {h: "Latest score", v: s => s.score,          dir: -1},
+    {h: T.cols[0], v: s => s.t,              dir: 1},
+    {h: T.cols[1], v: s => s.sec,            dir: 1},
+    {h: T.cols[2], v: s => s.apps,           dir: -1},
+    {h: T.cols[3], v: s => s.best,           dir: 1},
+    {h: T.cols[4], v: s => s.latest,         dir: 1},
+    {h: T.cols[5], v: s => s.streak || null, dir: -1},
+    {h: T.cols[6], v: s => s.firstD,         dir: -1},
+    {h: T.cols[7], v: s => s.lastD,          dir: -1},
+    {h: T.cols[8], v: s => s.score,          dir: -1},
   ];
   const thead = document.createElement("thead");
   const hr = document.createElement("tr");
@@ -719,7 +875,7 @@ function renderHeat(minApps) {
       return c || (b.apps - a.apps) || (a.best - b.best);
     }).forEach(s => {
       const tr = document.createElement("tr");
-      [s.t, s.sec, s.apps, "#"+s.best, s.latest ? "#"+s.latest : "—",
+      [s.t, secName(s.sec), s.apps, "#"+s.best, s.latest ? "#"+s.latest : "—",
        s.streak || "—", s.first, s.last, s.score !== null ? s.score.toFixed(2) : "—"]
       .forEach((c, i) => {
         const td = document.createElement("td");
@@ -740,12 +896,12 @@ function renderHeat(minApps) {
 
 {
   const foot = document.getElementById("foot");
-  foot.append("Generated by ");
+  foot.append(T.genBy);
   const fa = document.createElement("a");
   fa.href = "https://github.com/mthli/skills/blob/master/momentum-scan/scripts/render_history_html.py";
   fa.target = "_blank"; fa.rel = "noopener";
   fa.textContent = "render_history_html.py";
-  foot.append(fa, ` at ${GENERATED} · Source: `);
+  foot.append(fa, T.genAt(GENERATED));
   const sa = document.createElement("a");
   sa.href = "https://github.com/mthli/skills/blob/master/momentum-scan/state/history.csv";
   sa.target = "_blank"; sa.rel = "noopener";
