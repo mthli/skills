@@ -9,8 +9,8 @@ HTML file (no external assets, no network) with:
   - a sector-composition stacked column per run day
   - a date x ticker rank heatmap with a min-appearances filter
   - a per-ticker summary table (the no-hover fallback for every value)
-  - an English / 简体中文 / 繁體中文 / 日本語 language menu (top-right; choice
-    kept in localStorage, first visit follows the browser language)
+  - an English / 简体中文 / 繁體中文 / 日本語 / 한국어 language menu (top-right;
+    choice kept in localStorage, first visit follows the browser language)
 
 Usage:
     python scripts/render_history_html.py [--top-n 30] [--days 60] [--out state/history.html]
@@ -484,6 +484,44 @@ const I18N = {
       "Real Estate": "不動産", "Utilities": "公益事業", "Unknown": "不明", "Others": "その他",
     },
   },
+  ko: {
+    htmlLang: "ko",
+    title: "momentum-scan 히스토리",
+    h1Suffix: "히스토리",
+    subtitle: (a, b, runs, n) => `${a} → ${b} · 총 ${runs}거래일 · 일일 top-${n} 보드의 지속성 뷰`,
+    winTag: (s, t) => `차트는 최근 ${s} / ${t}거래일만 표시합니다.`,
+    kSpan: "기록 기간", kDays: n => `${n}일`,
+    kNo1: "현재 1위", kScore: s => `점수 ${s}`,
+    kStreak: "최장 연속 진입",
+    kNew: "신규 진입", kDrop: "이탈",
+    kTracked: "추적 종목 수", kTrackedSub: "1일 이상 순위에 오른 종목",
+    bumpTitle: "순위 궤적",
+    bumpNote: (m, min, n) => `총 ${m}개 궤적(순위 진입 ${min}일 이상 + 오늘의 top ${n}; 1위가 맨 위; ${n}위 아래 순위는 점선 바닥에 고정). 상위 8개 종목은 색상 표시; 오른쪽 끝은 오늘의 전체 보드.\n마우스를 올려 값 확인; 선을 클릭하면 고정되고 점수 / 수익률 / 낙폭 추이가 열립니다.`,
+    heatTitle: "보드 히트맵",
+    heatNote: "행은 순위 진입 일수순 —— 꾸준한 리더가 위, 하루짜리 종목이 아래. 파란색이 선명할수록 순위가 높습니다.\n행을 클릭하면 점수 / 수익률 / 낙폭 추이가 열립니다.",
+    heatFilterLabel: "순위 진입 일수로 필터",
+    geDays: n => `${n}일 이상`, all: "전체",
+    heatLegendBelow: "필터 통과, 표시 컷오프 미만",
+    secTitle: "섹터 구성",
+    secNote: n => `일일 top-${n}을 섹터별로 집계 —— 어느 섹터가 보드를 장악해 가는지 관찰하세요.`,
+    names: c => `${c}개 종목`,
+    others: "기타",
+    rosterTitle: "진입 종목 목록",
+    rosterNote: "순위에 오른 적 있는 종목을 한 행씩 표시. 헤더를 클릭해 정렬, 다시 클릭하면 역순. 차트의 모든 호버 값을 이 표에서 확인할 수 있습니다.",
+    cols: ["티커", "섹터", "진입 일수", "최고 순위", "현재 순위", "연속 일수", "첫 진입", "최근 진입", "최신 점수"],
+    score: "점수", ret: "수익률", dd: "낙폭",
+    formula: "점수 = 수익률 ÷ |낙폭|",
+    formulaNote: " —— 낙폭 1%당 얻은 수익률(1% 미만 낙폭은 1%로 계산).",
+    rankAt: r => `순위 #${r}`, rankBelow: r => `순위 #${r} (컷오프 미만)`,
+    gapTag: g => ` · ${g}일 전 대비`,
+    genBy: "", genAt: t => `로 ${t}에 생성 · 데이터 출처: `,
+    sectorNames: {
+      "Technology": "기술", "Financial Services": "금융 서비스", "Healthcare": "헬스케어",
+      "Consumer Cyclical": "임의소비재", "Consumer Defensive": "필수소비재", "Industrials": "산업재",
+      "Communication Services": "커뮤니케이션 서비스", "Energy": "에너지", "Basic Materials": "소재",
+      "Real Estate": "부동산", "Utilities": "유틸리티", "Unknown": "미상", "Others": "기타",
+    },
+  },
 };
 const LANG = (() => {
   try {
@@ -492,6 +530,7 @@ const LANG = (() => {
   } catch (e) {}
   const l = (navigator.language || "").toLowerCase();
   if (l.startsWith("ja")) return "ja";
+  if (l.startsWith("ko")) return "ko";
   if (!l.startsWith("zh")) return "en";
   return /hant|tw|hk|mo/.test(l) ? "zht" : "zh";
 })();
@@ -501,7 +540,7 @@ document.documentElement.lang = T.htmlLang;
 document.title = T.title;
 {
   const sel = document.getElementById("lang-menu");
-  [["en", "English"], ["zh", "简体中文"], ["zht", "繁體中文"], ["ja", "日本語"]].forEach(([v, lbl]) => {
+  [["en", "English"], ["zh", "简体中文"], ["zht", "繁體中文"], ["ja", "日本語"], ["ko", "한국어"]].forEach(([v, lbl]) => {
     const o = document.createElement("option");
     o.value = v;
     o.textContent = lbl;
