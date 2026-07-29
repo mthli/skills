@@ -9,8 +9,8 @@ HTML file (no external assets, no network) with:
   - a sector-composition stacked column per run day
   - a date x ticker rank heatmap with a min-appearances filter
   - a per-ticker summary table (the no-hover fallback for every value)
-  - an English / 简体中文 / 繁體中文 language menu (top-right; choice kept in
-    localStorage, first visit follows the browser language)
+  - an English / 简体中文 / 繁體中文 / 日本語 language menu (top-right; choice
+    kept in localStorage, first visit follows the browser language)
 
 Usage:
     python scripts/render_history_html.py [--top-n 30] [--days 60] [--out state/history.html]
@@ -446,6 +446,44 @@ const I18N = {
       "Real Estate": "房地產", "Utilities": "公用事業", "Unknown": "未知", "Others": "其他",
     },
   },
+  ja: {
+    htmlLang: "ja",
+    title: "momentum-scan 履歴",
+    h1Suffix: "履歴",
+    subtitle: (a, b, runs, n) => `${a} → ${b} · 全 ${runs} 営業日 · 日次 top-${n} ランキングの持続性ビュー`,
+    winTag: (s, t) => `チャートは直近 ${s} / ${t} 営業日のみ表示。`,
+    kSpan: "履歴期間", kDays: n => `${n} 日`,
+    kNo1: "現在の第 1 位", kScore: s => `スコア ${s}`,
+    kStreak: "最長連続ランクイン",
+    kNew: "新規ランクイン", kDrop: "圏外へ",
+    kTracked: "追跡銘柄数", kTrackedSub: "1 日以上ランクインした銘柄",
+    bumpTitle: "順位推移",
+    bumpNote: (m, min, n) => `全 ${m} 本の推移線（ランクイン ${min} 日以上 + 本日の top ${n}；第 1 位が最上部；第 ${n} 位より下は破線の底辺に固定）。上位 8 銘柄を着色；右端は本日の全ランキング。\nホバーで数値を確認；線をクリックすると固定され、スコア / リターン / ドローダウンの推移が開きます。`,
+    heatTitle: "ランキングヒートマップ",
+    heatNote: "行はランクイン日数順 —— 定着したリーダーが上、一日だけの銘柄が下。青が鮮やかなほど順位が高い。\n行をクリックするとスコア / リターン / ドローダウンの推移が開きます。",
+    heatFilterLabel: "ランクイン日数で絞り込み",
+    geDays: n => `${n} 日以上`, all: "すべて",
+    heatLegendBelow: "絞り込みは通過、表示カットオフ未満",
+    secTitle: "セクター構成",
+    secNote: n => `日次 top-${n} をセクター別に集計 —— どのセクターがランキングを席巻しつつあるかを観察。`,
+    names: c => `${c} 銘柄`,
+    others: "その他",
+    rosterTitle: "ランクイン銘柄一覧",
+    rosterNote: "ランクインしたことのある銘柄を 1 行ずつ表示。ヘッダーをクリックでソート、もう一度クリックで逆順。チャートのホバー数値はすべてこの表で確認できます。",
+    cols: ["ティッカー", "セクター", "ランクイン日数", "最高順位", "現在順位", "連続日数", "初登場", "直近登場", "最新スコア"],
+    score: "スコア", ret: "リターン", dd: "ドローダウン",
+    formula: "スコア = リターン ÷ |ドローダウン|",
+    formulaNote: " —— ドローダウン 1% あたりのリターン（1% 未満のドローダウンは 1% として計算）。",
+    rankAt: r => `順位 #${r}`, rankBelow: r => `順位 #${r}（カットオフ未満）`,
+    gapTag: g => ` · ${g} 日前との比較`,
+    genBy: "", genAt: t => ` により ${t} に生成 · データソース：`,
+    sectorNames: {
+      "Technology": "テクノロジー", "Financial Services": "金融サービス", "Healthcare": "ヘルスケア",
+      "Consumer Cyclical": "一般消費財", "Consumer Defensive": "生活必需品", "Industrials": "資本財",
+      "Communication Services": "通信サービス", "Energy": "エネルギー", "Basic Materials": "素材",
+      "Real Estate": "不動産", "Utilities": "公益事業", "Unknown": "不明", "Others": "その他",
+    },
+  },
 };
 const LANG = (() => {
   try {
@@ -453,6 +491,7 @@ const LANG = (() => {
     if (I18N[s]) return s;
   } catch (e) {}
   const l = (navigator.language || "").toLowerCase();
+  if (l.startsWith("ja")) return "ja";
   if (!l.startsWith("zh")) return "en";
   return /hant|tw|hk|mo/.test(l) ? "zht" : "zh";
 })();
@@ -462,7 +501,7 @@ document.documentElement.lang = T.htmlLang;
 document.title = T.title;
 {
   const sel = document.getElementById("lang-menu");
-  [["en", "English"], ["zh", "简体中文"], ["zht", "繁體中文"]].forEach(([v, lbl]) => {
+  [["en", "English"], ["zh", "简体中文"], ["zht", "繁體中文"], ["ja", "日本語"]].forEach(([v, lbl]) => {
     const o = document.createElement("option");
     o.value = v;
     o.textContent = lbl;
