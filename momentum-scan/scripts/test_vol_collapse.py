@@ -248,7 +248,8 @@ def test_enrich_persistence_uses_score_rank_when_present():
                      "NOK", rank=1, score_rank=2),
     ])
     picks = [{"ticker": "NOK", "rank": 1, "score_rank": 2}]
-    out = scan.enrich_with_persistence(picks, history, current_run_id="D2")
+    out = scan.enrich_with_persistence(picks, history, current_run_id="D2",
+                                       top_n=10)
     assert out[0]["rank_delta"] == 0
     assert out[0]["prev_rank"] == 1  # display rank from history
 
@@ -261,7 +262,8 @@ def test_enrich_persistence_falls_back_to_rank_when_score_rank_missing():
     ])
     assert "score_rank" not in history.columns
     picks = [{"ticker": "NOK", "rank": 1, "score_rank": 2}]
-    out = scan.enrich_with_persistence(picks, history, current_run_id="D2")
+    out = scan.enrich_with_persistence(picks, history, current_run_id="D2",
+                                       top_n=10)
     assert out[0]["rank_delta"] == 0  # 2 - 2 (current score_rank)
 
 
@@ -279,7 +281,8 @@ def test_enrich_persistence_falls_back_per_row_on_nan_score_rank():
         {"ticker": "OLD", "rank": 1, "score_rank": 3},
         {"ticker": "NEW", "rank": 2, "score_rank": 4},
     ]
-    out = scan.enrich_with_persistence(picks, history, current_run_id="D2")
+    out = scan.enrich_with_persistence(picks, history, current_run_id="D2",
+                                       top_n=10)
     deltas = {p["ticker"]: p["rank_delta"] for p in out}
     assert deltas["OLD"] == 0  # 3 (fallback to rank) - 3 (current score_rank)
     assert deltas["NEW"] == 0  # 4 (score_rank) - 4 (current score_rank)
@@ -318,7 +321,7 @@ def test_show_history_summary_uses_score_rank_for_delta(capsys):
         _history_row("D2", "2026-05-13T00:00:00Z", "B", rank=1, score_rank=2),
     ]
     history = pd.DataFrame(rows)
-    scan.show_history_summary(history)
+    scan.show_history_summary(history, top_n=10)
     captured = capsys.readouterr().out
     # With the fix, B's delta is 2 - 2 = 0, so no climber line for B.
     # Without the fix, B would have delta 2 - 1 = +1 → climber line.
@@ -342,13 +345,34 @@ def test_show_history_summary_works_with_old_schema_no_score_rank_column(capsys)
     history = pd.DataFrame(rows)
     assert "score_rank" not in history.columns
     # Must not raise (was a KeyError pre-fix due to duplicate-column rename).
-    scan.show_history_summary(history)
+    scan.show_history_summary(history, top_n=10)
     captured = capsys.readouterr().out
     # X rose 2 → 1 (delta +1, climber); Y fell 3 → 4 (delta -1, dropper).
     climbers = _show_history_climber_lines(captured)
     assert any("X " in line for line in climbers), (
         f"X should be a climber (rank 2 → 1). Climber lines: {climbers}\n"
         f"Output:\n{captured}")
+
+
+def test_show_history_summary_applies_visibility_cutoff(capsys):
+    # ZZZ only ever appeared below the display cutoff — history stores every
+    # filter-passer, but the summary's streak/frequency stats must not
+    # surface names the user never saw on the leaderboard.
+    rows = [
+        _history_row("D1", "2026-05-12T00:00:00Z", "A", rank=1, score_rank=1),
+        _history_row("D1", "2026-05-12T00:00:00Z", "ZZZ",
+                     rank=40, score_rank=40),
+        _history_row("D2", "2026-05-13T00:00:00Z", "A", rank=1, score_rank=1),
+        _history_row("D2", "2026-05-13T00:00:00Z", "ZZZ",
+                     rank=35, score_rank=35),
+    ]
+    history = pd.DataFrame(rows)
+    scan.show_history_summary(history, top_n=30)
+    captured = capsys.readouterr().out
+    assert "ZZZ" not in captured
+    # Ticker lines are rendered as "  {ticker:<8} ..." — match the padded
+    # form so this can't accidentally pass on a bare capital A in a header.
+    assert "  A " in captured
 
 
 # ---- Short-window warning helper ------------------------------------------

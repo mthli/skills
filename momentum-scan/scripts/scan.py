@@ -55,6 +55,10 @@ HISTORY_COLS = [
 # vol-collapse re-numbering, so rank_delta computed against it doesn't get a
 # +1 nudge every time the filter removes someone above. Old history files
 # without score_rank fall back to rank in enrich_with_persistence.
+# Rows cover EVERY kept pick that run, not just the displayed top-N — the
+# below-cutoff rows preserve near-miss context. Persistence consumers
+# (enrich_with_persistence, show_history_summary) apply the rank <= top_n
+# visibility filter at read time; dropouts() has always done the same.
 
 
 class _NYSECalendar(AbstractHolidayCalendar):
@@ -214,17 +218,23 @@ def load_universe(min_market_cap: float, min_volume: int, count: int | None,
         many tickers. If the on-disk cache has fewer rows than the requested
         `count`, force a refresh — otherwise the user would silently get an
         undersized universe (e.g. asking for 500 but cached 250 from a prior
-        smaller run still being inside its TTL).
+        smaller run still being inside its TTL). If the cache has *more* rows
+        than requested, slice to the first `count` — the file is written in
+        market-cap-descending order (the screener sorts by intradaymarketcap),
+        so the slice is the top-count largest names, no refresh needed.
     refresh_mode: None = TTL-based (default), True = force refresh,
         False = use cache as-is regardless of TTL (offline / testing).
     """
+    def _cap(tickers: list[str]) -> list[str]:
+        return tickers[:count] if count is not None else tickers
+
     if not UNIVERSE_FILE.exists():
         return refresh_universe(min_market_cap, min_volume, count)
     if refresh_mode is True:
         return refresh_universe(min_market_cap, min_volume, count)
     cached = [t for t in UNIVERSE_FILE.read_text().splitlines() if t.strip()]
     if refresh_mode is False:
-        return cached
+        return _cap(cached)
     if count is not None and len(cached) < count:
         print(f"Universe cache has {len(cached)} tickers but {count} requested, "
               f"refreshing...", file=sys.stderr)
@@ -233,7 +243,7 @@ def load_universe(min_market_cap: float, min_volume: int, count: int | None,
     if age_days > UNIVERSE_TTL_DAYS:
         print(f"Universe cache stale ({age_days:.1f}d), refreshing...", file=sys.stderr)
         return refresh_universe(min_market_cap, min_volume, count)
-    return cached
+    return _cap(cached)
 
 
 def fetch_bars(tickers: list[str], window_months: int,
@@ -250,15 +260,34 @@ def fetch_bars(tickers: list[str], window_months: int,
     )
 
 
+def window_trading_days(window_months: int) -> int:
+    """Scoring-window size in sessions: ~21 per month, floor of 21. The
+    single source of truth for the tail() slice used by score_tickers and
+    filter_vol_collapse."""
+    return max(int(round(window_months * 21)), 21)
+
+
+def min_window_observations(window_months: int) -> int:
+    """Minimum sessions a ticker needs to be scored for this window: allow
+    up to 3 missing sessions below the window size, capped at the historical
+    60-session floor so ≥3mo behavior is unchanged (min(60, 63-3) = 60).
+    Shared by extract_closes (via main) and score_tickers so a newly-listed
+    name that clears the scoring guard isn't silently dropped upstream."""
+    return min(60, window_trading_days(window_months) - 3)
+
+
 def extract_closes(bars: pd.DataFrame, tickers: list[str],
-                   min_len: int = 60) -> pd.DataFrame:
+                   min_len: int) -> pd.DataFrame:
     """Pull Close column per ticker from the raw bars frame; drop tickers
-    that don't have enough history to score the short window."""
+    with fewer than `min_len` sessions of history. Pass
+    min_window_observations(window) so the floor scales with the scoring
+    window — a hard-coded 60 would exclude sub-3-month listings even at
+    --window-months 1-2, where score_tickers would happily score them."""
     closes = {}
     for t in tickers:
         try:
             s = bars[(t, "Close")].dropna() if (t, "Close") in bars.columns else None
-            if s is not None and len(s) > min_len:
+            if s is not None and len(s) >= min_len:
                 closes[t] = s
         except Exception:
             pass
@@ -848,18 +877,18 @@ def score_tickers(prices: pd.DataFrame, window_months: int,
     # cutoff: prices.index only contains trading days, so a calendar cutoff
     # near a holiday week could include or exclude a session depending on
     # weekday placement. tail(N) deterministically takes the last N sessions.
-    trading_days = max(int(round(window_months * 21)), 21)
-    window = prices.tail(trading_days)
+    window = prices.tail(window_trading_days(window_months))
+    min_obs = min_window_observations(window_months)
     results = []
     for t in window.columns:
         s = window[t].dropna()
         # Minimum-observations guard. The historical hard-coded 60 was tuned for
         # the 3mo default (~63 sessions); it silently zeroed out every name for
-        # any window < ~3mo (tail(trading_days) can never reach 60 rows). Scale
-        # it to the window — allow up to 3 missing sessions below the cap — while
-        # capping at 60 so the ≥3mo behavior is byte-for-byte unchanged
-        # (min(60, 63-3)=60; longer windows stay pinned at the 60 floor).
-        if len(s) < min(60, trading_days - 3):
+        # any window < ~3mo (tail(trading_days) can never reach 60 rows).
+        # min_window_observations scales it to the window — allow up to 3
+        # missing sessions below the cap — while capping at 60 so the ≥3mo
+        # behavior is byte-for-byte unchanged.
+        if len(s) < min_obs:
             continue
         ret = (s.iloc[-1] / s.iloc[0] - 1) * 100
         max_dd = ((s / s.cummax() - 1).min()) * 100
@@ -934,8 +963,7 @@ def filter_vol_collapse(
     Kept picks are re-ranked so #1..#N stay contiguous after exclusion."""
     if ratio_threshold is None or ratio_threshold <= 0:
         return picks, []
-    trading_days = max(int(round(window_months * 21)), 21)
-    window = prices.tail(trading_days)
+    window = prices.tail(window_trading_days(window_months))
     kept, excluded = [], []
     for p in picks:
         t = p["ticker"]
@@ -1123,11 +1151,21 @@ def append_history(picks: list[dict], run_id: str, run_date: datetime,
 
 
 def enrich_with_persistence(picks: list[dict], history: pd.DataFrame,
-                            current_run_id: str) -> list[dict]:
+                            current_run_id: str, top_n: int) -> list[dict]:
     """Add streak / first_seen / rank_delta columns based on prior runs.
 
-    rank_delta compares against the *latest prior appearance*, not the
-    *immediately previous run*. A ticker that fell out for a few runs and
+    history.csv stores EVERY name that passed the score filter each day (the
+    below-cutoff rows preserve near-miss context), but the persistence stats
+    are promises about the *displayed* leaderboard — Streak is "consecutive
+    prior runs in the top N". Only appearances at rank ≤ top_n count here:
+    a name that hovered at #40 for weeks still debuts with streak 1 and a 🆕
+    flag, and RankΔ / FirstSeen only ever reference ranks the user has seen.
+    top_n is the current run's cutoff; stored display ranks are compared
+    against it, so changing --top-n between runs re-interprets which
+    historical appearances were "visible".
+
+    rank_delta compares against the *latest prior visible appearance*, not
+    the *immediately previous run*. A ticker that fell out for a few runs and
     is now back will show the delta against its last-seen rank — `streak`
     and the dropouts/new-entrants sections cover the gap separately.
 
@@ -1149,13 +1187,18 @@ def enrich_with_persistence(picks: list[dict], history: pd.DataFrame,
                       "rank_delta": None})
         return picks
 
+    # Run ordering comes from ALL prior runs, but appearances are filtered to
+    # visible rows — a run where the ticker sat below the cutoff must break
+    # its streak, so the walk needs every run in the chain while the ticker's
+    # presence set only contains runs where it was actually displayed.
     run_ids_ordered = (prior.sort_values("run_date")["run_id"]
                        .drop_duplicates().tolist())
-    has_score_rank_col = "score_rank" in prior.columns
+    visible = prior[prior["rank"] <= top_n]
+    has_score_rank_col = "score_rank" in visible.columns
 
     for p in picks:
         t = p["ticker"]
-        appearances = prior[prior["ticker"] == t].sort_values("run_date")
+        appearances = visible[visible["ticker"] == t].sort_values("run_date")
         if appearances.empty:
             p.update({"streak": 1, "first_seen": "🆕", "prev_rank": None,
                       "rank_delta": None})
@@ -1343,9 +1386,16 @@ def rank_sparkline(history: pd.DataFrame, ticker: str,
     return "".join(out)
 
 
-def show_history_summary(history: pd.DataFrame):
+def show_history_summary(history: pd.DataFrame, top_n: int):
     if history.empty:
         print("History is empty.")
+        return
+    # Same visibility rule as enrich_with_persistence: history stores every
+    # filter-passer, but streak / frequency / delta stats describe the
+    # displayed leaderboard, so drop below-cutoff rows before any math.
+    history = history[history["rank"] <= top_n]
+    if history.empty:
+        print(f"History has no rows at rank <= {top_n}.")
         return
     runs = history.sort_values("run_date")["run_id"].drop_duplicates().tolist()
     print(f"Total runs: {len(runs)}")
@@ -1611,7 +1661,7 @@ def main():
         return
 
     if args.show_history:
-        show_history_summary(load_history())
+        show_history_summary(load_history(), args.top_n)
         return
 
     short_window_warning = _maybe_short_window_warning(
@@ -1627,7 +1677,8 @@ def main():
     min_period = SPY_HISTORY_MONTHS if args.regime_gate != "off" else 0
     bars = fetch_bars(universe, args.window_months,
                       min_period_months=min_period)
-    prices = extract_closes(bars, universe)
+    prices = extract_closes(bars, universe,
+                            min_len=min_window_observations(args.window_months))
     regime = compute_regime(prices) if args.regime_gate != "off" else None
     picks = score_tickers(prices, args.window_months,
                           args.min_return_pct, args.max_dd_pct)
@@ -1637,7 +1688,7 @@ def main():
     history = load_history()
     now = datetime.now(timezone.utc)
     run_id = make_run_id(now, allow_same_day=args.allow_same_day)
-    picks = enrich_with_persistence(picks, history, run_id)
+    picks = enrich_with_persistence(picks, history, run_id, args.top_n)
     vol_target = compute_vol_target(prices, picks, args.top_n,
                                     args.target_vol_pct)
     picks = assign_weights(picks, args.top_n, vol_target)

@@ -249,3 +249,27 @@ def test_load_universe_refreshes_when_cache_smaller_than_count(
     assert mock.call_count == 1  # refresh was triggered
     captured = capsys.readouterr()
     assert "3 tickers but 10 requested" in captured.err
+
+
+def test_load_universe_caps_cache_larger_than_count(universe_file, mock_screen):
+    """A fresh cache larger than the requested count is sliced to the first
+    `count` names (the file is market-cap-descending) with NO refresh call —
+    pre-fix, the count was silently ignored and the full cache was scanned."""
+    universe_file.write_text("\n".join(f"T{i:02d}" for i in range(10)))
+    mock = mock_screen([])  # any yf.screen call would raise StopIteration
+
+    tickers = scan.load_universe(5e9, 1_000_000, count=3, refresh_mode=None)
+
+    assert tickers == ["T00", "T01", "T02"]
+    assert mock.call_count == 0
+
+
+def test_load_universe_caps_cache_in_no_refresh_mode(universe_file, mock_screen):
+    """--no-refresh-universe + --universe-count still slices the cache."""
+    universe_file.write_text("\n".join(f"T{i:02d}" for i in range(10)))
+    mock = mock_screen([])
+
+    tickers = scan.load_universe(5e9, 1_000_000, count=4, refresh_mode=False)
+
+    assert tickers == ["T00", "T01", "T02", "T03"]
+    assert mock.call_count == 0

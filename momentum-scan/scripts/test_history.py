@@ -856,7 +856,8 @@ def _make_history(rows: list[dict]) -> pd.DataFrame:
 
 def test_enrich_empty_history_marks_all_new():
     picks = [_pick("AAA", 1), _pick("BBB", 2)]
-    out = scan.enrich_with_persistence(picks, _make_history([]), "20260512")
+    out = scan.enrich_with_persistence(picks, _make_history([]), "20260512",
+                                       top_n=10)
     for p in out:
         assert p["streak"] == 1
         assert p["first_seen"] == "—"
@@ -872,7 +873,7 @@ def test_enrich_consecutive_streak_counted():
         _hist_row("20260511", "2026-05-11T20:00:00+00:00", "AAA", 2),
     ])
     picks = [_pick("AAA", 1)]
-    out = scan.enrich_with_persistence(picks, history, "20260512")
+    out = scan.enrich_with_persistence(picks, history, "20260512", top_n=10)
     assert out[0]["streak"] == 4
     assert out[0]["first_seen"] == "2026-05-09"
     assert out[0]["prev_rank"] == 2
@@ -888,7 +889,7 @@ def test_enrich_streak_breaks_on_gap():
         _hist_row("20260511", "2026-05-11T20:00:00+00:00", "AAA", 2),
     ])
     picks = [_pick("AAA", 1)]
-    out = scan.enrich_with_persistence(picks, history, "20260512")
+    out = scan.enrich_with_persistence(picks, history, "20260512", top_n=10)
     assert out[0]["streak"] == 2  # 20260511 + current; 20260509 doesn't count
     # but first_seen is the earliest
     assert out[0]["first_seen"] == "2026-05-09"
@@ -899,7 +900,7 @@ def test_enrich_new_ticker_marked():
         _hist_row("20260511", "2026-05-11T20:00:00+00:00", "AAA", 1),
     ])
     picks = [_pick("BBB", 1)]
-    out = scan.enrich_with_persistence(picks, history, "20260512")
+    out = scan.enrich_with_persistence(picks, history, "20260512", top_n=10)
     assert out[0]["streak"] == 1
     assert out[0]["first_seen"] == "🆕"
     assert out[0]["prev_rank"] is None
@@ -912,10 +913,73 @@ def test_enrich_excludes_current_run_id():
         _hist_row("20260512", "2026-05-12T20:00:00+00:00", "AAA", 1),
     ])
     picks = [_pick("AAA", 1)]
-    out = scan.enrich_with_persistence(picks, history, "20260512")
+    out = scan.enrich_with_persistence(picks, history, "20260512", top_n=10)
     # No prior runs → streak 1, first_seen "—".
     assert out[0]["streak"] == 1
     assert out[0]["first_seen"] == "—"
+
+
+def test_enrich_ignores_below_cutoff_appearances():
+    # History stores every filter-passer, but only displayed (rank <= top_n)
+    # appearances count toward persistence. A name that only ever sat below
+    # the cutoff must debut as 🆕 with streak 1 — pre-fix, such a name could
+    # surface carrying a streak of 30+ from weeks of invisible near-misses.
+    history = _make_history([
+        _hist_row("20260509", "2026-05-09T20:00:00+00:00", "AAA", 40),
+        _hist_row("20260510", "2026-05-10T20:00:00+00:00", "AAA", 35),
+        _hist_row("20260511", "2026-05-11T20:00:00+00:00", "AAA", 31),
+    ])
+    picks = [_pick("AAA", 5)]
+    out = scan.enrich_with_persistence(picks, history, "20260512", top_n=30)
+    assert out[0]["streak"] == 1
+    assert out[0]["first_seen"] == "🆕"
+    assert out[0]["prev_rank"] is None
+    assert out[0]["rank_delta"] is None
+
+
+def test_enrich_streak_breaks_on_below_cutoff_day():
+    # Visible → below-cutoff → visible: the middle day must break the streak
+    # even though the ticker was in history (just not displayed) that day.
+    history = _make_history([
+        _hist_row("20260509", "2026-05-09T20:00:00+00:00", "AAA", 5),
+        _hist_row("20260510", "2026-05-10T20:00:00+00:00", "AAA", 40),
+        _hist_row("20260511", "2026-05-11T20:00:00+00:00", "AAA", 3),
+    ])
+    picks = [_pick("AAA", 1)]
+    out = scan.enrich_with_persistence(picks, history, "20260512", top_n=30)
+    assert out[0]["streak"] == 2                  # 20260511 + current
+    assert out[0]["first_seen"] == "2026-05-09"   # earliest VISIBLE day
+    assert out[0]["prev_rank"] == 3               # latest visible appearance
+
+
+# ─── window sizing helpers / extract_closes scaling ──────────────────────────
+
+def test_window_trading_days_values():
+    assert scan.window_trading_days(1) == 21
+    assert scan.window_trading_days(3) == 63
+    assert scan.window_trading_days(6) == 126
+
+
+def test_min_window_observations_scales_and_caps():
+    assert scan.min_window_observations(1) == 18   # 21 - 3
+    assert scan.min_window_observations(2) == 39   # 42 - 3
+    assert scan.min_window_observations(3) == 60   # capped at the floor
+    assert scan.min_window_observations(6) == 60
+
+
+def test_extract_closes_min_len_scales_with_window():
+    # A 30-session listing must survive extraction at the 1mo threshold
+    # (pre-fix, a hard-coded 60 dropped it before score_tickers could see
+    # it) while still being dropped at the 3mo threshold.
+    idx = pd.date_range("2026-01-02", periods=30, freq="B")
+    bars = pd.DataFrame(
+        {("NEWIPO", "Close"): pd.Series(np.arange(1.0, 31.0), index=idx)})
+    short = scan.extract_closes(
+        bars, ["NEWIPO"], min_len=scan.min_window_observations(1))
+    long = scan.extract_closes(
+        bars, ["NEWIPO"], min_len=scan.min_window_observations(3))
+    assert "NEWIPO" in short.columns
+    assert "NEWIPO" not in long.columns
 
 
 # ─── dropouts ────────────────────────────────────────────────────────────────
@@ -981,7 +1045,7 @@ def test_enrich_excludes_current_run_through_csv_path(history_file):
         _hist_row("20260602", "2026-06-02T20:00:00+00:00", "AAA", 1),  # stale today
     ], columns=scan.HISTORY_COLS).to_csv(history_file, index=False)
     out = scan.enrich_with_persistence([_pick("AAA", 1)], scan.load_history(),
-                                       "20260602")
+                                       "20260602", top_n=10)
     assert out[0]["streak"] == 2          # not 3 (which double-counts today)
     assert out[0]["first_seen"] == "2026-06-01"
     assert out[0]["prev_rank"] == 2        # from 20260601, not today's stale #1
