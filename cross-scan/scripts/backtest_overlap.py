@@ -13,7 +13,7 @@ What gets tested:
   - the overlap-count gradient itself (1 vs 2 vs 3+ scans);
   - the within-scan confirmation question — for each technical scan, does
     ALSO appearing in another scan (or in UOA) improve that scan's names?
-    This is the fair test: UOA flags ~15-20%% of the universe daily, so
+    This is the fair test: UOA flags ~15-20% of the universe daily, so
     "overlaps with UOA" is cheap by construction;
   - every composite-read pattern the SKILL.md sells (⭐ base+call-flow,
     "pullback in a leader", "leader with bearish positioning", ...);
@@ -347,17 +347,26 @@ def main() -> None:
         umean[s] = {k: float(np.mean(v)) for k, v in per_k.items()
                     if len(v) >= 50}
 
+    def has_session_bar(t: str, s: pd.Timestamp) -> bool:
+        idx = prices[t].index
+        pos = idx.searchsorted(s, side="right") - 1
+        return pos >= 0 and idx[pos].normalize() == s
+
     n_no_prices = 0
+    n_no_bar = 0
     n_open = 0
     for td in tdays:
         td.fwd = fwd_for(td.ticker, td.session)
         if not td.fwd:
-            # Distinguish "no price data at all" from "shortest window not
-            # yet elapsed" (the last ~5 sessions) — very different things.
-            if td.ticker in prices:
+            # Distinguish "no price data at all", "has prices but no bar on
+            # that session" (halt / data gap), and "shortest window not yet
+            # elapsed" (the last ~5 sessions) — very different things.
+            if td.ticker not in prices:
+                n_no_prices += 1
+            elif has_session_bar(td.ticker, td.session):
                 n_open += 1
             else:
-                n_no_prices += 1
+                n_no_bar += 1
             continue
         td.x = {k: v - umean[td.session][k] for k, v in td.fwd.items()
                 if k in umean[td.session]}
@@ -370,9 +379,9 @@ def main() -> None:
           f"{sessions[0].date()} → {sessions[-1].date()} "
           f"({len(sessions)} joined; MR present on {n_mr})\n")
     print(f"**Ticker-days**: {len(tdays):,} ({len(ok):,} resolved, "
-          f"{n_open} with T+5 window still open, {n_no_prices} without "
-          f"price data) · **unique tickers**: "
-          f"{len({td.ticker for td in tdays})}")
+          f"{n_open} with T+5 window still open, {n_no_bar} without a bar "
+          f"on the session, {n_no_prices} without price data) "
+          f"· **unique tickers**: {len({td.ticker for td in tdays})}")
     print(f"**Universe baseline pool**: {len(base_pool)} tickers")
     counts = defaultdict(int)
     for td in ok:
@@ -453,9 +462,10 @@ def main() -> None:
         ("base+UOA put-heavy — 'caution'",
          [td for td in ok if has(td, "base-breakout", "unusual-options")
           and td.uoa_dir == "put"]),
-        ("mom+UOA call-heavy — 'trend confirmation'",
+        ("mom+UOA call-heavy, no mr — '⚠️ crowding tell'",
          [td for td in ok if has(td, "momentum", "unusual-options")
-          and td.uoa_dir == "call"]),
+          and td.uoa_dir == "call"
+          and not has(td, "mean-reversion")]),
         ("mom+UOA put-heavy — '⚠️ bearish positioning'",
          [td for td in ok if has(td, "momentum", "unusual-options")
           and td.uoa_dir == "put"]),

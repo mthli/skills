@@ -25,7 +25,7 @@ python <SKILL_DIR>/scripts/aggregate.py
 # then aggregate. The one-command "ensure fresh + show overlap" workflow.
 python <SKILL_DIR>/scripts/aggregate.py --refresh
 
-# Higher conviction only (3+ scans must agree)
+# Only 3+ scan overlaps (⚠️ backtest: the most-crowded names, not the best)
 python <SKILL_DIR>/scripts/aggregate.py --min-overlap 3
 
 # Strict date alignment — only use data from a specific trading day
@@ -62,7 +62,7 @@ uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy>=1.24,<3' \
 
 - **Does not re-run any scan by default.** Run the individual scans first, or pass `--refresh` to have cross-scan re-run any stale ones for you. Without `--refresh`, a stale or missing scan shows a warning in the freshness header but won't be regenerated.
 - **Does not invent a composite "alpha score" across scans.** Each scan's quality metric (momentum's score, base-breakout's base_score, mean-reversion's RSI(2), UOA's Vol/OI + notional) measures different things — combining them into a single number would be more confusing than helpful. Instead, the output shows each scan's rank/score side-by-side and lets the human read the pattern.
-- **Does not recommend specific trades.** This is a *prioritized research list*, not a buy list. Tickers appearing in 3+ scans deserve a closer look — but "deserves a closer look" ≠ "buy". Confirm catalysts, check earnings calendar, look at the chart, size the position, etc.
+- **Does not recommend specific trades.** This is a *research and de-risking list*, not a buy list. Tickers appearing in 3+ scans deserve a closer look — and per the backtest, that look most often resolves to "crowded", not "confirmed". Confirm catalysts, check earnings calendar, look at the chart, size the position, etc.
 
 ## Output shape
 
@@ -103,7 +103,7 @@ Notes on the composite read column:
   - `base-breakout + unusual-options` (put-heavy ratio ≤ 0.33) → `base setup but put-flow disagrees — caution`
   - `base-breakout + unusual-options` (other) → `base setup + options attention`
   - `momentum + mean-reversion` → `pullback in a leader` (the least-bad research label: median +0.8% xT+10, mean dragged negative by tails)
-  - `momentum + unusual-options` (call-heavy) → `leader + hot call tape — ⚠️ crowding tell` (backtest: −3.1% xT+10)
+  - `momentum + unusual-options` (call-heavy) → `leader + hot call tape — ⚠️ crowding tell` (backtest: −3.0% xT+10)
   - `momentum + unusual-options` (put-heavy) → `⚠️ leader with bearish positioning` (backtest-validated: −5.3% xT+10)
   - `momentum + base-breakout` (alone) → `leader still consolidating`
   - `mean-reversion + base-breakout` (alone) → `oversold base candidate`
