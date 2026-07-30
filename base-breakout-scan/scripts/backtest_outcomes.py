@@ -133,6 +133,9 @@ def load_episodes(history_path: Path) -> tuple[list[Episode], list[str]]:
 
 # ---------------------------------------------------------------- prices
 
+NO_DATA_KEY = "_NO_DATA"  # cache slot: tickers Yahoo confirmed empty
+
+
 def fetch_prices(tickers: list[str], start: str, cache: Path,
                  refresh: bool) -> dict[str, pd.DataFrame]:
     import yfinance as yf
@@ -152,11 +155,13 @@ def fetch_prices(tickers: list[str], start: str, cache: Path,
             print(f"cache {cache} is stale (last bar {last_bar}); "
                   f"refetching everything", file=sys.stderr)
             data = {}
-        missing = [t for t in tickers if t not in data]
+        no_data = data.get(NO_DATA_KEY, set())
+        missing = [t for t in tickers if t not in data and t not in no_data]
         if not missing:
             return data
     else:
         data = {}
+        no_data = set()
         missing = list(tickers)
 
     CHUNK = 50
@@ -164,10 +169,15 @@ def fetch_prices(tickers: list[str], start: str, cache: Path,
         chunk = missing[i:i + CHUNK]
         print(f"fetching {i + 1}-{i + len(chunk)} of {len(missing)}...",
               file=sys.stderr)
-        raw = yf.download(chunk, start=start, interval="1d",
+        # SPY rides along as a liveness probe: if it comes back, the request
+        # pipeline worked, so empty chunk members are genuinely dead
+        # (delisted) rather than a transient network failure.
+        req = list(dict.fromkeys(chunk + ["SPY"]))
+        raw = yf.download(req, start=start, interval="1d",
                           auto_adjust=True, group_by="ticker",
                           progress=False, threads=True)
-        for t in chunk:
+        got_any = False
+        for t in req:
             try:
                 # yfinance returns MultiIndex columns for multi-ticker
                 # requests and (version-dependent) flat columns for one.
@@ -177,8 +187,13 @@ def fetch_prices(tickers: list[str], start: str, cache: Path,
                 continue
             if len(df):
                 data[t] = df
+                got_any = True
+        # Remember permanently-empty tickers so reruns don't refetch them.
+        if got_any:
+            no_data.update(t for t in chunk if t not in data)
         time.sleep(1.0)
 
+    data[NO_DATA_KEY] = no_data
     with open(cache, "wb") as f:
         pickle.dump(data, f)
     return data
