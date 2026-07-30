@@ -443,7 +443,7 @@ const I18N = {
     others: "Others",
     rosterTitle: "Roster",
     rosterNote: "One row per name that ever made the board. Click a header to sort; click again to reverse. Every hover value from the charts is readable here.\nEntry = entry-day volume character of the latest board spell (darker blue = stronger entry; hover or tap the dot for details).",
-    cols: ["Ticker", "Sector", "Current rank", "Latest score", "Streak", "Entry", "Days on board", "Best rank", "First seen", "Last seen"],
+    cols: ["Ticker", "Sector", "Current rank", "Latest score", "Entry", "Streak", "Days on board", "Best rank", "First seen", "Last seen"],
     eqLabels: ["Quiet drift-in", "Neutral", "Volume surge", "Surge + clean"],
     eqTip: (v, d, day) => `Vol ${v}× · ${d} dist days · Entered ${day}`,
     eqFrozen: "Tier frozen at entry day, never updated",
@@ -481,7 +481,7 @@ const I18N = {
     others: "其他",
     rosterTitle: "上榜名录",
     rosterNote: "每个曾经上榜的标的一行。点击表头排序；再次点击反向。图表中所有悬停数值在此均可查阅。\n入场 = 最近一段在榜区间入场日的量能特征（蓝色越深入场越强；悬停或点按圆点看详情）。",
-    cols: ["代码", "行业", "当前排名", "最新评分", "连续在榜", "入场", "在榜天数", "最佳排名", "首次上榜", "最近上榜"],
+    cols: ["代码", "行业", "当前排名", "最新评分", "入场", "连续在榜", "在榜天数", "最佳排名", "首次上榜", "最近上榜"],
     eqLabels: ["缩量飘入", "中性", "放量入场", "放量且干净"],
     eqTip: (v, d, day) => `量比 ${v}× · ${d} 个派发日 · ${day} 入场`,
     eqFrozen: "层级定格于入场日、不随行情更新",
@@ -524,7 +524,7 @@ const I18N = {
     others: "其他",
     rosterTitle: "上榜名錄",
     rosterNote: "每個曾經上榜的標的一行。點擊表頭排序；再次點擊反向。圖表中所有懸停數值在此均可查閱。\n進場 = 最近一段在榜區間進場日的量能特徵（藍色越深進場越強；懸停或點按圓點看詳情）。",
-    cols: ["代號", "產業", "目前排名", "最新評分", "連續在榜", "進場", "在榜天數", "最佳排名", "首次上榜", "最近上榜"],
+    cols: ["代號", "產業", "目前排名", "最新評分", "進場", "連續在榜", "在榜天數", "最佳排名", "首次上榜", "最近上榜"],
     eqLabels: ["縮量飄入", "中性", "放量進場", "放量且乾淨"],
     eqTip: (v, d, day) => `量比 ${v}× · ${d} 個派發日 · ${day} 進場`,
     eqFrozen: "層級定格於進場日、不隨行情更新",
@@ -567,7 +567,7 @@ const I18N = {
     others: "その他",
     rosterTitle: "ランクイン銘柄一覧",
     rosterNote: "ランクインしたことのある銘柄を 1 行ずつ表示。ヘッダーをクリックでソート、もう一度クリックで逆順。チャートのホバー数値はすべてこの表で確認できます。\nエントリー = 直近ランクイン期間の初日の出来高特性（青が濃いほど強い。ドットにホバーまたはタップで詳細）。",
-    cols: ["ティッカー", "セクター", "現在順位", "最新スコア", "連続日数", "エントリー", "ランクイン日数", "最高順位", "初登場", "直近登場"],
+    cols: ["ティッカー", "セクター", "現在順位", "最新スコア", "エントリー", "連続日数", "ランクイン日数", "最高順位", "初登場", "直近登場"],
     eqLabels: ["薄商い流入", "中立", "出来高急増", "急増＋クリーン"],
     eqTip: (v, d, day) => `出来高比 ${v}× · 分配日 ${d} · ${day} エントリー`,
     eqFrozen: "階層はエントリー日で確定し、以後更新されません",
@@ -610,7 +610,7 @@ const I18N = {
     others: "기타",
     rosterTitle: "진입 종목 목록",
     rosterNote: "순위에 오른 적 있는 종목을 한 행씩 표시. 헤더를 클릭해 정렬, 다시 클릭하면 역순. 차트의 모든 호버 값을 이 표에서 확인할 수 있습니다.\n진입 = 최근 순위권 구간 첫날의 거래량 특성 (파란색이 진할수록 강한 진입; 점에 호버하거나 탭하면 상세).",
-    cols: ["티커", "섹터", "현재 순위", "최신 점수", "연속 일수", "진입", "진입 일수", "최고 순위", "첫 진입", "최근 진입"],
+    cols: ["티커", "섹터", "현재 순위", "최신 점수", "진입", "연속 일수", "진입 일수", "최고 순위", "첫 진입", "최근 진입"],
     eqLabels: ["거래량 미달 진입", "중립", "거래량 급증", "급증+클린"],
     eqTip: (v, d, day) => `거래량비 ${v}× · 분배일 ${d} · ${day} 진입`,
     eqFrozen: "등급은 진입일에 확정되며 이후 갱신되지 않습니다",
@@ -1037,20 +1037,21 @@ function renderHeat(minApps) {
 {
   const tbl = document.getElementById("tbl");
   // dir is each column's first-click direction: rank-like asc (best first), days/dates/score desc (largest/newest first)
-  // identity | current spell (rank, score, streak, entry) | lifetime archive
+  // identity | current spell (rank, score, entry, streak) | lifetime archive;
+  // streak sits beside days-on-board so full attendance vs gaps reads side by side
   const COLS = [
     {h: T.cols[0], v: s => s.t,              dir: 1},
     {h: T.cols[1], v: s => s.sec,            dir: 1},
     {h: T.cols[2], v: s => s.latest,         dir: 1},
     {h: T.cols[3], v: s => s.score,          dir: -1},
-    {h: T.cols[4], v: s => s.streak || null, dir: -1},
-    {h: T.cols[5], v: s => s.eq,             dir: -1},
+    {h: T.cols[4], v: s => s.eq,             dir: -1},
+    {h: T.cols[5], v: s => s.streak || null, dir: -1},
     {h: T.cols[6], v: s => s.apps,           dir: -1},
     {h: T.cols[7], v: s => s.best,           dir: 1},
     {h: T.cols[8], v: s => s.firstD,         dir: -1},
     {h: T.cols[9], v: s => s.lastD,          dir: -1},
   ];
-  const EQ_COL = 5;
+  const EQ_COL = 4;
   const thead = document.createElement("thead");
   const hr = document.createElement("tr");
   const ths = COLS.map(c => {
@@ -1080,7 +1081,7 @@ function renderHeat(minApps) {
       const tr = document.createElement("tr");
       [s.t, secName(s.sec), s.latest ? "#"+s.latest : "—",
        s.score !== null ? s.score.toFixed(2) : "—",
-       s.streak || "—", s.eq, s.apps, "#"+s.best, s.first, s.last]
+       s.eq, s.streak || "—", s.apps, "#"+s.best, s.first, s.last]
       .forEach((c, i) => {
         const td = document.createElement("td");
         if (i === 0) { td.className = "tk"; td.appendChild(tickerLink(c)); }
