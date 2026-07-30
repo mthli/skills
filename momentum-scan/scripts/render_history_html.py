@@ -332,6 +332,7 @@ select {
 }
 #tip .v { color: var(--ink); font-weight: 600; font-size: 13.5px; }
 #tip .k { display: inline-block; width: 14px; height: 2px; border-radius: 1px; vertical-align: middle; margin-right: 6px; }
+#tip .eqdot { vertical-align: middle; margin-right: 6px; }
 table { border-collapse: collapse; width: 100%; font-size: 13px; }
 th, td { text-align: right; padding: 6px 10px; border-bottom: 1px solid var(--grid); white-space: nowrap; }
 th { color: var(--muted); font-weight: 500; font-size: 12px; cursor: pointer; user-select: none; }
@@ -440,9 +441,8 @@ const I18N = {
     cols: ["Ticker", "Sector", "Days on board", "Best rank", "Current rank", "Streak", "Entry", "First seen", "Last seen", "Latest score"],
     eqLabels: ["Quiet drift-in", "Neutral", "Volume surge", "Surge + clean"],
     eqTip: (v, d, day) => `vol ${v}× · ${d} dist days · entered ${day}`,
-    eqNewKey: "entered this run",
-    eqOldKey: "earlier entry",
-    eqFrozen: "tier frozen at entry day, never updated",
+    eqFrozen: "Tier frozen at entry day, never updated",
+    eqFreshNote: "Filled = entered this run; ring = earlier entry — tier frozen at entry day, never updated.",
     score: "Score", ret: "Return", dd: "Drawdown",
     formula: "Score = Return ÷ |Drawdown|",
     formulaNote: " — return per 1% of drawdown endured (sub-1% drawdowns count as 1%).",
@@ -478,9 +478,8 @@ const I18N = {
     cols: ["代码", "行业", "在榜天数", "最佳排名", "当前排名", "连续在榜", "入场", "首次上榜", "最近上榜", "最新评分"],
     eqLabels: ["缩量飘入", "中性", "放量入场", "放量且干净"],
     eqTip: (v, d, day) => `量比 ${v}× · ${d} 个派发日 · ${day} 入场`,
-    eqNewKey: "本期新入榜",
-    eqOldKey: "历史入场",
     eqFrozen: "层级定格于入场日、不随行情更新",
+    eqFreshNote: "实心 = 本期新入榜；空心 = 历史入场——层级定格于入场日、不随行情更新。",
     score: "评分", ret: "收益", dd: "回撤",
     formula: "评分 = 收益 ÷ |回撤|",
     formulaNote: " —— 每承受 1% 回撤换来的收益（回撤不足 1% 按 1% 计）。",
@@ -521,9 +520,8 @@ const I18N = {
     cols: ["代號", "產業", "在榜天數", "最佳排名", "目前排名", "連續在榜", "進場", "首次上榜", "最近上榜", "最新評分"],
     eqLabels: ["縮量飄入", "中性", "放量進場", "放量且乾淨"],
     eqTip: (v, d, day) => `量比 ${v}× · ${d} 個派發日 · ${day} 進場`,
-    eqNewKey: "本期新進榜",
-    eqOldKey: "歷史進場",
     eqFrozen: "層級定格於進場日、不隨行情更新",
+    eqFreshNote: "實心 = 本期新進榜；空心 = 歷史進場——層級定格於進場日、不隨行情更新。",
     score: "評分", ret: "報酬", dd: "回撤",
     formula: "評分 = 報酬 ÷ |回撤|",
     formulaNote: " —— 每承受 1% 回撤換來的報酬（回撤不足 1% 按 1% 計）。",
@@ -564,9 +562,8 @@ const I18N = {
     cols: ["ティッカー", "セクター", "ランクイン日数", "最高順位", "現在順位", "連続日数", "エントリー", "初登場", "直近登場", "最新スコア"],
     eqLabels: ["薄商い流入", "中立", "出来高急増", "急増＋クリーン"],
     eqTip: (v, d, day) => `出来高比 ${v}× · 分配日 ${d} · ${day} エントリー`,
-    eqNewKey: "今回新規ランクイン",
-    eqOldKey: "過去のエントリー",
     eqFrozen: "階層はエントリー日で確定し、以後更新されません",
+    eqFreshNote: "塗りつぶし = 今回新規ランクイン、リング = 過去のエントリー——階層はエントリー日で確定し、以後更新されません。",
     score: "スコア", ret: "リターン", dd: "ドローダウン",
     formula: "スコア = リターン ÷ |ドローダウン|",
     formulaNote: " —— ドローダウン 1% あたりのリターン（1% 未満のドローダウンは 1% として計算）。",
@@ -607,9 +604,8 @@ const I18N = {
     cols: ["티커", "섹터", "진입 일수", "최고 순위", "현재 순위", "연속 일수", "진입", "첫 진입", "최근 진입", "최신 점수"],
     eqLabels: ["거래량 미달 진입", "중립", "거래량 급증", "급증+클린"],
     eqTip: (v, d, day) => `거래량비 ${v}× · 분배일 ${d} · ${day} 진입`,
-    eqNewKey: "이번 런 신규 진입",
-    eqOldKey: "과거 진입",
     eqFrozen: "등급은 진입일에 확정되며 이후 갱신되지 않습니다",
+    eqFreshNote: "채움 = 이번 런 신규 진입; 링 = 과거 진입 — 등급은 진입일에 확정되며 이후 갱신되지 않습니다.",
     score: "점수", ret: "수익률", dd: "낙폭",
     formula: "점수 = 수익률 ÷ |낙폭|",
     formulaNote: " —— 낙폭 1%당 얻은 수익률(1% 미만 낙폭은 1%로 계산).",
@@ -758,9 +754,12 @@ function showTip(x, y, build) {
   tip.style.top = (y - r.height - 12 < 4 ? y + 16 : y - r.height - 12) + "px";
 }
 const hideTip = () => { tip.style.display = "none"; delete tip.dataset.eq; };
-function tipRows(t, rows, keyColor) {
+function tipRows(t, rows, keyColor, keyClass) {
   const head = div(null, t);
-  if (keyColor) { const k = document.createElement("span"); k.className = "k"; k.style.background = keyColor; head.appendChild(k); }
+  // keyClass wins over keyColor: the eq-dot tip mirrors the exact dot
+  // being hovered (filled or ring) instead of the generic line-segment key.
+  if (keyClass) { const k = document.createElement("span"); k.className = keyClass; head.appendChild(k); }
+  else if (keyColor) { const k = document.createElement("span"); k.className = "k"; k.style.background = keyColor; head.appendChild(k); }
   const v = document.createElement("span"); v.className = "v"; v.textContent = rows[0]; head.appendChild(v);
   rows.slice(1).forEach(r => div(null, t, r));
 }
@@ -1080,7 +1079,7 @@ function renderHeat(minApps) {
               const r = dot.getBoundingClientRect();
               showTip(r.left + r.width / 2, r.top, t => tipRows(
                 t, [T.eqLabels[c], T.eqTip(s.eqv, s.eqd, s.eqDay), T.eqFrozen],
-                `var(--eq${c})`));
+                null, "eqdot eq" + c + (s.eqNew ? "" : " ring")));
               tip.dataset.eq = s.t;
             };
             dot.addEventListener("pointerenter", ev => {
@@ -1122,16 +1121,9 @@ function renderHeat(minApps) {
     k.appendChild(d);
     k.appendChild(document.createTextNode(T.eqLabels[q]));
   });
-  // Freshness pair (same tier color on purpose — same tier, two states):
-  // filled = spell began on the latest run; ring = older, frozen entry.
-  [["eqdot eq2", T.eqNewKey], ["eqdot eq2 ring", T.eqOldKey]].forEach(([cls, label]) => {
-    const k = div("key", leg);
-    const d = document.createElement("span");
-    d.className = cls;
-    k.appendChild(d);
-    k.appendChild(document.createTextNode(label));
-  });
-  leg.appendChild(document.createTextNode(T.eqFrozen));
+  // Freshness is explained in words, not sample dots: filled = spell
+  // began on the latest run; ring = older entry, tier frozen.
+  leg.appendChild(document.createTextNode(T.eqFreshNote));
 }
 
 {
