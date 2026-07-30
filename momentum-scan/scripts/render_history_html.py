@@ -309,13 +309,14 @@ svg text.dlabel { font-size: 11.5px; font-weight: 600; fill: var(--ink-2); }
 .legend .line { width: 14px; height: 2px; border-radius: 1px; }
 .legend .rect { width: 11px; height: 11px; border-radius: 3px; }
 .detail { position: relative; display: none; grid-template-columns: auto 1fr; gap: 8px 20px; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--grid); }
-.detail .dt-close { position: absolute; top: 10px; right: 0; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; padding: 0; border: none; background: none; border-radius: 6px; color: var(--muted); font-size: 15px; line-height: 1; cursor: pointer; }
+/* top = .detail padding-top (12) + half the .mlbl line (8) - half the button (11): centers on the label row */
+.detail .dt-close { position: absolute; top: 9px; right: 0; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; padding: 0; border: none; background: none; border-radius: 6px; color: var(--muted); font-size: 15px; line-height: 1; cursor: pointer; }
 .detail .dt-close:hover { color: var(--ink); background: var(--grid); }
 .detail .minis { display: flex; flex-wrap: wrap; gap: 20px; align-items: center; }
 .detail .dt-head { font-size: 13px; font-weight: 600; grid-row: span 2; }
 .detail .dt-note { grid-column: 2; font-size: 11.5px; color: var(--muted); }
 .dt-note code { font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; }
-.mini .mlbl { font-size: 11.5px; color: var(--muted); margin-bottom: 2px; }
+.mini .mlbl { font-size: 11.5px; line-height: 16px; color: var(--muted); margin-bottom: 2px; }
 .mini .mlbl b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; margin-left: 4px; }
 .topbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin: 0 0 20px; }
 .topbar .sub { margin-bottom: 0; }
