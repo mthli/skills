@@ -144,13 +144,17 @@ vite.config.ts.timestamp-*
 
 # Others
 **/__pycache__/
-# Scan runtime state: ignore regenerable caches (universe/sectors), but TRACK
+# Scan runtime state: ignore regenerable caches (universe), but TRACK
 # accumulated history — these are point-in-time measurements (options Vol/OI,
 # market breadth, daily ranks) that yfinance can't reconstruct after the fact.
+# sectors.json is tracked too: it is NOT cheaply regenerable (Yahoo throttles
+# Ticker.info hard, and delisted tickers lose their info entirely), and a
+# checkout without it silently renders every ticker as "Unknown" sector.
 **/state/*
 !**/state/history.csv
 !**/state/history/
 !**/state/history/**
+!**/state/sectors.json
 # premarket-brief personal positions (private account facts — keep the template
 # header in the repo, but never commit a user's real holdings)
 premarket-brief/positions.md

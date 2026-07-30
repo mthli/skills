@@ -1,0 +1,3767 @@
+{
+  "AAPL": {
+    "sector": "Technology",
+    "industry": "Consumer Electronics",
+    "ts": "2026-07-28T00:31:54.357757+00:00"
+  },
+  "AMZN": {
+    "sector": "Consumer Cyclical",
+    "industry": "Internet Retail",
+    "ts": "2026-07-28T00:31:54.355239+00:00"
+  },
+  "GOOGL": {
+    "sector": "Communication Services",
+    "industry": "Internet Content & Information",
+    "ts": "2026-07-28T00:31:54.359966+00:00"
+  },
+  "NVDA": {
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "ts": "2026-07-28T00:31:54.387755+00:00"
+  },
+  "PLTR": {
+    "sector": "Technology",
+    "industry": "Software - Infrastructure",
+    "ts": "2026-07-28T00:31:55.083649+00:00"
+  },
+  "SPY": {
+    "sector": "Other",
+    "industry": "",
+    "ts": "2026-05-23T12:36:12.679948+00:00"
+  },
+  "MSFT": {
+    "sector": "Technology",
+    "industry": "Software - Infrastructure",
+    "ts": "2026-07-28T00:31:54.375485+00:00"
+  },
+  "TSLA": {
+    "sector": "Consumer Cyclical",
+    "industry": "Auto Manufacturers",
+    "ts": "2026-07-28T00:31:54.681108+00:00"
+  },
+  "AMD": {
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "ts": "2026-07-28T00:31:54.720979+00:00"
+  },
+  "META": {
+    "sector": "Communication Services",
+    "industry": "Internet Content & Information",
+    "ts": "2026-07-28T00:31:54.676727+00:00"
+  },
+  "AVGO": {
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "ts": "2026-07-28T00:31:54.680088+00:00"
+  },
+  "JPM": {
+    "sector": "Financial Services",
+    "industry": "Banks - Diversified",
+    "ts": "2026-07-28T00:31:54.690900+00:00"
+  },
+  "V": {
+    "sector": "Financial Services",
+    "industry": "Credit Services",
+    "ts": "2026-07-02T00:05:52.764625+00:00"
+  },
+  "GOOG": {
+    "sector": "Communication Services",
+    "industry": "Internet Content & Information",
+    "ts": "2026-07-28T00:31:54.365738+00:00"
+  },
+  "WMT": {
+    "sector": "Other",
+    "industry": "",
+    "ts": "2026-07-01T00:05:13.122151+00:00"
+  },
+  "MU": {
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "ts": "2026-07-28T00:31:54.687689+00:00"
+  },
+  "TSM": {
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "ts": "2026-07-28T00:31:54.366928+00:00"
+  },
+  "BRK-B": {
+    "sector": "Financial Services",
+    "industry": "Insurance - Diversified",
+    "ts": "2026-07-29T00:31:19.459272+00:00"
+  },
+  "XOM": {
+    "sector": "Energy",
+    "industry": "Oil & Gas Integrated",
+    "ts": "2026-07-28T00:31:54.733355+00:00"
+  },
+  "JNJ": {
+    "sector": "Healthcare",
+    "industry": "Drug Manufacturers - General",
+    "ts": "2026-07-28T00:31:54.703615+00:00"
+  },
+  "BAC": {
+    "sector": "Financial Services",
+    "industry": "Banks - Diversified",
+    "ts": "2026-07-28T00:31:55.019007+00:00"
+  },
+  "ORCL": {
+    "sector": "Technology",
+    "industry": "Software - Infrastructure",
+    "ts": "2026-07-28T00:31:55.023826+00:00"
+  },
+  "ABBV": {
+    "sector": "Healthcare",
+    "industry": "Drug Manufacturers - General",
+    "ts": "2026-06-24T00:06:07.405522+00:00"
+  },
+  "INTC": {
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "ts": "2026-07-28T00:31:54.990695+00:00"
+  },
+  "COST": {
+    "sector": "Consumer Defensive",
+    "industry": "Discount Stores",
+    "ts": "2026-07-29T00:31:19.465135+00:00"
+  },
+  "CSCO": {
+    "sector": "Technology",
+    "industry": "Communication Equipment",
+    "ts": "2026-07-28T00:31:55.005699+00:00"
+  },
+  "CVX": {
+    "sector": "Energy",
+    "industry": "Oil & Gas Integrated",
+    "ts": "2026-07-29T00:31:19.457285+00:00"
+  },
+  "CAT": {
+    "sector": "Industrials",
+    "industry": "Farm & Heavy Construction Machinery",
+    "ts": "2026-07-28T00:31:55.045506+00:00"
+  },
+  "LRCX": {
+    "sector": "Technology",
+    "industry": "Semiconductor Equipment & Materials",
+    "ts": "2026-07-29T00:31:19.490377+00:00"
+  },
+  "KO": {
+    "sector": "Consumer Defensive",
+    "industry": "Beverages - Non-Alcoholic",
+    "ts": "2026-07-02T00:05:52.747611+00:00"
+  },
+  "C": {
+    "sector": "Financial Services",
+    "industry": "Banks - Diversified",
+    "ts": "2026-07-28T00:31:55.353374+00:00"
+  },
+  "GE": {
+    "sector": "Other",
+    "industry": "",
+    "ts": "2026-07-09T00:06:11.854673+00:00"
+  },
+  "AMAT": {
+    "sector": "Technology",
+    "industry": "Semiconductor Equipment & Materials",
+    "ts": "2026-07-28T00:31:54.994472+00:00"
+  },
+  "PM": {
+    "sector": "Consumer Defensive",
+    "industry": "Tobacco",
+    "ts": "2026-06-25T00:05:36.498978+00:00"
+  },
+  "BABA": {
+    "sector": "Consumer Cyclical",
+    "industry": "Internet Retail",
+    "ts": "2026-07-28T00:31:55.328451+00:00"
+  },
+  "NVS": {
+    "sector": "Healthcare",
+    "industry": "Drug Manufacturers - General",
+    "ts": "2026-07-29T00:31:19.467547+00:00"
+  },
+  "MRK": {
+    "sector": "Healthcare",
+    "industry": "Drug Manufacturers - General",
+    "ts": "2026-07-30T00:31:14.258434+00:00"
+  },
+  "RY": {
+    "sector": "Financial Services",
+    "industry": "Banks - Diversified",
+    "ts": "2026-07-23T00:31:11.711044+00:00"
+  },
+  "GEV": {
+    "sector": "Industrials",
+    "industry": "Specialty Industrial Machinery",
+    "ts": "2026-07-03T00:31:41.282815+00:00"
+  },
+  "ARM": {
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "ts": "2026-07-28T00:31:55.051016+00:00"
+  },
+  "SHEL": {
+    "sector": "Energy",
+    "industry": "Oil & Gas Integrated",
+    "ts": "2026-07-02T00:05:52.726659+00:00"
+  },
+  "IBM": {
+    "sector": "Technology",
+    "industry": "Information Technology Services",
+    "ts": "2026-07-28T00:31:55.307284+00:00"
+  },
+  "BHP": {
+    "sector": "Basic Materials",
+    "industry": "Other Industrial Metals & Mining",
+    "ts": "2026-07-28T00:31:55.633768+00:00"
+  },
+  "SAP": {
+    "sector": "Technology",
+    "industry": "Software - Application",
+    "ts": "2026-07-02T00:05:53.055147+00:00"
+  },
+  "WFC": {
+    "sector": "Financial Services",
+    "industry": "Banks - Diversified",
+    "ts": "2026-06-24T00:06:07.837415+00:00"
+  },
+  "QCOM": {
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "ts": "2026-07-28T00:31:55.411395+00:00"
+  },
+  "SNDK": {
+    "sector": "Technology",
+    "industry": "Computer Hardware",
+    "ts": "2026-07-28T00:31:55.336333+00:00"
+  },
+  "PEP": {
+    "sector": "Consumer Defensive",
+    "industry": "Beverages - Non-Alcoholic",
+    "ts": "2026-06-25T00:05:36.851061+00:00"
+  },
+  "VZ": {
+    "sector": "Communication Services",
+    "industry": "Telecom Services",
+    "ts": "2026-07-28T00:31:55.625251+00:00"
+  },
+  "ADI": {
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "ts": "2026-07-29T00:31:19.457878+00:00"
+  },
+  "PANW": {
+    "sector": "Technology",
+    "industry": "Software - Infrastructure",
+    "ts": "2026-07-30T00:31:14.253267+00:00"
+  },
+  "AMGN": {
+    "sector": "Healthcare",
+    "industry": "Drug Manufacturers - General",
+    "ts": "2026-07-18T00:34:20.464179+00:00"
+  },
+  "BA": {
+    "sector": "Industrials",
+    "industry": "Aerospace & Defense",
+    "ts": "2026-07-29T00:31:19.786196+00:00"
+  },
+  "DIS": {
+    "sector": "Communication Services",
+    "industry": "Entertainment",
+    "ts": "2026-07-28T00:31:55.662256+00:00"
+  },
+  "STX": {
+    "sector": "Technology",
+    "industry": "Computer Hardware",
+    "ts": "2026-07-28T00:31:55.635333+00:00"
+  },
+  "RIO": {
+    "sector": "Basic Materials",
+    "industry": "Other Industrial Metals & Mining",
+    "ts": "2026-07-28T00:31:55.739124+00:00"
+  },
+  "GILD": {
+    "sector": "Healthcare",
+    "industry": "Drug Manufacturers - General",
+    "ts": "2026-07-08T00:31:34.723684+00:00"
+  },
+  "MRVL": {
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "ts": "2026-07-28T00:31:55.392803+00:00"
+  },
+  "CRWD": {
+    "sector": "Technology",
+    "industry": "Software - Infrastructure",
+    "ts": "2026-07-02T00:05:53.064979+00:00"
+  },
+  "WDC": {
+    "sector": "Technology",
+    "industry": "Computer Hardware",
+    "ts": "2026-07-29T00:31:19.464316+00:00"
+  },
+  "APP": {
+    "sector": "Communication Services",
+    "industry": "Advertising Agencies",
+    "ts": "2026-06-25T00:05:36.863637+00:00"
+  },
+  "GLW": {
+    "sector": "Technology",
+    "industry": "Electronic Components",
+    "ts": "2026-07-28T00:31:55.698112+00:00"
+  },
+  "DELL": {
+    "sector": "Technology",
+    "industry": "Computer Hardware",
+    "ts": "2026-07-28T00:31:55.309519+00:00"
+  },
+  "UBER": {
+    "sector": "Technology",
+    "industry": "Software - Application",
+    "ts": "2026-07-28T00:31:55.722290+00:00"
+  },
+  "COP": {
+    "sector": "Energy",
+    "industry": "Oil & Gas E&P",
+    "ts": "2026-07-07T00:31:50.496643+00:00"
+  },
+  "SHOP": {
+    "sector": "Technology",
+    "industry": "Software - Application",
+    "ts": "2026-07-28T00:31:55.702594+00:00"
+  },
+  "ENB": {
+    "sector": "Energy",
+    "industry": "Oil & Gas Midstream",
+    "ts": "2026-07-24T00:32:01.802005+00:00"
+  },
+  "MO": {
+    "sector": "Consumer Defensive",
+    "industry": "Tobacco",
+    "ts": "2026-07-29T00:31:19.782129+00:00"
+  },
+  "BKNG": {
+    "sector": "Consumer Cyclical",
+    "industry": "Travel Services",
+    "ts": "2026-07-28T00:31:55.944612+00:00"
+  },
+  "CVS": {
+    "sector": "Healthcare",
+    "industry": "Healthcare Plans",
+    "ts": "2026-07-07T00:31:50.555490+00:00"
+  },
+  "BMY": {
+    "sector": "Healthcare",
+    "industry": "Drug Manufacturers - General",
+    "ts": "2026-07-28T00:31:55.954828+00:00"
+  },
+  "COF": {
+    "sector": "Financial Services",
+    "industry": "Credit Services",
+    "ts": "2026-07-02T00:05:53.067292+00:00"
+  },
+  "BP": {
+    "sector": "Energy",
+    "industry": "Oil & Gas Integrated",
+    "ts": "2026-07-07T00:31:50.899693+00:00"
+  },
+  "ACN": {
+    "sector": "Technology",
+    "industry": "Information Technology Services",
+    "ts": "2026-07-11T00:05:23.187641+00:00"
+  },
+  "NOW": {
+    "sector": "Technology",
+    "industry": "Software - Application",
+    "ts": "2026-07-28T00:31:55.957454+00:00"
+  },
+  "ADBE": {
+    "sector": "Technology",
+    "industry": "Software - Application",
+    "ts": "2026-07-28T00:31:56.067643+00:00"
+  },
+  "CEG": {
+    "sector": "Utilities",
+    "industry": "Utilities - Independent Power Producers",
+    "ts": "2026-07-02T00:05:53.062037+00:00"
+  },
+  "MDT": {
+    "sector": "Other",
+    "industry": "",
+    "ts": "2026-07-16T00:04:54.854029+00:00"
+  },
+  "TT": {
+    "sector": "Industrials",
+    "industry": "Building Products & Equipment",
+    "ts": "2026-05-23T12:44:29.718884+00:00"
+  },
+  "EQNR": {
+    "sector": "Energy",
+    "industry": "Oil & Gas Integrated",
+    "ts": "2026-07-29T00:31:19.795918+00:00"
+  },
+  "SNPS": {
+    "sector": "Technology",
+    "industry": "Software - Infrastructure",
+    "ts": "2026-07-28T00:31:56.254134+00:00"
+  },
+  "FDX": {
+    "sector": "Industrials",
+    "industry": "Integrated Freight & Logistics",
+    "ts": "2026-06-24T00:06:09.201061+00:00"
+  },
+  "FCX": {
+    "sector": "Basic Materials",
+    "industry": "Copper",
+    "ts": "2026-07-28T00:31:56.279147+00:00"
+  },
+  "ING": {
+    "sector": "Financial Services",
+    "industry": "Banks - Diversified",
+    "ts": "2026-05-23T12:44:30.036435+00:00"
+  },
+  "NOK": {
+    "sector": "Technology",
+    "industry": "Communication Equipment",
+    "ts": "2026-07-08T00:31:34.713761+00:00"
+  },
+  "SLB": {
+    "sector": "Energy",
+    "industry": "Oil & Gas Equipment & Services",
+    "ts": "2026-06-25T00:05:37.222736+00:00"
+  },
+  "KKR": {
+    "sector": "Financial Services",
+    "industry": "Asset Management",
+    "ts": "2026-07-30T00:31:14.278207+00:00"
+  },
+  "UPS": {
+    "sector": "Industrials",
+    "industry": "Integrated Freight & Logistics",
+    "ts": "2026-07-28T00:31:56.024923+00:00"
+  },
+  "ABNB": {
+    "sector": "Consumer Cyclical",
+    "industry": "Travel Services",
+    "ts": "2026-07-02T00:05:53.104489+00:00"
+  },
+  "BE": {
+    "sector": "Industrials",
+    "industry": "Electrical Equipment & Parts",
+    "ts": "2026-07-28T00:31:56.276564+00:00"
+  },
+  "CIEN": {
+    "sector": "Technology",
+    "industry": "Communication Equipment",
+    "ts": "2026-07-11T00:05:23.178552+00:00"
+  },
+  "RKLB": {
+    "sector": "Industrials",
+    "industry": "Aerospace & Defense",
+    "ts": "2026-07-28T00:31:56.665957+00:00"
+  },
+  "MPC": {
+    "sector": "Energy",
+    "industry": "Oil & Gas Refining & Marketing",
+    "ts": "2026-07-08T00:31:34.720990+00:00"
+  },
+  "BAM": {
+    "sector": "Financial Services",
+    "industry": "Asset Management",
+    "ts": "2026-06-24T00:06:09.203000+00:00"
+  },
+  "DDOG": {
+    "sector": "Technology",
+    "industry": "Software - Application",
+    "ts": "2026-07-28T00:31:56.057763+00:00"
+  },
+  "HLT": {
+    "sector": "Consumer Cyclical",
+    "industry": "Lodging",
+    "ts": "2026-05-23T12:44:30.761486+00:00"
+  },
+  "NET": {
+    "sector": "Technology",
+    "industry": "Software - Infrastructure",
+    "ts": "2026-07-28T00:31:56.017965+00:00"
+  },
+  "AEP": {
+    "sector": "Utilities",
+    "industry": "Utilities - Regulated Electric",
+    "ts": "2026-05-23T12:44:30.795850+00:00"
+  },
+  "COHR": {
+    "sector": "Technology",
+    "industry": "Scientific & Technical Instruments",
+    "ts": "2026-07-07T00:31:51.189995+00:00"
+  },
+  "GM": {
+    "sector": "Consumer Cyclical",
+    "industry": "Auto Manufacturers",
+    "ts": "2026-07-28T00:31:56.344215+00:00"
+  },
+  "RCL": {
+    "sector": "Consumer Cyclical",
+    "industry": "Travel Services",
+    "ts": "2026-06-24T00:06:08.869595+00:00"
+  },
+  "HOOD": {
+    "sector": "Financial Services",
+    "industry": "Capital Markets",
+    "ts": "2026-07-28T00:31:55.978383+00:00"
+  },
+  "NKE": {
+    "sector": "Consumer Cyclical",
+    "industry": "Footwear & Accessories",
+    "ts": "2026-07-28T00:31:56.398384+00:00"
+  },
+  "LITE": {
+    "sector": "Technology",
+    "industry": "Communication Equipment",
+    "ts": "2026-07-28T00:31:56.601185+00:00"
+  },
+  "NU": {
+    "sector": "Financial Services",
+    "industry": "Banks - Regional",
+    "ts": "2026-07-08T00:31:35.011154+00:00"
+  },
+  "OKE": {
+    "sector": "Energy",
+    "industry": "Oil & Gas Midstream",
+    "ts": "2026-05-23T12:44:31.291356+00:00"
+  },
+  "MSTR": {
+    "sector": "Technology",
+    "industry": "Software - Application",
+    "ts": "2026-07-28T00:31:57.074382+00:00"
+  },
+  "SNOW": {
+    "sector": "Technology",
+    "industry": "Software - Application",
+    "ts": "2026-07-02T00:05:53.382189+00:00"
+  },
+  "FANG": {
+    "sector": "Energy",
+    "industry": "Oil & Gas E&P",
+    "ts": "2026-07-23T00:31:11.693886+00:00"
+  },
+  "OXY": {
+    "sector": "Energy",
+    "industry": "Oil & Gas E&P",
+    "ts": "2026-07-29T00:31:20.103653+00:00"
+  },
+  "DVN": {
+    "sector": "Energy",
+    "industry": "Oil & Gas E&P",
+    "ts": "2026-07-07T00:31:51.358755+00:00"
+  },
+  "CRWV": {
+    "sector": "Technology",
+    "industry": "Software - Infrastructure",
+    "ts": "2026-07-28T00:31:56.668293+00:00"
+  },
+  "TER": {
+    "sector": "Technology",
+    "industry": "Semiconductor Equipment & Materials",
+    "ts": "2026-07-02T00:05:53.392210+00:00"
+  },
+  "EBAY": {
+    "sector": "Other",
+    "industry": "",
+    "ts": "2026-07-01T00:05:14.099434+00:00"
+  },
+  "F": {
+    "sector": "Consumer Cyclical",
+    "industry": "Auto Manufacturers",
+    "ts": "2026-07-28T00:31:56.622237+00:00"
+  },
+  "COIN": {
+    "sector": "Financial Services",
+    "industry": "Financial Data & Stock Exchanges",
+    "ts": "2026-07-28T00:31:56.918980+00:00"
+  },
+  "ALAB": {
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "ts": "2026-07-28T00:31:56.345973+00:00"
+  },
+  "NBIS": {
+    "sector": "Communication Services",
+    "industry": "Internet Content & Information",
+    "ts": "2026-07-28T00:31:56.616760+00:00"
+  },
+  "VST": {
+    "sector": "Utilities",
+    "industry": "Utilities - Independent Power Producers",
+    "ts": "2026-07-02T00:05:53.405501+00:00"
+  },
+  "CVNA": {
+    "sector": "Consumer Cyclical",
+    "industry": "Auto & Truck Dealerships",
+    "ts": "2026-07-28T00:31:56.738030+00:00"
+  },
+  "DAL": {
+    "sector": "Industrials",
+    "industry": "Airlines",
+    "ts": "2026-07-02T00:05:53.394030+00:00"
+  },
+  "BIDU": {
+    "sector": "Communication Services",
+    "industry": "Internet Content & Information",
+    "ts": "2026-06-25T00:05:37.247319+00:00"
+  },
+  "HPE": {
+    "sector": "Technology",
+    "industry": "Communication Equipment",
+    "ts": "2026-07-30T00:31:14.592071+00:00"
+  },
+  "CCJ": {
+    "sector": "Energy",
+    "industry": "Uranium",
+    "ts": "2026-06-24T00:06:09.900940+00:00"
+  },
+  "JD": {
+    "sector": "Consumer Cyclical",
+    "industry": "Internet Retail",
+    "ts": "2026-07-11T00:05:23.492984+00:00"
+  },
+  "KR": {
+    "sector": "Consumer Defensive",
+    "industry": "Grocery Stores",
+    "ts": "2026-07-07T00:31:51.514835+00:00"
+  },
+  "XYZ": {
+    "sector": "Other",
+    "industry": "",
+    "ts": "2026-07-01T00:05:14.095603+00:00"
+  },
+  "SATS": {
+    "sector": "Communication Services",
+    "industry": "Telecom Services",
+    "ts": "2026-05-23T12:44:32.757901+00:00"
+  },
+  "CRDO": {
+    "sector": "Other",
+    "industry": "",
+    "ts": "2026-07-03T00:31:42.668742+00:00"
+  },
+  "PEG": {
+    "sector": "Utilities",
+    "industry": "Utilities - Regulated Electric",
+    "ts": "2026-05-23T12:44:32.803639+00:00"
+  },
+  "KDP": {
+    "sector": "Other",
+    "industry": "",
+    "ts": "2026-07-01T00:05:14.206942+00:00"
+  },
+  "LYV": {
+    "sector": "Communication Services",
+    "industry": "Entertainment",
+    "ts": "2026-05-23T12:44:32.995917+00:00"
+  },
+  "JBL": {
+    "sector": "Technology",
+    "industry": "Electronic Components",
+    "ts": "2026-07-02T00:05:53.727778+00:00"
+  },
+  "ADM": {
+    "sector": "Consumer Defensive",
+    "industry": "Farm Products",
+    "ts": "2026-07-18T00:34:21.100801+00:00"
+  },
+  "IBKR": {
+    "sector": "Financial Services",
+    "industry": "Capital Markets",
+    "ts": "2026-07-28T00:31:56.876534+00:00"
+  },
+  "GFI": {
+    "sector": "Basic Materials",
+    "industry": "Gold",
+    "ts": "2026-07-29T00:31:20.137732+00:00"
+  },
+  "RBLX": {
+    "sector": "Other",
+    "industry": "",
+    "ts": "2026-07-01T00:05:14.475970+00:00"
+  },
+  "RVMD": {
+    "sector": "Healthcare",
+    "industry": "Biotechnology",
+    "ts": "2026-07-18T00:34:21.087255+00:00"
+  },
+  "TS": {
+    "sector": "Energy",
+    "industry": "Oil & Gas Equipment & Services",
+    "ts": "2026-05-23T12:44:33.454619+00:00"
+  },
+  "WDAY": {
+    "sector": "Technology",
+    "industry": "Software - Application",
+    "ts": "2026-07-28T00:31:57.001945+00:00"
+  },
+  "VICI": {
+    "sector": "Real Estate",
+    "industry": "REIT - Diversified",
+    "ts": "2026-06-25T00:05:37.572188+00:00"
+  },
+  "TCOM": {
+    "sector": "Consumer Cyclical",
+    "industry": "Travel Services",
+    "ts": "2026-06-25T00:05:37.594690+00:00"
+  },
+  "ZM": {
+    "sector": "Technology",
+    "industry": "Software - Application",
+    "ts": "2026-07-11T00:05:23.738867+00:00"
+  },
+  "RDDT": {
+    "sector": "Communication Services",
+    "industry": "Internet Content & Information",
+    "ts": "2026-07-30T00:31:14.606567+00:00"
+  },
+  "KHC": {
+    "sector": "Consumer Defensive",
+    "industry": "Packaged Foods",
+    "ts": "2026-07-02T00:05:53.744549+00:00"
+  },
+  "ZS": {
+    "sector": "Technology",
+    "industry": "Software - Infrastructure",
+    "ts": "2026-07-02T00:05:54.102544+00:00"
+  },
+  "CRCL": {
+    "sector": "Financial Services",
+    "industry": "Capital Markets",
+    "ts": "2026-07-28T00:31:57.638147+00:00"
+  },
+  "ASTS": {
+    "sector": "Technology",
+    "industry": "Communication Equipment",
+    "ts": "2026-07-28T00:31:57.324710+00:00"
+  },
+  "OTIS": {
+    "sector": "Industrials",
+    "industry": "Specialty Industrial Machinery",
+    "ts": "2026-05-23T12:44:34.011489+00:00"
+  },
+  "MDB": {
+    "sector": "Technology",
+    "industry": "Software - Infrastructure",
+    "ts": "2026-07-02T00:05:54.015213+00:00"
+  },
+  "NVT": {
+    "sector": "Industrials",
+    "industry": "Electrical Equipment & Parts",
+    "ts": "2026-06-25T00:05:37.618940+00:00"
+  },
+  "RPRX": {
+    "sector": "Healthcare",
+    "industry": "Biotechnology",
+    "ts": "2026-07-30T00:31:14.937874+00:00"
+  },
+  "P": {
+    "sector": "Technology",
+    "industry": "Computer Hardware",
+    "ts": "2026-07-29T00:31:20.420353+00:00"
+  },
+  "NTAP": {
+    "sector": "Technology",
+    "industry": "Software - Infrastructure",
+    "ts": "2026-07-02T00:05:53.716526+00:00"
+  },
+  "XPO": {
+    "sector": "Industrials",
+    "industry": "Trucking",
+    "ts": "2026-07-02T00:05:54.046742+00:00"
+  },
+  "DG": {
+    "sector": "Consumer Defensive",
+    "industry": "Discount Stores",
+    "ts": "2026-07-07T00:31:51.778322+00:00"
+  },
+  "AFRM": {
+    "sector": "Financial Services",
+    "industry": "Credit Services",
+    "ts": "2026-06-25T00:05:37.924070+00:00"
+  },
+  "FIS": {
+    "sector": "Technology",
+    "industry": "Information Technology Services",
+    "ts": "2026-07-02T00:05:54.168055+00:00"
+  },
+  "SBAC": {
+    "sector": "Real Estate",
+    "industry": "REIT - Specialty",
+    "ts": "2026-05-23T12:44:34.672973+00:00"
+  },
+  "AKAM": {
+    "sector": "Technology",
+    "industry": "Software - Infrastructure",
+    "ts": "2026-05-23T12:44:34.797560+00:00"
+  },
+  "SMCI": {
+    "sector": "Technology",
+    "industry": "Computer Hardware",
+    "ts": "2026-07-29T00:31:20.749459+00:00"
+  },
+  "SOFI": {
+    "sector": "Financial Services",
+    "industry": "Credit Services",
+    "ts": "2026-07-29T00:31:20.439795+00:00"
+  },
+  "IONQ": {
+    "sector": "Technology",
+    "industry": "Computer Hardware",
+    "ts": "2026-07-28T00:31:57.648333+00:00"
+  },
+  "SW": {
+    "sector": "Consumer Cyclical",
+    "industry": "Packaging & Containers",
+    "ts": "2026-07-28T00:31:57.396158+00:00"
+  },
+  "HPQ": {
+    "sector": "Other",
+    "industry": "",
+    "ts": "2026-07-03T00:31:43.568294+00:00"
+  },
+  "MRNA": {
+    "sector": "Healthcare",
+    "industry": "Biotechnology",
+    "ts": "2026-07-28T00:31:57.232965+00:00"
+  },
+  "IREN": {
+    "sector": "Financial Services",
+    "industry": "Capital Markets",
+    "ts": "2026-07-28T00:31:57.743133+00:00"
+  },
+  "TTMI": {
+    "sector": "Technology",
+    "industry": "Electronic Components",
+    "ts": "2026-07-08T00:31:35.366777+00:00"
+  },
+  "FUTU": {
+    "sector": "Financial Services",
+    "industry": "Capital Markets",
+    "ts": "2026-07-08T00:31:35.680941+00:00"
+  },
+  "DOCN": {
+    "sector": "Technology",
+    "industry": "Software - Infrastructure",
+    "ts": "2026-07-29T00:31:20.764248+00:00"
+  },
+  "OKTA": {
+    "sector": "Technology",
+    "industry": "Software - Infrastructure",
+    "ts": "2026-06-25T00:05:38.248702+00:00"
+  },
+  "NIO": {
+    "sector": "Consumer Cyclical",
+    "industry": "Auto Manufacturers",
+    "ts": "2026-05-23T12:44:35.447111+00:00"
+  },
+  "RBRK": {
+    "sector": "Technology",
+    "industry": "Software - Infrastructure",
+    "ts": "2026-07-18T00:34:21.427577+00:00"
+  },
+  "SMMT": {
+    "sector": "Healthcare",
+    "industry": "Biotechnology",
+    "ts": "2026-07-07T00:31:52.489503+00:00"
+  },
+  "TOST": {
+    "sector": "Technology",
+    "industry": "Software - Infrastructure",
+    "ts": "2026-07-11T00:05:23.534638+00:00"
+  },
+  "AAOI": {
+    "sector": "Technology",
+    "industry": "Communication Equipment",
+    "ts": "2026-07-28T00:31:58.122667+00:00"
+  },
+  "SMTC": {
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "ts": "2026-07-29T00:31:21.059862+00:00"
+  },
+  "BWA": {
+    "sector": "Consumer Cyclical",
+    "industry": "Auto Parts",
+    "ts": "2026-06-25T00:05:38.516169+00:00"
+  },
+  "MKC": {
+    "sector": "Consumer Defensive",
+    "industry": "Packaged Foods",
+    "ts": "2026-07-07T00:31:52.276141+00:00"
+  },
+  "BJ": {
+    "sector": "Consumer Defensive",
+    "industry": "Discount Stores",
+    "ts": "2026-06-25T00:05:38.879473+00:00"
+  },
+  "FIG": {
+    "sector": "Technology",
+    "industry": "Software - Application",
+    "ts": "2026-07-02T00:05:54.764061+00:00"
+  },
+  "ALGN": {
+    "sector": "Healthcare",
+    "industry": "Medical Instruments & Supplies",
+    "ts": "2026-07-28T00:31:57.892451+00:00"
+  },
+  "U": {
+    "sector": "Technology",
+    "industry": "Software - Application",
+    "ts": "2026-07-02T00:05:54.507914+00:00"
+  },
+  "APLD": {
+    "sector": "Technology",
+    "industry": "Information Technology Services",
+    "ts": "2026-07-28T00:31:58.176481+00:00"
+  },
+  "SWKS": {
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "ts": "2026-07-02T00:05:54.646624+00:00"
+  },
+  "BMNR": {
+    "sector": "Financial Services",
+    "industry": "Capital Markets",
+    "ts": "2026-07-28T00:31:58.287932+00:00"
+  },
+  "OKLO": {
+    "sector": "Utilities",
+    "industry": "Utilities - Independent Power Producers",
+    "ts": "2026-07-29T00:31:21.107642+00:00"
+  },
+  "NTNX": {
+    "sector": "Technology",
+    "industry": "Software - Infrastructure",
+    "ts": "2026-07-02T00:05:54.412639+00:00"
+  },
+  "CPT": {
+    "sector": "Real Estate",
+    "industry": "REIT - Residential",
+    "ts": "2026-05-23T12:44:36.832064+00:00"
+  },
+  "WULF": {
+    "sector": "Financial Services",
+    "industry": "Capital Markets",
+    "ts": "2026-07-28T00:31:57.987485+00:00"
+  },
+  "HUBS": {
+    "sector": "Technology",
+    "industry": "Software - Application",
+    "ts": "2026-07-24T00:32:02.386414+00:00"
+  },
+  "HL": {
+    "sector": "Basic Materials",
+    "industry": "Other Precious Metals & Mining",
+    "ts": "2026-07-11T00:05:24.067297+00:00"
+  },
+  "GME": {
+    "sector": "Consumer Cyclical",
+    "industry": "Specialty Retail",
+    "ts": "2026-07-18T00:34:22.120559+00:00"
+  },
+  "MP": {
+    "sector": "Basic Materials",
+    "industry": "Other Industrial Metals & Mining",
+    "ts": "2026-07-30T00:31:15.255068+00:00"
+  },
+  "JOBY": {
+    "sector": "Industrials",
+    "industry": "Airports & Air Services",
+    "ts": "2026-07-22T00:31:04.381465+00:00"
+  },
+  "HUT": {
+    "sector": "Financial Services",
+    "industry": "Capital Markets",
+    "ts": "2026-07-02T00:05:54.388088+00:00"
+  },
+  "AG": {
+    "sector": "Basic Materials",
+    "industry": "Silver",
+    "ts": "2026-07-18T00:34:22.431191+00:00"
+  },
+  "QRVO": {
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "ts": "2026-05-23T12:44:37.326151+00:00"
+  },
+  "RIOT": {
+    "sector": "Financial Services",
+    "industry": "Capital Markets",
+    "ts": "2026-07-02T00:05:54.681275+00:00"
+  },
+  "BVN": {
+    "sector": "Basic Materials",
+    "industry": "Other Precious Metals & Mining",
+    "ts": "2026-05-23T12:44:37.398812+00:00"
+  },
+  "AAL": {
+    "sector": "Industrials",
+    "industry": "Airlines",
+    "ts": "2026-07-28T00:31:57.969330+00:00"
+  },
+  "Z": {
+    "sector": "Communication Services",
+    "industry": "Internet Content & Information",
+    "ts": "2026-07-24T00:32:02.713398+00:00"
+  },
+  "AVAV": {
+    "sector": "Industrials",
+    "industry": "Aerospace & Defense",
+    "ts": "2026-07-02T00:05:55.057366+00:00"
+  },
+  "TEM": {
+    "sector": "Healthcare",
+    "industry": "Health Information Services",
+    "ts": "2026-07-28T00:31:58.067789+00:00"
+  },
+  "BLDR": {
+    "sector": "Industrials",
+    "industry": "Building Products & Equipment",
+    "ts": "2026-07-30T00:31:15.281317+00:00"
+  },
+  "CIFR": {
+    "sector": "Technology",
+    "industry": "Information Technology Services",
+    "ts": "2026-07-28T00:31:58.212872+00:00"
+  },
+  "CORZ": {
+    "sector": "Technology",
+    "industry": "Software - Infrastructure",
+    "ts": "2026-07-28T00:31:58.547973+00:00"
+  },
+  "NCLH": {
+    "sector": "Consumer Cyclical",
+    "industry": "Travel Services",
+    "ts": "2026-07-28T00:31:58.274658+00:00"
+  },
+  "CELH": {
+    "sector": "Consumer Defensive",
+    "industry": "Beverages - Non-Alcoholic",
+    "ts": "2026-07-02T00:05:55.077321+00:00"
+  },
+  "QBTS": {
+    "sector": "Technology",
+    "industry": "Computer Hardware",
+    "ts": "2026-07-28T00:31:58.492011+00:00"
+  },
+  "OSCR": {
+    "sector": "Healthcare",
+    "industry": "Healthcare Plans",
+    "ts": "2026-07-02T00:05:54.736767+00:00"
+  },
+  "NXE": {
+    "sector": "Energy",
+    "industry": "Uranium",
+    "ts": "2026-05-23T12:44:38.204705+00:00"
+  },
+  "ENPH": {
+    "sector": "Technology",
+    "industry": "Solar",
+    "ts": "2026-07-29T00:31:21.422732+00:00"
+  },
+  "AXTI": {
+    "sector": "Technology",
+    "industry": "Semiconductor Equipment & Materials",
+    "ts": "2026-06-25T00:05:39.699109+00:00"
+  },
+  "SYM": {
+    "sector": "Industrials",
+    "industry": "Specialty Industrial Machinery",
+    "ts": "2026-07-24T00:32:02.824665+00:00"
+  },
+  "UEC": {
+    "sector": "Energy",
+    "industry": "Uranium",
+    "ts": "2026-05-23T12:44:38.392380+00:00"
+  },
+  "GTES": {
+    "sector": "Industrials",
+    "industry": "Specialty Industrial Machinery",
+    "ts": "2026-07-07T00:31:52.776446+00:00"
+  },
+  "BIRK": {
+    "sector": "Consumer Cyclical",
+    "industry": "Footwear & Accessories",
+    "ts": "2026-05-23T12:44:38.524080+00:00"
+  },
+  "S": {
+    "sector": "Technology",
+    "industry": "Software - Infrastructure",
+    "ts": "2026-07-18T00:34:22.709439+00:00"
+  },
+  "WH": {
+    "sector": "Consumer Cyclical",
+    "industry": "Lodging",
+    "ts": "2026-07-18T00:34:22.738859+00:00"
+  },
+  "TTAN": {
+    "sector": "Technology",
+    "industry": "Software - Application",
+    "ts": "2026-05-23T12:44:38.770394+00:00"
+  },
+  "CLF": {
+    "sector": "Basic Materials",
+    "industry": "Steel",
+    "ts": "2026-07-18T00:34:22.758522+00:00"
+  },
+  "RGTI": {
+    "sector": "Technology",
+    "industry": "Computer Hardware",
+    "ts": "2026-07-28T00:31:58.650472+00:00"
+  },
+  "VSH": {
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "ts": "2026-07-08T00:31:36.027127+00:00"
+  },
+  "CAR": {
+    "sector": "Industrials",
+    "industry": "Rental & Leasing Services",
+    "ts": "2026-06-25T00:05:39.361453+00:00"
+  },
+  "LUNR": {
+    "sector": "Industrials",
+    "industry": "Aerospace & Defense",
+    "ts": "2026-05-23T12:44:39.027385+00:00"
+  },
+  "GLXY": {
+    "sector": "Financial Services",
+    "industry": "Capital Markets",
+    "ts": "2026-07-02T00:05:55.299690+00:00"
+  },
+  "SBRA": {
+    "sector": "Real Estate",
+    "industry": "REIT - Healthcare Facilities",
+    "ts": "2026-07-22T00:31:04.971266+00:00"
+  },
+  "NVTS": {
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "ts": "2026-06-25T00:05:39.681409+00:00"
+  },
+  "HIMS": {
+    "sector": "Healthcare",
+    "industry": "Drug Manufacturers - Specialty & Generic",
+    "ts": "2026-07-02T00:05:55.035130+00:00"
+  },
+  "PLUG": {
+    "sector": "Industrials",
+    "industry": "Electrical Equipment & Parts",
+    "ts": "2026-05-23T12:44:39.386737+00:00"
+  },
+  "MARA": {
+    "sector": "Financial Services",
+    "industry": "Capital Markets",
+    "ts": "2026-06-25T00:05:39.639929+00:00"
+  },
+  "USAR": {
+    "sector": "Basic Materials",
+    "industry": "Other Industrial Metals & Mining",
+    "ts": "2026-07-07T00:31:52.967559+00:00"
+  },
+  "PG": {
+    "sector": "Consumer Defensive",
+    "industry": "Household & Personal Products",
+    "ts": "2026-07-02T00:05:52.763277+00:00"
+  },
+  "LLY": {
+    "sector": "Other",
+    "industry": "",
+    "ts": "2026-07-01T00:05:13.118797+00:00"
+  },
+  "PDD": {
+    "sector": "Consumer Cyclical",
+    "industry": "Internet Retail",
+    "ts": "2026-07-02T00:05:53.079539+00:00"
+  },
+  "UNH": {
+    "sector": "Healthcare",
+    "industry": "Healthcare Plans",
+    "ts": "2026-07-02T00:05:52.734922+00:00"
+  },
+  "SCHW": {
+    "sector": "Financial Services",
+    "industry": "Capital Markets",
+    "ts": "2026-07-03T00:31:41.276429+00:00"
+  },
+  "GS": {
+    "sector": "Financial Services",
+    "industry": "Capital Markets",
+    "ts": "2026-07-02T00:05:52.740588+00:00"
+  },
+  "BX": {
+    "sector": "Financial Services",
+    "industry": "Asset Management",
+    "ts": "2026-07-02T00:05:53.057030+00:00"
+  },
+  "HD": {
+    "sector": "Consumer Cyclical",
+    "industry": "Home Improvement Retail",
+    "ts": "2026-07-02T00:05:52.746140+00:00"
+  },
+  "LOW": {
+    "sector": "Consumer Cyclical",
+    "industry": "Home Improvement Retail",
+    "ts": "2026-07-07T00:31:50.847240+00:00"
+  },
+  "FTNT": {
+    "sector": "Technology",
+    "industry": "Software - Infrastructure",
+    "ts": "2026-07-07T00:31:50.868891+00:00"
+  },
+  "ELV": {
+    "sector": "Healthcare",
+    "industry": "Healthcare Plans",
+    "ts": "2026-07-11T00:05:23.157277+00:00"
+  },
+  "ICE": {
+    "sector": "Financial Services",
+    "industry": "Financial Data & Stock Exchanges",
+    "ts": "2026-07-02T00:05:53.390257+00:00"
+  },
+  "VALE": {
+    "sector": "Basic Materials",
+    "industry": "Other Industrial Metals & Mining",
+    "ts": "2026-05-27T17:37:20.833340+00:00"
+  },
+  "CNI": {
+    "sector": "Industrials",
+    "industry": "Railroads",
+    "ts": "2026-07-22T00:31:02.974624+00:00"
+  },
+  "ET": {
+    "sector": "Energy",
+    "industry": "Oil & Gas Midstream",
+    "ts": "2026-05-27T17:37:20.852883+00:00"
+  },
+  "B": {
+    "sector": "Basic Materials",
+    "industry": "Gold",
+    "ts": "2026-07-08T00:31:35.003800+00:00"
+  },
+  "CBRS": {
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "ts": "2026-07-02T00:05:53.697461+00:00"
+  },
+  "MCHP": {
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "ts": "2026-07-02T00:05:53.442486+00:00"
+  },
+  "EW": {
+    "sector": "Healthcare",
+    "industry": "Medical Devices",
+    "ts": "2026-07-22T00:31:03.294237+00:00"
+  },
+  "UMC": {
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "ts": "2026-07-07T00:31:51.219213+00:00"
+  },
+  "PYPL": {
+    "sector": "Financial Services",
+    "industry": "Credit Services",
+    "ts": "2026-07-08T00:31:35.321031+00:00"
+  },
+  "GFS": {
+    "sector": "Other",
+    "industry": "",
+    "ts": "2026-07-03T00:31:42.704426+00:00"
+  },
+  "A": {
+    "sector": "Healthcare",
+    "industry": "Diagnostics & Research",
+    "ts": "2026-05-27T17:37:21.372250+00:00"
+  },
+  "CPNG": {
+    "sector": "Consumer Cyclical",
+    "industry": "Internet Retail",
+    "ts": "2026-07-28T00:31:56.990137+00:00"
+  },
+  "UAL": {
+    "sector": "Industrials",
+    "industry": "Airlines",
+    "ts": "2026-07-22T00:31:03.331057+00:00"
+  },
+  "LEN": {
+    "sector": "Consumer Cyclical",
+    "industry": "Residential Construction",
+    "ts": "2026-05-27T17:37:21.825668+00:00"
+  },
+  "AS": {
+    "sector": "Consumer Cyclical",
+    "industry": "Leisure",
+    "ts": "2026-07-22T00:31:03.942597+00:00"
+  },
+  "RCI": {
+    "sector": "Communication Services",
+    "industry": "Telecom Services",
+    "ts": "2026-05-27T17:37:21.840482+00:00"
+  },
+  "DKS": {
+    "sector": "Consumer Cyclical",
+    "industry": "Specialty Retail",
+    "ts": "2026-05-27T17:37:21.846574+00:00"
+  },
+  "DLTR": {
+    "sector": "Consumer Defensive",
+    "industry": "Discount Stores",
+    "ts": "2026-05-27T17:37:21.885475+00:00"
+  },
+  "VTRS": {
+    "sector": "Healthcare",
+    "industry": "Drug Manufacturers - Specialty & Generic",
+    "ts": "2026-05-27T17:37:21.887295+00:00"
+  },
+  "ROKU": {
+    "sector": "Communication Services",
+    "industry": "Entertainment",
+    "ts": "2026-07-28T00:31:57.402068+00:00"
+  },
+  "NLY": {
+    "sector": "Real Estate",
+    "industry": "REIT - Mortgage",
+    "ts": "2026-07-23T00:31:12.040392+00:00"
+  },
+  "LULU": {
+    "sector": "Consumer Cyclical",
+    "industry": "Apparel Retail",
+    "ts": "2026-07-08T00:31:35.808146+00:00"
+  },
+  "CDW": {
+    "sector": "Technology",
+    "industry": "Information Technology Services",
+    "ts": "2026-05-27T17:37:22.339388+00:00"
+  },
+  "BBY": {
+    "sector": "Consumer Cyclical",
+    "industry": "Specialty Retail",
+    "ts": "2026-07-02T00:05:54.368790+00:00"
+  },
+  "IOT": {
+    "sector": "Technology",
+    "industry": "Software - Infrastructure",
+    "ts": "2026-07-08T00:31:35.416947+00:00"
+  },
+  "FPS": {
+    "sector": "Industrials",
+    "industry": "Electrical Equipment & Parts",
+    "ts": "2026-07-22T00:31:04.042248+00:00"
+  },
+  "AGNC": {
+    "sector": "Other",
+    "industry": "",
+    "ts": "2026-07-09T00:06:13.196865+00:00"
+  },
+  "ESI": {
+    "sector": "Basic Materials",
+    "industry": "Specialty Chemicals",
+    "ts": "2026-07-07T00:31:52.430331+00:00"
+  },
+  "LUMN": {
+    "sector": "Communication Services",
+    "industry": "Telecom Services",
+    "ts": "2026-07-24T00:32:02.723486+00:00"
+  },
+  "FRO": {
+    "sector": "Energy",
+    "industry": "Oil & Gas Midstream",
+    "ts": "2026-07-18T00:34:22.405988+00:00"
+  },
+  "CART": {
+    "sector": "Consumer Cyclical",
+    "industry": "Internet Retail",
+    "ts": "2026-07-11T00:05:23.898288+00:00"
+  },
+  "LEVI": {
+    "sector": "Consumer Cyclical",
+    "industry": "Apparel Manufacturing",
+    "ts": "2026-05-27T17:37:22.844900+00:00"
+  },
+  "GAP": {
+    "sector": "Consumer Cyclical",
+    "industry": "Apparel Retail",
+    "ts": "2026-07-24T00:32:02.761406+00:00"
+  },
+  "EMN": {
+    "sector": "Basic Materials",
+    "industry": "Specialty Chemicals",
+    "ts": "2026-07-24T00:32:02.476487+00:00"
+  },
+  "FLY": {
+    "sector": "Industrials",
+    "industry": "Aerospace & Defense",
+    "ts": "2026-05-27T17:37:22.927375+00:00"
+  },
+  "FLR": {
+    "sector": "Industrials",
+    "industry": "Engineering & Construction",
+    "ts": "2026-07-02T00:05:55.086531+00:00"
+  },
+  "CGON": {
+    "sector": "Healthcare",
+    "industry": "Biotechnology",
+    "ts": "2026-07-11T00:05:24.163733+00:00"
+  },
+  "KLAR": {
+    "sector": "Financial Services",
+    "industry": "Credit Services",
+    "ts": "2026-07-08T00:31:36.036074+00:00"
+  },
+  "HRB": {
+    "sector": "Consumer Cyclical",
+    "industry": "Personal Services",
+    "ts": "2026-05-27T17:37:23.339685+00:00"
+  },
+  "IEP": {
+    "sector": "Energy",
+    "industry": "Oil & Gas Refining & Marketing",
+    "ts": "2026-05-27T17:37:23.353484+00:00"
+  },
+  "SBUX": {
+    "sector": "Consumer Cyclical",
+    "industry": "Restaurants",
+    "ts": "2026-07-07T00:31:50.861329+00:00"
+  },
+  "CNQ": {
+    "sector": "Energy",
+    "industry": "Oil & Gas E&P",
+    "ts": "2026-06-01T15:52:37.016466+00:00"
+  },
+  "MCD": {
+    "sector": "Consumer Cyclical",
+    "industry": "Restaurants",
+    "ts": "2026-07-03T00:31:40.264867+00:00"
+  },
+  "CMCSA": {
+    "sector": "Communication Services",
+    "industry": "Telecom Services",
+    "ts": "2026-07-07T00:31:51.132178+00:00"
+  },
+  "ADP": {
+    "sector": "Technology",
+    "industry": "Software - Application",
+    "ts": "2026-07-11T00:05:23.185565+00:00"
+  },
+  "CRM": {
+    "sector": "Technology",
+    "industry": "Software - Application",
+    "ts": "2026-07-07T00:31:50.538568+00:00"
+  },
+  "MAR": {
+    "sector": "Consumer Cyclical",
+    "industry": "Lodging",
+    "ts": "2026-06-01T15:52:37.062347+00:00"
+  },
+  "PBR": {
+    "sector": "Energy",
+    "industry": "Oil & Gas Integrated",
+    "ts": "2026-07-07T00:31:50.866904+00:00"
+  },
+  "NGG": {
+    "sector": "Utilities",
+    "industry": "Utilities - Regulated Electric",
+    "ts": "2026-06-01T15:52:37.484517+00:00"
+  },
+  "BSX": {
+    "sector": "Healthcare",
+    "industry": "Medical Devices",
+    "ts": "2026-07-07T00:31:51.203420+00:00"
+  },
+  "USB": {
+    "sector": "Financial Services",
+    "industry": "Banks - Regional",
+    "ts": "2026-07-04T00:05:21.998665+00:00"
+  },
+  "BCS": {
+    "sector": "Financial Services",
+    "industry": "Banks - Diversified",
+    "ts": "2026-07-18T00:34:20.446494+00:00"
+  },
+  "ORLY": {
+    "sector": "Consumer Cyclical",
+    "industry": "Auto Parts",
+    "ts": "2026-07-07T00:31:51.205179+00:00"
+  },
+  "SHW": {
+    "sector": "Basic Materials",
+    "industry": "Specialty Chemicals",
+    "ts": "2026-06-01T15:52:37.547807+00:00"
+  },
+  "DB": {
+    "sector": "Financial Services",
+    "industry": "Banks - Regional",
+    "ts": "2026-07-04T00:05:23.047580+00:00"
+  },
+  "D": {
+    "sector": "Utilities",
+    "industry": "Utilities - Regulated Electric",
+    "ts": "2026-06-01T15:52:37.623198+00:00"
+  },
+  "O": {
+    "sector": "Real Estate",
+    "industry": "REIT - Retail",
+    "ts": "2026-06-01T15:52:37.952231+00:00"
+  },
+  "TTWO": {
+    "sector": "Communication Services",
+    "industry": "Electronic Gaming & Multimedia",
+    "ts": "2026-07-18T00:34:20.789554+00:00"
+  },
+  "SE": {
+    "sector": "Consumer Cyclical",
+    "industry": "Internet Retail",
+    "ts": "2026-07-24T00:32:02.058994+00:00"
+  },
+  "ON": {
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "ts": "2026-07-07T00:31:51.461356+00:00"
+  },
+  "RKT": {
+    "sector": "Financial Services",
+    "industry": "Mortgage Finance",
+    "ts": "2026-07-08T00:31:35.077597+00:00"
+  },
+  "TGT": {
+    "sector": "Consumer Defensive",
+    "industry": "Discount Stores",
+    "ts": "2026-07-08T00:31:35.039180+00:00"
+  },
+  "KVUE": {
+    "sector": "Consumer Defensive",
+    "industry": "Household & Personal Products",
+    "ts": "2026-07-11T00:05:23.513727+00:00"
+  },
+  "ZTS": {
+    "sector": "Healthcare",
+    "industry": "Drug Manufacturers - Specialty & Generic",
+    "ts": "2026-06-01T15:52:38.118527+00:00"
+  },
+  "LVS": {
+    "sector": "Consumer Cyclical",
+    "industry": "Resorts & Casinos",
+    "ts": "2026-07-22T00:31:03.644787+00:00"
+  },
+  "TWLO": {
+    "sector": "Technology",
+    "industry": "Software - Infrastructure",
+    "ts": "2026-07-07T00:31:51.695052+00:00"
+  },
+  "EC": {
+    "sector": "Energy",
+    "industry": "Oil & Gas Integrated",
+    "ts": "2026-06-01T15:52:38.472984+00:00"
+  },
+  "VEEV": {
+    "sector": "Healthcare",
+    "industry": "Health Information Services",
+    "ts": "2026-06-01T15:52:38.522136+00:00"
+  },
+  "RF": {
+    "sector": "Financial Services",
+    "industry": "Banks - Regional",
+    "ts": "2026-06-01T15:52:38.549164+00:00"
+  },
+  "FSLR": {
+    "sector": "Technology",
+    "industry": "Solar",
+    "ts": "2026-07-18T00:34:21.120746+00:00"
+  },
+  "TSN": {
+    "sector": "Consumer Defensive",
+    "industry": "Farm Products",
+    "ts": "2026-07-29T00:31:20.455679+00:00"
+  },
+  "PAAS": {
+    "sector": "Basic Materials",
+    "industry": "Gold",
+    "ts": "2026-07-08T00:31:35.367303+00:00"
+  },
+  "LYB": {
+    "sector": "Basic Materials",
+    "industry": "Specialty Chemicals",
+    "ts": "2026-07-08T00:31:35.405473+00:00"
+  },
+  "TEAM": {
+    "sector": "Other",
+    "industry": "",
+    "ts": "2026-07-03T00:31:43.577731+00:00"
+  },
+  "CF": {
+    "sector": "Basic Materials",
+    "industry": "Agricultural Inputs",
+    "ts": "2026-07-07T00:31:52.167234+00:00"
+  },
+  "RIVN": {
+    "sector": "Consumer Cyclical",
+    "industry": "Auto Manufacturers",
+    "ts": "2026-07-07T00:31:51.911470+00:00"
+  },
+  "GEN": {
+    "sector": "Technology",
+    "industry": "Software - Infrastructure",
+    "ts": "2026-06-01T15:52:39.040198+00:00"
+  },
+  "SKM": {
+    "sector": "Communication Services",
+    "industry": "Telecom Services",
+    "ts": "2026-07-18T00:34:21.750504+00:00"
+  },
+  "RMBS": {
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "ts": "2026-07-18T00:34:21.783317+00:00"
+  },
+  "APA": {
+    "sector": "Energy",
+    "industry": "Oil & Gas E&P",
+    "ts": "2026-07-08T00:31:35.947920+00:00"
+  },
+  "QXO": {
+    "sector": "Industrials",
+    "industry": "Industrial Distribution",
+    "ts": "2026-07-18T00:34:21.439419+00:00"
+  },
+  "KTOS": {
+    "sector": "Industrials",
+    "industry": "Aerospace & Defense",
+    "ts": "2026-07-03T00:31:44.256794+00:00"
+  },
+  "MGM": {
+    "sector": "Consumer Cyclical",
+    "industry": "Resorts & Casinos",
+    "ts": "2026-07-24T00:32:02.388694+00:00"
+  },
+  "FROG": {
+    "sector": "Technology",
+    "industry": "Software - Application",
+    "ts": "2026-07-07T00:31:52.854864+00:00"
+  },
+  "SAIL": {
+    "sector": "Technology",
+    "industry": "Software - Infrastructure",
+    "ts": "2026-06-01T15:52:39.555693+00:00"
+  },
+  "NOV": {
+    "sector": "Energy",
+    "industry": "Oil & Gas Equipment & Services",
+    "ts": "2026-06-01T15:52:39.556097+00:00"
+  },
+  "VIAV": {
+    "sector": "Technology",
+    "industry": "Communication Equipment",
+    "ts": "2026-06-01T15:52:39.586786+00:00"
+  },
+  "GTX": {
+    "sector": "Consumer Cyclical",
+    "industry": "Auto Parts",
+    "ts": "2026-07-11T00:05:24.435297+00:00"
+  },
+  "ZETA": {
+    "sector": "Technology",
+    "industry": "Software - Infrastructure",
+    "ts": "2026-07-11T00:05:24.475010+00:00"
+  },
+  "LQDA": {
+    "sector": "Healthcare",
+    "industry": "Drug Manufacturers - Specialty & Generic",
+    "ts": "2026-07-18T00:34:22.449038+00:00"
+  },
+  "CE": {
+    "sector": "Basic Materials",
+    "industry": "Chemicals",
+    "ts": "2026-07-22T00:31:04.965161+00:00"
+  },
+  "SONY": {
+    "sector": "Technology",
+    "industry": "Consumer Electronics",
+    "ts": "2026-06-03T02:09:18.779580+00:00"
+  },
+  "DHR": {
+    "sector": "Healthcare",
+    "industry": "Diagnostics & Research",
+    "ts": "2026-07-17T00:05:37.745934+00:00"
+  },
+  "TXN": {
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "ts": "2026-07-18T00:34:20.456291+00:00"
+  },
+  "ASML": {
+    "sector": "Technology",
+    "industry": "Semiconductor Equipment & Materials",
+    "ts": "2026-07-18T00:34:20.451483+00:00"
+  },
+  "NVO": {
+    "sector": "Healthcare",
+    "industry": "Drug Manufacturers - General",
+    "ts": "2026-07-11T00:05:23.192837+00:00"
+  },
+  "TMO": {
+    "sector": "Healthcare",
+    "industry": "Diagnostics & Research",
+    "ts": "2026-07-18T00:34:20.466091+00:00"
+  },
+  "NFLX": {
+    "sector": "Communication Services",
+    "industry": "Entertainment",
+    "ts": "2026-07-07T00:31:50.689415+00:00"
+  },
+  "INTU": {
+    "sector": "Other",
+    "industry": "",
+    "ts": "2026-07-09T00:06:11.847794+00:00"
+  },
+  "DE": {
+    "sector": "Industrials",
+    "industry": "Farm & Heavy Construction Machinery",
+    "ts": "2026-06-03T02:09:19.338295+00:00"
+  },
+  "BN": {
+    "sector": "Financial Services",
+    "industry": "Asset Management",
+    "ts": "2026-07-22T00:31:02.962275+00:00"
+  },
+  "BNS": {
+    "sector": "Financial Services",
+    "industry": "Banks - Diversified",
+    "ts": "2026-07-07T00:31:51.059244+00:00"
+  },
+  "CTAS": {
+    "sector": "Industrials",
+    "industry": "Specialty Business Services",
+    "ts": "2026-06-03T02:09:19.642762+00:00"
+  },
+  "WPM": {
+    "sector": "Basic Materials",
+    "industry": "Gold",
+    "ts": "2026-06-03T02:09:19.701366+00:00"
+  },
+  "STM": {
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "ts": "2026-07-08T00:31:34.996461+00:00"
+  },
+  "PCAR": {
+    "sector": "Industrials",
+    "industry": "Farm & Heavy Construction Machinery",
+    "ts": "2026-07-22T00:31:03.308412+00:00"
+  },
+  "PWR": {
+    "sector": "Industrials",
+    "industry": "Engineering & Construction",
+    "ts": "2026-06-03T02:09:19.880137+00:00"
+  },
+  "INFY": {
+    "sector": "Technology",
+    "industry": "Information Technology Services",
+    "ts": "2026-07-22T00:31:03.316295+00:00"
+  },
+  "FLEX": {
+    "sector": "Technology",
+    "industry": "Electronic Components",
+    "ts": "2026-07-18T00:34:20.793610+00:00"
+  },
+  "CMG": {
+    "sector": "Consumer Cyclical",
+    "industry": "Restaurants",
+    "ts": "2026-07-23T00:31:11.710183+00:00"
+  },
+  "STT": {
+    "sector": "Financial Services",
+    "industry": "Asset Management",
+    "ts": "2026-07-24T00:32:02.063061+00:00"
+  },
+  "VG": {
+    "sector": "Energy",
+    "industry": "Oil & Gas Midstream",
+    "ts": "2026-07-28T00:31:57.184568+00:00"
+  },
+  "HIG": {
+    "sector": "Financial Services",
+    "industry": "Insurance - Diversified",
+    "ts": "2026-07-18T00:34:21.118863+00:00"
+  },
+  "ODFL": {
+    "sector": "Industrials",
+    "industry": "Trucking",
+    "ts": "2026-06-03T02:09:20.439447+00:00"
+  },
+  "MTSI": {
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "ts": "2026-07-22T00:31:03.943742+00:00"
+  },
+  "PCG": {
+    "sector": "Utilities",
+    "industry": "Utilities - Regulated Electric",
+    "ts": "2026-07-23T00:31:11.696066+00:00"
+  },
+  "HAL": {
+    "sector": "Energy",
+    "industry": "Oil & Gas Equipment & Services",
+    "ts": "2026-07-07T00:31:51.586453+00:00"
+  },
+  "STZ": {
+    "sector": "Consumer Defensive",
+    "industry": "Beverages - Brewers",
+    "ts": "2026-07-07T00:31:51.872744+00:00"
+  },
+  "KEY": {
+    "sector": "Financial Services",
+    "industry": "Banks - Regional",
+    "ts": "2026-06-03T02:09:20.828462+00:00"
+  },
+  "ROL": {
+    "sector": "Consumer Cyclical",
+    "industry": "Personal Services",
+    "ts": "2026-06-03T02:09:20.943040+00:00"
+  },
+  "APG": {
+    "sector": "Industrials",
+    "industry": "Engineering & Construction",
+    "ts": "2026-06-03T02:09:21.024620+00:00"
+  },
+  "AA": {
+    "sector": "Basic Materials",
+    "industry": "Aluminum",
+    "ts": "2026-07-07T00:31:52.254526+00:00"
+  },
+  "AMKR": {
+    "sector": "Technology",
+    "industry": "Semiconductor Equipment & Materials",
+    "ts": "2026-07-28T00:31:57.578114+00:00"
+  },
+  "PL": {
+    "sector": "Other",
+    "industry": "",
+    "ts": "2026-07-09T00:06:13.202766+00:00"
+  },
+  "DECK": {
+    "sector": "Consumer Cyclical",
+    "industry": "Footwear & Accessories",
+    "ts": "2026-07-23T00:31:12.041525+00:00"
+  },
+  "CHKP": {
+    "sector": "Technology",
+    "industry": "Software - Infrastructure",
+    "ts": "2026-07-18T00:34:21.444962+00:00"
+  },
+  "DINO": {
+    "sector": "Energy",
+    "industry": "Oil & Gas Refining & Marketing",
+    "ts": "2026-07-11T00:05:23.809008+00:00"
+  },
+  "APTV": {
+    "sector": "Consumer Cyclical",
+    "industry": "Auto Parts",
+    "ts": "2026-06-03T02:09:21.535216+00:00"
+  },
+  "ONON": {
+    "sector": "Consumer Cyclical",
+    "industry": "Footwear & Accessories",
+    "ts": "2026-07-07T00:31:52.376099+00:00"
+  },
+  "KNX": {
+    "sector": "Industrials",
+    "industry": "Trucking",
+    "ts": "2026-07-18T00:34:21.760998+00:00"
+  },
+  "IONS": {
+    "sector": "Healthcare",
+    "industry": "Biotechnology",
+    "ts": "2026-07-08T00:31:35.742331+00:00"
+  },
+  "ABVX": {
+    "sector": "Healthcare",
+    "industry": "Biotechnology",
+    "ts": "2026-06-03T02:09:21.909620+00:00"
+  },
+  "CHWY": {
+    "sector": "Consumer Cyclical",
+    "industry": "Internet Retail",
+    "ts": "2026-07-08T00:31:36.152178+00:00"
+  },
+  "ST": {
+    "sector": "Technology",
+    "industry": "Scientific & Technical Instruments",
+    "ts": "2026-06-03T02:09:22.045032+00:00"
+  },
+  "MOH": {
+    "sector": "Healthcare",
+    "industry": "Healthcare Plans",
+    "ts": "2026-07-23T00:31:12.344881+00:00"
+  },
+  "INGM": {
+    "sector": "Technology",
+    "industry": "Information Technology Services",
+    "ts": "2026-07-18T00:34:22.669164+00:00"
+  },
+  "AVT": {
+    "sector": "Technology",
+    "industry": "Electronics & Computer Distribution",
+    "ts": "2026-06-03T02:09:22.278068+00:00"
+  },
+  "POR": {
+    "sector": "Utilities",
+    "industry": "Utilities - Regulated Electric",
+    "ts": "2026-06-03T02:09:22.378508+00:00"
+  },
+  "PATH": {
+    "sector": "Technology",
+    "industry": "Software - Infrastructure",
+    "ts": "2026-07-23T00:31:12.711007+00:00"
+  },
+  "LBRT": {
+    "sector": "Energy",
+    "industry": "Oil & Gas Equipment & Services",
+    "ts": "2026-06-03T02:09:22.530192+00:00"
+  },
+  "GXO": {
+    "sector": "Industrials",
+    "industry": "Integrated Freight & Logistics",
+    "ts": "2026-07-29T00:31:21.410135+00:00"
+  },
+  "BLSH": {
+    "sector": "Technology",
+    "industry": "Software - Infrastructure",
+    "ts": "2026-06-03T02:09:22.645759+00:00"
+  },
+  "M": {
+    "sector": "Consumer Cyclical",
+    "industry": "Department Stores",
+    "ts": "2026-07-11T00:05:24.437008+00:00"
+  },
+  "KMX": {
+    "sector": "Consumer Cyclical",
+    "industry": "Auto & Truck Dealerships",
+    "ts": "2026-06-03T02:09:22.873804+00:00"
+  },
+  "BB": {
+    "sector": "Technology",
+    "industry": "Software - Infrastructure",
+    "ts": "2026-07-07T00:31:53.079008+00:00"
+  },
+  "TMUS": {
+    "sector": "Communication Services",
+    "industry": "Telecom Services",
+    "ts": "2026-07-08T00:31:34.692454+00:00"
+  },
+  "WM": {
+    "sector": "Industrials",
+    "industry": "Waste Management",
+    "ts": "2026-06-03T17:48:36.230159+00:00"
+  },
+  "MA": {
+    "sector": "Financial Services",
+    "industry": "Credit Services",
+    "ts": "2026-07-07T00:31:50.530373+00:00"
+  },
+  "AXP": {
+    "sector": "Financial Services",
+    "industry": "Credit Services",
+    "ts": "2026-07-07T00:31:50.528555+00:00"
+  },
+  "VRT": {
+    "sector": "Industrials",
+    "industry": "Electrical Equipment & Parts",
+    "ts": "2026-07-07T00:31:50.815863+00:00"
+  },
+  "HON": {
+    "sector": "Industrials",
+    "industry": "Conglomerates",
+    "ts": "2026-07-24T00:32:02.056774+00:00"
+  },
+  "SPOT": {
+    "sector": "Communication Services",
+    "industry": "Internet Content & Information",
+    "ts": "2026-07-24T00:32:01.741861+00:00"
+  },
+  "CL": {
+    "sector": "Consumer Defensive",
+    "industry": "Household & Personal Products",
+    "ts": "2026-07-30T00:31:14.256502+00:00"
+  },
+  "ECL": {
+    "sector": "Basic Materials",
+    "industry": "Specialty Chemicals",
+    "ts": "2026-07-08T00:31:35.157145+00:00"
+  },
+  "AFL": {
+    "sector": "Financial Services",
+    "industry": "Insurance - Life",
+    "ts": "2026-06-03T17:48:36.688157+00:00"
+  },
+  "FERG": {
+    "sector": "Industrials",
+    "industry": "Industrial Distribution",
+    "ts": "2026-06-03T17:48:36.691646+00:00"
+  },
+  "KMB": {
+    "sector": "Consumer Defensive",
+    "industry": "Household & Personal Products",
+    "ts": "2026-07-29T00:31:20.119730+00:00"
+  },
+  "PPL": {
+    "sector": "Utilities",
+    "industry": "Utilities - Regulated Electric",
+    "ts": "2026-06-03T17:48:36.744764+00:00"
+  },
+  "FISV": {
+    "sector": "Other",
+    "industry": "",
+    "ts": "2026-07-07T00:31:51.834179+00:00"
+  },
+  "YPF": {
+    "sector": "Energy",
+    "industry": "Oil & Gas Integrated",
+    "ts": "2026-07-07T00:31:51.930650+00:00"
+  },
+  "WMG": {
+    "sector": "Communication Services",
+    "industry": "Entertainment",
+    "ts": "2026-06-03T17:48:36.836095+00:00"
+  },
+  "MXL": {
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "ts": "2026-07-28T00:31:58.437921+00:00"
+  },
+  "AUR": {
+    "sector": "Consumer Cyclical",
+    "industry": "Auto Parts",
+    "ts": "2026-06-03T17:48:37.172785+00:00"
+  },
+  "W": {
+    "sector": "Consumer Cyclical",
+    "industry": "Internet Retail",
+    "ts": "2026-07-11T00:05:23.848700+00:00"
+  },
+  "FIVE": {
+    "sector": "Consumer Cyclical",
+    "industry": "Specialty Retail",
+    "ts": "2026-06-03T17:48:37.197592+00:00"
+  },
+  "BROS": {
+    "sector": "Consumer Cyclical",
+    "industry": "Restaurants",
+    "ts": "2026-07-30T00:31:15.292369+00:00"
+  },
+  "FIGR": {
+    "sector": "Financial Services",
+    "industry": "Capital Markets",
+    "ts": "2026-07-18T00:34:22.452389+00:00"
+  },
+  "BXSL": {
+    "sector": "Financial Services",
+    "industry": "Asset Management",
+    "ts": "2026-06-03T17:48:37.271637+00:00"
+  },
+  "CROX": {
+    "sector": "Consumer Cyclical",
+    "industry": "Footwear & Accessories",
+    "ts": "2026-07-11T00:05:24.213124+00:00"
+  },
+  "PFE": {
+    "sector": "Healthcare",
+    "industry": "Drug Manufacturers - General",
+    "ts": "2026-07-07T00:31:50.521101+00:00"
+  },
+  "PNC": {
+    "sector": "Financial Services",
+    "industry": "Banks - Regional",
+    "ts": "2026-07-07T00:31:51.016628+00:00"
+  },
+  "T": {
+    "sector": "Communication Services",
+    "industry": "Telecom Services",
+    "ts": "2026-07-07T00:31:50.562908+00:00"
+  },
+  "NEE": {
+    "sector": "Utilities",
+    "industry": "Utilities - Regulated Electric",
+    "ts": "2026-07-11T00:05:23.167297+00:00"
+  },
+  "CLS": {
+    "sector": "Technology",
+    "industry": "Electronic Components",
+    "ts": "2026-07-22T00:31:03.324428+00:00"
+  },
+  "EXC": {
+    "sector": "Utilities",
+    "industry": "Utilities - Regulated Electric",
+    "ts": "2026-06-05T12:14:50.962963+00:00"
+  },
+  "HSBC": {
+    "sector": "Financial Services",
+    "industry": "Banks - Diversified",
+    "ts": "2026-06-08T18:55:39.256236+00:00"
+  },
+  "ABT": {
+    "sector": "Healthcare",
+    "industry": "Medical Devices",
+    "ts": "2026-07-24T00:32:01.735605+00:00"
+  },
+  "VMC": {
+    "sector": "Basic Materials",
+    "industry": "Building Materials",
+    "ts": "2026-06-08T18:55:41.020810+00:00"
+  },
+  "RTX": {
+    "sector": "Industrials",
+    "industry": "Aerospace & Defense",
+    "ts": "2026-07-24T00:32:01.742927+00:00"
+  },
+  "ISRG": {
+    "sector": "Healthcare",
+    "industry": "Medical Instruments & Supplies",
+    "ts": "2026-07-24T00:32:01.761724+00:00"
+  },
+  "EQX": {
+    "sector": "Basic Materials",
+    "industry": "Gold",
+    "ts": "2026-06-09T00:07:07.405616+00:00"
+  },
+  "TTD": {
+    "sector": "Communication Services",
+    "industry": "Advertising Agencies",
+    "ts": "2026-07-18T00:34:22.352065+00:00"
+  },
+  "MS": {
+    "sector": "Financial Services",
+    "industry": "Capital Markets",
+    "ts": "2026-07-18T00:34:20.477317+00:00"
+  },
+  "LMT": {
+    "sector": "Industrials",
+    "industry": "Aerospace & Defense",
+    "ts": "2026-07-24T00:32:01.729646+00:00"
+  },
+  "NEM": {
+    "sector": "Basic Materials",
+    "industry": "Gold",
+    "ts": "2026-07-22T00:31:02.990978+00:00"
+  },
+  "UNP": {
+    "sector": "Other",
+    "industry": "",
+    "ts": "2026-07-16T00:04:54.871994+00:00"
+  },
+  "CSX": {
+    "sector": "Industrials",
+    "industry": "Railroads",
+    "ts": "2026-07-23T00:31:11.691539+00:00"
+  },
+  "CME": {
+    "sector": "Financial Services",
+    "industry": "Financial Data & Stock Exchanges",
+    "ts": "2026-07-22T00:31:05.011899+00:00"
+  },
+  "APH": {
+    "sector": "Technology",
+    "industry": "Electronic Components",
+    "ts": "2026-07-22T00:31:02.989599+00:00"
+  },
+  "AEM": {
+    "sector": "Basic Materials",
+    "industry": "Gold",
+    "ts": "2026-07-30T00:31:14.265801+00:00"
+  },
+  "SU": {
+    "sector": "Energy",
+    "industry": "Oil & Gas Integrated",
+    "ts": "2026-07-29T00:31:19.797538+00:00"
+  },
+  "MMM": {
+    "sector": "Industrials",
+    "industry": "Conglomerates",
+    "ts": "2026-07-18T00:34:20.790950+00:00"
+  },
+  "VLO": {
+    "sector": "Energy",
+    "industry": "Oil & Gas Refining & Marketing",
+    "ts": "2026-07-24T00:32:01.744749+00:00"
+  },
+  "KMI": {
+    "sector": "Energy",
+    "industry": "Oil & Gas Midstream",
+    "ts": "2026-06-11T00:07:35.870831+00:00"
+  },
+  "SPG": {
+    "sector": "Real Estate",
+    "industry": "REIT - Retail",
+    "ts": "2026-06-11T00:07:35.898849+00:00"
+  },
+  "PSX": {
+    "sector": "Energy",
+    "industry": "Oil & Gas Refining & Marketing",
+    "ts": "2026-06-11T00:07:35.910139+00:00"
+  },
+  "ADSK": {
+    "sector": "Technology",
+    "industry": "Software - Application",
+    "ts": "2026-07-29T00:31:20.101433+00:00"
+  },
+  "HSY": {
+    "sector": "Consumer Defensive",
+    "industry": "Confectioners",
+    "ts": "2026-07-30T00:31:14.644125+00:00"
+  },
+  "CCL": {
+    "sector": "Consumer Cyclical",
+    "industry": "Travel Services",
+    "ts": "2026-07-18T00:34:21.113341+00:00"
+  },
+  "CNC": {
+    "sector": "Healthcare",
+    "industry": "Healthcare Plans",
+    "ts": "2026-07-22T00:31:03.621182+00:00"
+  },
+  "EL": {
+    "sector": "Consumer Defensive",
+    "industry": "Household & Personal Products",
+    "ts": "2026-07-30T00:31:14.925080+00:00"
+  },
+  "TPR": {
+    "sector": "Consumer Cyclical",
+    "industry": "Luxury Goods",
+    "ts": "2026-07-18T00:34:21.115580+00:00"
+  },
+  "DOW": {
+    "sector": "Basic Materials",
+    "industry": "Chemicals",
+    "ts": "2026-07-24T00:32:02.069535+00:00"
+  },
+  "INSM": {
+    "sector": "Healthcare",
+    "industry": "Biotechnology",
+    "ts": "2026-06-11T00:07:36.413695+00:00"
+  },
+  "AER": {
+    "sector": "Industrials",
+    "industry": "Rental & Leasing Services",
+    "ts": "2026-06-11T00:07:36.457075+00:00"
+  },
+  "LUV": {
+    "sector": "Industrials",
+    "industry": "Airlines",
+    "ts": "2026-07-22T00:31:03.654745+00:00"
+  },
+  "NXT": {
+    "sector": "Technology",
+    "industry": "Solar",
+    "ts": "2026-07-18T00:34:21.433721+00:00"
+  },
+  "ALLY": {
+    "sector": "Financial Services",
+    "industry": "Credit Services",
+    "ts": "2026-07-18T00:34:21.447702+00:00"
+  },
+  "FLUT": {
+    "sector": "Consumer Cyclical",
+    "industry": "Gambling",
+    "ts": "2026-06-11T00:07:36.794950+00:00"
+  },
+  "AGI": {
+    "sector": "Basic Materials",
+    "industry": "Gold",
+    "ts": "2026-07-18T00:34:21.752419+00:00"
+  },
+  "HST": {
+    "sector": "Real Estate",
+    "industry": "REIT - Hotel & Motel",
+    "ts": "2026-06-11T00:07:36.887672+00:00"
+  },
+  "SN": {
+    "sector": "Consumer Cyclical",
+    "industry": "Furnishings, Fixtures & Appliances",
+    "ts": "2026-07-23T00:31:12.030372+00:00"
+  },
+  "DKNG": {
+    "sector": "Consumer Cyclical",
+    "industry": "Gambling",
+    "ts": "2026-07-28T00:31:57.814661+00:00"
+  },
+  "PSKY": {
+    "sector": "Communication Services",
+    "industry": "Entertainment",
+    "ts": "2026-07-29T00:31:21.088944+00:00"
+  },
+  "XPEV": {
+    "sector": "Consumer Cyclical",
+    "industry": "Auto Manufacturers",
+    "ts": "2026-06-11T00:07:37.013700+00:00"
+  },
+  "PINS": {
+    "sector": "Communication Services",
+    "industry": "Internet Content & Information",
+    "ts": "2026-07-28T00:31:57.861136+00:00"
+  },
+  "BAH": {
+    "sector": "Industrials",
+    "industry": "Consulting Services",
+    "ts": "2026-06-11T00:07:37.263816+00:00"
+  },
+  "SIRI": {
+    "sector": "Communication Services",
+    "industry": "Entertainment",
+    "ts": "2026-07-18T00:34:22.070308+00:00"
+  },
+  "NE": {
+    "sector": "Energy",
+    "industry": "Oil & Gas Drilling",
+    "ts": "2026-06-11T00:07:37.368899+00:00"
+  },
+  "PRMB": {
+    "sector": "Consumer Defensive",
+    "industry": "Beverages - Non-Alcoholic",
+    "ts": "2026-06-11T00:07:37.380255+00:00"
+  },
+  "SGHC": {
+    "sector": "Consumer Cyclical",
+    "industry": "Gambling",
+    "ts": "2026-07-23T00:31:12.375541+00:00"
+  },
+  "BILI": {
+    "sector": "Communication Services",
+    "industry": "Internet Content & Information",
+    "ts": "2026-06-11T00:07:37.480918+00:00"
+  },
+  "MOS": {
+    "sector": "Basic Materials",
+    "industry": "Agricultural Inputs",
+    "ts": "2026-06-11T00:07:37.515384+00:00"
+  },
+  "VFC": {
+    "sector": "Consumer Cyclical",
+    "industry": "Apparel Manufacturing",
+    "ts": "2026-07-29T00:31:21.371275+00:00"
+  },
+  "CORT": {
+    "sector": "Healthcare",
+    "industry": "Biotechnology",
+    "ts": "2026-06-11T00:07:37.742284+00:00"
+  },
+  "CENX": {
+    "sector": "Basic Materials",
+    "industry": "Aluminum",
+    "ts": "2026-06-11T00:07:37.790677+00:00"
+  },
+  "SNDR": {
+    "sector": "Industrials",
+    "industry": "Trucking",
+    "ts": "2026-06-11T00:07:37.850531+00:00"
+  },
+  "PRIM": {
+    "sector": "Industrials",
+    "industry": "Engineering & Construction",
+    "ts": "2026-06-11T00:07:37.860292+00:00"
+  },
+  "FND": {
+    "sector": "Consumer Cyclical",
+    "industry": "Home Improvement Retail",
+    "ts": "2026-07-24T00:32:02.741622+00:00"
+  },
+  "ALM": {
+    "sector": "Basic Materials",
+    "industry": "Other Industrial Metals & Mining",
+    "ts": "2026-06-11T00:07:37.991214+00:00"
+  },
+  "AMT": {
+    "sector": "Real Estate",
+    "industry": "REIT - Specialty",
+    "ts": "2026-06-12T00:52:45.215798+00:00"
+  },
+  "TRV": {
+    "sector": "Financial Services",
+    "industry": "Insurance - Property & Casualty",
+    "ts": "2026-07-18T00:34:20.773206+00:00"
+  },
+  "WMB": {
+    "sector": "Energy",
+    "industry": "Oil & Gas Midstream",
+    "ts": "2026-06-12T00:52:45.273329+00:00"
+  },
+  "CB": {
+    "sector": "Financial Services",
+    "industry": "Insurance - Property & Casualty",
+    "ts": "2026-06-12T00:52:45.283964+00:00"
+  },
+  "NXPI": {
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "ts": "2026-07-18T00:34:20.780897+00:00"
+  },
+  "DASH": {
+    "sector": "Consumer Cyclical",
+    "industry": "Internet Retail",
+    "ts": "2026-07-18T00:34:20.458592+00:00"
+  },
+  "GD": {
+    "sector": "Industrials",
+    "industry": "Aerospace & Defense",
+    "ts": "2026-06-12T00:52:45.410496+00:00"
+  },
+  "MCK": {
+    "sector": "Healthcare",
+    "industry": "Medical Distribution",
+    "ts": "2026-06-12T00:52:45.415058+00:00"
+  },
+  "AME": {
+    "sector": "Industrials",
+    "industry": "Specialty Industrial Machinery",
+    "ts": "2026-06-12T00:52:45.813418+00:00"
+  },
+  "AU": {
+    "sector": "Basic Materials",
+    "industry": "Gold",
+    "ts": "2026-07-18T00:34:20.795782+00:00"
+  },
+  "TEVA": {
+    "sector": "Healthcare",
+    "industry": "Drug Manufacturers - Specialty & Generic",
+    "ts": "2026-07-29T00:31:20.106441+00:00"
+  },
+  "Q": {
+    "sector": "Technology",
+    "industry": "Semiconductor Equipment & Materials",
+    "ts": "2026-07-24T00:32:02.074072+00:00"
+  },
+  "SUNB": {
+    "sector": "Industrials",
+    "industry": "Rental & Leasing Services",
+    "ts": "2026-06-12T00:52:45.909678+00:00"
+  },
+  "NRG": {
+    "sector": "Utilities",
+    "industry": "Utilities - Independent Power Producers",
+    "ts": "2026-07-23T00:31:12.023098+00:00"
+  },
+  "CTSH": {
+    "sector": "Technology",
+    "industry": "Information Technology Services",
+    "ts": "2026-07-18T00:34:21.405625+00:00"
+  },
+  "PHM": {
+    "sector": "Consumer Cyclical",
+    "industry": "Residential Construction",
+    "ts": "2026-07-22T00:31:03.686163+00:00"
+  },
+  "ATI": {
+    "sector": "Industrials",
+    "industry": "Metal Fabrication",
+    "ts": "2026-06-12T00:52:46.389844+00:00"
+  },
+  "CHTR": {
+    "sector": "Communication Services",
+    "industry": "Telecom Services",
+    "ts": "2026-07-24T00:32:02.132572+00:00"
+  },
+  "ALB": {
+    "sector": "Basic Materials",
+    "industry": "Specialty Chemicals",
+    "ts": "2026-07-23T00:31:12.038778+00:00"
+  },
+  "PTC": {
+    "sector": "Technology",
+    "industry": "Software - Application",
+    "ts": "2026-07-18T00:34:21.449875+00:00"
+  },
+  "CSGP": {
+    "sector": "Real Estate",
+    "industry": "Real Estate Services",
+    "ts": "2026-07-22T00:31:04.043865+00:00"
+  },
+  "MOD": {
+    "sector": "Consumer Cyclical",
+    "industry": "Auto Parts",
+    "ts": "2026-07-30T00:31:14.966343+00:00"
+  },
+  "JHX": {
+    "sector": "Basic Materials",
+    "industry": "Building Materials",
+    "ts": "2026-06-12T00:52:46.757875+00:00"
+  },
+  "J": {
+    "sector": "Industrials",
+    "industry": "Engineering & Construction",
+    "ts": "2026-06-12T00:52:46.868269+00:00"
+  },
+  "DT": {
+    "sector": "Technology",
+    "industry": "Software - Application",
+    "ts": "2026-07-18T00:34:21.722672+00:00"
+  },
+  "WYNN": {
+    "sector": "Consumer Cyclical",
+    "industry": "Resorts & Casinos",
+    "ts": "2026-07-18T00:34:22.080032+00:00"
+  },
+  "FLS": {
+    "sector": "Industrials",
+    "industry": "Specialty Industrial Machinery",
+    "ts": "2026-07-18T00:34:22.413055+00:00"
+  },
+  "PCOR": {
+    "sector": "Technology",
+    "industry": "Software - Application",
+    "ts": "2026-07-30T00:31:15.329476+00:00"
+  },
+  "MTCH": {
+    "sector": "Communication Services",
+    "industry": "Internet Content & Information",
+    "ts": "2026-07-23T00:31:12.365452+00:00"
+  },
+  "SNAP": {
+    "sector": "Communication Services",
+    "industry": "Internet Content & Information",
+    "ts": "2026-07-18T00:34:22.451695+00:00"
+  },
+  "PBF": {
+    "sector": "Energy",
+    "industry": "Oil & Gas Refining & Marketing",
+    "ts": "2026-07-22T00:31:04.611373+00:00"
+  },
+  "CVE": {
+    "sector": "Other",
+    "industry": "",
+    "ts": "2026-06-17T00:07:36.269614+00:00"
+  },
+  "DLR": {
+    "sector": "Other",
+    "industry": "",
+    "ts": "2026-06-17T00:07:36.270102+00:00"
+  },
+  "PSA": {
+    "sector": "Other",
+    "industry": "",
+    "ts": "2026-06-17T00:07:36.270620+00:00"
+  },
+  "GIS": {
+    "sector": "Consumer Defensive",
+    "industry": "Packaged Foods",
+    "ts": "2026-07-22T00:31:03.956461+00:00"
+  },
+  "LSCC": {
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "ts": "2026-06-17T00:07:37.718011+00:00"
+  },
+  "PR": {
+    "sector": "Energy",
+    "industry": "Oil & Gas E&P",
+    "ts": "2026-06-17T00:07:37.720820+00:00"
+  },
+  "OMF": {
+    "sector": "Financial Services",
+    "industry": "Credit Services",
+    "ts": "2026-06-17T00:07:38.898148+00:00"
+  },
+  "COMP": {
+    "sector": "Real Estate",
+    "industry": "Real Estate Services",
+    "ts": "2026-06-17T00:07:38.904233+00:00"
+  },
+  "ALKS": {
+    "sector": "Healthcare",
+    "industry": "Drug Manufacturers - Specialty & Generic",
+    "ts": "2026-07-18T00:34:22.123191+00:00"
+  },
+  "DHI": {
+    "sector": "Consumer Cyclical",
+    "industry": "Residential Construction",
+    "ts": "2026-07-30T00:31:14.602588+00:00"
+  },
+  "CCI": {
+    "sector": "Real Estate",
+    "industry": "REIT - Specialty",
+    "ts": "2026-07-23T00:31:11.690018+00:00"
+  },
+  "VTR": {
+    "sector": "Real Estate",
+    "industry": "REIT - Healthcare Facilities",
+    "ts": "2026-06-18T02:01:15.929699+00:00"
+  },
+  "MCO": {
+    "sector": "Financial Services",
+    "industry": "Financial Data & Stock Exchanges",
+    "ts": "2026-06-18T02:01:15.936070+00:00"
+  },
+  "PLD": {
+    "sector": "Real Estate",
+    "industry": "REIT - Industrial",
+    "ts": "2026-06-18T02:01:15.942217+00:00"
+  },
+  "JCI": {
+    "sector": "Industrials",
+    "industry": "Building Products & Equipment",
+    "ts": "2026-07-29T00:31:19.792813+00:00"
+  },
+  "EOG": {
+    "sector": "Energy",
+    "industry": "Oil & Gas E&P",
+    "ts": "2026-06-18T02:01:16.080630+00:00"
+  },
+  "NDAQ": {
+    "sector": "Financial Services",
+    "industry": "Financial Data & Stock Exchanges",
+    "ts": "2026-06-18T02:01:16.081659+00:00"
+  },
+  "CBOE": {
+    "sector": "Financial Services",
+    "industry": "Financial Data & Stock Exchanges",
+    "ts": "2026-06-18T02:01:16.409080+00:00"
+  },
+  "IRM": {
+    "sector": "Real Estate",
+    "industry": "REIT - Specialty",
+    "ts": "2026-07-30T00:31:14.899439+00:00"
+  },
+  "EQT": {
+    "sector": "Energy",
+    "industry": "Oil & Gas E&P",
+    "ts": "2026-07-22T00:31:03.630686+00:00"
+  },
+  "HBAN": {
+    "sector": "Financial Services",
+    "industry": "Banks - Regional",
+    "ts": "2026-06-18T02:01:16.431277+00:00"
+  },
+  "GEHC": {
+    "sector": "Healthcare",
+    "industry": "Medical Devices",
+    "ts": "2026-07-29T00:31:20.117782+00:00"
+  },
+  "PBA": {
+    "sector": "Energy",
+    "industry": "Oil & Gas Midstream",
+    "ts": "2026-06-18T02:01:16.704068+00:00"
+  },
+  "PPG": {
+    "sector": "Basic Materials",
+    "industry": "Specialty Chemicals",
+    "ts": "2026-06-18T02:01:16.714213+00:00"
+  },
+  "ARES": {
+    "sector": "Financial Services",
+    "industry": "Asset Management",
+    "ts": "2026-07-23T00:31:12.033130+00:00"
+  },
+  "RRX": {
+    "sector": "Industrials",
+    "industry": "Specialty Industrial Machinery",
+    "ts": "2026-06-18T02:01:16.935471+00:00"
+  },
+  "TOL": {
+    "sector": "Consumer Cyclical",
+    "industry": "Residential Construction",
+    "ts": "2026-06-18T02:01:16.948213+00:00"
+  },
+  "EXE": {
+    "sector": "Energy",
+    "industry": "Oil & Gas E&P",
+    "ts": "2026-07-23T00:31:12.034628+00:00"
+  },
+  "TSCO": {
+    "sector": "Consumer Cyclical",
+    "industry": "Specialty Retail",
+    "ts": "2026-07-22T00:31:03.971133+00:00"
+  },
+  "TROW": {
+    "sector": "Financial Services",
+    "industry": "Asset Management",
+    "ts": "2026-07-29T00:31:20.422600+00:00"
+  },
+  "GIL": {
+    "sector": "Consumer Cyclical",
+    "industry": "Apparel Manufacturing",
+    "ts": "2026-07-30T00:31:15.271480+00:00"
+  },
+  "HAS": {
+    "sector": "Consumer Cyclical",
+    "industry": "Leisure",
+    "ts": "2026-07-22T00:31:04.278161+00:00"
+  },
+  "IT": {
+    "sector": "Technology",
+    "industry": "Information Technology Services",
+    "ts": "2026-07-29T00:31:21.091834+00:00"
+  },
+  "ACI": {
+    "sector": "Consumer Defensive",
+    "industry": "Grocery Stores",
+    "ts": "2026-07-23T00:31:12.374813+00:00"
+  },
+  "VLY": {
+    "sector": "Financial Services",
+    "industry": "Banks - Regional",
+    "ts": "2026-06-18T02:01:17.448353+00:00"
+  },
+  "KGS": {
+    "sector": "Energy",
+    "industry": "Oil & Gas Equipment & Services",
+    "ts": "2026-06-18T02:01:17.683924+00:00"
+  },
+  "GDS": {
+    "sector": "Technology",
+    "industry": "Information Technology Services",
+    "ts": "2026-07-22T00:31:04.608881+00:00"
+  },
+  "PAYC": {
+    "sector": "Technology",
+    "industry": "Software - Application",
+    "ts": "2026-07-29T00:31:21.100810+00:00"
+  },
+  "TEX": {
+    "sector": "Industrials",
+    "industry": "Farm & Heavy Construction Machinery",
+    "ts": "2026-06-18T02:01:17.742409+00:00"
+  },
+  "FLG": {
+    "sector": "Financial Services",
+    "industry": "Banks - Regional",
+    "ts": "2026-06-18T02:01:17.966534+00:00"
+  },
+  "EAT": {
+    "sector": "Consumer Cyclical",
+    "industry": "Restaurants",
+    "ts": "2026-06-18T02:01:17.978766+00:00"
+  },
+  "MAC": {
+    "sector": "Real Estate",
+    "industry": "REIT - Retail",
+    "ts": "2026-06-18T02:01:17.981678+00:00"
+  },
+  "ESTC": {
+    "sector": "Technology",
+    "industry": "Software - Application",
+    "ts": "2026-06-18T02:01:17.989431+00:00"
+  },
+  "SPCX": {
+    "sector": "Industrials",
+    "industry": "Aerospace & Defense",
+    "ts": "2026-07-28T00:31:54.394566+00:00"
+  },
+  "SCCO": {
+    "sector": "Basic Materials",
+    "industry": "Copper",
+    "ts": "2026-07-30T00:31:14.275890+00:00"
+  },
+  "BKR": {
+    "sector": "Energy",
+    "industry": "Oil & Gas Equipment & Services",
+    "ts": "2026-07-28T00:31:56.411310+00:00"
+  },
+  "KLAC": {
+    "sector": "Technology",
+    "industry": "Semiconductor Equipment & Materials",
+    "ts": "2026-07-29T00:31:19.477325+00:00"
+  },
+  "SYK": {
+    "sector": "Healthcare",
+    "industry": "Medical Devices",
+    "ts": "2026-06-25T00:05:37.184900+00:00"
+  },
+  "ASX": {
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "ts": "2026-07-30T00:31:14.273148+00:00"
+  },
+  "WCN": {
+    "sector": "Industrials",
+    "industry": "Waste Management",
+    "ts": "2026-06-25T00:05:37.218160+00:00"
+  },
+  "MTZ": {
+    "sector": "Industrials",
+    "industry": "Engineering & Construction",
+    "ts": "2026-06-25T00:05:37.549748+00:00"
+  },
+  "TECK": {
+    "sector": "Basic Materials",
+    "industry": "Other Industrial Metals & Mining",
+    "ts": "2026-06-25T00:05:37.569505+00:00"
+  },
+  "XYL": {
+    "sector": "Industrials",
+    "industry": "Specialty Industrial Machinery",
+    "ts": "2026-07-28T00:31:57.263703+00:00"
+  },
+  "DRI": {
+    "sector": "Consumer Cyclical",
+    "industry": "Restaurants",
+    "ts": "2026-07-29T00:31:20.425182+00:00"
+  },
+  "FOXA": {
+    "sector": "Communication Services",
+    "industry": "Entertainment",
+    "ts": "2026-06-25T00:05:38.250675+00:00"
+  },
+  "CG": {
+    "sector": "Financial Services",
+    "industry": "Asset Management",
+    "ts": "2026-06-25T00:05:38.409276+00:00"
+  },
+  "INVH": {
+    "sector": "Real Estate",
+    "industry": "REIT - Residential",
+    "ts": "2026-06-25T00:05:38.412646+00:00"
+  },
+  "BBIO": {
+    "sector": "Healthcare",
+    "industry": "Biotechnology",
+    "ts": "2026-06-25T00:05:38.643472+00:00"
+  },
+  "ARWR": {
+    "sector": "Healthcare",
+    "industry": "Biotechnology",
+    "ts": "2026-06-25T00:05:38.778617+00:00"
+  },
+  "IVZ": {
+    "sector": "Financial Services",
+    "industry": "Asset Management",
+    "ts": "2026-06-25T00:05:38.780074+00:00"
+  },
+  "BAX": {
+    "sector": "Healthcare",
+    "industry": "Medical Instruments & Supplies",
+    "ts": "2026-06-25T00:05:39.011690+00:00"
+  },
+  "CNTA": {
+    "sector": "Healthcare",
+    "industry": "Biotechnology",
+    "ts": "2026-06-25T00:05:39.506250+00:00"
+  },
+  "CHYM": {
+    "sector": "Technology",
+    "industry": "Software - Application",
+    "ts": "2026-07-28T00:31:58.309248+00:00"
+  },
+  "BGC": {
+    "sector": "Financial Services",
+    "industry": "Capital Markets",
+    "ts": "2026-06-25T00:05:39.542474+00:00"
+  },
+  "TTE": {
+    "sector": "Other",
+    "industry": "",
+    "ts": "2026-07-01T00:05:13.120185+00:00"
+  },
+  "TJX": {
+    "sector": "Consumer Cyclical",
+    "industry": "Apparel Retail",
+    "ts": "2026-07-02T00:05:52.748998+00:00"
+  },
+  "EMR": {
+    "sector": "Industrials",
+    "industry": "Specialty Industrial Machinery",
+    "ts": "2026-07-02T00:05:53.089056+00:00"
+  },
+  "APO": {
+    "sector": "Financial Services",
+    "industry": "Asset Management",
+    "ts": "2026-07-02T00:05:53.377009+00:00"
+  },
+  "CAH": {
+    "sector": "Healthcare",
+    "industry": "Medical Distribution",
+    "ts": "2026-07-02T00:05:53.416800+00:00"
+  },
+  "EIX": {
+    "sector": "Utilities",
+    "industry": "Utilities - Regulated Electric",
+    "ts": "2026-07-02T00:05:53.729374+00:00"
+  },
+  "FITB": {
+    "sector": "Financial Services",
+    "industry": "Banks - Regional",
+    "ts": "2026-07-02T00:05:53.766187+00:00"
+  },
+  "AXON": {
+    "sector": "Industrials",
+    "industry": "Aerospace & Defense",
+    "ts": "2026-07-02T00:05:53.771029+00:00"
+  },
+  "WSM": {
+    "sector": "Consumer Cyclical",
+    "industry": "Specialty Retail",
+    "ts": "2026-07-02T00:05:53.773550+00:00"
+  },
+  "QSR": {
+    "sector": "Consumer Cyclical",
+    "industry": "Restaurants",
+    "ts": "2026-07-02T00:05:54.044861+00:00"
+  },
+  "EQR": {
+    "sector": "Real Estate",
+    "industry": "REIT - Residential",
+    "ts": "2026-07-02T00:05:54.048490+00:00"
+  },
+  "BG": {
+    "sector": "Consumer Defensive",
+    "industry": "Farm Products",
+    "ts": "2026-07-02T00:05:54.067017+00:00"
+  },
+  "OMC": {
+    "sector": "Communication Services",
+    "industry": "Advertising Agencies",
+    "ts": "2026-07-02T00:05:54.089081+00:00"
+  },
+  "BEN": {
+    "sector": "Financial Services",
+    "industry": "Asset Management",
+    "ts": "2026-07-02T00:05:54.330857+00:00"
+  },
+  "WPC": {
+    "sector": "Real Estate",
+    "industry": "REIT - Diversified",
+    "ts": "2026-07-02T00:05:54.363937+00:00"
+  },
+  "GH": {
+    "sector": "Healthcare",
+    "industry": "Diagnostics & Research",
+    "ts": "2026-07-02T00:05:54.366238+00:00"
+  },
+  "CNH": {
+    "sector": "Industrials",
+    "industry": "Farm & Heavy Construction Machinery",
+    "ts": "2026-07-02T00:05:54.426285+00:00"
+  },
+  "CGNX": {
+    "sector": "Technology",
+    "industry": "Scientific & Technical Instruments",
+    "ts": "2026-07-02T00:05:54.716318+00:00"
+  },
+  "ARE": {
+    "sector": "Real Estate",
+    "industry": "REIT - Office",
+    "ts": "2026-07-02T00:05:54.755828+00:00"
+  },
+  "BXP": {
+    "sector": "Real Estate",
+    "industry": "REIT - Office",
+    "ts": "2026-07-02T00:05:54.760239+00:00"
+  },
+  "BSY": {
+    "sector": "Technology",
+    "industry": "Software - Application",
+    "ts": "2026-07-02T00:05:54.848415+00:00"
+  },
+  "VOYA": {
+    "sector": "Financial Services",
+    "industry": "Financial Conglomerates",
+    "ts": "2026-07-02T00:05:54.966989+00:00"
+  },
+  "EGO": {
+    "sector": "Basic Materials",
+    "industry": "Gold",
+    "ts": "2026-07-02T00:05:55.000948+00:00"
+  },
+  "SM": {
+    "sector": "Energy",
+    "industry": "Oil & Gas E&P",
+    "ts": "2026-07-02T00:05:55.087747+00:00"
+  },
+  "CPB": {
+    "sector": "Consumer Defensive",
+    "industry": "Packaged Foods",
+    "ts": "2026-07-02T00:05:55.197917+00:00"
+  },
+  "WBD": {
+    "sector": "Communication Services",
+    "industry": "Entertainment",
+    "ts": "2026-07-03T00:31:41.866618+00:00"
+  },
+  "STLD": {
+    "sector": "Basic Materials",
+    "industry": "Steel",
+    "ts": "2026-07-03T00:31:43.467149+00:00"
+  },
+  "KEYS": {
+    "sector": "Technology",
+    "industry": "Scientific & Technical Instruments",
+    "ts": "2026-07-07T00:31:51.237315+00:00"
+  },
+  "NTRS": {
+    "sector": "Financial Services",
+    "industry": "Asset Management",
+    "ts": "2026-07-07T00:31:51.538954+00:00"
+  },
+  "VOD": {
+    "sector": "Communication Services",
+    "industry": "Telecom Services",
+    "ts": "2026-07-07T00:31:51.548720+00:00"
+  },
+  "EXR": {
+    "sector": "Real Estate",
+    "industry": "REIT - Industrial",
+    "ts": "2026-07-07T00:31:51.559062+00:00"
+  },
+  "LNG": {
+    "sector": "Energy",
+    "industry": "Oil & Gas Midstream",
+    "ts": "2026-07-07T00:31:51.565641+00:00"
+  },
+  "BCE": {
+    "sector": "Communication Services",
+    "industry": "Telecom Services",
+    "ts": "2026-07-07T00:31:51.888210+00:00"
+  },
+  "EXPD": {
+    "sector": "Industrials",
+    "industry": "Integrated Freight & Logistics",
+    "ts": "2026-07-07T00:31:51.897234+00:00"
+  },
+  "AMCR": {
+    "sector": "Consumer Cyclical",
+    "industry": "Packaging & Containers",
+    "ts": "2026-07-07T00:31:52.029259+00:00"
+  },
+  "CX": {
+    "sector": "Basic Materials",
+    "industry": "Building Materials",
+    "ts": "2026-07-07T00:31:52.106113+00:00"
+  },
+  "GPC": {
+    "sector": "Consumer Cyclical",
+    "industry": "Auto Parts",
+    "ts": "2026-07-07T00:31:52.210430+00:00"
+  },
+  "UNM": {
+    "sector": "Financial Services",
+    "industry": "Insurance - Life",
+    "ts": "2026-07-07T00:31:52.375067+00:00"
+  },
+  "SOLS": {
+    "sector": "Basic Materials",
+    "industry": "Specialty Chemicals",
+    "ts": "2026-07-07T00:31:52.439556+00:00"
+  },
+  "ALGM": {
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "ts": "2026-07-07T00:31:52.542401+00:00"
+  },
+  "SCI": {
+    "sector": "Consumer Cyclical",
+    "industry": "Personal Services",
+    "ts": "2026-07-07T00:31:52.589033+00:00"
+  },
+  "GDDY": {
+    "sector": "Technology",
+    "industry": "Software - Infrastructure",
+    "ts": "2026-07-07T00:31:52.619614+00:00"
+  },
+  "IAG": {
+    "sector": "Basic Materials",
+    "industry": "Gold",
+    "ts": "2026-07-07T00:31:52.702796+00:00"
+  },
+  "RAL": {
+    "sector": "Technology",
+    "industry": "Electronic Components",
+    "ts": "2026-07-07T00:31:52.763761+00:00"
+  },
+  "SBSW": {
+    "sector": "Basic Materials",
+    "industry": "Other Precious Metals & Mining",
+    "ts": "2026-07-07T00:31:52.846950+00:00"
+  },
+  "DUOL": {
+    "sector": "Technology",
+    "industry": "Software - Application",
+    "ts": "2026-07-07T00:31:52.877269+00:00"
+  },
+  "FRMI": {
+    "sector": "Real Estate",
+    "industry": "REIT - Specialty",
+    "ts": "2026-07-07T00:31:52.966780+00:00"
+  },
+  "LYFT": {
+    "sector": "Technology",
+    "industry": "Software - Application",
+    "ts": "2026-07-07T00:31:53.072842+00:00"
+  },
+  "HCA": {
+    "sector": "Healthcare",
+    "industry": "Medical Care Facilities",
+    "ts": "2026-07-08T00:31:34.674763+00:00"
+  },
+  "PGR": {
+    "sector": "Financial Services",
+    "industry": "Insurance - Property & Casualty",
+    "ts": "2026-07-08T00:31:34.683831+00:00"
+  },
+  "ANET": {
+    "sector": "Technology",
+    "industry": "Computer Hardware",
+    "ts": "2026-07-08T00:31:34.746439+00:00"
+  },
+  "ALL": {
+    "sector": "Financial Services",
+    "industry": "Insurance - Property & Casualty",
+    "ts": "2026-07-08T00:31:35.042817+00:00"
+  },
+  "AIG": {
+    "sector": "Financial Services",
+    "industry": "Insurance - Diversified",
+    "ts": "2026-07-08T00:31:35.056096+00:00"
+  },
+  "DTE": {
+    "sector": "Utilities",
+    "industry": "Utilities - Regulated Electric",
+    "ts": "2026-07-08T00:31:35.334771+00:00"
+  },
+  "AWK": {
+    "sector": "Utilities",
+    "industry": "Utilities - Regulated Water",
+    "ts": "2026-07-08T00:31:35.336644+00:00"
+  },
+  "CDE": {
+    "sector": "Basic Materials",
+    "industry": "Gold",
+    "ts": "2026-07-08T00:31:35.630688+00:00"
+  },
+  "ONTO": {
+    "sector": "Technology",
+    "industry": "Semiconductor Equipment & Materials",
+    "ts": "2026-07-08T00:31:35.642782+00:00"
+  },
+  "TIGO": {
+    "sector": "Communication Services",
+    "industry": "Telecom Services",
+    "ts": "2026-07-08T00:31:35.661488+00:00"
+  },
+  "EXEL": {
+    "sector": "Healthcare",
+    "industry": "Biotechnology",
+    "ts": "2026-07-08T00:31:35.697345+00:00"
+  },
+  "GFL": {
+    "sector": "Industrials",
+    "industry": "Waste Management",
+    "ts": "2026-07-08T00:31:35.698227+00:00"
+  },
+  "TGTX": {
+    "sector": "Healthcare",
+    "industry": "Biotechnology",
+    "ts": "2026-07-08T00:31:35.984380+00:00"
+  },
+  "EQPT": {
+    "sector": "Industrials",
+    "industry": "Rental & Leasing Services",
+    "ts": "2026-07-08T00:31:36.077034+00:00"
+  },
+  "HNGE": {
+    "sector": "Healthcare",
+    "industry": "Health Information Services",
+    "ts": "2026-07-08T00:31:36.150885+00:00"
+  },
+  "OGE": {
+    "sector": "Utilities",
+    "industry": "Utilities - Regulated Electric",
+    "ts": "2026-07-08T00:31:36.202370+00:00"
+  },
+  "LPX": {
+    "sector": "Industrials",
+    "industry": "Building Products & Equipment",
+    "ts": "2026-07-08T00:31:36.452544+00:00"
+  },
+  "BUD": {
+    "sector": "Other",
+    "industry": "",
+    "ts": "2026-07-09T00:06:11.850308+00:00"
+  },
+  "GSK": {
+    "sector": "Other",
+    "industry": "",
+    "ts": "2026-07-09T00:06:11.852784+00:00"
+  },
+  "SANM": {
+    "sector": "Other",
+    "industry": "",
+    "ts": "2026-07-09T00:06:13.200647+00:00"
+  },
+  "LINE": {
+    "sector": "Other",
+    "industry": "",
+    "ts": "2026-07-09T00:06:13.209412+00:00"
+  },
+  "TD": {
+    "sector": "Financial Services",
+    "industry": "Banks - Diversified",
+    "ts": "2026-07-11T00:05:23.173686+00:00"
+  },
+  "YUM": {
+    "sector": "Consumer Cyclical",
+    "industry": "Restaurants",
+    "ts": "2026-07-11T00:05:23.180397+00:00"
+  },
+  "THC": {
+    "sector": "Healthcare",
+    "industry": "Medical Care Facilities",
+    "ts": "2026-07-11T00:05:23.523987+00:00"
+  },
+  "FTI": {
+    "sector": "Energy",
+    "industry": "Oil & Gas Equipment & Services",
+    "ts": "2026-07-11T00:05:23.537390+00:00"
+  },
+  "RMD": {
+    "sector": "Healthcare",
+    "industry": "Medical Instruments & Supplies",
+    "ts": "2026-07-11T00:05:23.784488+00:00"
+  },
+  "ZBH": {
+    "sector": "Healthcare",
+    "industry": "Medical Devices",
+    "ts": "2026-07-11T00:05:23.798117+00:00"
+  },
+  "HRL": {
+    "sector": "Consumer Defensive",
+    "industry": "Packaged Foods",
+    "ts": "2026-07-11T00:05:23.823155+00:00"
+  },
+  "CYTK": {
+    "sector": "Healthcare",
+    "industry": "Biotechnology",
+    "ts": "2026-07-11T00:05:23.845024+00:00"
+  },
+  "LNC": {
+    "sector": "Financial Services",
+    "industry": "Insurance - Life",
+    "ts": "2026-07-11T00:05:24.114885+00:00"
+  },
+  "XENE": {
+    "sector": "Healthcare",
+    "industry": "Biotechnology",
+    "ts": "2026-07-11T00:05:24.118404+00:00"
+  },
+  "MTDR": {
+    "sector": "Energy",
+    "industry": "Oil & Gas E&P",
+    "ts": "2026-07-11T00:05:24.132027+00:00"
+  },
+  "MWH": {
+    "sector": "Utilities",
+    "industry": "Utilities - Renewable",
+    "ts": "2026-07-11T00:05:24.168080+00:00"
+  },
+  "GGAL": {
+    "sector": "Financial Services",
+    "industry": "Banks - Regional",
+    "ts": "2026-07-11T00:05:24.193770+00:00"
+  },
+  "DFTX": {
+    "sector": "Healthcare",
+    "industry": "Biotechnology",
+    "ts": "2026-07-11T00:05:24.393693+00:00"
+  },
+  "SSRM": {
+    "sector": "Basic Materials",
+    "industry": "Gold",
+    "ts": "2026-07-11T00:05:24.435973+00:00"
+  },
+  "SNY": {
+    "sector": "Healthcare",
+    "industry": "Drug Manufacturers - General",
+    "ts": "2026-07-18T00:34:20.453371+00:00"
+  },
+  "TRGP": {
+    "sector": "Energy",
+    "industry": "Oil & Gas Midstream",
+    "ts": "2026-07-18T00:34:20.785975+00:00"
+  },
+  "TFC": {
+    "sector": "Financial Services",
+    "industry": "Banks - Regional",
+    "ts": "2026-07-18T00:34:20.794418+00:00"
+  },
+  "CHD": {
+    "sector": "Consumer Defensive",
+    "industry": "Household & Personal Products",
+    "ts": "2026-07-18T00:34:21.123134+00:00"
+  },
+  "BRO": {
+    "sector": "Financial Services",
+    "industry": "Insurance Brokers",
+    "ts": "2026-07-18T00:34:21.124823+00:00"
+  },
+  "SWK": {
+    "sector": "Industrials",
+    "industry": "Tools & Accessories",
+    "ts": "2026-07-18T00:34:21.451600+00:00"
+  },
+  "NYT": {
+    "sector": "Communication Services",
+    "industry": "Publishing",
+    "ts": "2026-07-18T00:34:21.786823+00:00"
+  },
+  "SJM": {
+    "sector": "Consumer Defensive",
+    "industry": "Packaged Foods",
+    "ts": "2026-07-18T00:34:21.788528+00:00"
+  },
+  "PNR": {
+    "sector": "Industrials",
+    "industry": "Specialty Industrial Machinery",
+    "ts": "2026-07-18T00:34:21.790544+00:00"
+  },
+  "BF-B": {
+    "sector": "Consumer Defensive",
+    "industry": "Beverages - Wineries & Distilleries",
+    "ts": "2026-07-18T00:34:22.037037+00:00"
+  },
+  "SIMO": {
+    "sector": "Technology",
+    "industry": "Semiconductors",
+    "ts": "2026-07-18T00:34:22.079220+00:00"
+  },
+  "CTRE": {
+    "sector": "Real Estate",
+    "industry": "REIT - Healthcare Facilities",
+    "ts": "2026-07-18T00:34:22.109372+00:00"
+  },
+  "DAR": {
+    "sector": "Consumer Defensive",
+    "industry": "Packaged Foods",
+    "ts": "2026-07-18T00:34:22.118739+00:00"
+  },
+  "AAON": {
+    "sector": "Industrials",
+    "industry": "Building Products & Equipment",
+    "ts": "2026-07-18T00:34:22.392811+00:00"
+  },
+  "CZR": {
+    "sector": "Consumer Cyclical",
+    "industry": "Resorts & Casinos",
+    "ts": "2026-07-18T00:34:22.722359+00:00"
+  },
+  "BNY": {
+    "sector": "Financial Services",
+    "industry": "Banks - Diversified",
+    "ts": "2026-07-22T00:31:02.975421+00:00"
+  },
+  "BTI": {
+    "sector": "Consumer Defensive",
+    "industry": "Tobacco",
+    "ts": "2026-07-22T00:31:02.995710+00:00"
+  },
+  "TEL": {
+    "sector": "Technology",
+    "industry": "Electronic Components",
+    "ts": "2026-07-22T00:31:03.303810+00:00"
+  },
+  "WAT": {
+    "sector": "Healthcare",
+    "industry": "Diagnostics & Research",
+    "ts": "2026-07-22T00:31:03.617167+00:00"
+  },
+  "ZION": {
+    "sector": "Financial Services",
+    "industry": "Banks - Regional",
+    "ts": "2026-07-22T00:31:04.268797+00:00"
+  },
+  "RRC": {
+    "sector": "Energy",
+    "industry": "Oil & Gas E&P",
+    "ts": "2026-07-22T00:31:04.284584+00:00"
+  },
+  "XP": {
+    "sector": "Financial Services",
+    "industry": "Capital Markets",
+    "ts": "2026-07-22T00:31:04.297176+00:00"
+  },
+  "SRRK": {
+    "sector": "Healthcare",
+    "industry": "Biotechnology",
+    "ts": "2026-07-22T00:31:04.385045+00:00"
+  },
+  "LMND": {
+    "sector": "Financial Services",
+    "industry": "Insurance - Property & Casualty",
+    "ts": "2026-07-22T00:31:04.619031+00:00"
+  },
+  "ALK": {
+    "sector": "Industrials",
+    "industry": "Airlines",
+    "ts": "2026-07-22T00:31:04.627735+00:00"
+  },
+  "PEGA": {
+    "sector": "Technology",
+    "industry": "Software - Application",
+    "ts": "2026-07-22T00:31:04.743150+00:00"
+  },
+  "VRNS": {
+    "sector": "Technology",
+    "industry": "Software - Infrastructure",
+    "ts": "2026-07-22T00:31:04.743353+00:00"
+  },
+  "SO": {
+    "sector": "Utilities",
+    "industry": "Utilities - Regulated Electric",
+    "ts": "2026-07-22T00:31:06.277043+00:00"
+  },
+  "MUFG": {
+    "sector": "Financial Services",
+    "industry": "Banks - Diversified",
+    "ts": "2026-07-23T00:31:11.678137+00:00"
+  },
+  "CBRE": {
+    "sector": "Real Estate",
+    "industry": "Real Estate Services",
+    "ts": "2026-07-23T00:31:11.702516+00:00"
+  },
+  "DOV": {
+    "sector": "Industrials",
+    "industry": "Specialty Industrial Machinery",
+    "ts": "2026-07-23T00:31:12.025002+00:00"
+  },
+  "GWRE": {
+    "sector": "Technology",
+    "industry": "Software - Application",
+    "ts": "2026-07-23T00:31:12.349255+00:00"
+  },
+  "GMED": {
+    "sector": "Healthcare",
+    "industry": "Medical Devices",
+    "ts": "2026-07-23T00:31:12.351712+00:00"
+  },
+  "CNM": {
+    "sector": "Industrials",
+    "industry": "Industrial Distribution",
+    "ts": "2026-07-23T00:31:12.357027+00:00"
+  },
+  "PSN": {
+    "sector": "Technology",
+    "industry": "Information Technology Services",
+    "ts": "2026-07-23T00:31:12.371892+00:00"
+  },
+  "GLNG": {
+    "sector": "Energy",
+    "industry": "Oil & Gas Midstream",
+    "ts": "2026-07-23T00:31:12.673696+00:00"
+  },
+  "GTLB": {
+    "sector": "Technology",
+    "industry": "Software - Infrastructure",
+    "ts": "2026-07-23T00:31:12.677509+00:00"
+  },
+  "MDLZ": {
+    "sector": "Consumer Defensive",
+    "industry": "Confectioners",
+    "ts": "2026-07-24T00:32:01.731959+00:00"
+  },
+  "HONA": {
+    "sector": "Industrials",
+    "industry": "Aerospace & Defense",
+    "ts": "2026-07-24T00:32:02.057978+00:00"
+  },
+  "EFX": {
+    "sector": "Industrials",
+    "industry": "Consulting Services",
+    "ts": "2026-07-24T00:32:02.117559+00:00"
+  },
+  "ALLE": {
+    "sector": "Industrials",
+    "industry": "Security & Protection Services",
+    "ts": "2026-07-24T00:32:02.384506+00:00"
+  },
+  "APGE": {
+    "sector": "Healthcare",
+    "industry": "Biotechnology",
+    "ts": "2026-07-24T00:32:02.389537+00:00"
+  },
+  "FORM": {
+    "sector": "Technology",
+    "industry": "Semiconductor Equipment & Materials",
+    "ts": "2026-07-24T00:32:02.398468+00:00"
+  },
+  "CAVA": {
+    "sector": "Consumer Cyclical",
+    "industry": "Restaurants",
+    "ts": "2026-07-24T00:32:02.405480+00:00"
+  },
+  "MBLY": {
+    "sector": "Consumer Cyclical",
+    "industry": "Auto Parts",
+    "ts": "2026-07-24T00:32:02.449475+00:00"
+  },
+  "SSL": {
+    "sector": "Basic Materials",
+    "industry": "Specialty Chemicals",
+    "ts": "2026-07-24T00:32:02.713978+00:00"
+  },
+  "VIST": {
+    "sector": "Energy",
+    "industry": "Oil & Gas E&P",
+    "ts": "2026-07-24T00:32:02.731745+00:00"
+  },
+  "TWST": {
+    "sector": "Healthcare",
+    "industry": "Diagnostics & Research",
+    "ts": "2026-07-24T00:32:02.784871+00:00"
+  },
+  "ROST": {
+    "sector": "Consumer Cyclical",
+    "industry": "Apparel Retail",
+    "ts": "2026-07-28T00:31:56.306662+00:00"
+  },
+  "CARR": {
+    "sector": "Industrials",
+    "industry": "Building Products & Equipment",
+    "ts": "2026-07-28T00:31:56.562048+00:00"
+  },
+  "HUM": {
+    "sector": "Healthcare",
+    "industry": "Healthcare Plans",
+    "ts": "2026-07-28T00:31:56.726357+00:00"
+  },
+  "PRU": {
+    "sector": "Financial Services",
+    "industry": "Insurance - Life",
+    "ts": "2026-07-28T00:31:56.943085+00:00"
+  },
+  "PAYX": {
+    "sector": "Technology",
+    "industry": "Software - Application",
+    "ts": "2026-07-28T00:31:56.944803+00:00"
+  },
+  "IQV": {
+    "sector": "Healthcare",
+    "industry": "Diagnostics & Research",
+    "ts": "2026-07-28T00:31:57.072547+00:00"
+  },
+  "CNP": {
+    "sector": "Utilities",
+    "industry": "Utilities - Regulated Electric",
+    "ts": "2026-07-28T00:31:57.279764+00:00"
+  },
+  "PFG": {
+    "sector": "Financial Services",
+    "industry": "Asset Management",
+    "ts": "2026-07-28T00:31:57.316457+00:00"
+  },
+  "GPN": {
+    "sector": "Industrials",
+    "industry": "Specialty Business Services",
+    "ts": "2026-07-28T00:31:57.493094+00:00"
+  },
+  "PFGC": {
+    "sector": "Consumer Defensive",
+    "industry": "Food Distribution",
+    "ts": "2026-07-28T00:31:57.548170+00:00"
+  },
+  "TXT": {
+    "sector": "Industrials",
+    "industry": "Aerospace & Defense",
+    "ts": "2026-07-28T00:31:57.646437+00:00"
+  },
+  "TRU": {
+    "sector": "Financial Services",
+    "industry": "Financial Data & Stock Exchanges",
+    "ts": "2026-07-28T00:31:57.740741+00:00"
+  },
+  "TRMB": {
+    "sector": "Technology",
+    "industry": "Scientific & Technical Instruments",
+    "ts": "2026-07-28T00:31:57.957499+00:00"
+  },
+  "UHS": {
+    "sector": "Healthcare",
+    "industry": "Medical Care Facilities",
+    "ts": "2026-07-28T00:31:58.202141+00:00"
+  },
+  "QGEN": {
+    "sector": "Healthcare",
+    "industry": "Diagnostics & Research",
+    "ts": "2026-07-28T00:31:58.392066+00:00"
+  },
+  "DBX": {
+    "sector": "Technology",
+    "industry": "Software - Infrastructure",
+    "ts": "2026-07-28T00:31:58.529389+00:00"
+  },
+  "TPG": {
+    "sector": "Financial Services",
+    "industry": "Asset Management",
+    "ts": "2026-07-28T00:31:58.599953+00:00"
+  },
+  "MRSH": {
+    "sector": "Financial Services",
+    "industry": "Insurance Brokers",
+    "ts": "2026-07-29T00:31:19.784386+00:00"
+  },
+  "CI": {
+    "sector": "Healthcare",
+    "industry": "Healthcare Plans",
+    "ts": "2026-07-29T00:31:19.787951+00:00"
+  },
+  "LHX": {
+    "sector": "Industrials",
+    "industry": "Aerospace & Defense",
+    "ts": "2026-07-29T00:31:19.810880+00:00"
+  },
+  "EXPE": {
+    "sector": "Consumer Cyclical",
+    "industry": "Travel Services",
+    "ts": "2026-07-29T00:31:20.121428+00:00"
+  },
+  "ECHO": {
+    "sector": "Communication Services",
+    "industry": "Telecom Services",
+    "ts": "2026-07-29T00:31:20.135953+00:00"
+  },
+  "CHRW": {
+    "sector": "Industrials",
+    "industry": "Integrated Freight & Logistics",
+    "ts": "2026-07-29T00:31:20.435160+00:00"
+  },
+  "FTAI": {
+    "sector": "Industrials",
+    "industry": "Aerospace & Defense",
+    "ts": "2026-07-29T00:31:20.452884+00:00"
+  },
+  "WES": {
+    "sector": "Energy",
+    "industry": "Oil & Gas Midstream",
+    "ts": "2026-07-29T00:31:20.468925+00:00"
+  },
+  "MAS": {
+    "sector": "Industrials",
+    "industry": "Building Products & Equipment",
+    "ts": "2026-07-29T00:31:20.742227+00:00"
+  },
+  "BR": {
+    "sector": "Technology",
+    "industry": "Information Technology Services",
+    "ts": "2026-07-29T00:31:20.744205+00:00"
+  },
+  "SUI": {
+    "sector": "Real Estate",
+    "industry": "REIT - Residential",
+    "ts": "2026-07-29T00:31:20.758023+00:00"
+  },
+  "SOLV": {
+    "sector": "Healthcare",
+    "industry": "Medical Instruments & Supplies",
+    "ts": "2026-07-29T00:31:20.778868+00:00"
+  },
+  "ICLR": {
+    "sector": "Healthcare",
+    "industry": "Diagnostics & Research",
+    "ts": "2026-07-29T00:31:20.780599+00:00"
+  },
+  "SNN": {
+    "sector": "Healthcare",
+    "industry": "Medical Devices",
+    "ts": "2026-07-29T00:31:20.791444+00:00"
+  },
+  "LTH": {
+    "sector": "Consumer Cyclical",
+    "industry": "Leisure",
+    "ts": "2026-07-29T00:31:21.093174+00:00"
+  },
+  "CLX": {
+    "sector": "Consumer Defensive",
+    "industry": "Household & Personal Products",
+    "ts": "2026-07-29T00:31:21.094878+00:00"
+  },
+  "LW": {
+    "sector": "Consumer Defensive",
+    "industry": "Packaged Foods",
+    "ts": "2026-07-29T00:31:21.110787+00:00"
+  },
+  "AMRX": {
+    "sector": "Healthcare",
+    "industry": "Drug Manufacturers - Specialty & Generic",
+    "ts": "2026-07-29T00:31:21.410750+00:00"
+  },
+  "REGN": {
+    "sector": "Healthcare",
+    "industry": "Biotechnology",
+    "ts": "2026-07-30T00:31:14.267800+00:00"
+  },
+  "VIK": {
+    "sector": "Consumer Cyclical",
+    "industry": "Travel Services",
+    "ts": "2026-07-30T00:31:14.580598+00:00"
+  },
+  "CRH": {
+    "sector": "Basic Materials",
+    "industry": "Building Materials",
+    "ts": "2026-07-30T00:31:14.598767+00:00"
+  },
+  "ALNY": {
+    "sector": "Healthcare",
+    "industry": "Biotechnology",
+    "ts": "2026-07-30T00:31:14.603653+00:00"
+  },
+  "WEC": {
+    "sector": "Utilities",
+    "industry": "Utilities - Regulated Electric",
+    "ts": "2026-07-30T00:31:14.608716+00:00"
+  },
+  "NWS": {
+    "sector": "Communication Services",
+    "industry": "Entertainment",
+    "ts": "2026-07-30T00:31:14.928877+00:00"
+  },
+  "OC": {
+    "sector": "Industrials",
+    "industry": "Building Products & Equipment",
+    "ts": "2026-07-30T00:31:14.942563+00:00"
+  },
+  "EMBJ": {
+    "sector": "Industrials",
+    "industry": "Aerospace & Defense",
+    "ts": "2026-07-30T00:31:14.944275+00:00"
+  },
+  "PODD": {
+    "sector": "Healthcare",
+    "industry": "Medical Devices",
+    "ts": "2026-07-30T00:31:14.990764+00:00"
+  },
+  "ONB": {
+    "sector": "Financial Services",
+    "industry": "Banks - Regional",
+    "ts": "2026-07-30T00:31:15.222875+00:00"
+  },
+  "DOCU": {
+    "sector": "Technology",
+    "industry": "Software - Application",
+    "ts": "2026-07-30T00:31:15.282528+00:00"
+  },
+  "SFM": {
+    "sector": "Consumer Defensive",
+    "industry": "Grocery Stores",
+    "ts": "2026-07-30T00:31:15.301496+00:00"
+  },
+  "CAG": {
+    "sector": "Consumer Defensive",
+    "industry": "Packaged Foods",
+    "ts": "2026-07-30T00:31:15.552480+00:00"
+  },
+  "BYD": {
+    "sector": "Consumer Cyclical",
+    "industry": "Resorts & Casinos",
+    "ts": "2026-07-30T00:31:15.581418+00:00"
+  },
+  "DOX": {
+    "sector": "Technology",
+    "industry": "Software - Infrastructure",
+    "ts": "2026-07-30T00:31:15.608202+00:00"
+  },
+  "CHDN": {
+    "sector": "Consumer Cyclical",
+    "industry": "Gambling",
+    "ts": "2026-07-30T00:31:15.612446+00:00"
+  }
+}

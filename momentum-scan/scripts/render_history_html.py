@@ -21,6 +21,7 @@ Usage:
 import argparse
 import csv
 import json
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -35,6 +36,14 @@ def load_history(path: Path) -> list[dict]:
 
 def load_sectors(path: Path) -> dict:
     if not path.exists():
+        # A missing cache is almost always a checkout/path problem, and the
+        # silent-{} fallback renders EVERY ticker as "Unknown" sector — a
+        # page that looks fine at a glance but is wrong everywhere. Warn
+        # loudly; keep rendering so a truly cache-less setup still works.
+        print(f"WARNING: sector cache not found at {path} — every ticker "
+              f"will render with 'Unknown' sector. sectors.json is tracked "
+              f"in the repo; pass --sectors if yours lives elsewhere.",
+              file=sys.stderr)
         return {}
     return json.loads(path.read_text())
 

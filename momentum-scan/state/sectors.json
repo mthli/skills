@@ -1,0 +1,762 @@
+{
+  "ABBV": {
+    "industry": "Drug Manufacturers - General",
+    "sector": "Healthcare",
+    "ts": 1784937692
+  },
+  "ACMR": {
+    "industry": "Semiconductor Equipment & Materials",
+    "sector": "Technology",
+    "ts": 1782345684
+  },
+  "ALAB": {
+    "industry": "Semiconductors",
+    "sector": "Technology",
+    "ts": 1782135476
+  },
+  "ALGM": {
+    "industry": "Semiconductors",
+    "sector": "Technology",
+    "ts": 1782786282
+  },
+  "ALKS": {
+    "industry": "Drug Manufacturers - Specialty & Generic",
+    "sector": "Healthcare",
+    "ts": 1783123285
+  },
+  "AMAT": {
+    "industry": "Semiconductor Equipment & Materials",
+    "sector": "Technology",
+    "ts": 1782405186
+  },
+  "AMD": {
+    "industry": "Semiconductors",
+    "sector": "Technology",
+    "ts": 1784246492
+  },
+  "AMRX": {
+    "industry": "Drug Manufacturers - Specialty & Generic",
+    "sector": "Healthcare",
+    "ts": 1782786281
+  },
+  "APGE": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1782786281
+  },
+  "ARM": {
+    "industry": "Semiconductors",
+    "sector": "Technology",
+    "ts": 1778771326
+  },
+  "ARMK": {
+    "industry": "Specialty Business Services",
+    "sector": "Industrials",
+    "ts": 1781568120
+  },
+  "ASX": {
+    "industry": "Semiconductors",
+    "sector": "Technology",
+    "ts": 1779984543
+  },
+  "AVT": {
+    "industry": "Electronics & Computer Distribution",
+    "sector": "Technology",
+    "ts": 1780499160
+  },
+  "AVTR": {
+    "industry": "Medical Instruments & Supplies",
+    "sector": "Healthcare",
+    "ts": 1784851303
+  },
+  "BAX": {
+    "industry": "Medical Instruments & Supplies",
+    "sector": "Healthcare",
+    "ts": 1785283277
+  },
+  "BB": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1782744225
+  },
+  "BBY": {
+    "industry": "Specialty Retail",
+    "sector": "Consumer Cyclical",
+    "ts": 1784937692
+  },
+  "BEN": {
+    "industry": "Asset Management",
+    "sector": "Financial Services",
+    "ts": 1781654506
+  },
+  "BRKR": {
+    "industry": "Medical Devices",
+    "sector": "Healthcare",
+    "ts": 1784851303
+  },
+  "BTSG": {
+    "industry": "Health Information Services",
+    "sector": "Healthcare",
+    "ts": 1784246492
+  },
+  "CIEN": {
+    "industry": "Communication Equipment",
+    "sector": "Technology",
+    "ts": 1778771326
+  },
+  "CNC": {
+    "industry": "Healthcare Plans",
+    "sector": "Healthcare",
+    "ts": 1783728075
+  },
+  "COMP": {
+    "industry": "Real Estate Services",
+    "sector": "Real Estate",
+    "ts": 1782786282
+  },
+  "CORT": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1784764900
+  },
+  "CRWD": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1784073750
+  },
+  "CSCO": {
+    "industry": "Communication Equipment",
+    "sector": "Technology",
+    "ts": 1778771325
+  },
+  "CUZ": {
+    "industry": "REIT - Office",
+    "sector": "Real Estate",
+    "ts": 1783382513
+  },
+  "CVE": {
+    "industry": "Oil & Gas Integrated",
+    "sector": "Energy",
+    "ts": 1778864408
+  },
+  "CVS": {
+    "industry": "Healthcare Plans",
+    "sector": "Healthcare",
+    "ts": 1784246492
+  },
+  "DD": {
+    "industry": "Specialty Chemicals",
+    "sector": "Basic Materials",
+    "ts": 1782405186
+  },
+  "DDOG": {
+    "industry": "Software - Application",
+    "sector": "Technology",
+    "ts": 1779285358
+  },
+  "DELL": {
+    "industry": "Computer Hardware",
+    "sector": "Technology",
+    "ts": 1778771325
+  },
+  "DFTX": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1785369706
+  },
+  "DINO": {
+    "industry": "Oil & Gas Refining & Marketing",
+    "sector": "Energy",
+    "ts": 1784332986
+  },
+  "DOC": {
+    "industry": "REIT - Healthcare Facilities",
+    "sector": "Real Estate",
+    "ts": 1784592083
+  },
+  "DOCN": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1779285358
+  },
+  "EBAY": {
+    "industry": "Internet Retail",
+    "sector": "Consumer Cyclical",
+    "ts": 1778771326
+  },
+  "ELV": {
+    "industry": "Healthcare Plans",
+    "sector": "Healthcare",
+    "ts": 1780068222
+  },
+  "ERAS": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1782786282
+  },
+  "FBIN": {
+    "industry": "Building Products & Equipment",
+    "sector": "Industrials",
+    "ts": 1782786281
+  },
+  "FLEX": {
+    "industry": "Electronic Components",
+    "sector": "Technology",
+    "ts": 1781568120
+  },
+  "FRMI": {
+    "industry": "REIT - Specialty",
+    "sector": "Real Estate",
+    "ts": 1782786282
+  },
+  "FROG": {
+    "industry": "Software - Application",
+    "sector": "Technology",
+    "ts": 1783382513
+  },
+  "FSLR": {
+    "industry": "Solar",
+    "sector": "Technology",
+    "ts": 1779984543
+  },
+  "FTNT": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1784246492
+  },
+  "GFS": {
+    "industry": "Semiconductors",
+    "sector": "Technology",
+    "ts": 1779458389
+  },
+  "GH": {
+    "industry": "Diagnostics & Research",
+    "sector": "Healthcare",
+    "ts": 1783728075
+  },
+  "GLW": {
+    "industry": "Electronic Components",
+    "sector": "Technology",
+    "ts": 1782786282
+  },
+  "GTX": {
+    "industry": "Auto Parts",
+    "sector": "Consumer Cyclical",
+    "ts": 1784246492
+  },
+  "HNGE": {
+    "industry": "Health Information Services",
+    "sector": "Healthcare",
+    "ts": 1782488479
+  },
+  "HPE": {
+    "industry": "Communication Equipment",
+    "sector": "Technology",
+    "ts": 1781568120
+  },
+  "HPQ": {
+    "industry": "Computer Hardware",
+    "sector": "Technology",
+    "ts": 1780068222
+  },
+  "HST": {
+    "industry": "REIT - Hotel & Motel",
+    "sector": "Real Estate",
+    "ts": 1781225150
+  },
+  "HUM": {
+    "industry": "Healthcare Plans",
+    "sector": "Healthcare",
+    "ts": 1784246492
+  },
+  "ICLR": {
+    "industry": "Diagnostics & Research",
+    "sector": "Healthcare",
+    "ts": 1784851303
+  },
+  "ILMN": {
+    "industry": "Diagnostics & Research",
+    "sector": "Healthcare",
+    "ts": 1784678502
+  },
+  "INTC": {
+    "industry": "Semiconductors",
+    "sector": "Technology",
+    "ts": 1778771325
+  },
+  "IQV": {
+    "industry": "Diagnostics & Research",
+    "sector": "Healthcare",
+    "ts": 1785283277
+  },
+  "JEF": {
+    "industry": "Capital Markets",
+    "sector": "Financial Services",
+    "ts": 1780717144
+  },
+  "KDP": {
+    "industry": "Beverages - Non-Alcoholic",
+    "sector": "Consumer Defensive",
+    "ts": 1782950494
+  },
+  "KGS": {
+    "industry": "Oil & Gas Equipment & Services",
+    "sector": "Energy",
+    "ts": 1778771326
+  },
+  "KLAC": {
+    "industry": "Semiconductor Equipment & Materials",
+    "sector": "Technology",
+    "ts": 1782786282
+  },
+  "KMX": {
+    "industry": "Auto & Truck Dealerships",
+    "sector": "Consumer Cyclical",
+    "ts": 1784678502
+  },
+  "KXIAY": {
+    "industry": "Semiconductors",
+    "sector": "Technology",
+    "ts": 1782135476
+  },
+  "LEGN": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1781136113
+  },
+  "LGN": {
+    "industry": "Engineering & Construction",
+    "sector": "Industrials",
+    "ts": 1778771326
+  },
+  "LLY": {
+    "industry": "Drug Manufacturers - General",
+    "sector": "Healthcare",
+    "ts": 1784937692
+  },
+  "LQDA": {
+    "industry": "Drug Manufacturers - Specialty & Generic",
+    "sector": "Healthcare",
+    "ts": 1784246492
+  },
+  "LSCC": {
+    "industry": "Semiconductors",
+    "sector": "Technology",
+    "ts": 1785382630
+  },
+  "LTH": {
+    "industry": "Leisure",
+    "sector": "Consumer Cyclical",
+    "ts": 1783987360
+  },
+  "MAC": {
+    "industry": "REIT - Retail",
+    "sector": "Real Estate",
+    "ts": 1781136113
+  },
+  "MARA": {
+    "industry": "Capital Markets",
+    "sector": "Financial Services",
+    "ts": 1785382630
+  },
+  "MICC": {
+    "industry": "Packaged Foods",
+    "sector": "Consumer Defensive",
+    "ts": 1784764900
+  },
+  "MKSI": {
+    "industry": "Scientific & Technical Instruments",
+    "sector": "Technology",
+    "ts": 1782751347
+  },
+  "MNST": {
+    "industry": "Beverages - Non-Alcoholic",
+    "sector": "Consumer Defensive",
+    "ts": 1782405187
+  },
+  "MOH": {
+    "industry": "Healthcare Plans",
+    "sector": "Healthcare",
+    "ts": 1782786281
+  },
+  "MPC": {
+    "industry": "Oil & Gas Refining & Marketing",
+    "sector": "Energy",
+    "ts": 1784332986
+  },
+  "MRNA": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1782786281
+  },
+  "MRVL": {
+    "industry": "Semiconductors",
+    "sector": "Technology",
+    "ts": 1778771325
+  },
+  "MS": {
+    "industry": "Capital Markets",
+    "sector": "Financial Services",
+    "ts": 1780583126
+  },
+  "MTSI": {
+    "industry": "Semiconductors",
+    "sector": "Technology",
+    "ts": 1785382630
+  },
+  "MU": {
+    "industry": "Semiconductors",
+    "sector": "Technology",
+    "ts": 1782259276
+  },
+  "MUFG": {
+    "industry": "Banks - Diversified",
+    "sector": "Financial Services",
+    "ts": 1784851303
+  },
+  "MXL": {
+    "industry": "Semiconductors",
+    "sector": "Technology",
+    "ts": 1779156885
+  },
+  "NAVN": {
+    "industry": "Software - Application",
+    "sector": "Technology",
+    "ts": 1782135476
+  },
+  "NBIX": {
+    "industry": "Drug Manufacturers - Specialty & Generic",
+    "sector": "Healthcare",
+    "ts": 1783987360
+  },
+  "NOK": {
+    "industry": "Communication Equipment",
+    "sector": "Technology",
+    "ts": 1778771325
+  },
+  "NOKBF": {
+    "industry": "Communication Equipment",
+    "sector": "Technology",
+    "ts": 1778771325
+  },
+  "NTAP": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1779922424
+  },
+  "NUE": {
+    "industry": "Steel",
+    "sector": "Basic Materials",
+    "ts": 1780717144
+  },
+  "NVT": {
+    "industry": "Electrical Equipment & Parts",
+    "sector": "Industrials",
+    "ts": 1778771326
+  },
+  "OKTA": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1783728075
+  },
+  "ON": {
+    "industry": "Semiconductors",
+    "sector": "Technology",
+    "ts": 1779984543
+  },
+  "ONTO": {
+    "industry": "Semiconductor Equipment & Materials",
+    "sector": "Technology",
+    "ts": 1782786282
+  },
+  "ORKA": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1782786281
+  },
+  "OSCR": {
+    "industry": "Healthcare Plans",
+    "sector": "Healthcare",
+    "ts": 1782259276
+  },
+  "PANW": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1782950494
+  },
+  "PAYX": {
+    "industry": "Software - Application",
+    "sector": "Technology",
+    "ts": 1785196917
+  },
+  "PFGC": {
+    "industry": "Food Distribution",
+    "sector": "Consumer Defensive",
+    "ts": 1785283277
+  },
+  "PLUG": {
+    "industry": "Electrical Equipment & Parts",
+    "sector": "Industrials",
+    "ts": 1778771326
+  },
+  "PRU": {
+    "industry": "Insurance - Life",
+    "sector": "Financial Services",
+    "ts": 1785331040
+  },
+  "PTRN": {
+    "industry": "Software - Application",
+    "sector": "Technology",
+    "ts": 1783382513
+  },
+  "PWR": {
+    "industry": "Engineering & Construction",
+    "sector": "Industrials",
+    "ts": 1778771326
+  },
+  "QRVO": {
+    "industry": "Semiconductors",
+    "sector": "Technology",
+    "ts": 1785382630
+  },
+  "RAL": {
+    "industry": "Electronic Components",
+    "sector": "Technology",
+    "ts": 1784332986
+  },
+  "RCRUY": {
+    "industry": "Internet Content & Information",
+    "sector": "Communication Services",
+    "ts": 1780944612
+  },
+  "RIOT": {
+    "industry": "Capital Markets",
+    "sector": "Financial Services",
+    "ts": 1782744225
+  },
+  "RVMD": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1783468901
+  },
+  "RVTY": {
+    "industry": "Diagnostics & Research",
+    "sector": "Healthcare",
+    "ts": 1785369706
+  },
+  "RY": {
+    "industry": "Banks - Diversified",
+    "sector": "Financial Services",
+    "ts": 1782744225
+  },
+  "SFTBY": {
+    "industry": "Telecom Services",
+    "sector": "Communication Services",
+    "ts": 1780328954
+  },
+  "SGHC": {
+    "industry": "Gambling",
+    "sector": "Consumer Cyclical",
+    "ts": 1778771326
+  },
+  "SIMO": {
+    "industry": "Semiconductors",
+    "sector": "Technology",
+    "ts": 1782744225
+  },
+  "SIRI": {
+    "industry": "Entertainment",
+    "sector": "Communication Services",
+    "ts": 1779410270
+  },
+  "SKM": {
+    "industry": "Telecom Services",
+    "sector": "Communication Services",
+    "ts": 1780499160
+  },
+  "SMTC": {
+    "industry": "Semiconductors",
+    "sector": "Technology",
+    "ts": 1781568120
+  },
+  "SNDK": {
+    "industry": "Computer Hardware",
+    "sector": "Technology",
+    "ts": 1782135476
+  },
+  "SNDR": {
+    "industry": "Trucking",
+    "sector": "Industrials",
+    "ts": 1781022779
+  },
+  "SNOW": {
+    "industry": "Software - Application",
+    "sector": "Technology",
+    "ts": 1783987360
+  },
+  "SSL": {
+    "industry": "Specialty Chemicals",
+    "sector": "Basic Materials",
+    "ts": 1778771326
+  },
+  "ST": {
+    "industry": "Scientific & Technical Instruments",
+    "sector": "Technology",
+    "ts": 1780499160
+  },
+  "STLD": {
+    "industry": "Steel",
+    "sector": "Basic Materials",
+    "ts": 1781136113
+  },
+  "STM": {
+    "industry": "Semiconductors",
+    "sector": "Technology",
+    "ts": 1781568120
+  },
+  "STT": {
+    "industry": "Asset Management",
+    "sector": "Financial Services",
+    "ts": 1783382513
+  },
+  "STUB": {
+    "industry": "Internet Content & Information",
+    "sector": "Communication Services",
+    "ts": 1783382513
+  },
+  "STX": {
+    "industry": "Computer Hardware",
+    "sector": "Technology",
+    "ts": 1781568120
+  },
+  "SYRE": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1781568120
+  },
+  "TD": {
+    "industry": "Banks - Diversified",
+    "sector": "Financial Services",
+    "ts": 1782405186
+  },
+  "TECH": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1782786281
+  },
+  "TGTX": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1782786281
+  },
+  "TNGX": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1782786282
+  },
+  "TROW": {
+    "industry": "Asset Management",
+    "sector": "Financial Services",
+    "ts": 1783036904
+  },
+  "TRV": {
+    "industry": "Insurance - Property & Casualty",
+    "sector": "Financial Services",
+    "ts": 1785331040
+  },
+  "TSEM": {
+    "industry": "Semiconductors",
+    "sector": "Technology",
+    "ts": 1780452266
+  },
+  "TVTX": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1784764900
+  },
+  "TWLO": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1778771326
+  },
+  "TWST": {
+    "industry": "Diagnostics & Research",
+    "sector": "Healthcare",
+    "ts": 1782786281
+  },
+  "TXG": {
+    "industry": "Health Information Services",
+    "sector": "Healthcare",
+    "ts": 1784678502
+  },
+  "UBS": {
+    "industry": "Banks - Diversified",
+    "sector": "Financial Services",
+    "ts": 1784160078
+  },
+  "UCTT": {
+    "industry": "Semiconductor Equipment & Materials",
+    "sector": "Technology",
+    "ts": 1782751347
+  },
+  "UMC": {
+    "industry": "Semiconductors",
+    "sector": "Technology",
+    "ts": 1782488479
+  },
+  "UNH": {
+    "industry": "Healthcare Plans",
+    "sector": "Healthcare",
+    "ts": 1782135476
+  },
+  "VNO": {
+    "industry": "REIT - Office",
+    "sector": "Real Estate",
+    "ts": 1783728075
+  },
+  "VOYA": {
+    "industry": "Financial Conglomerates",
+    "sector": "Financial Services",
+    "ts": 1783555288
+  },
+  "VRNS": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1783468901
+  },
+  "VSAT": {
+    "industry": "Communication Equipment",
+    "sector": "Technology",
+    "ts": 1779922424
+  },
+  "VSH": {
+    "industry": "Semiconductors",
+    "sector": "Technology",
+    "ts": 1781568120
+  },
+  "VSNT": {
+    "industry": "Entertainment",
+    "sector": "Communication Services",
+    "ts": 1778771326
+  },
+  "VSXY": {
+    "industry": "Apparel Retail",
+    "sector": "Consumer Cyclical",
+    "ts": 1784764900
+  },
+  "W": {
+    "industry": "Internet Retail",
+    "sector": "Consumer Cyclical",
+    "ts": 1782786281
+  },
+  "WDC": {
+    "industry": "Computer Hardware",
+    "sector": "Technology",
+    "ts": 1782135476
+  },
+  "YOU": {
+    "industry": "Software - Application",
+    "sector": "Technology",
+    "ts": 1778771326
+  }
+}
