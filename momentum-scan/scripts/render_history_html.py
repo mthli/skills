@@ -34,6 +34,16 @@ def load_history(path: Path) -> list[dict]:
         return list(csv.DictReader(f))
 
 
+# Entry-quality tier thresholds — MUST equal scan.py's constants of the
+# same names (that's the source of truth; test_volume_fields.py has a
+# drift-guard test asserting equality). Duplicated numerically because
+# this script deliberately stays stdlib-only while scan.py imports
+# yfinance at module level.
+ENTRY_VOL_SURGE_MIN = 1.5
+ENTRY_VOL_QUIET_MAX = 0.8
+ENTRY_CLEAN_DIST_MAX = 1
+
+
 def load_sectors(path: Path) -> dict:
     if not path.exists():
         # A missing cache is almost always a checkout/path problem, and the
@@ -105,6 +115,27 @@ def build_payload(rows: list[dict], sectors: dict, top_n: int, days_window: int 
                 t), "pts": win_pts, "apps": win_apps})
         first_d = min(p["d"] for p in top_days)
         last_d = max(p["d"] for p in top_days)
+        # Entry quality of the LATEST episode: walk back from the most
+        # recent on-board day while days stay consecutive, then tier the
+        # spell's first day by its entry-day volume character.
+        top_ds = sorted(p["d"] for p in top_days)
+        ep_start = top_ds[-1]
+        for d in reversed(top_ds[:-1]):
+            if d != ep_start - 1:
+                break
+            ep_start = d
+        erow = runs[run_ids[ep_start]]
+        eq = eqv = eqd = None
+        vr_s = erow.get("vol_ratio_20d") or ""
+        dd_s = erow.get("dist_days_25d") or ""
+        if vr_s and dd_s:
+            eqv, eqd = float(vr_s), int(float(dd_s))
+            if eqv >= ENTRY_VOL_SURGE_MIN:
+                eq = 3 if eqd <= ENTRY_CLEAN_DIST_MAX else 2
+            elif eqv < ENTRY_VOL_QUIET_MAX:
+                eq = 0
+            else:
+                eq = 1
         summary.append({
             "t": t,
             "sec": sector_of(t),
@@ -115,6 +146,8 @@ def build_payload(rows: list[dict], sectors: dict, top_n: int, days_window: int 
             "first": day_labels[first_d], "firstD": first_d,
             "last": day_labels[last_d], "lastD": last_d,
             "score": float(latest_row["score"]) if latest_row else None,
+            "eq": eq, "eqv": eqv, "eqd": eqd,
+            "eqDay": day_labels[ep_start],
         })
 
     summary.sort(key=lambda s: (-s["apps"], s["best"]))
@@ -217,6 +250,9 @@ HTML_TEMPLATE = r"""<!doctype html>
   --h0: #cde2fb; --h1: #b7d3f6; --h2: #9ec5f4; --h3: #86b6ef; --h4: #6da7ec;
   --h5: #5598e7; --h6: #3987e5; --h7: #2a78d6; --h8: #1c5cab; --h9: #0d366b;
   --hx: #eceae4;
+  /* Entry-quality ordinal ramp — 4 steps off the heat ramp, spaced for
+     adjacent distinguishability (validated ΔE ≥ 15 on both surfaces). */
+  --eq0: var(--h0); --eq1: var(--h3); --eq2: var(--h6); --eq3: var(--h9);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -231,6 +267,9 @@ HTML_TEMPLATE = r"""<!doctype html>
     --h0: #184f95; --h1: #1c5cab; --h2: #256abf; --h3: #2a78d6; --h4: #3987e5;
     --h5: #5598e7; --h6: #6da7ec; --h7: #86b6ef; --h8: #9ec5f4; --h9: #cde2fb;
     --hx: #262624;
+    /* Dark ramp compresses at the deep end — widen the middle steps so
+       adjacent tiers keep ΔE ≥ 15 against the dark surface. */
+    --eq1: var(--h4); --eq2: var(--h7);
   }
 }
 * { box-sizing: border-box; }
@@ -297,6 +336,10 @@ th:first-child, td:first-child, th:nth-child(2), td:nth-child(2) { text-align: l
 td { font-variant-numeric: tabular-nums; color: var(--ink-2); }
 tbody tr:last-child td { border-bottom: none; }
 td.tk { color: var(--ink); font-weight: 600; }
+.eqdot { display: inline-block; width: 12px; height: 12px; border-radius: 50%;
+         border: 1px solid var(--border); vertical-align: -1px; }
+.eq0 { background: var(--eq0); } .eq1 { background: var(--eq1); }
+.eq2 { background: var(--eq2); } .eq3 { background: var(--eq3); }
 .foot { color: var(--muted); font-size: 12px; margin-top: 24px; }
 a { color: inherit; text-decoration: none; }
 a:hover { text-decoration: underline; }
@@ -380,8 +423,10 @@ const I18N = {
     names: c => `${c} names`,
     others: "Others",
     rosterTitle: "Roster",
-    rosterNote: "One row per name that ever made the board. Click a header to sort; click again to reverse. Every hover value from the charts is readable here.",
-    cols: ["Ticker", "Sector", "Days on board", "Best rank", "Current rank", "Streak", "First seen", "Last seen", "Latest score"],
+    rosterNote: "One row per name that ever made the board. Click a header to sort; click again to reverse. Every hover value from the charts is readable here. Entry = entry-day volume character of the latest board spell (darker blue = stronger entry; hover or tap the dot for details).",
+    cols: ["Ticker", "Sector", "Days on board", "Best rank", "Current rank", "Streak", "Entry", "First seen", "Last seen", "Latest score"],
+    eqLabels: ["Quiet drift-in", "Neutral", "Volume surge", "Surge + clean"],
+    eqTip: (v, d, day) => `vol ${v}× · ${d} dist days · entered ${day}`,
     score: "Score", ret: "Return", dd: "Drawdown",
     formula: "Score = Return ÷ |Drawdown|",
     formulaNote: " — return per 1% of drawdown endured (sub-1% drawdowns count as 1%).",
@@ -413,8 +458,10 @@ const I18N = {
     names: c => `${c} 只`,
     others: "其他",
     rosterTitle: "上榜名录",
-    rosterNote: "每个曾经上榜的标的一行。点击表头排序；再次点击反向。图表中所有悬停数值在此均可查阅。",
-    cols: ["代码", "行业", "在榜天数", "最佳排名", "当前排名", "连续在榜", "首次上榜", "最近上榜", "最新评分"],
+    rosterNote: "每个曾经上榜的标的一行。点击表头排序；再次点击反向。图表中所有悬停数值在此均可查阅。入场 = 最近一段在榜区间入场日的量能特征（蓝色越深入场越强；悬停或点按圆点看详情）。",
+    cols: ["代码", "行业", "在榜天数", "最佳排名", "当前排名", "连续在榜", "入场", "首次上榜", "最近上榜", "最新评分"],
+    eqLabels: ["缩量飘入", "中性", "放量入场", "放量且干净"],
+    eqTip: (v, d, day) => `量比 ${v}× · ${d} 个派发日 · ${day} 入场`,
     score: "评分", ret: "收益", dd: "回撤",
     formula: "评分 = 收益 ÷ |回撤|",
     formulaNote: " —— 每承受 1% 回撤换来的收益（回撤不足 1% 按 1% 计）。",
@@ -451,8 +498,10 @@ const I18N = {
     names: c => `${c} 檔`,
     others: "其他",
     rosterTitle: "上榜名錄",
-    rosterNote: "每個曾經上榜的標的一行。點擊表頭排序；再次點擊反向。圖表中所有懸停數值在此均可查閱。",
-    cols: ["代號", "產業", "在榜天數", "最佳排名", "目前排名", "連續在榜", "首次上榜", "最近上榜", "最新評分"],
+    rosterNote: "每個曾經上榜的標的一行。點擊表頭排序；再次點擊反向。圖表中所有懸停數值在此均可查閱。進場 = 最近一段在榜區間進場日的量能特徵（藍色越深進場越強；懸停或點按圓點看詳情）。",
+    cols: ["代號", "產業", "在榜天數", "最佳排名", "目前排名", "連續在榜", "進場", "首次上榜", "最近上榜", "最新評分"],
+    eqLabels: ["縮量飄入", "中性", "放量進場", "放量且乾淨"],
+    eqTip: (v, d, day) => `量比 ${v}× · ${d} 個派發日 · ${day} 進場`,
     score: "評分", ret: "報酬", dd: "回撤",
     formula: "評分 = 報酬 ÷ |回撤|",
     formulaNote: " —— 每承受 1% 回撤換來的報酬（回撤不足 1% 按 1% 計）。",
@@ -489,8 +538,10 @@ const I18N = {
     names: c => `${c} 銘柄`,
     others: "その他",
     rosterTitle: "ランクイン銘柄一覧",
-    rosterNote: "ランクインしたことのある銘柄を 1 行ずつ表示。ヘッダーをクリックでソート、もう一度クリックで逆順。チャートのホバー数値はすべてこの表で確認できます。",
-    cols: ["ティッカー", "セクター", "ランクイン日数", "最高順位", "現在順位", "連続日数", "初登場", "直近登場", "最新スコア"],
+    rosterNote: "ランクインしたことのある銘柄を 1 行ずつ表示。ヘッダーをクリックでソート、もう一度クリックで逆順。チャートのホバー数値はすべてこの表で確認できます。エントリー = 直近ランクイン期間の初日の出来高特性（青が濃いほど強い。ドットにホバーまたはタップで詳細）。",
+    cols: ["ティッカー", "セクター", "ランクイン日数", "最高順位", "現在順位", "連続日数", "エントリー", "初登場", "直近登場", "最新スコア"],
+    eqLabels: ["薄商い流入", "中立", "出来高急増", "急増＋クリーン"],
+    eqTip: (v, d, day) => `出来高比 ${v}× · 分配日 ${d} · ${day} エントリー`,
     score: "スコア", ret: "リターン", dd: "ドローダウン",
     formula: "スコア = リターン ÷ |ドローダウン|",
     formulaNote: " —— ドローダウン 1% あたりのリターン（1% 未満のドローダウンは 1% として計算）。",
@@ -527,8 +578,10 @@ const I18N = {
     names: c => `${c}개 종목`,
     others: "기타",
     rosterTitle: "진입 종목 목록",
-    rosterNote: "순위에 오른 적 있는 종목을 한 행씩 표시. 헤더를 클릭해 정렬, 다시 클릭하면 역순. 차트의 모든 호버 값을 이 표에서 확인할 수 있습니다.",
-    cols: ["티커", "섹터", "진입 일수", "최고 순위", "현재 순위", "연속 일수", "첫 진입", "최근 진입", "최신 점수"],
+    rosterNote: "순위에 오른 적 있는 종목을 한 행씩 표시. 헤더를 클릭해 정렬, 다시 클릭하면 역순. 차트의 모든 호버 값을 이 표에서 확인할 수 있습니다. 진입 = 최근 순위권 구간 첫날의 거래량 특성 (파란색이 진할수록 강한 진입; 점에 호버하거나 탭하면 상세).",
+    cols: ["티커", "섹터", "진입 일수", "최고 순위", "현재 순위", "연속 일수", "진입", "첫 진입", "최근 진입", "최신 점수"],
+    eqLabels: ["거래량 미달 진입", "중립", "거래량 급증", "급증+클린"],
+    eqTip: (v, d, day) => `거래량비 ${v}× · 분배일 ${d} · ${day} 진입`,
     score: "점수", ret: "수익률", dd: "낙폭",
     formula: "점수 = 수익률 ÷ |낙폭|",
     formulaNote: " —— 낙폭 1%당 얻은 수익률(1% 미만 낙폭은 1%로 계산).",
@@ -667,13 +720,16 @@ function renderDetail(det, t) {
 const tip = document.getElementById("tip");
 function showTip(x, y, build) {
   tip.textContent = "";
+  // Any caller repainting the tip owns it — clear the eq-dot marker so a
+  // chart hover doesn't leave a stale "this dot's tip is open" flag.
+  delete tip.dataset.eq;
   build(tip);
   tip.style.display = "block";
   const r = tip.getBoundingClientRect();
   tip.style.left = Math.min(x + 14, innerWidth - r.width - 8) + "px";
   tip.style.top = (y - r.height - 12 < 4 ? y + 16 : y - r.height - 12) + "px";
 }
-const hideTip = () => { tip.style.display = "none"; };
+const hideTip = () => { tip.style.display = "none"; delete tip.dataset.eq; };
 function tipRows(t, rows, keyColor) {
   const head = div(null, t);
   if (keyColor) { const k = document.createElement("span"); k.className = "k"; k.style.background = keyColor; head.appendChild(k); }
@@ -942,10 +998,12 @@ function renderHeat(minApps) {
     {h: T.cols[3], v: s => s.best,           dir: 1},
     {h: T.cols[4], v: s => s.latest,         dir: 1},
     {h: T.cols[5], v: s => s.streak || null, dir: -1},
-    {h: T.cols[6], v: s => s.firstD,         dir: -1},
-    {h: T.cols[7], v: s => s.lastD,          dir: -1},
-    {h: T.cols[8], v: s => s.score,          dir: -1},
+    {h: T.cols[6], v: s => s.eq,             dir: -1},
+    {h: T.cols[7], v: s => s.firstD,         dir: -1},
+    {h: T.cols[8], v: s => s.lastD,          dir: -1},
+    {h: T.cols[9], v: s => s.score,          dir: -1},
   ];
+  const EQ_COL = 6;
   const thead = document.createElement("thead");
   const hr = document.createElement("tr");
   const ths = COLS.map(c => {
@@ -974,10 +1032,45 @@ function renderHeat(minApps) {
     }).forEach(s => {
       const tr = document.createElement("tr");
       [s.t, secName(s.sec), s.apps, "#"+s.best, s.latest ? "#"+s.latest : "—",
-       s.streak || "—", s.first, s.last, s.score !== null ? s.score.toFixed(2) : "—"]
+       s.streak || "—", s.eq, s.first, s.last,
+       s.score !== null ? s.score.toFixed(2) : "—"]
       .forEach((c, i) => {
         const td = document.createElement("td");
         if (i === 0) { td.className = "tk"; td.appendChild(tickerLink(c)); }
+        else if (i === EQ_COL) {
+          if (c === null || c === undefined) td.textContent = "—";
+          else {
+            const dot = document.createElement("span");
+            dot.className = "eqdot eq" + c;
+            dot.setAttribute("aria-label",
+              `${T.eqLabels[c]} · ${T.eqTip(s.eqv, s.eqd, s.eqDay)}`);
+            dot.setAttribute("role", "img");
+            dot.tabIndex = 0;
+            // Shared #tip layer instead of a native title: works for
+            // hover, tap (mobile), and keyboard focus alike.
+            const show = () => {
+              const r = dot.getBoundingClientRect();
+              showTip(r.left + r.width / 2, r.top, t => tipRows(
+                t, [T.eqLabels[c], T.eqTip(s.eqv, s.eqd, s.eqDay)],
+                `var(--eq${c})`));
+              tip.dataset.eq = s.t;
+            };
+            dot.addEventListener("pointerenter", ev => {
+              if (ev.pointerType === "mouse") show();
+            });
+            dot.addEventListener("pointerleave", ev => {
+              if (ev.pointerType === "mouse") hideTip();
+            });
+            dot.addEventListener("click", ev => {
+              ev.stopPropagation();
+              if (tip.style.display === "block" && tip.dataset.eq === s.t) hideTip();
+              else show();
+            });
+            dot.addEventListener("focus", show);
+            dot.addEventListener("blur", hideTip);
+            td.appendChild(dot);
+          }
+        }
         else td.textContent = c;
         tr.appendChild(td);
       });

@@ -121,6 +121,16 @@ def test_partial_session_trimmed_from_volume_trio():
     assert p2["vol_ratio_20d"] == 3.0
 
 
+def test_entry_quality_thresholds_match_render_script():
+    # render_history_html.py duplicates the tier thresholds (it stays
+    # stdlib-only, so it can't import scan). This guard fails the build
+    # if a re-calibration touches one side and forgets the other.
+    import render_history_html as rh
+    assert rh.ENTRY_VOL_SURGE_MIN == scan.ENTRY_VOL_SURGE_MIN
+    assert rh.ENTRY_VOL_QUIET_MAX == scan.ENTRY_VOL_QUIET_MAX
+    assert rh.ENTRY_CLEAN_DIST_MAX == scan.ENTRY_CLEAN_DIST_MAX
+
+
 def test_entry_quality_tiers():
     assert scan.entry_quality(1.5, 1) == ("🟢", "surge+clean")
     assert scan.entry_quality(1.5, 2) == ("🔵", "surge")
