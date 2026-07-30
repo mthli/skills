@@ -1194,23 +1194,34 @@ def main():
 
 
 def show_history_summary():
-    """Quick stats — # snapshots, date range, recent flag counts."""
+    """Quick stats — # snapshots, date range, recent flag counts, and the
+    chronic residents (per-ticker share of all snapshots — the outcome
+    backtest found >2/3 presence to be the worst-performing pocket)."""
     dates = list_history_dates()
     if not dates:
         print("No history yet.")
         return
+    ticker_days: dict[str, int] = {}
     print(f"# UOA history summary")
     print(
         f"\nSnapshots: {len(dates)}  ({dates[0].isoformat()} → {dates[-1].isoformat()})\n")
     print("| Date | Flagged contracts | Top tickers |")
     print("|---|---|---|")
-    for d in dates[-14:]:
+    for d in dates:
         snap = parse_snapshot(d)
         if not snap:
             continue
         tickers = sorted(set(r["ticker"] for r in snap if r.get("ticker")))
-        print(f"| {d.isoformat()} | {len(snap)} | "
-              f"{', '.join(tickers[:8])}{' ...' if len(tickers) > 8 else ''} |")
+        for t in tickers:
+            ticker_days[t] = ticker_days.get(t, 0) + 1
+        if d >= dates[-14]:
+            print(f"| {d.isoformat()} | {len(snap)} | "
+                  f"{', '.join(tickers[:8])}{' ...' if len(tickers) > 8 else ''} |")
+    chronic = sorted(ticker_days.items(), key=lambda kv: -kv[1])[:15]
+    print("\n## Chronic residents (share of all snapshots — discount these; "
+          "see SKILL.md Backtested outcomes #4)\n")
+    for t, c in chronic:
+        print(f"- **{t}**: {c}/{len(dates)} ({100 * c / len(dates):.0f}%)")
 
 
 if __name__ == "__main__":

@@ -270,8 +270,11 @@ def resolve_sessions(snap_dates: list[date],
             continue
         s = idx[pos].normalize()
         if s in used:
+            # Both snapshots read the same close; keep only the later one so
+            # its ticker-days aren't double-counted.
             print(f"warning: snapshots {used[s]} and {d} map to the same "
                   f"session {s.date()}; keeping {d}", file=sys.stderr)
+            sessions.pop(used[s], None)
         used[s] = d
         sessions[d] = s
     return sessions
@@ -310,6 +313,9 @@ def excess_table(title: str, groups: list[tuple[str, list[TDay]]],
         else:
             vals = {k: [td.x[k] for td in tds if k in td.x] for k in WINDOWS}
         if not vals[1]:
+            # Print empty strata rather than dropping them — a reader must be
+            # able to tell "n=0" from "not computed".
+            lines.append(f"| {name} | 0 | 0 | — | — | — | — | — | — |")
             continue
         raw5 = [abs(td.fwd[5]) for td in tds if 5 in td.fwd]
         beat = 100 * np.mean([v > 0 for v in vals[5]]) if vals[5] else None
@@ -333,6 +339,7 @@ def contract_table(title: str,
         vals = {k: [sg * td.x[k] for sg, td in items if k in td.x]
                 for k in WINDOWS}
         if not vals[1]:
+            lines.append(f"| {name} | 0 | 0 | — | — | — | — | — |")
             continue
         beat = 100 * np.mean([v > 0 for v in vals[5]]) if vals[5] else None
         lines.append(
@@ -544,7 +551,7 @@ def main() -> None:
         "By chronicity (share of all snapshots the ticker appears in — "
         "full-sample attribute, see caveats)", bucket_td(
             ok, lambda td: td.chron,
-            [("≤10% episodic", 0, 0.10), ("10–33%", 0.10, 1 / 3),
+            [("<10% episodic", 0, 0.10), ("10–33%", 0.10, 1 / 3),
              ("33–67%", 1 / 3, 2 / 3), (">67% chronic", 2 / 3, 1.01)])))
 
     print(excess_table(
@@ -733,6 +740,7 @@ def main() -> None:
         res = [x for x in rows if x[3]]
         cen = len(rows) - len(res)
         if not res:
+            print(f"| {name} | 0 | 0 | — | — | {cen} |")
             return
         hit = [x for x in res if x[1]]
         med_d = _med([x[2] for x in hit]) if hit else None
@@ -776,7 +784,9 @@ _Columns: n = ticker-days (or contracts) with T+1 resolved; n10 = with T+10
 resolved; xT+k = mean excess forward return vs the equal-weight universe mean
 on the same session; s× = direction-signed (call = +excess, put = −excess);
 med = median of the T+5 column's values; |T+5| = mean absolute raw T+5 move
-(does the flag predict MOVEMENT); Beat5 = share of T+5 values > 0._
+(does the flag predict MOVEMENT); Beat5 = share of the SAME table's T+5
+column values > 0 — i.e. excess in unsigned tables, signed excess in s×
+tables (the calibration table's Pos5 is the only raw-return share)._
 
 **Caveats** — read before quoting numbers:
 - One ~2.3-month window on a mostly RISK-ON tape; no regime variety.
@@ -794,7 +804,10 @@ med = median of the T+5 column's values; |T+5| = mean absolute raw T+5 move
 - Chronicity is computed over the full sample (mildly forward-looking as a
   filter attribute; in live use, trailing appearance counts approximate it).
 - Universe baseline uses the CURRENT universe list (survivorship optimism)
-  equal-weighted over ~1,000 names.
+  equal-weighted over ~1,000 names — and it CONTAINS the flagged names
+  themselves (~10-20% of the pool on a typical day), which drags the
+  baseline slightly toward the flagged pool; measured underperformance is
+  therefore mildly conservative.
 - The flagged pool structurally skews to high-volatility names (that's what
   generates options volume), so part of the underperformance may be a style
   effect of volatile names in this particular tape rather than information
