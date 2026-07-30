@@ -43,9 +43,10 @@ first ideally); the briefing says so if they're stale.
 
 ### 1. Reconcile the previous briefing first (the feedback loop)
 
-Before building today's, close the loop on the last one. Look in `archive/` for
-the most recent `YYYY-MM-DD.md` that has **no `## Reconciliation` section yet**
-and whose date is a *past* trading day. If you find one:
+Before building today's, close the loop on what's still open. Look in `archive/`
+for **every** `YYYY-MM-DD.md` dated a *past* trading day that has **no
+`## Reconciliation` section yet** — normally just one, but a skipped run must
+not orphan the briefing before it. For each one (oldest first):
 
 ```bash
 uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' \
@@ -59,8 +60,11 @@ expected vs actual in 3–5 lines, then **one honest calibration line**
 — what the call got right, what it missed, and *why* (e.g. "over-weighted a VIX
 spike that futures never confirmed"). Also append a one-row summary to
 `calibration.md` (create it if missing) so the hit/miss pattern is scannable
-over time. This is the whole point of archiving — a briefing nobody grades is
-just a horoscope.
+over time. **When the same lesson shows up in 2+ calibration rows, promote it:**
+fold the rule into `references/briefing-template.md` (game-plan framing or
+honesty rules, wherever it belongs) so hardened doctrine lives in the spec, not
+just in history. This is the whole point of archiving — a briefing nobody
+grades is just a horoscope.
 
 If there's no un-reconciled briefing (first run, or already caught up), skip to step 2.
 
@@ -82,8 +86,9 @@ large-cap movers outside your book, via TradingView), today's econ calendar +
 earnings, recent analyst rating changes on your names + watchlist
 (`rating_changes`), overnight macro headlines (`headlines`, CNBC RSS), Fear &
 Greed, the regime-scan state row, the cross-scan overlap names, your parsed
-positions (with `reports_today` / `in_overlap` joins), special-day flags, and an
-`errors` list.
+positions (with `reports_today` / `in_overlap` joins), special-day flags, an
+`errors` list, and a `data_quality` list (cross-source premarket disagreements
++ prev-close provenance — see step 3).
 
 ### 3. Gate on the run window — STOP if out-of-window
 
@@ -114,6 +119,19 @@ to not get fooled by them. Check these:
   flat, the VIX print is suspect; flag it, don't headline it. Let the *futures
   gap and Europe* lead the risk read; treat a lone VIX number as corroboration,
   not the driver.
+- **Data quality (`data_quality`).** Every premarket gap % is computed against
+  official daily closes (`prev_close_source: "daily"`); fast_info prevs proved
+  pollution-prone pre-open (2026-07-30: SPY prev 732.39 vs official 729.46,
+  FTNT +0.15% shown on a real +11% gap). Any entry in `data_quality` — a
+  cross-source premarket % disagreement (yfinance vs TradingView) or a
+  fast_info fallback — means that number is suspect: verify it against the
+  official close before grading it, and carry the caveat into the brief.
+- **Futures understate AMC-earnings gaps.** A big after-hours print gets
+  folded into the 17:00 ET futures settle, so next morning's ES/NQ pct can
+  understate — or even invert vs — the true overnight gap (2026-07-30: NQ
+  +0.99% vs QQQ +1.86% after the MSFT/META prints). When last night had a
+  market-moving AMC print, grade gap *size* off the index ETFs vs official
+  closes; futures keep only the risk-tone vote.
 - **Staleness.** `regime.stale_days > 1` means the structural backdrop predates
   recent action — say so and lean on the live tape. (A "RISK-ON" cache captured
   before a −4% day is worse than no read if quoted uncritically.)
@@ -136,6 +154,12 @@ structure, the game-plan framing (section 9 is the one that can do harm if
 written lazily — conditional/event-gated, tied to positions, never a directional
 call), and the output honesty rules (don't pad, check the premarket `as_of`
 date, state what was missing, times in ET).
+
+Then read **`calibration.md`** (at least the last ~10 rows) and carry its
+standing rules into today's synthesis — the lessons column is accumulated
+doctrine, not history. Cite a rule's date when applying it (e.g. "the 07-15
+flag-vs-board rule") so tomorrow's reconciliation can grade whether the
+doctrine itself keeps paying.
 
 ### 6. Archive it
 

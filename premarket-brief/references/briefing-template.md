@@ -66,9 +66,13 @@ an event driver today.
 
 SPY/QQQ/IWM: prior close, premarket gap (index_premarket), regime's 50/200DMA
 context (spy_vs_200_pct). Cross-check the gap against the ES/NQ/RTY futures in
-section 2 — futures are the cleaner overnight read; index-ETF premarket prints
-are thin. The levels that matter today — gap fill, resistance above / support
-below.
+section 2 — by default futures are the cleaner overnight read (index-ETF
+premarket prints are thin), EXCEPT on AMC-earnings mornings: a big after-hours
+print gets folded into the 17:00 ET futures settle, so the futures pct
+understates or even inverts vs the true gap (07-30: NQ +0.99% vs QQQ +1.86%
+after MSFT/META). On those mornings the ETF premarket vs official prior close
+is the honest gap size; futures keep only the risk-tone vote. The levels that
+matter today — gap fill, resistance above / support below.
 
 ## 7. Focus names
 
@@ -109,8 +113,9 @@ The closing `*Sources: …*` footer is **required**: a single italic line after 
 `---` rule (keep the blank line between the rule and the footer). It names which
 sources actually fed this run, flags any that came back empty/unavailable, dates
 the regime/cross-scan caches with their staleness, and ends with the `errors`
-count. This is the at-a-glance provenance + freshness stamp — it complements the
-per-section honesty notes (§3/§7/§8), it doesn't replace them.
+count plus any `data_quality` flags. This is the at-a-glance provenance +
+freshness stamp — it complements the per-section honesty notes (§3/§7/§8), it
+doesn't replace them.
 
 ---
 
@@ -169,8 +174,11 @@ prediction dressed as a plan — rewrite it as scenarios.
   regime should produce a *short* briefing that says "low-event day, range-bound
   likely, no action needed" — that's a valid and useful output. Length should
   track how much is actually happening.
-- **State what was missing.** Surface `errors`, stale caches, and unavailable
-  sources in the relevant section. A briefing that hides its blind spots is
-  worse than one that names them.
+- **State what was missing — and what disagreed.** Surface `errors`, stale
+  caches, and unavailable sources in the relevant section, plus every
+  `data_quality` flag (cross-source premarket % disagreements, prev-close
+  fallbacks): a flagged number that still gets quoted must carry its caveat
+  inline. A briefing that hides its blind spots is worse than one that names
+  them.
 - **Times are ET.** The calendar is ET-stamped; keep everything in ET and note
   the "as of" time so the user knows how fresh the premarket read is.

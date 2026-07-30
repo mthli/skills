@@ -12,6 +12,9 @@ in two things the sister scans already compute so we don't recompute them:
 Everything price-related is best-effort and degrades to None cleanly (mirrors
 regime-scan's philosophy): one dead source must never sink the whole packet —
 the `errors` list records what failed so the briefing can say so honestly.
+A separate `data_quality` list records sources that ANSWERED but disagree
+(cross-source premarket % divergence, prev-close fallbacks) — a lying source
+is worse than a dead one, so disagreement is surfaced, never averaged away.
 
 The output is ONE JSON object on stdout. It is saved to state/packets/ when the
 run is inside the pre-open window (session.valid) — or out-of-window only with
@@ -63,7 +66,10 @@ UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
 # fast_info gives last_price + previous_close in one cheap call. For futures
 # prev_close is the prior settlement, so pct = the overnight move — exactly the
 # "futures pointing up/down X%" tell. For Asia/Europe indices it's today's
-# session change. One consistent mechanism across every instrument here.
+# session change. One consistent mechanism across the tape blocks here — but
+# NOT for equity/ETF gap math: fast_info's previous_close proved pollution-prone
+# in the pre-open window (folds after-hours prints into "prev close"), so the
+# premarket blocks and the VIX pct use daily_prev_closes instead.
 FUTURES = {"ES=F": "S&P 500", "NQ=F": "Nasdaq 100", "YM=F": "Dow", "RTY=F": "Russell 2000"}
 GLOBAL = {"^N225": "Nikkei", "^HSI": "Hang Seng", "000001.SS": "Shanghai",
           "^KS11": "KOSPI", "^GDAXI": "DAX", "^FTSE": "FTSE 100",
@@ -200,15 +206,51 @@ def tape_block(mapping: dict[str, str]) -> dict:
     return out
 
 
-def premarket_movers(tickers: list[str]) -> dict:
+def daily_prev_closes(tickers: list[str], today: date, errors: list) -> dict[str, float]:
+    """Official prior-session closes from daily bars — ONE batched call.
+
+    This exists because fast_info.previous_close is NOT trustworthy in the
+    pre-open window: it can fold after-hours prints into "previous close"
+    (2026-07-30: SPY prev 732.39 vs official 729.46; FTNT shown +0.15% on a
+    real +11% gap), silently corrupting every premarket pct while `errors`
+    stays empty. Daily bars are the canonical close, so every gap % in the
+    packet is computed against them; fast_info is only a per-name fallback,
+    recorded via prev_close_source so it can't hide."""
+    tickers = sorted(set(t for t in tickers if t))
+    if not tickers:
+        return {}
+    try:
+        df = yf.download(tickers, period="5d", interval="1d", auto_adjust=False,
+                         progress=False, threads=True, group_by="ticker")
+    except Exception as e:
+        errors.append(f"daily_prev_closes: {e}")
+        return {}
+    out = {}
+    for tk in tickers:
+        try:
+            closes = (df[tk]["Close"] if len(tickers) > 1 else df["Close"]).dropna()
+            past = closes[closes.index.date < today]
+            if len(past):
+                out[tk] = round(float(past.iloc[-1]), 4)
+        except Exception:
+            continue
+    return out
+
+
+def premarket_movers(tickers: list[str], prev_map: dict[str, float] | None = None,
+                     quality: list | None = None) -> dict:
     """Best-effort premarket prints for a focused set (watchlist + positions +
     sectors + index proxies). Premarket single-stock data is thin and noisy —
     callers should weight it lightly — but 30 min before the open it's the only
-    read on overnight gaps in individual names. Uses 1m prepost bars; degrades
-    to {} with a note when the session has no premarket data yet."""
+    read on overnight gaps in individual names. Uses 1m prepost bars for the
+    live print; the gap is computed against `prev_map` (official daily closes —
+    see daily_prev_closes), with fast_info only as a per-ticker fallback, and
+    `prev_close_source` records which one fed each pct. Degrades to {} with a
+    note when the session has no premarket data yet."""
     tickers = sorted(set(t for t in tickers if t))
     if not tickers:
         return {"note": "no tickers to fetch", "movers": {}}
+    prev_map = prev_map or {}
     try:
         df = yf.download(tickers, period="1d", interval="1m", prepost=True,
                          auto_adjust=False, progress=False, threads=True,
@@ -223,12 +265,19 @@ def premarket_movers(tickers: list[str]) -> dict:
             if closes.empty:
                 continue
             last = float(closes.iloc[-1])
-            prev = quote(tk)
-            prev_close = prev["prev_close"] if prev else None
+            prev_close, src = prev_map.get(tk), "daily"
+            if not prev_close:
+                q = quote(tk)
+                prev_close, src = (q or {}).get("prev_close"), "fast_info"
+                if prev_close and quality is not None:
+                    quality.append(f"prev_close/{tk}: no daily bar — fast_info "
+                                   f"fallback (pollution-prone pre-open); verify "
+                                   f"the gap % against the official close")
             if not prev_close:
                 continue
             movers[tk] = {"premkt": round(last, 4),
                           "prev_close": round(prev_close, 4),
+                          "prev_close_source": src,
                           "pct": round((last / prev_close - 1) * 100, 2),
                           "as_of": str(closes.index[-1])}
         except Exception:
@@ -237,7 +286,7 @@ def premarket_movers(tickers: list[str]) -> dict:
     return {"note": note, "movers": movers}
 
 
-def vix_term_structure() -> dict:
+def vix_term_structure(prev_map: dict[str, float] | None = None) -> dict:
     """Live VIX term structure — VIX9D (9-day) / VIX (30-day) / VIX3M (3-month).
     The SHAPE is the read, not any single level: VIX/VIX3M > 1 means the front is
     above the back (backwardation) = acute near-term stress; < 1 = contango =
@@ -246,6 +295,15 @@ def vix_term_structure() -> dict:
     overnight risk shift. Degrades per-leg via tape_block (None where Yahoo has
     no print); a lone level is suspect overnight, the ratio is the corroboration."""
     levels = tape_block(VIX_TERM)
+    # fast_info prevs on the VIX complex proved polluted pre-open (two straight
+    # briefings had to void the deltas and use levels only) — recompute pct
+    # against the official daily closes wherever prev_map has them.
+    for tk, q in levels.items():
+        prev = (prev_map or {}).get(tk)
+        if prev and q.get("last"):
+            q["prev_close"] = prev
+            q["pct"] = round((q["last"] / prev - 1) * 100, 2)
+            q["prev_close_source"] = "daily"
 
     def lvl(tk):
         return (levels.get(tk) or {}).get("last")
@@ -320,6 +378,26 @@ def premarket_gappers(errors: list, min_mktcap: float = 2e9,
     return {"source": "tradingview", "note": "",
             "filters": {"min_mktcap": min_mktcap, "min_premkt_vol": min_premkt_vol},
             "gainers": gainers, "losers": losers}
+
+
+def cross_source_check(movers_blk: dict, gappers_blk: dict, quality: list,
+                       threshold_pp: float = 2.0) -> None:
+    """yfinance (premarket_movers) and TradingView (premarket_gappers) each
+    print a premarket pct; for tickers appearing in both, a material
+    disagreement means one source is lying — and BOTH have lied on different
+    mornings (TradingView stale 07-29; yfinance prevs polluted 07-30, ARM
+    +17.8 vs +10.9 the same day). Flag the disagreement so the briefing
+    verifies against the official close instead of detecting it by eye."""
+    yf_pcts = {tk: m.get("pct") for tk, m in (movers_blk.get("movers") or {}).items()}
+    for row in (gappers_blk.get("gainers") or []) + (gappers_blk.get("losers") or []):
+        tk, tv_pct = row.get("ticker"), row.get("pct")
+        yf_pct = yf_pcts.get(tk)
+        if tk and tv_pct is not None and yf_pct is not None \
+                and abs(yf_pct - tv_pct) > threshold_pp:
+            quality.append(
+                f"cross-source/{tk}: premkt {yf_pct:+.2f}% (yfinance, daily prev) "
+                f"vs {tv_pct:+.2f}% (TradingView) — Δ{abs(yf_pct - tv_pct):.1f}pp; "
+                f"verify against the official close before grading")
 
 
 def overnight_headlines(now: datetime, errors: list, lookback_h: int = 18,
@@ -741,6 +819,19 @@ def build(today: date, now: datetime | None = None) -> dict:
     overlap_order = [o["ticker"] for o in names.get("overlaps", [])]
     ratings_universe = sorted(pos_tickers) + overlap_order[:15]
 
+    # Official prior-session closes for every gap computation below — ONE
+    # batched daily download covering the index proxies, sector ETFs, the
+    # watchlist + book, and the VIX complex. fast_info prevs are pollution-
+    # prone pre-open (see daily_prev_closes); daily bars are canonical.
+    data_quality: list = []
+    prev_map = daily_prev_closes(
+        list(INDEX_PROXIES) + list(SECTOR_ETFS) + list(VIX_TERM)
+        + sorted(watchlist | pos_tickers), today, errors)
+
+    movers_blk = premarket_movers(sorted(watchlist | pos_tickers), prev_map, data_quality)
+    gappers_blk = premarket_gappers(errors)
+    cross_source_check(movers_blk, gappers_blk, data_quality)
+
     packet = {
         "as_of": now.isoformat(),
         "today_et": today.isoformat(),
@@ -749,17 +840,17 @@ def build(today: date, now: datetime | None = None) -> dict:
         "special_days": special_days(today),
         "overnight_tape": {
             "futures": tape_block(FUTURES),
-            "vix": vix_term_structure(),
+            "vix": vix_term_structure(prev_map),
             "global": tape_block(GLOBAL),
             "yields": tape_block(YIELDS),
             "fx": tape_block(FX),
             "commodities": tape_block(COMMODITIES),
             "crypto": tape_block(CRYPTO),
         },
-        "index_premarket": premarket_movers(list(INDEX_PROXIES)),
-        "sectors_premarket": premarket_movers(list(SECTOR_ETFS)),
-        "premarket_movers": premarket_movers(sorted(watchlist | pos_tickers)),
-        "premarket_gappers": premarket_gappers(errors),
+        "index_premarket": premarket_movers(list(INDEX_PROXIES), prev_map, data_quality),
+        "sectors_premarket": premarket_movers(list(SECTOR_ETFS), prev_map, data_quality),
+        "premarket_movers": movers_blk,
+        "premarket_gappers": gappers_blk,
         "calendar": econ_calendar(today, errors),
         "earnings": earn,
         "rating_changes": rating_changes(ratings_universe, today, errors),
@@ -768,6 +859,7 @@ def build(today: date, now: datetime | None = None) -> dict:
         "regime": regime_state(today, errors),
         "names": names,
         "positions": positions,
+        "data_quality": data_quality,
         "errors": errors,
     }
 
@@ -787,7 +879,10 @@ def realized_moves(target: date, extra: list[str]) -> dict:
     """Actual session result for a past day — index proxies + sectors (+ any
     names the briefing flagged). This is the reconciliation half: compare what
     the briefing CALLED against what the tape actually DID, so the regime call
-    gets calibrated over time. Daily close vs the prior trading day's close."""
+    gets calibrated over time. Daily close vs the prior trading day's close,
+    plus open/high/low + gap_pct so the reconcile can grade gap-keep (% of the
+    opening gap held at the close) and whether an intraday level held or broke
+    — without a second hand fetch."""
     tickers = sorted(set(INDEX_PROXIES) | set(SECTOR_ETFS) | set(t.upper() for t in extra if t))
     try:
         df = yf.download(tickers, period="1mo", interval="1d",
@@ -799,12 +894,18 @@ def realized_moves(target: date, extra: list[str]) -> dict:
     moves = {}
     for tk in tickers:
         try:
-            closes = (df[tk]["Close"] if len(tickers) > 1 else df["Close"]).dropna()
+            sub = df[tk] if len(tickers) > 1 else df
+            closes = sub["Close"].dropna()
             if tgt not in closes.index or len(closes.loc[:tgt]) < 2:
                 continue
             upto = closes.loc[:tgt]
             close, prev = float(upto.iloc[-1]), float(upto.iloc[-2])
+            bar = sub.loc[tgt]
+            o = float(bar["Open"])
             moves[tk] = {"close": round(close, 4), "pct": round((close / prev - 1) * 100, 2),
+                         "open": round(o, 4), "gap_pct": round((o / prev - 1) * 100, 2),
+                         "high": round(float(bar["High"]), 4),
+                         "low": round(float(bar["Low"]), 4),
                          "label": INDEX_PROXIES.get(tk) or SECTOR_ETFS.get(tk) or tk}
         except Exception:
             continue
@@ -867,6 +968,9 @@ def main(argv=None) -> int:
     if packet["errors"]:
         print(f"\n{len(packet['errors'])} source(s) degraded — see packet.errors",
               file=sys.stderr)
+    if packet["data_quality"]:
+        print(f"{len(packet['data_quality'])} data-quality flag(s) — see "
+              f"packet.data_quality", file=sys.stderr)
     return 0
 
 
