@@ -21,6 +21,19 @@ rolling stat can't see:
   - a no-exit baseline — the raw close-to-close return over the same window
     if you used no target and no stop at all.
 
+Beyond the single-attribute strata it reports the combined entry filter
+(Score >= 40 on a 1st-2nd-day listing), a scan-breadth stratification
+(signals emitted that run-day — quiet-day vs washout-day signals behave
+very differently), and a first-half/second-half stability split, so every
+number quoted in SKILL.md's "Backtested outcomes" section reproduces from
+this one script.
+
+--entry next-open replays the realistic execution instead: the scan output
+only exists after the close, so entry is the NEXT session's open (signals
+that gap past their target or stop before entry are skipped), and outcomes
+are measured from that fill. Compare against the default --entry close to
+see how much of the edge survives entry timing.
+
 Prices are fetched with auto_adjust=True. Dividend re-adjustment between the
 scan date and today shifts the recorded price levels out of the series'
 units, so each signal is re-anchored: the recorded close is matched against
@@ -31,7 +44,8 @@ reported rather than resolved on mismatched units.
 
 Run:
   uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy>=1.24,<3' \
-    python backtest_outcomes.py [--target-window 5] [--refresh-prices]
+    python backtest_outcomes.py [--target-window 5] [--entry next-open] \
+    [--refresh-prices]
 """
 
 from __future__ import annotations
@@ -215,10 +229,16 @@ class Outcome:
     fwd_ret: float | None          # close-to-close % over full window, no exits
 
 
-def resolve_signal(sig: Signal, bars: pd.DataFrame,
-                   window: int) -> tuple[Outcome | None, str]:
+def resolve_signal(sig: Signal, bars: pd.DataFrame, window: int,
+                   entry_mode: str = "close") -> tuple[Outcome | None, str]:
     """Returns (outcome, status) where status is one of
-    resolved / open / no_bars / unit_mismatch."""
+    resolved / open / no_bars / unit_mismatch / gap_skip.
+
+    entry_mode "close" is scan.py's convention (entry at the signal-day
+    close). "next-open" is realistic execution: the scan output exists only
+    after the close, so entry is the next session's open; a signal whose
+    next open is already past the target (bounce done overnight) or through
+    the stop (setup busted) is skipped as untradable → gap_skip."""
     closes = bars["Close"]
     pos = closes.index.searchsorted(sig.et_date, side="right") - 1
     if pos < 0:
@@ -235,13 +255,21 @@ def resolve_signal(sig: Signal, bars: pd.DataFrame,
     if abs(ratio - 1) > 0.05:
         return None, "unit_mismatch"
 
-    entry = float(closes.iloc[pos])
     target = sig.target * ratio
     stop = sig.stop * ratio if sig.stop is not None else None
 
     post = bars.iloc[pos + 1:pos + 1 + window]
     if len(post) == 0:
         return None, "open"
+
+    if entry_mode == "next-open":
+        entry = float(post["Open"].iloc[0])
+        if not np.isfinite(entry):
+            return None, "no_bars"
+        if entry >= target or (stop is not None and entry <= stop):
+            return None, "gap_skip"
+    else:
+        entry = float(closes.iloc[pos])
 
     fwd_ret = (float(post["Close"].iloc[window - 1]) / entry - 1) * 100 \
         if len(post) >= window else None
@@ -329,6 +357,11 @@ def main() -> None:
     ap.add_argument("--refresh-prices", action="store_true")
     ap.add_argument("--start", default="2026-05-01",
                     help="price download start date")
+    ap.add_argument("--entry", choices=["close", "next-open"], default="close",
+                    help="close = scan.py's convention (signal-day close); "
+                         "next-open = realistic execution at the next "
+                         "session's open, skipping signals that gap past "
+                         "target or stop before entry")
     args = ap.parse_args()
 
     signals, run_days = load_signals(args.history)
@@ -342,15 +375,22 @@ def main() -> None:
 
     outcomes: list[Outcome] = []
     n_open = 0
+    n_no_bars = 0
+    n_gap_skip = 0
     unit_mismatch: list[str] = []
     for s in signals:
         if s.ticker not in prices:
             continue
-        o, status = resolve_signal(s, prices[s.ticker], args.target_window)
+        o, status = resolve_signal(s, prices[s.ticker], args.target_window,
+                                   args.entry)
         if status == "resolved":
             outcomes.append(o)
         elif status == "open":
             n_open += 1
+        elif status == "no_bars":
+            n_no_bars += 1
+        elif status == "gap_skip":
+            n_gap_skip += 1
         elif status == "unit_mismatch":
             unit_mismatch.append(f"{s.ticker}@{s.run_day}")
 
@@ -362,16 +402,31 @@ def main() -> None:
 
     n_skipped_missing = sum(s.ticker not in prices for s in signals)
     print(f"# mean-reversion outcome backtest — history "
-          f"{run_days[0]} → {run_days[-1]} — window {args.target_window}d\n")
+          f"{run_days[0]} → {run_days[-1]} — window {args.target_window}d — "
+          f"entry mode: **{args.entry}**\n")
     print(f"**Signals**: {len(outcomes)} resolved of {len(signals)} "
-          f"({n_open} still open, {n_skipped_missing} on tickers with no "
-          f"price data: {', '.join(missing) or '—'})")
+          f"({n_open} still open, {n_no_bars} with no usable bars, "
+          f"{n_skipped_missing} on tickers with no price data: "
+          f"{', '.join(missing) or '—'})")
+    if args.entry == "next-open":
+        print(f"**Skipped at entry** (next open already past target or "
+              f"through stop — untradable overnight gaps): {n_gap_skip}")
     if unit_mismatch:
         print(f"**Dropped for unit mismatch** (n={len(unit_mismatch)}): "
               f"{', '.join(unit_mismatch)}")
     print(f"**Decisive** (target or stop hit): {a['dec']} — win rate "
           f"{fmt(a['win'], '%', 0)}, avg {fmt(a['days_to_t'])} days to "
           f"target; {fmt(a['expired'], '%', 0)} expired flat")
+    won_r = [o.result for o in outcomes if o.outcome == "WON"]
+    lost_r = [o.result for o in outcomes if o.outcome == "LOST"]
+    exp_r = [o.result for o in outcomes if o.outcome == "EXPIRED"]
+    print(f"**Payoff asymmetry**: avg win "
+          f"{fmt(float(np.mean(won_r)) if won_r else None, '%', 2)} "
+          f"(n={len(won_r)}) · avg loss "
+          f"{fmt(float(np.mean(lost_r)) if lost_r else None, '%', 2)} "
+          f"(n={len(lost_r)}) · avg expired drift "
+          f"{fmt(float(np.mean(exp_r)) if exp_r else None, '%', 2)} "
+          f"(n={len(exp_r)})")
     print(f"**Same-day double-touch** (counted WON per Connors convention): "
           f"n={len(ambiguous)}; pessimistic win rate if all counted LOST: "
           f"{fmt(pes_win, '%', 0)}")
@@ -424,6 +479,53 @@ def main() -> None:
         outcomes, lambda s: s.rank,
         [("1–5", 1, 6), ("6–15", 6, 16), ("16+", 16, 9999)])))
 
+    # Combined entry filter — the headline cross-cell SKILL.md quotes.
+    def sc40(o):
+        return o.sig.score >= 40
+
+    def fresh(o):
+        return o.sig.day_of_spell <= 2
+
+    print(strata_table("Combined filter: Score≥40 × day-of-spell≤2", [
+        ("Score≥40 & spell≤2 (THE filter)",
+         [o for o in outcomes if sc40(o) and fresh(o)]),
+        ("Score≥40 & spell 3+", [o for o in outcomes if sc40(o) and not fresh(o)]),
+        ("Score<40 & spell≤2", [o for o in outcomes if not sc40(o) and fresh(o)]),
+        ("Score<40 & spell 3+",
+         [o for o in outcomes if not sc40(o) and not fresh(o)]),
+    ]))
+
+    # Scan breadth — how many signals the scan emitted that run-day (from the
+    # raw history, open ones included). Cutoffs 30/60 were chosen in-sample.
+    breadth = defaultdict(int)
+    for s in signals:
+        breadth[s.run_day] += 1
+
+    def bre(o):
+        return breadth[o.sig.run_day]
+
+    print(strata_table("By scan breadth (signals emitted that run-day; "
+                       "30/60 cutoffs chosen in-sample)", [
+        ("<30 quiet day", [o for o in outcomes if bre(o) < 30]),
+        ("30–60", [o for o in outcomes if 30 <= bre(o) <= 60]),
+        (">60 washout day", [o for o in outcomes if bre(o) > 60]),
+        ("<30 & Score≥40", [o for o in outcomes if bre(o) < 30 and sc40(o)]),
+        (">60 & Score≥40", [o for o in outcomes if bre(o) > 60 and sc40(o)]),
+    ]))
+
+    # Stability split — does the combined filter's edge hold out-of-half?
+    mid = run_days[len(run_days) // 2]
+    print(strata_table(f"Stability: first vs second half (split at {mid})", [
+        ("H1, filter", [o for o in outcomes
+                        if o.sig.run_day <= mid and sc40(o) and fresh(o)]),
+        ("H1, rest", [o for o in outcomes
+                      if o.sig.run_day <= mid and not (sc40(o) and fresh(o))]),
+        ("H2, filter", [o for o in outcomes
+                        if o.sig.run_day > mid and sc40(o) and fresh(o)]),
+        ("H2, rest", [o for o in outcomes
+                      if o.sig.run_day > mid and not (sc40(o) and fresh(o))]),
+    ]))
+
     sector_of = load_sector_map()
     by_sector: dict[str, list[Outcome]] = defaultdict(list)
     for o in outcomes:
@@ -444,7 +546,7 @@ def main() -> None:
         for s in signals:
             if s.ticker not in prices:
                 continue
-            o, status = resolve_signal(s, prices[s.ticker], w)
+            o, status = resolve_signal(s, prices[s.ticker], w, args.entry)
             if status == "resolved":
                 outs_w.append(o)
         aw = agg(outs_w)
@@ -461,7 +563,10 @@ def main() -> None:
           "close-to-close return over the full window with no target and no "
           "stop. Consecutive-day rows of one oversold spell are correlated — "
           "the day-of-spell table's '1st' row is the per-spell independent "
-          "view._")
+          "view. NoExit% is computed only over signals whose full window of "
+          "bars exists, so signals resolved decisively near the data edge "
+          "count toward Win%/Exp% but not NoExit% — the two columns' samples "
+          "differ by that handful._")
 
 
 if __name__ == "__main__":
