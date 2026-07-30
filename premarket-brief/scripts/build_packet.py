@@ -836,8 +836,9 @@ def build(today: date, now: datetime | None = None) -> dict:
         movers_quality = None
         data_quality.append(
             "prev_close: daily-bar batch returned nothing — every premarket gap "
-            "% in this packet rests on fast_info prevs (pollution-prone "
-            "pre-open); verify against official closes before grading")
+            "% AND the VIX-complex deltas in this packet rest on fast_info "
+            "prevs (pollution-prone pre-open); verify against official closes "
+            "before grading, and read the VIX by levels only")
 
     movers_blk = premarket_movers(sorted(watchlist | pos_tickers), prev_map, movers_quality)
     gappers_blk = premarket_gappers(errors)
