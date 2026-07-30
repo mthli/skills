@@ -827,10 +827,26 @@ def build(today: date, now: datetime | None = None) -> dict:
     prev_map = daily_prev_closes(
         list(INDEX_PROXIES) + list(SECTOR_ETFS) + list(VIX_TERM)
         + sorted(watchlist | pos_tickers), today, errors)
+    # Batch failure → ONE aggregate flag, not ~55 identical per-ticker ones
+    # (a flood would drown the cross-source signal). Per-ticker fallback flags
+    # stay reserved for the partial case: only some names missing a daily bar.
+    if prev_map:
+        movers_quality = data_quality
+    else:
+        movers_quality = None
+        data_quality.append(
+            "prev_close: daily-bar batch returned nothing — every premarket gap "
+            "% in this packet rests on fast_info prevs (pollution-prone "
+            "pre-open); verify against official closes before grading")
 
-    movers_blk = premarket_movers(sorted(watchlist | pos_tickers), prev_map, data_quality)
+    movers_blk = premarket_movers(sorted(watchlist | pos_tickers), prev_map, movers_quality)
     gappers_blk = premarket_gappers(errors)
-    cross_source_check(movers_blk, gappers_blk, data_quality)
+    # Out-of-window the two sides aren't comparable — yfinance "premkt" is a
+    # live RTH/AH print while TradingView's premarket column is frozen — so
+    # the check would only manufacture false disagreements on a packet that is
+    # void anyway (and --save-invalid could persist them).
+    if session["valid"]:
+        cross_source_check(movers_blk, gappers_blk, data_quality)
 
     packet = {
         "as_of": now.isoformat(),
@@ -847,8 +863,8 @@ def build(today: date, now: datetime | None = None) -> dict:
             "commodities": tape_block(COMMODITIES),
             "crypto": tape_block(CRYPTO),
         },
-        "index_premarket": premarket_movers(list(INDEX_PROXIES), prev_map, data_quality),
-        "sectors_premarket": premarket_movers(list(SECTOR_ETFS), prev_map, data_quality),
+        "index_premarket": premarket_movers(list(INDEX_PROXIES), prev_map, movers_quality),
+        "sectors_premarket": premarket_movers(list(SECTOR_ETFS), prev_map, movers_quality),
         "premarket_movers": movers_blk,
         "premarket_gappers": gappers_blk,
         "calendar": econ_calendar(today, errors),
@@ -884,9 +900,13 @@ def realized_moves(target: date, extra: list[str]) -> dict:
     opening gap held at the close) and whether an intraday level held or broke
     — without a second hand fetch."""
     tickers = sorted(set(INDEX_PROXIES) | set(SECTOR_ETFS) | set(t.upper() for t in extra if t))
+    # auto_adjust MUST stay False: the briefing's levels are official unadjusted
+    # closes, and adjusted bars reconciled across an ex-div boundary (SPY/DIA
+    # quarterly, singles anytime) come back dividend-shaved — enough to silently
+    # flip a "closed above X" verdict by a whole rung.
     try:
         df = yf.download(tickers, period="1mo", interval="1d",
-                         auto_adjust=True, progress=False, threads=True,
+                         auto_adjust=False, progress=False, threads=True,
                          group_by="ticker")
     except Exception as e:
         return {"date": target.isoformat(), "error": str(e), "moves": {}}
@@ -969,7 +989,8 @@ def main(argv=None) -> int:
         print(f"\n{len(packet['errors'])} source(s) degraded — see packet.errors",
               file=sys.stderr)
     if packet["data_quality"]:
-        print(f"{len(packet['data_quality'])} data-quality flag(s) — see "
+        prefix = "" if packet["errors"] else "\n"
+        print(f"{prefix}{len(packet['data_quality'])} data-quality flag(s) — see "
               f"packet.data_quality", file=sys.stderr)
     return 0
 
