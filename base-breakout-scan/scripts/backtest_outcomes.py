@@ -49,6 +49,11 @@ SKILL_DIR = Path(__file__).resolve().parent.parent
 HISTORY_CSV = SKILL_DIR / "state" / "history.csv"
 
 
+def ts_of(run_day: str) -> pd.Timestamp:
+    """YYYYMMDD run-day string → Timestamp."""
+    return pd.Timestamp(f"{run_day[:4]}-{run_day[4:6]}-{run_day[6:]}")
+
+
 # ---------------------------------------------------------------- history
 
 @dataclass
@@ -135,6 +140,18 @@ def fetch_prices(tickers: list[str], start: str, cache: Path,
     if cache.exists() and not refresh:
         with open(cache, "rb") as f:
             data = pickle.load(f)
+        # Freshness guard: a quarterly re-run against an old cache would
+        # silently censor every new episode's post-window. SPY is always in
+        # the cache, so its last bar dates the whole snapshot.
+        last_bar = data["SPY"].index.max() if "SPY" in data else None
+        stale = (last_bar is None
+                 or (pd.Timestamp.today().normalize() - last_bar).days > 5
+                 or (len(data["SPY"]) and data["SPY"].index.min()
+                     > pd.Timestamp(start) + pd.Timedelta(days=7)))
+        if stale:
+            print(f"cache {cache} is stale (last bar {last_bar}); "
+                  f"refetching everything", file=sys.stderr)
+            data = {}
         missing = [t for t in tickers if t not in data]
         if not missing:
             return data
@@ -152,9 +169,11 @@ def fetch_prices(tickers: list[str], start: str, cache: Path,
                           progress=False, threads=True)
         for t in chunk:
             try:
-                df = raw[t].dropna(subset=["Close"]) if len(chunk) > 1 else \
-                    raw.droplevel(0, axis=1).dropna(subset=["Close"])
-            except (KeyError, TypeError):
+                # yfinance returns MultiIndex columns for multi-ticker
+                # requests and (version-dependent) flat columns for one.
+                df = raw[t] if isinstance(raw.columns, pd.MultiIndex) else raw
+                df = df.dropna(subset=["Close"])
+            except (KeyError, TypeError, ValueError):
                 continue
             if len(df):
                 data[t] = df
@@ -171,7 +190,7 @@ def units_consistent(ep: Episode, bars: pd.DataFrame,
     with the price series the pivot is in different units (spinoff/split
     re-adjustment between scan date and today) and the episode is untestable."""
     a = ep.start
-    start_ts = pd.Timestamp(f"{a.run_day[:4]}-{a.run_day[4:6]}-{a.run_day[6:]}")
+    start_ts = ts_of(a.run_day)
     implied_close = a.pivot * (1 + a.to_pivot / 100)
     closes = bars.loc[bars.index <= start_ts, "Close"]
     if len(closes) == 0:
@@ -193,12 +212,12 @@ class Outcome:
     gap_pct: float | None = None   # fill premium over pivot
     ret5: float | None = None
     ret10: float | None = None
-    ret20: float | None = None
-    spy20: float | None = None
+    ret_h: float | None = None     # horizon-session return (default 20)
+    spy_h: float | None = None     # SPY over the same horizon window
     above_pivot10: bool | None = None
     fellback5: bool | None = None
     stop_hit: bool | None = None
-    trade_ret: float | None = None  # stop-based trade: -stop% or +20d close
+    trade_ret: float | None = None  # stop-based trade: -stop% or +horizon close
     no_trigger_drift: float | None = None
     broke_down: bool | None = None
 
@@ -206,8 +225,8 @@ class Outcome:
 def resolve_episode(ep: Episode, bars: pd.DataFrame, spy: pd.DataFrame,
                     calendar: pd.DatetimeIndex, horizon: int,
                     stop_pct: float, entry: str = "touch") -> Outcome | None:
-    start_ts = pd.Timestamp(f"{ep.start_day[:4]}-{ep.start_day[4:6]}-{ep.start_day[6:]}")
-    end_ts = pd.Timestamp(f"{ep.end_day[:4]}-{ep.end_day[4:6]}-{ep.end_day[6:]}")
+    start_ts = ts_of(ep.start_day)
+    end_ts = ts_of(ep.end_day)
 
     # Watch window: trading days strictly after the first snapshot, through
     # one trading day past the last snapshot (the order placed after the
@@ -220,8 +239,7 @@ def resolve_episode(ep: Episode, bars: pd.DataFrame, spy: pd.DataFrame,
         return None
 
     # Pivot in force on day T = pivot from the latest snapshot before T.
-    pivots = {pd.Timestamp(f"{a.run_day[:4]}-{a.run_day[4:6]}-{a.run_day[6:]}"): a.pivot
-              for a in ep.appearances}
+    pivots = {ts_of(a.run_day): a.pivot for a in ep.appearances}
     pivot_days = sorted(pivots)
 
     def pivot_for(day: pd.Timestamp) -> float:
@@ -283,7 +301,7 @@ def resolve_episode(ep: Episode, bars: pd.DataFrame, spy: pd.DataFrame,
             return None
         return (post["Close"].iloc[k] / fill - 1) * 100
 
-    out.ret5, out.ret10, out.ret20 = ret_at(5), ret_at(10), ret_at(horizon)
+    out.ret5, out.ret10, out.ret_h = ret_at(5), ret_at(10), ret_at(horizon)
     if len(post) > 10:
         out.above_pivot10 = bool(post["Close"].iloc[10] >= pivot)
     if len(post) > 5:
@@ -291,15 +309,20 @@ def resolve_episode(ep: Episode, bars: pd.DataFrame, spy: pd.DataFrame,
     if len(post) > horizon:
         win = post.iloc[:horizon + 1]
         stop_level = fill * (1 - stop_pct / 100)
-        hit = win["Low"] <= stop_level
-        out.stop_hit = bool(hit.any())
+        lows = win["Low"].copy()
+        if entry == "touch":
+            # The trigger day's Low can predate the intraday fill (morning
+            # dip, then rally through the pivot), so judge day 0 by its
+            # close; from day 1 on the position exists all session.
+            lows.iloc[0] = win["Close"].iloc[0]
+        out.stop_hit = bool((lows <= stop_level).any())
         if out.stop_hit:
             out.trade_ret = -stop_pct
         else:
-            out.trade_ret = out.ret20
+            out.trade_ret = out.ret_h
         spy_win = spy.loc[spy.index >= trigger_ts, "Close"]
         if len(spy_win) > horizon:
-            out.spy20 = (spy_win.iloc[horizon] / spy_win.iloc[0] - 1) * 100
+            out.spy_h = (spy_win.iloc[horizon] / spy_win.iloc[0] - 1) * 100
     return out
 
 
@@ -313,7 +336,7 @@ def fmt(v, suffix="", nd=1):
 def agg(outs: list[Outcome], horizon: int) -> dict:
     trig_denom = [o for o in outs if o.triggered or not o.censored]
     trig = [o for o in outs if o.triggered]
-    r20 = [o for o in trig if o.ret20 is not None]
+    res = [o for o in trig if o.ret_h is not None]
     ap10 = [o for o in trig if o.above_pivot10 is not None]
     fb5 = [o for o in trig if o.fellback5 is not None]
     tr = [o for o in trig if o.trade_ret is not None]
@@ -322,24 +345,26 @@ def agg(outs: list[Outcome], horizon: int) -> dict:
         "trig_rate": 100 * len(trig) / len(trig_denom) if trig_denom else None,
         "n_trig": len(trig),
         "med_days": float(np.median([o.days_to_trigger for o in trig])) if trig else None,
-        "ret20": float(np.mean([o.ret20 for o in r20])) if r20 else None,
-        "med_ret20": float(np.median([o.ret20 for o in r20])) if r20 else None,
-        "win20": 100 * sum(o.ret20 > 0 for o in r20) / len(r20) if r20 else None,
+        "ret_h": float(np.mean([o.ret_h for o in res])) if res else None,
+        "med_ret_h": float(np.median([o.ret_h for o in res])) if res else None,
+        "win": 100 * sum(o.ret_h > 0 for o in res) / len(res) if res else None,
         "above_p10": 100 * sum(o.above_pivot10 for o in ap10) / len(ap10) if ap10 else None,
         "fellback5": 100 * sum(o.fellback5 for o in fb5) / len(fb5) if fb5 else None,
         "stop_hit": 100 * sum(o.stop_hit for o in tr) / len(tr) if tr else None,
         "trade_ret": float(np.mean([o.trade_ret for o in tr])) if tr else None,
-        "n_resolved": len(r20),
+        "n_resolved": len(res),
     }
-    spy = [o.spy20 for o in r20 if o.spy20 is not None]
-    d["alpha20"] = (d["ret20"] - float(np.mean(spy))) if (spy and d["ret20"] is not None) else None
+    spy = [o.spy_h for o in res if o.spy_h is not None]
+    d["alpha"] = (d["ret_h"] - float(np.mean(spy))) if (spy and d["ret_h"] is not None) else None
     return d
 
 
 def strata_table(title: str, groups: list[tuple[str, list[Outcome]]],
                  horizon: int) -> str:
     lines = [f"\n### {title}\n",
-             "| Stratum | Eps | Trig% | MedDays | n(res) | Ret20 avg | Ret20 med | Win% | AbovePivot@10 | Fellback@5 | StopHit | Trade avg |",
+             f"| Stratum | Eps | Trig% | MedDays | n(res) | Ret{horizon} avg | "
+             f"Ret{horizon} med | Win% | AbovePivot@10 | Fellback@5 | StopHit | "
+             f"Trade avg |",
              "|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for name, outs in groups:
         if not outs:
@@ -348,8 +373,8 @@ def strata_table(title: str, groups: list[tuple[str, list[Outcome]]],
         lines.append(
             f"| {name} | {a['n']} | {fmt(a['trig_rate'], '%', 0)} | "
             f"{fmt(a['med_days'], '', 0)} | {a['n_resolved']} | "
-            f"{fmt(a['ret20'], '%')} | {fmt(a['med_ret20'], '%')} | "
-            f"{fmt(a['win20'], '%', 0)} | {fmt(a['above_p10'], '%', 0)} | "
+            f"{fmt(a['ret_h'], '%')} | {fmt(a['med_ret_h'], '%')} | "
+            f"{fmt(a['win'], '%', 0)} | {fmt(a['above_p10'], '%', 0)} | "
             f"{fmt(a['fellback5'], '%', 0)} | {fmt(a['stop_hit'], '%', 0)} | "
             f"{fmt(a['trade_ret'], '%')} |")
     return "\n".join(lines)
@@ -427,9 +452,9 @@ def main() -> None:
           f"(n={a['n_trig']} triggered, median {fmt(a['med_days'], '', 0)} "
           f"sessions to trigger)")
     print(f"**Post-trigger (+{args.horizon} sessions, n={a['n_resolved']})**: "
-          f"avg {fmt(a['ret20'], '%')} / median {fmt(a['med_ret20'], '%')} "
-          f"from fill, win rate {fmt(a['win20'], '%', 0)}, "
-          f"alpha vs SPY {fmt(a['alpha20'], 'pt')}")
+          f"avg {fmt(a['ret_h'], '%')} / median {fmt(a['med_ret_h'], '%')} "
+          f"from fill, win rate {fmt(a['win'], '%', 0)}, "
+          f"alpha vs SPY {fmt(a['alpha'], 'pt')}")
     print(f"**Breakout durability**: above pivot at +10 sessions "
           f"{fmt(a['above_p10'], '%', 0)}; fell back below pivot within 5 "
           f"sessions {fmt(a['fellback5'], '%', 0)}")
@@ -488,7 +513,7 @@ def main() -> None:
 
     print(strata_table("By base length", bucket(
         outcomes, lambda x: x.base_weeks,
-        [("<10wk", 0, 10), ("10–20wk", 10, 20), (">20wk", 20, 99)]),
+        [("<10wk", 0, 10), ("10–<20wk", 10, 20), ("≥20wk", 20, 99)]),
         args.horizon))
 
     print(strata_table("By base width", bucket(
@@ -503,10 +528,11 @@ def main() -> None:
                              (">10d", 11, 999)]], args.horizon))
 
     print("\n_Columns: Eps = episodes; Trig% = pivot touched during watch "
-          "window; n(res) = triggered with full post-window; Ret20 = close-to-"
-          f"fill return at +{args.horizon} sessions; AbovePivot@10 = close ≥ "
-          "trigger pivot at +10; Fellback@5 = any close back below pivot in "
-          "first 5 sessions; Trade avg = mean return of the stop-based "
+          f"window; n(res) = triggered with full post-window; Ret{args.horizon}"
+          f" = close-to-fill return at +{args.horizon} sessions; AbovePivot@10 "
+          "= close ≥ trigger pivot at +10; Fellback@5 = any close back below "
+          "pivot in sessions 1–5 after the trigger day (the trigger day's own "
+          "close is not counted); Trade avg = mean return of the stop-based "
           "trade._")
 
 
