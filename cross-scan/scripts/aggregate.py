@@ -610,18 +610,21 @@ def composite_read(row: OverlapRow) -> str:
     uoa_dir = uoa_direction()
     added_pullback = False
 
+    # Labels reflect the 2026-05→07 overlap backtest (see SKILL.md
+    # "Backtested outcomes"): UOA co-membership was a froth/crowding tell,
+    # not confirmation, so no UOA-involving label reads as bullish.
     if has_base and has_uoa and uoa_dir == "call-heavy":
-        notes.append("⭐ pre-breakout + call flow — best pattern")
+        notes.append("base + hot call tape — ⚠️ froth tell, not confirmation")
     elif has_base and has_uoa and uoa_dir == "put-heavy":
         notes.append("base setup but put-flow disagrees — caution")
     elif has_base and has_uoa:
-        notes.append("base setup + options activity")
+        notes.append("base setup + options attention")
 
     if has_mom and has_mr:
         notes.append("pullback in a leader")
         added_pullback = True
     if has_mom and has_uoa and uoa_dir == "call-heavy" and not added_pullback:
-        notes.append("trend + call-flow confirmation")
+        notes.append("leader + hot call tape — ⚠️ crowding tell")
     if has_mom and has_uoa and uoa_dir == "put-heavy":
         notes.append("⚠️ leader with bearish positioning")
     if has_mom and has_base and not (has_mr or has_uoa):
@@ -630,7 +633,7 @@ def composite_read(row: OverlapRow) -> str:
         notes.append("oversold base candidate")
 
     if has_mom and has_base and has_mr:
-        notes.append("leader, in base, pulled back hard — rare")
+        notes.append("leader, in base, pulled back hard — ⚠️ backtest-worst cell")
 
     if not notes:
         notes.append(f"in {row.overlap_count} scans")
@@ -720,10 +723,15 @@ def render_markdown(snapshots: list[ScanSnapshot],
 
     if tier_3plus:
         shown_3plus = tier_3plus[:top_n]
-        header_3plus = "## Tickers in ≥3 scans (highest conviction)"
+        header_3plus = "## Tickers in ≥3 scans"
         if len(shown_3plus) < len(tier_3plus):
             header_3plus += f" — {len(shown_3plus)} of {len(tier_3plus)} shown"
         out.append(header_3plus)
+        out.append("")
+        out.append("_⚠️ Backtest (2026-05→07): overlap count ranked conviction "
+                   "BACKWARDS — 3-scan names ran −4.5% xT+10 vs −1.5% for "
+                   "single-scan. Read as attention-crowding, not conviction "
+                   "(see SKILL.md Backtested outcomes)._")
         out.append("")
         out.extend(_render_overlap_table(shown_3plus))
         out.append("")
@@ -733,7 +741,7 @@ def render_markdown(snapshots: list[ScanSnapshot],
         if remaining > 0:
             shown = tier_2[:remaining]
             out.append(
-                f"## Tickers in 2 scans (worth a look) — {len(shown)} of {len(tier_2)} shown")
+                f"## Tickers in 2 scans — {len(shown)} of {len(tier_2)} shown")
             out.append("")
             out.extend(_render_overlap_table(shown))
             out.append("")
