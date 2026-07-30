@@ -55,6 +55,32 @@ from zoneinfo import ZoneInfo
 warnings.filterwarnings("ignore")
 import pandas as pd
 import yfinance as yf
+from pandas.tseries.holiday import (
+    AbstractHolidayCalendar, GoodFriday, Holiday, USLaborDay,
+    USMartinLutherKingJr, USMemorialDay, USPresidentsDay,
+    USThanksgivingDay, nearest_workday,
+)
+
+
+class _NYSECalendar(AbstractHolidayCalendar):
+    """Mirrors regime-scan / premarket-brief — a weekday-only window would
+    count holidays as spark days and mislabel a holiday-eve run's AMC gate."""
+    rules = [
+        Holiday("New Year's Day", month=1, day=1, observance=nearest_workday),
+        USMartinLutherKingJr, USPresidentsDay, GoodFriday, USMemorialDay,
+        Holiday("Juneteenth", month=6, day=19, observance=nearest_workday,
+                start_date="2022-06-19"),
+        Holiday("Independence Day", month=7, day=4, observance=nearest_workday),
+        USLaborDay, USThanksgivingDay,
+        Holiday("Christmas Day", month=12, day=25, observance=nearest_workday),
+    ]
+
+
+def is_trading_day(d: date) -> bool:
+    if d.weekday() >= 5:
+        return False
+    ts = pd.Timestamp(d)
+    return _NYSECalendar().holidays(start=ts, end=ts).empty
 
 SKILL_DIR = Path(__file__).resolve().parent.parent
 SKILLS_ROOT = SKILL_DIR.parent
@@ -163,12 +189,11 @@ def http_json(url: str, headers: dict | None = None, timeout: int = 20):
 
 
 def next_trading_days(start: date, n: int) -> list[date]:
-    """The next n weekdays AFTER start. NYSE holidays are rare enough that a
-    holiday in the window just yields an empty earnings page — harmless."""
+    """The next n NYSE trading days strictly AFTER start."""
     out, d = [], start
     while len(out) < n:
         d = d + timedelta(days=1)
-        if d.weekday() < 5:
+        if is_trading_day(d):
             out.append(d)
     return out
 
@@ -234,11 +259,17 @@ def load_kegs(min_score: float, max_age: int, top_n: int, errors: list,
     return kegs[:top_n], meta
 
 
-def sector_map() -> dict:
+def sector_map(errors: list) -> dict:
     try:
         d = json.loads(MR_SECTORS.read_text())
         return {tk: v.get("sector") for tk, v in d.items()}
-    except Exception:
+    except Exception as e:
+        # Say so loudly: with an empty map every keg has sector=None, the
+        # sector-verdict join silently goes dark, and `armed` produces false
+        # negatives across the board — the same silent-degrade failure mode
+        # the premarket prev_close pollution taught us to flag, not swallow.
+        errors.append(f"sectors: {MR_SECTORS} unreadable ({e}) — "
+                      f"sector-verdict join disabled this run")
         return {}
 
 
@@ -312,6 +343,48 @@ def uoa_flagged(errors: list) -> tuple[set, str | None]:
     except Exception as e:
         errors.append(f"uoa: {e}")
         return set(), None
+
+
+def join_sparks(kegs: list[dict], by_symbol: dict, verdicts: list[dict],
+                macro: list[dict], uoa_set: set) -> None:
+    """Attach sparks to each keg and decide `armed`. Pure logic, no I/O.
+
+    A marketwide megacap print moves the tape, but it cannot flip a crashed
+    name's OWN narrative — arming requires a spark scoped to the keg (its own
+    print, its sector's verdict, or a macro verdict). Marketwide sparks stay
+    listed as context so the brief can time around them."""
+    for k in kegs:
+        sparks = []
+        own = by_symbol.get(k["ticker"])
+        if own:
+            sparks.append({"type": "own_earnings", "symbol": k["ticker"],
+                           "date": own["date"], "slot": own["slot"],
+                           "detail": f"{k['ticker']} reports {own['date']} "
+                                     f"{own['slot']} (eps est {own['eps_forecast'] or '?'}) "
+                                     f"— a coin flip, NOT a verdict: earnings-gap "
+                                     f"rule says zero directional trust"})
+        for v in verdicts:
+            if v["symbol"] == k["ticker"]:
+                continue
+            v_sector = v.get("sector")
+            if v_sector and v_sector == k.get("sector"):
+                sparks.append({"type": "sector_verdict", "symbol": v["symbol"],
+                               "date": v["date"], "slot": v["slot"],
+                               "detail": f"{v['symbol']} ({v_sector}, "
+                                         f"${v['mktcap']/1e9:.0f}B) reports "
+                                         f"{v['date']} {v['slot']}"})
+            elif v["mktcap"] >= MARKETWIDE_MKTCAP:
+                sparks.append({"type": "marketwide_verdict", "symbol": v["symbol"],
+                               "date": v["date"], "slot": v["slot"],
+                               "detail": f"{v['symbol']} (${v['mktcap']/1e9:.0f}B) "
+                                         f"reports {v['date']} {v['slot']}"})
+        for m in macro:
+            sparks.append({"type": "macro", "symbol": None, "date": m["date"],
+                           "detail": f"{m['title']} {m['date']} {m['time_et']} ET"})
+        k["sparks"] = sorted(sparks, key=lambda s: s["date"])
+        k["armed"] = any(s["type"] in ("own_earnings", "sector_verdict", "macro")
+                         for s in sparks)
+        k["uoa_flagged"] = k["ticker"] in uoa_set
 
 
 def regime_state(errors: list) -> dict | None:
@@ -390,30 +463,79 @@ def tape_check(kegs: list[dict], signal_date: date | None, errors: list) -> None
             errors.append(f"tape/{k['ticker']}: {e}")
 
 
-def prior_review(prior: dict | None, mr_df_path: Path, errors: list) -> list[dict]:
-    if not prior:
-        return []
+def prior_review(prior_mr: dict | None, errors: list, today: date) -> dict | None:
+    """Grade what got flagged last time — full sample, both tails.
+
+    Two choices born of the first live round:
+    - Grade THIS skill's previous packet when one exists (state/runs/): the
+      MR run is the keg SOURCE, not this skill's call — grading the whole MR
+      list credits calls the skill never made. Fallback to the prior MR run
+      only when no own history exists yet.
+    - Report full-sample stats plus best AND worst tails. The first
+      implementation returned the top-15 by return — a winners-side sample
+      the synthesis layer duly read as "15/15 up, avg +10%" — exactly the
+      self-flattering horoscope the grading loop exists to prevent."""
+    base, src = [], None
     try:
-        df = pd.read_csv(mr_df_path)
-        rows = df[df["run_id"].astype(str) == str(prior["run_id"])]
-        tks = list(rows["ticker"])
-        if not tks:
-            return []
-        px = yf.download(tks, period="5d", interval="1d", auto_adjust=False,
-                         progress=False, threads=True, group_by="ticker")
-        out = []
-        for _, r in rows.iterrows():
-            try:
-                sub = px[r["ticker"]] if len(tks) > 1 else px
-                last = float(sub["Close"].dropna().iloc[-1])
-                out.append({"ticker": r["ticker"], "score": float(r["score"]),
-                            "since_pct": round((last / float(r["last_close"]) - 1) * 100, 2)})
-            except Exception:
-                continue
-        return sorted(out, key=lambda x: x["since_pct"], reverse=True)[:15]
+        prior_packets = [p for p in sorted(RUNS_DIR.glob("*.json"))
+                         if p.stem < today.isoformat()]
+        if prior_packets:
+            pk = json.loads(prior_packets[-1].read_text())
+            src = f"snapback:{pk.get('today')}"
+            for k in pk.get("kegs", []):
+                bp = k.get("latest_close") or k.get("signal_close")
+                if bp:
+                    base.append({"ticker": k["ticker"], "base": float(bp),
+                                 "armed": bool(k.get("armed"))})
     except Exception as e:
-        errors.append(f"prior_review: {e}")
-        return []
+        errors.append(f"prior_review/packet: {e}")
+    if not base and prior_mr:
+        try:
+            df = pd.read_csv(MR_HISTORY)
+            rows = df[df["run_id"].astype(str) == str(prior_mr["run_id"])]
+            src = f"mr:{prior_mr['run_id']}"
+            base = [{"ticker": r["ticker"], "base": float(r["last_close"]),
+                     "armed": None} for _, r in rows.iterrows()]
+        except Exception as e:
+            errors.append(f"prior_review/mr: {e}")
+    if not base:
+        return None
+    tks = sorted({b["ticker"] for b in base})
+    try:
+        px = yf.download(tks, period="1mo", interval="1d", auto_adjust=False,
+                         progress=False, threads=True, group_by="ticker")
+    except Exception as e:
+        errors.append(f"prior_review/prices: {e}")
+        return None
+    rated = []
+    for b in base:
+        try:
+            sub = px[b["ticker"]] if len(tks) > 1 else px
+            last = float(sub["Close"].dropna().iloc[-1])
+            rated.append({**b, "since_pct": round((last / b["base"] - 1) * 100, 2)})
+        except Exception:
+            continue
+    if not rated:
+        return None
+
+    def stats(rows):
+        pcts = sorted(r["since_pct"] for r in rows)
+        mid = len(pcts) // 2
+        median = pcts[mid] if len(pcts) % 2 else (pcts[mid - 1] + pcts[mid]) / 2
+        return {"n": len(pcts),
+                "pct_positive": round(100 * sum(1 for p in pcts if p > 0) / len(pcts), 1),
+                "avg_pct": round(sum(pcts) / len(pcts), 2),
+                "median_pct": round(median, 2)}
+
+    ranked = sorted(rated, key=lambda r: r["since_pct"], reverse=True)
+    tail = lambda rows: [{"ticker": r["ticker"], "since_pct": r["since_pct"]}
+                         for r in rows]
+    out = {"source": src, **stats(rated),
+           "best": tail(ranked[:3]), "worst": tail(ranked[-3:][::-1])}
+    armed = [r for r in rated if r.get("armed")]
+    if armed:
+        out["armed_subset"] = stats(armed)
+    return out
 
 
 # --------------------------------------------------------------------------- #
@@ -424,7 +546,7 @@ def build(window_days: int, min_score: float, max_age: int, top_n: int) -> dict:
     now = datetime.now(MARKET_TZ)
     today = now.date()
     kegs, mr_meta = load_kegs(min_score, max_age, top_n, errors, today)
-    sectors = sector_map()
+    sectors = sector_map(errors)
     for k in kegs:
         k["sector"] = sectors.get(k["ticker"])
 
@@ -432,7 +554,7 @@ def build(window_days: int, min_score: float, max_age: int, top_n: int) -> dict:
     # window while they still lie ahead (before ~20:00 ET the AMC cluster
     # hasn't finished printing). BMO/unknown slots for today are already past.
     window = next_trading_days(today, window_days)
-    include_today_amc = today.weekday() < 5 and now.hour < 20
+    include_today_amc = is_trading_day(today) and now.hour < 20
     fetch_days = ([today] if include_today_amc else []) + window
     earnings = earnings_sparks(fetch_days, errors) if kegs else []
     if include_today_amc:
@@ -456,48 +578,13 @@ def build(window_days: int, min_score: float, max_age: int, top_n: int) -> dict:
     for v in verdicts:
         v["sector"] = v_sectors.get(v["symbol"])
 
-    for k in kegs:
-        sparks = []
-        own = by_symbol.get(k["ticker"])
-        if own:
-            sparks.append({"type": "own_earnings", "symbol": k["ticker"],
-                           "date": own["date"], "slot": own["slot"],
-                           "detail": f"{k['ticker']} reports {own['date']} "
-                                     f"{own['slot']} (eps est {own['eps_forecast'] or '?'}) "
-                                     f"— a coin flip, NOT a verdict: earnings-gap "
-                                     f"rule says zero directional trust"})
-        for v in verdicts:
-            if v["symbol"] == k["ticker"]:
-                continue
-            v_sector = v.get("sector")
-            if v_sector and v_sector == k.get("sector"):
-                sparks.append({"type": "sector_verdict", "symbol": v["symbol"],
-                               "date": v["date"], "slot": v["slot"],
-                               "detail": f"{v['symbol']} ({v_sector}, "
-                                         f"${v['mktcap']/1e9:.0f}B) reports "
-                                         f"{v['date']} {v['slot']}"})
-            elif v["mktcap"] >= MARKETWIDE_MKTCAP:
-                sparks.append({"type": "marketwide_verdict", "symbol": v["symbol"],
-                               "date": v["date"], "slot": v["slot"],
-                               "detail": f"{v['symbol']} (${v['mktcap']/1e9:.0f}B) "
-                                         f"reports {v['date']} {v['slot']}"})
-        for m in macro:
-            sparks.append({"type": "macro", "symbol": None, "date": m["date"],
-                           "detail": f"{m['title']} {m['date']} {m['time_et']} ET"})
-        k["sparks"] = sorted(sparks, key=lambda s: s["date"])
-        # A marketwide megacap print moves the tape, but it cannot flip a
-        # crashed name's OWN narrative — arming requires a spark scoped to the
-        # keg (its print, its sector's verdict, or a macro verdict). Marketwide
-        # sparks stay listed as context so the brief can time around them.
-        k["armed"] = any(s["type"] in ("own_earnings", "sector_verdict", "macro")
-                         for s in sparks)
-        k["uoa_flagged"] = k["ticker"] in uoa_set
+    join_sparks(kegs, by_symbol, verdicts, macro, uoa_set)
 
     sig_date = None
     if mr_meta.get("run_id"):
         sig_date = datetime.strptime(mr_meta["run_id"], "%Y%m%d").date()
     tape_check(kegs, sig_date, errors)
-    review = prior_review(mr_meta.get("prior_run"), MR_HISTORY, errors)
+    review = prior_review(mr_meta.get("prior_run"), errors, today)
 
     # Window honesty: an unarmed keg means "no spark IN THIS WINDOW", not "no
     # catalyst exists" — a real earnings date 2 weeks out is information, not
@@ -538,9 +625,11 @@ def as_table(p: dict) -> str:
     lines = [f"snapback-scan {p['today']}  regime={p['regime']['state'] if p['regime'] else '?'}"
              f"  MR run {p['mr_run'].get('run_id')} (stale {p['mr_run'].get('stale_days')}d)"
              f"  window {p['spark_window'][0]}..{p['spark_window'][-1]}", ""]
-    hdr = f"{'TICKER':7}{'SCORE':6}{'AGE':4}{'5D%':7}{'SINCE%':8}{'ARMED':6}{'FLAGS':10}SPARKS"
+    hdr = f"{'TICKER':7}{'SCORE':6}{'AGE':4}{'5D%':7}{'SINCE%':8}{'ARMED':6}SPARKS  [FLAGS]"
     lines.append(hdr)
     for k in p["kegs"]:
+        # Flags ride at the END of the line: emoji are double-width in most
+        # terminals, so a fixed-width flags column skews every column after it.
         flags = ("🔥" if k.get("ignited") else "") + \
                 ("😴" if k.get("quiet_warning") else "") + \
                 ("⚠️UOA" if k.get("uoa_flagged") else "")
@@ -552,11 +641,21 @@ def as_table(p: dict) -> str:
         lines.append(f"{k['ticker']:7}{k['score']:<6.1f}{k['listing_age_runs']:<4}"
                      f"{(k.get('ret_5d_pct') if k.get('ret_5d_pct') is not None else 0):<7.1f}"
                      f"{(k.get('since_signal_pct') if k.get('since_signal_pct') is not None else 0):<8.1f}"
-                     f"{'YES' if k['armed'] else 'no':6}{flags:10}{sparks}")
-    if p["prior_run_review"]:
-        lines += ["", "prior run since-signal:",
-                  "  " + "  ".join(f"{r['ticker']} {r['since_pct']:+.1f}%"
-                                   for r in p["prior_run_review"][:10])]
+                     f"{'YES' if k['armed'] else 'no':6}{sparks}"
+                     + (f"  [{flags}]" if flags else ""))
+    r = p["prior_run_review"]
+    if r:
+        lines += ["", f"prior review [{r['source']}]: n={r['n']}  "
+                      f"win {r['pct_positive']}%  avg {r['avg_pct']:+.2f}%  "
+                      f"med {r['median_pct']:+.2f}%",
+                  "  best:  " + "  ".join(f"{x['ticker']} {x['since_pct']:+.1f}%"
+                                          for x in r["best"]),
+                  "  worst: " + "  ".join(f"{x['ticker']} {x['since_pct']:+.1f}%"
+                                          for x in r["worst"])]
+        if r.get("armed_subset"):
+            a = r["armed_subset"]
+            lines.append(f"  armed subset: n={a['n']}  win {a['pct_positive']}%  "
+                         f"avg {a['avg_pct']:+.2f}%")
     if p["errors"]:
         lines += ["", f"errors: {p['errors']}"]
     return "\n".join(lines)

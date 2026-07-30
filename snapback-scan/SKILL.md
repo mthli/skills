@@ -52,6 +52,10 @@ uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' \
 ... --min-score 30        # loosen the keg gate when nothing qualifies (default 40)
 ```
 
+The spark window is the next N trading days PLUS tonight's AMC prints when
+the run happens before ~20:00 ET (they're the nearest spark of all) — that's
+the `(AMC only)` entry in `spark_window`.
+
 The packet saves to `state/runs/<date>.json`. Per-keg fields that matter:
 
 - `armed` — has ≥ 1 spark scoped to it (own print / sector verdict / macro;
@@ -63,8 +67,10 @@ The packet saves to `state/runs/<date>.json`. Per-keg fields that matter:
 - `signal_day_low` / `mr_stop` — invalidation candidates; `mr_target`
 - `next_own_earnings` — for unarmed kegs, the next known date beyond the window
 - `down_streak`, `down_gaps_5d`, `vol_ratio_5d_20d` — seller-mechanism reads
-- `prior_run_review` — what the previous run's names did since; a scanner
-  nobody grades is a horoscope
+- `prior_run_review` — full-sample grade of the previous flag list (n, win
+  rate, avg/median, best AND worst tails, armed subset), sourced from this
+  skill's own prior packet when one exists, else the prior MR run. A scanner
+  nobody grades is a horoscope — and one that only shows its winners is worse
 
 ## Synthesize — the if-then brief
 
