@@ -1202,6 +1202,7 @@ def show_history_summary():
         print("No history yet.")
         return
     ticker_days: dict[str, int] = {}
+    recent = set(dates[-14:])
     print(f"# UOA history summary")
     print(
         f"\nSnapshots: {len(dates)}  ({dates[0].isoformat()} → {dates[-1].isoformat()})\n")
@@ -1214,7 +1215,7 @@ def show_history_summary():
         tickers = sorted(set(r["ticker"] for r in snap if r.get("ticker")))
         for t in tickers:
             ticker_days[t] = ticker_days.get(t, 0) + 1
-        if d >= dates[-14]:
+        if d in recent:
             print(f"| {d.isoformat()} | {len(snap)} | "
                   f"{', '.join(tickers[:8])}{' ...' if len(tickers) > 8 else ''} |")
     chronic = sorted(ticker_days.items(), key=lambda kv: -kv[1])[:15]
