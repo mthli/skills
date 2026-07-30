@@ -75,14 +75,17 @@ BREADTH_BULL, BREADTH_BEAR = 60.0, 40.0   # % of names above an MA
 RSPSPY_DEADBAND = 0.5         # % move of RSP/SPY over the lookback to count
 CREDIT_DEADBAND = 0.25        # % move of HYG/LQD over the lookback to count
 ROTATION_DEADBAND = 0.5       # pp of (defensive − offensive) return to count
+NHNL_DEADBAND_PCT = 1.0       # pp of net new highs to count — without this a
+                              # single name at a 52w high flips the vote in a
+                              # ~500-name pool
 VIX_CALM, VIX_STRESS = 17.0, 25.0
 VIX_SPIKE_5D_PCT = 20.0       # VIX up >20% in 5 sessions = a sentiment jolt
 
 HISTORY_COLS = [
     "run_id", "run_date", "state", "score", "n_bull", "n_bear", "n_flags",
     "spy_vs_200_pct", "ma200_slope_pct", "breadth_50_pct", "breadth_200_pct",
-    "rsp_spy_pct", "nhnl_pct", "vix", "vix_term", "credit_pct", "def_off_pct",
-    "flags",
+    "rsp_spy_pct", "nhnl_pct", "vix", "vix_5d_pct", "vix_term", "credit_pct",
+    "def_off_pct", "flags",
 ]
 
 
@@ -370,7 +373,7 @@ def classify(m: dict) -> dict:
         f"{m['rsp_spy_pct']:+.1f}% / {m['lookback']}d "
         f"({'broadening' if m['rsp_spy_pct'] > 0 else 'narrowing'})")
     nhnl_pct = m["nhnl"]["nhnl_pct"] if m["nhnl"] else None
-    v = _vote(nhnl_pct, 0.001, -0.001)
+    v = _vote(nhnl_pct, NHNL_DEADBAND_PCT, -NHNL_DEADBAND_PCT)
     add("Breadth", "New highs − new lows", nhnl_pct, v,
         "—" if m["nhnl"] is None else
         f"{m['nhnl']['nh']} NH − {m['nhnl']['nl']} NL ({nhnl_pct:+.0f}%)")
@@ -462,8 +465,12 @@ def classify(m: dict) -> dict:
 # --------------------------------------------------------------------------- #
 # History (one row per ET market day; atomic write; mirrors momentum-scan)
 # --------------------------------------------------------------------------- #
-def make_run_id(now: datetime) -> str:
-    return now.astimezone(MARKET_TZ).strftime("%Y%m%d")
+def make_run_id(data_date: date) -> str:
+    """run_id is the DATA's session date (SPY's last bar), not the wall clock.
+    A pre-open run therefore upserts the prior session's row (same data →
+    idempotent refresh) instead of writing yesterday's numbers under today's
+    date — the mislabeling that a wall-clock run_id produces."""
+    return data_date.strftime("%Y%m%d")
 
 
 def load_history() -> pd.DataFrame:
@@ -506,6 +513,7 @@ def history_row(run_id: str, run_date: datetime, m: dict, c: dict) -> dict:
         "rsp_spy_pct": _round(m["rsp_spy_pct"]),
         "nhnl_pct": _round(m["nhnl"]["nhnl_pct"], 0) if m["nhnl"] else None,
         "vix": _round(m["vix"]),
+        "vix_5d_pct": _round(m["vix_5d_pct"]),
         "vix_term": _round(m["vix_term"], 2),
         "credit_pct": _round(m["credit_pct"]),
         "def_off_pct": _round(m["def_off_pct"]),
@@ -513,20 +521,20 @@ def history_row(run_id: str, run_date: datetime, m: dict, c: dict) -> dict:
     }
 
 
-def append_history(row: dict, run_date: datetime):
-    """Upsert one row keyed on the America/New_York date so re-running the same
-    day refreshes rather than duplicates. Atomic tmp+rename like momentum-scan."""
+def append_history(row: dict):
+    """Upsert one row keyed on run_id — the data's session date — so re-running
+    against the same close refreshes rather than duplicates, no matter what
+    wall-clock time the run happens. Atomic tmp+rename like momentum-scan."""
     new = pd.DataFrame([row], columns=HISTORY_COLS)
     has_existing = HISTORY_FILE.exists() and HISTORY_FILE.stat().st_size > 0
     existing = pd.read_csv(HISTORY_FILE) if has_existing else None
     if existing is not None and not existing.empty:
-        today_et = run_date.astimezone(MARKET_TZ).date()
-        ed = (pd.to_datetime(existing["run_date"], utc=True, format="ISO8601")
-              .dt.tz_convert(MARKET_TZ).dt.date)
-        existing = existing.loc[ed != today_et]
+        existing = existing.loc[
+            existing["run_id"].astype(str) != str(row["run_id"])]
     combined = new if existing is None or existing.empty else pd.concat(
         [existing, new], ignore_index=True)
-    combined = (combined.sort_values("run_date", kind="stable")
+    combined["run_id"] = combined["run_id"].astype(str)
+    combined = (combined.sort_values("run_id", kind="stable")
                 .reset_index(drop=True))
     canonical = HISTORY_COLS + [c for c in combined.columns if c not in HISTORY_COLS]
     combined = combined.reindex(columns=canonical)
@@ -681,20 +689,36 @@ def main():
         sys.exit(1)
 
     m = compute_metrics(macro, breadth, args.lookback)
+    if m["spy_trend"] is None:
+        print("ERROR: SPY history too short to compute the 200DMA trend gate "
+              "— refusing to classify (a data failure must not read as "
+              "RISK-OFF).", file=sys.stderr)
+        sys.exit(1)
     c = classify(m)
 
     history = load_history()
     now = datetime.now(timezone.utc)
-    run_id = make_run_id(now)
-    today_et = now.astimezone(MARKET_TZ).date()
+    now_et = now.astimezone(MARKET_TZ)
+    # run_id = the DATA's session date (SPY's last bar), not the wall clock —
+    # a pre-open run refreshes the prior session's row instead of mislabeling
+    # yesterday's close under today's date.
+    data_date = macro["SPY"].dropna().index[-1].date()
+    run_id = make_run_id(data_date)
+    today_et = now_et.date()
     today_is_trading = is_nyse_trading_day(today_et)
+    if (data_date == today_et and today_is_trading
+            and now_et.hour * 60 + now_et.minute < 16 * 60 + 15):
+        print(f"WARNING: run during the {today_et} session — today's bar is "
+              f"partial, so MAs/breadth reflect an in-progress day. The "
+              f"post-close run will overwrite this row.", file=sys.stderr)
 
     if not args.no_save:
         if not today_is_trading and not args.save_stale:
             print(f"Skipping history save: {today_et} is not an NYSE trading "
-                  f"day. Pass --save-stale to override.", file=sys.stderr)
+                  f"day (the {data_date} row already reflects this data). "
+                  f"Pass --save-stale to override.", file=sys.stderr)
         else:
-            append_history(history_row(run_id, now, m, c), now)
+            append_history(history_row(run_id, now, m, c))
 
     if args.format == "json":
         print(json.dumps({

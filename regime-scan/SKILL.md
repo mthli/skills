@@ -47,12 +47,12 @@ uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' \
 
 | Flag | Default | Notes |
 |---|---|---|
-| `--lookback` | 20 | Sessions for slope / relative-strength windows (RSP/SPY, credit, rotation, 200DMA slope). ~1 trading month. Raise for slower, less noisy reads. |
+| `--lookback` | 20 | Sessions for the relative-strength windows (RSP/SPY, credit, defensive rotation). ~1 trading month. Raise for slower, less noisy reads. **The 200DMA trend-gate slope is deliberately NOT covered** — it's fixed at 20d in code so tuning the RS window can't silently re-tune the trend gate (whose deadband is calibrated for 20d). |
 | `--format` | markdown | `markdown` or `json`. |
 | `--show-history` | — | Print the daily state log and exit. |
 | `--clear-history` | — | Wipe `history.csv` (no confirmation). |
 | `--no-save` | — | Don't append this run to history. |
-| `--save-stale` | — | Save even on a weekend / NYSE holiday (default skips so duplicate-data days don't pollute the trajectory). |
+| `--save-stale` | — | Save even on a weekend / NYSE holiday. History rows are keyed on the **data's session date** (SPY's last bar), so such a save just refreshes the prior session's row with identical data — the default skip merely avoids a redundant write. |
 
 ## Refreshing the breadth universe
 
@@ -101,7 +101,7 @@ None alone is a sell; **2–3 stacking = de-risk**. This is the layer the user e
 ## Known limitations
 
 - **Breadth universe is the S&P 500 (~500 names), a quarterly snapshot** — not the full ~4,000-name market, and it applies *today's* membership to past prices (a mild survivorship bias that's standard and acceptable for a forward-looking gauge, not a backtest). Broad enough to smooth the breadth % and self-refreshing via `build_universe.py`; edit `state/breadth_universe.txt` to retune.
-- **No intraday / real-time** — uses daily closes (last available session on weekends/holidays; those aren't saved unless `--save-stale`).
+- **No intraday / real-time** — uses daily closes. A run during market hours sees a *partial* today-bar in the MAs/breadth (the script warns); the post-close run overwrites that row, since history is keyed on the data's session date rather than the wall clock.
 - **Votes are mechanical** — thresholds are conventional, not optimized. Treat the output as a structured *dashboard to interpret*, not a trade signal. The signal compounds across **days of history**; a single run is just a snapshot.
 - **Credit via HYG/LQD ETF ratio** is a proxy for the OAS spread, good enough for direction but not a substitute for actual HY option-adjusted spreads.
 

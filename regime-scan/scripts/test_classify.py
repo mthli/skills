@@ -105,6 +105,16 @@ def test_neutral_tape_with_no_flags_stays_green():
     assert c["state"] == "🟢"
 
 
+def test_weak_breadth_alone_is_caution():
+    # No divergence flags (not near the high, so the breadth-divergence flag
+    # can't fire) and a healthy score — but breadth_50 < 45 trips the
+    # weak-breadth CAUTION branch on its own.
+    c = scan.classify(_metrics(spy_trend=_spy(from_high=-5.0),
+                               breadth_50_pct=44.0))
+    assert c["n_flags"] == 0
+    assert c["state"] == "🟡"
+
+
 def test_net_bearish_score_is_caution_even_without_flags_or_weak_breadth():
     # Isolate the score safety net: 0 flags, breadth_50 healthy (≥45 so the
     # b50<45 branch can't fire), but bearish votes from non-flag signals (QQQ
