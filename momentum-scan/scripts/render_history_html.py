@@ -332,7 +332,9 @@ select {
 }
 #tip .v { color: var(--ink); font-weight: 600; font-size: 13.5px; }
 #tip .k { display: inline-block; width: 14px; height: 2px; border-radius: 1px; vertical-align: middle; margin-right: 6px; }
-#tip .eqdot { vertical-align: middle; margin-right: 6px; }
+/* Inherit .eqdot's baseline -1px alignment (the roster-cell look);
+   vertical-align: middle sat visibly below the title's optical center. */
+#tip .eqdot { margin-right: 6px; }
 table { border-collapse: collapse; width: 100%; font-size: 13px; }
 th, td { text-align: right; padding: 6px 10px; border-bottom: 1px solid var(--grid); white-space: nowrap; }
 th { color: var(--muted); font-weight: 500; font-size: 12px; cursor: pointer; user-select: none; }
@@ -440,7 +442,7 @@ const I18N = {
     rosterNote: "One row per name that ever made the board. Click a header to sort; click again to reverse. Every hover value from the charts is readable here.\nEntry = entry-day volume character of the latest board spell (darker blue = stronger entry; hover or tap the dot for details).",
     cols: ["Ticker", "Sector", "Days on board", "Best rank", "Current rank", "Streak", "Entry", "First seen", "Last seen", "Latest score"],
     eqLabels: ["Quiet drift-in", "Neutral", "Volume surge", "Surge + clean"],
-    eqTip: (v, d, day) => `vol ${v}× · ${d} dist days · entered ${day}`,
+    eqTip: (v, d, day) => `Vol ${v}× · ${d} dist days · Entered ${day}`,
     eqFrozen: "Tier frozen at entry day, never updated",
     eqFreshNote: "Filled = entered this run; ring = earlier entry — tier frozen at entry day, never updated.",
     score: "Score", ret: "Return", dd: "Drawdown",
@@ -479,7 +481,7 @@ const I18N = {
     eqLabels: ["缩量飘入", "中性", "放量入场", "放量且干净"],
     eqTip: (v, d, day) => `量比 ${v}× · ${d} 个派发日 · ${day} 入场`,
     eqFrozen: "层级定格于入场日、不随行情更新",
-    eqFreshNote: "实心 = 本期新入榜；空心 = 历史入场——层级定格于入场日、不随行情更新。",
+    eqFreshNote: "实心 = 本期新入榜；空心 = 历史入场 —— 层级定格于入场日、不随行情更新。",
     score: "评分", ret: "收益", dd: "回撤",
     formula: "评分 = 收益 ÷ |回撤|",
     formulaNote: " —— 每承受 1% 回撤换来的收益（回撤不足 1% 按 1% 计）。",
@@ -521,7 +523,7 @@ const I18N = {
     eqLabels: ["縮量飄入", "中性", "放量進場", "放量且乾淨"],
     eqTip: (v, d, day) => `量比 ${v}× · ${d} 個派發日 · ${day} 進場`,
     eqFrozen: "層級定格於進場日、不隨行情更新",
-    eqFreshNote: "實心 = 本期新進榜；空心 = 歷史進場——層級定格於進場日、不隨行情更新。",
+    eqFreshNote: "實心 = 本期新進榜；空心 = 歷史進場 —— 層級定格於進場日、不隨行情更新。",
     score: "評分", ret: "報酬", dd: "回撤",
     formula: "評分 = 報酬 ÷ |回撤|",
     formulaNote: " —— 每承受 1% 回撤換來的報酬（回撤不足 1% 按 1% 計）。",
@@ -563,7 +565,7 @@ const I18N = {
     eqLabels: ["薄商い流入", "中立", "出来高急増", "急増＋クリーン"],
     eqTip: (v, d, day) => `出来高比 ${v}× · 分配日 ${d} · ${day} エントリー`,
     eqFrozen: "階層はエントリー日で確定し、以後更新されません",
-    eqFreshNote: "塗りつぶし = 今回新規ランクイン、リング = 過去のエントリー——階層はエントリー日で確定し、以後更新されません。",
+    eqFreshNote: "塗りつぶし = 今回新規ランクイン、リング = 過去のエントリー —— 階層はエントリー日で確定し、以後更新されません。",
     score: "スコア", ret: "リターン", dd: "ドローダウン",
     formula: "スコア = リターン ÷ |ドローダウン|",
     formulaNote: " —— ドローダウン 1% あたりのリターン（1% 未満のドローダウンは 1% として計算）。",
