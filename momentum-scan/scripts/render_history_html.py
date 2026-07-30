@@ -445,9 +445,9 @@ const I18N = {
     rosterNote: "One row per name that ever made the board. Click a header to sort; click again to reverse. Every hover value from the charts is readable here.\nEntry volume = entry-day volume character of the latest board spell (darker blue = stronger entry; hover or tap the dot for details).",
     cols: ["Ticker", "Sector", "Current rank", "Latest score", "Entry volume", "Streak", "Days on board", "Best rank", "First seen", "Last seen"],
     eqLabels: ["Quiet drift-in", "Neutral", "Volume surge", "Surge + clean"],
-    eqTip: (v, d, day) => `Vol ${v}× · ${d} dist days · Entered ${day}`,
-    eqFrozen: "Tier frozen at entry day, never updated",
-    eqFreshNote: "Filled = entered this run; ring = earlier entry — tier frozen at entry day, never updated.",
+    eqTip: (v, d, day) => [`Vol ${v}× (entry day / 20-day avg)`, `${d} dist days (down on higher vol, last 25)`, `Entered ${day}`],
+    eqFrozen: "Tier frozen that day",
+    eqFreshNote: "Filled = entered this run; ring = earlier entry — tier frozen at entry day.",
     score: "Score", ret: "Return", dd: "Drawdown",
     formula: "Score = Return ÷ |Drawdown|",
     formulaNote: " — return per 1% of drawdown endured (sub-1% drawdowns count as 1%).",
@@ -483,9 +483,9 @@ const I18N = {
     rosterNote: "每个曾经上榜的标的一行。点击表头排序；再次点击反向。图表中所有悬停数值在此均可查阅。\n入场量能 = 最近一段在榜区间入场日的量能特征（蓝色越深入场越强；悬停或点按圆点看详情）。",
     cols: ["代码", "行业", "当前排名", "最新评分", "入场量能", "连续在榜", "在榜天数", "最佳排名", "首次上榜", "最近上榜"],
     eqLabels: ["缩量飘入", "中性", "放量入场", "放量且干净"],
-    eqTip: (v, d, day) => `量比 ${v}× · ${d} 个派发日 · ${day} 入场`,
-    eqFrozen: "层级定格于入场日、不随行情更新",
-    eqFreshNote: "实心 = 本期新入榜；空心 = 历史入场 —— 层级定格于入场日、不随行情更新。",
+    eqTip: (v, d, day) => [`量比 ${v}×（当日量 / 20 日均量）`, `派发日 ${d} 天（近 25 日放量下跌）`, `${day} 入场`],
+    eqFrozen: "评级定格于当日",
+    eqFreshNote: "实心 = 本期新入榜；空心 = 历史入场 —— 评级定格于入场日。",
     score: "评分", ret: "收益", dd: "回撤",
     formula: "评分 = 收益 ÷ |回撤|",
     formulaNote: " —— 每承受 1% 回撤换来的收益（回撤不足 1% 按 1% 计）。",
@@ -526,9 +526,9 @@ const I18N = {
     rosterNote: "每個曾經上榜的標的一行。點擊表頭排序；再次點擊反向。圖表中所有懸停數值在此均可查閱。\n進場量能 = 最近一段在榜區間進場日的量能特徵（藍色越深進場越強；懸停或點按圓點看詳情）。",
     cols: ["代號", "產業", "目前排名", "最新評分", "進場量能", "連續在榜", "在榜天數", "最佳排名", "首次上榜", "最近上榜"],
     eqLabels: ["縮量飄入", "中性", "放量進場", "放量且乾淨"],
-    eqTip: (v, d, day) => `量比 ${v}× · ${d} 個派發日 · ${day} 進場`,
-    eqFrozen: "層級定格於進場日、不隨行情更新",
-    eqFreshNote: "實心 = 本期新進榜；空心 = 歷史進場 —— 層級定格於進場日、不隨行情更新。",
+    eqTip: (v, d, day) => [`量比 ${v}×（當日量 / 20 日均量）`, `派發日 ${d} 天（近 25 日放量下跌）`, `${day} 進場`],
+    eqFrozen: "評級定格於當日",
+    eqFreshNote: "實心 = 本期新進榜；空心 = 歷史進場 —— 評級定格於進場日。",
     score: "評分", ret: "報酬", dd: "回撤",
     formula: "評分 = 報酬 ÷ |回撤|",
     formulaNote: " —— 每承受 1% 回撤換來的報酬（回撤不足 1% 按 1% 計）。",
@@ -569,9 +569,9 @@ const I18N = {
     rosterNote: "ランクインしたことのある銘柄を 1 行ずつ表示。ヘッダーをクリックでソート、もう一度クリックで逆順。チャートのホバー数値はすべてこの表で確認できます。\nエントリー出来高 = 直近ランクイン期間の初日の出来高特性（青が濃いほど強い。ドットにホバーまたはタップで詳細）。",
     cols: ["ティッカー", "セクター", "現在順位", "最新スコア", "エントリー出来高", "連続日数", "ランクイン日数", "最高順位", "初登場", "直近登場"],
     eqLabels: ["薄商い流入", "中立", "出来高急増", "急増＋クリーン"],
-    eqTip: (v, d, day) => `出来高比 ${v}× · 分配日 ${d} · ${day} エントリー`,
-    eqFrozen: "階層はエントリー日で確定し、以後更新されません",
-    eqFreshNote: "塗りつぶし = 今回新規ランクイン、リング = 過去のエントリー —— 階層はエントリー日で確定し、以後更新されません。",
+    eqTip: (v, d, day) => [`出来高比 ${v}×（当日 / 20日平均）`, `分配日 ${d}（直近25日・出来高増の下落日）`, `${day} エントリー`],
+    eqFrozen: "評価は当日で確定",
+    eqFreshNote: "塗りつぶし = 今回新規ランクイン、リング = 過去のエントリー —— 評価はエントリー日で確定。",
     score: "スコア", ret: "リターン", dd: "ドローダウン",
     formula: "スコア = リターン ÷ |ドローダウン|",
     formulaNote: " —— ドローダウン 1% あたりのリターン（1% 未満のドローダウンは 1% として計算）。",
@@ -612,9 +612,9 @@ const I18N = {
     rosterNote: "순위에 오른 적 있는 종목을 한 행씩 표시. 헤더를 클릭해 정렬, 다시 클릭하면 역순. 차트의 모든 호버 값을 이 표에서 확인할 수 있습니다.\n진입 거래량 = 최근 순위권 구간 첫날의 거래량 특성 (파란색이 진할수록 강한 진입; 점에 호버하거나 탭하면 상세).",
     cols: ["티커", "섹터", "현재 순위", "최신 점수", "진입 거래량", "연속 일수", "진입 일수", "최고 순위", "첫 진입", "최근 진입"],
     eqLabels: ["거래량 미달 진입", "중립", "거래량 급증", "급증+클린"],
-    eqTip: (v, d, day) => `거래량비 ${v}× · 분배일 ${d} · ${day} 진입`,
-    eqFrozen: "등급은 진입일에 확정되며 이후 갱신되지 않습니다",
-    eqFreshNote: "채움 = 이번 런 신규 진입; 링 = 과거 진입 — 등급은 진입일에 확정되며 이후 갱신되지 않습니다.",
+    eqTip: (v, d, day) => [`거래량비 ${v}× (당일 / 20일 평균)`, `분배일 ${d} (최근 25일 · 거래량 증가 하락일)`, `${day} 진입`],
+    eqFrozen: "등급은 당일 확정",
+    eqFreshNote: "채움 = 이번 런 신규 진입; 링 = 과거 진입 — 등급은 진입일에 확정.",
     score: "점수", ret: "수익률", dd: "낙폭",
     formula: "점수 = 수익률 ÷ |낙폭|",
     formulaNote: " —— 낙폭 1%당 얻은 수익률(1% 미만 낙폭은 1%로 계산).",
@@ -1091,16 +1091,17 @@ function renderHeat(minApps) {
             const dot = document.createElement("span");
             dot.className = "eqdot eq" + c + (s.eqNew ? "" : " ring");
             dot.setAttribute("aria-label",
-              `${T.eqLabels[c]} · ${T.eqTip(s.eqv, s.eqd, s.eqDay)} · ${T.eqFrozen}`);
+              `${T.eqLabels[c]} · ${T.eqTip(s.eqv, s.eqd, s.eqDay).join(" · ")} · ${T.eqFrozen}`);
             dot.setAttribute("role", "img");
             dot.tabIndex = 0;
             // Shared #tip layer instead of a native title: works for
             // hover, tap (mobile), and keyboard focus alike.
             const show = () => {
               const r = dot.getBoundingClientRect();
+              const lines = [T.eqLabels[c], ...T.eqTip(s.eqv, s.eqd, s.eqDay)];
+              lines[lines.length - 1] += " · " + T.eqFrozen;
               showTip(r.left + r.width / 2, r.top, t => tipRows(
-                t, [T.eqLabels[c], T.eqTip(s.eqv, s.eqd, s.eqDay), T.eqFrozen],
-                null, "eqdot eq" + c + (s.eqNew ? "" : " ring")));
+                t, lines, null, "eqdot eq" + c + (s.eqNew ? "" : " ring")));
               tip.dataset.eq = s.t;
             };
             dot.addEventListener("pointerenter", ev => {
