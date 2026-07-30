@@ -49,6 +49,11 @@ MARKET_TZ = ZoneInfo("America/New_York")  # one snapshot per US market day
 HISTORY_COLS = [
     "run_id", "run_date", "ticker", "rank", "score_rank", "score",
     "return_pct", "max_dd_pct", "ann_vol_pct", "from_high_pct",
+    # Exit-rule research fields (2026-07, see attach_volume_fields). The
+    # volume trio was backfilled from yfinance for older rows; `close` was
+    # deliberately NOT backfilled — it records the price the scan actually
+    # saw, which later corporate actions rewrite and delistings erase.
+    "close", "vol_ratio_20d", "dollar_vol_20d_m", "dist_days_25d",
 ]
 # `rank` is the display position the user sees (post-vol-collapse, contiguous
 # 1..N). `score_rank` is the canonical pre-filter score-based rank — survives
@@ -918,6 +923,74 @@ def score_tickers(prices: pd.DataFrame, window_months: int,
     return results
 
 
+VOL_RATIO_LOOKBACK_DAYS = 20  # "today's volume vs normal" baseline window
+DOLLAR_VOL_LOOKBACK_DAYS = 20
+DIST_DAYS_LOOKBACK_DAYS = 25  # O'Neil counts distribution days over ~25 sessions
+DIST_DAY_MIN_DECLINE = -0.002  # a down day of ≥0.2% qualifies (O'Neil convention)
+
+
+def attach_volume_fields(picks: list[dict], bars: pd.DataFrame,
+                         now: datetime | None = None) -> list[dict]:
+    """Add close / vol_ratio_20d / dollar_vol_20d_m / dist_days_25d to every
+    pick (all kept picks, not just top-N — history.csv records them all).
+    Reads the bars frame the universe was downloaded into — no extra network.
+
+    These exist for exit-rule research: close-only history can't see climax
+    volume or quiet distribution, and `close` itself pins the price the scan
+    saw before later splits/dividends rewrite the adjusted series (or a
+    delisting erases it entirely). Fields are left absent rather than guessed
+    when a ticker lacks enough sessions for the lookback.
+
+    Volume is aligned to close's sessions with gaps kept as NaN: dropping a
+    close-but-no-volume session from both series (OTC ADRs occasionally
+    report one without the other) would let pct_change bridge the gap and
+    count a two-session decline as one distribution day. A NaN neighbor
+    instead disqualifies the comparison — conservative, no false positives.
+
+    When the latest bar is an in-progress session (mid-session manual run),
+    the volume trio is computed on completed bars only: intraday volume
+    accumulates through the day, so a partial bar would bias vol_ratio low.
+    `close` still records the partial bar — it's "what the scan saw", same
+    as every other price-derived field. `now` exists for tests."""
+    if now is None:
+        now = datetime.now(MARKET_TZ)
+    now_et = now.astimezone(MARKET_TZ)
+    for p in picks:
+        t = p["ticker"]
+        if (t, "Close") not in bars.columns:
+            continue
+        close = bars[(t, "Close")].dropna()
+        if close.empty:
+            continue
+        p["close"] = round(float(close.iloc[-1]), 4)
+        if (t, "Volume") not in bars.columns:
+            continue
+        vol = bars[(t, "Volume")].reindex(close.index)
+        if (close.index[-1].date() == now_et.date()
+                and now_et.hour < 16):  # NYSE close; early-close days just
+            # fall back to the prior session's (valid, day-old) reading.
+            close, vol = close.iloc[:-1], vol.iloc[:-1]
+            if close.empty:
+                continue
+        if len(vol) > VOL_RATIO_LOOKBACK_DAYS:
+            # Baseline excludes the latest session so a climax day compares
+            # against normal turnover instead of diluting its own signal.
+            base = vol.iloc[-(VOL_RATIO_LOOKBACK_DAYS + 1):-1].mean()
+            last_v = vol.iloc[-1]
+            if base > 0 and pd.notna(last_v):
+                p["vol_ratio_20d"] = round(float(last_v) / float(base), 2)
+        if len(vol) >= DOLLAR_VOL_LOOKBACK_DAYS:
+            dollar = (close * vol).tail(DOLLAR_VOL_LOOKBACK_DAYS).mean()
+            if pd.notna(dollar):
+                p["dollar_vol_20d_m"] = round(float(dollar) / 1e6, 1)
+        if len(close) > DIST_DAYS_LOOKBACK_DAYS:
+            ret = close.pct_change()
+            dist = ((ret <= DIST_DAY_MIN_DECLINE)
+                    & (vol > vol.shift(1))).tail(DIST_DAYS_LOOKBACK_DAYS)
+            p["dist_days_25d"] = int(dist.sum())
+    return picks
+
+
 # Vol-collapse filter: detect names whose realized vol crashed in the second
 # half of the scoring window — the canonical signature of an acquisition
 # target trading at the announced cash offer price (single-day gap up, then
@@ -1101,6 +1174,10 @@ def append_history(picks: list[dict], run_id: str, run_date: datetime,
                 "max_dd_pct": p["max_dd_pct"],
                 "ann_vol_pct": p["ann_vol_pct"],
                 "from_high_pct": p["from_high_pct"],
+                "close": p.get("close"),
+                "vol_ratio_20d": p.get("vol_ratio_20d"),
+                "dollar_vol_20d_m": p.get("dollar_vol_20d_m"),
+                "dist_days_25d": p.get("dist_days_25d"),
             }
             for p in picks
         ],
@@ -1145,6 +1222,10 @@ def append_history(picks: list[dict], run_id: str, run_date: datetime,
     canonical = HISTORY_COLS + [c for c in combined.columns
                                 if c not in HISTORY_COLS]
     combined = combined.reindex(columns=canonical)
+    # Nullable Int64 so a row that lacks the field doesn't flip the whole
+    # column to float ("3" silently becoming "3.0" in the CSV).
+    combined["dist_days_25d"] = pd.to_numeric(
+        combined["dist_days_25d"], errors="coerce").astype("Int64")
     tmp_path = HISTORY_FILE.with_suffix(".csv.tmp")
     combined.to_csv(tmp_path, index=False)
     tmp_path.replace(HISTORY_FILE)
@@ -1685,6 +1766,7 @@ def main():
     picks, excluded_vol_collapse = filter_vol_collapse(
         picks, prices, args.window_months, args.vol_collapse_ratio,
     )
+    picks = attach_volume_fields(picks, bars)
     history = load_history()
     now = datetime.now(timezone.utc)
     run_id = make_run_id(now, allow_same_day=args.allow_same_day)
