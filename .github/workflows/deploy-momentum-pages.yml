@@ -1,0 +1,63 @@
+name: Deploy momentum dashboard to Pages
+
+# develop only: the daily scan job commits data on develop, so master's
+# history.csv always lags — a master-triggered deploy would overwrite the
+# live page with stale data. The github-pages environment's deployment
+# branch policy mirrors this (develop only); if the automation ever moves
+# branches, update both this filter and that policy.
+on:
+  push:
+    branches: [develop]
+    paths:
+      - momentum-scan/state/history.csv
+      - momentum-scan/state/sectors.json
+      - momentum-scan/scripts/render_history_html.py
+      - .github/workflows/deploy-momentum-pages.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one Pages deploy at a time; let an in-flight deploy finish so the
+# site never serves a half-written artifact.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}momentum-scan/state/history.html
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+
+      # render_history_html.py is stdlib-only (no pip install needed) and
+      # reads the tracked history.csv + sectors.json.
+      - name: Render dashboard
+        run: python3 momentum-scan/scripts/render_history_html.py
+
+      # The staged directory layout IS the URL layout: the page is served at
+      # <pages-root>/momentum-scan/state/history.html, mirroring the repo
+      # path. Deliberately no index.html at the root.
+      - name: Stage site
+        run: |
+          mkdir -p _site/momentum-scan/state
+          cp momentum-scan/state/history.html _site/momentum-scan/state/
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
