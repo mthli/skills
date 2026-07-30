@@ -334,7 +334,8 @@ th:hover { color: var(--ink-2); }
 th.on { color: var(--ink); }
 th:first-child, td:first-child, th:nth-child(2), td:nth-child(2) { text-align: left; }
 td { font-variant-numeric: tabular-nums; color: var(--ink-2); }
-tbody tr:last-child td { border-bottom: none; }
+/* Last row keeps its divider: the entry-quality legend sits right below
+   the table, and the rule visually separates data from legend. */
 td.tk { color: var(--ink); font-weight: 600; }
 .eqdot { display: inline-block; width: 12px; height: 12px; border-radius: 50%;
          border: 1px solid var(--border); vertical-align: -1px; }
@@ -389,6 +390,7 @@ svg a:hover text { text-decoration: underline; }
     <h2 id="roster-title">Roster</h2>
     <p class="note" id="roster-note"></p>
     <div class="scroll"><table id="tbl"></table></div>
+    <div class="legend" id="roster-legend"></div>
   </div>
 
   <p class="foot" id="foot"></p>
@@ -1083,6 +1085,17 @@ function renderHeat(minApps) {
     renderHead(); renderRows();
   }));
   renderHead(); renderRows();
+
+  // Entry-quality legend under the table — same pattern as the heatmap's,
+  // strongest tier first to match the ramp's reading direction.
+  const leg = document.getElementById("roster-legend");
+  [3, 2, 1, 0].forEach(q => {
+    const k = div("key", leg);
+    const d = document.createElement("span");
+    d.className = "eqdot eq" + q;
+    k.appendChild(d);
+    k.appendChild(document.createTextNode(T.eqLabels[q]));
+  });
 }
 
 {
