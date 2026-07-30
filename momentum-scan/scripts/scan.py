@@ -991,6 +991,34 @@ def attach_volume_fields(picks: list[dict], bars: pd.DataFrame,
     return picks
 
 
+# Entry-quality tiers, calibrated on the 2026-07 episode backtest (n=220
+# episodes over 49 runs): volume-surge entries (vol_ratio ≥ 1.5, n=34)
+# averaged +9.0% held-to-dropout vs +3.1% for quiet drift-ins (< 0.8, n=76),
+# and low-distribution entries (dist_days ≤ 1, n=17) roughly doubled both
+# tenure (10.5 runs vs ~6) and top-10 reach rate (53% vs ~25%). Small
+# samples from a single regime — treat as a sizing/priority hint, not a
+# signal. Exit-side rules built on the same fields all failed vs the
+# hold-to-dropout baseline; that's why this attaches to entrants only.
+ENTRY_VOL_SURGE_MIN = 1.5
+ENTRY_VOL_QUIET_MAX = 0.8
+ENTRY_CLEAN_DIST_MAX = 1
+
+
+def entry_quality(vol_ratio: float | None,
+                  dist_days: float | None) -> tuple[str, str] | None:
+    """Tier a new entrant by its entry-day volume character. Returns
+    (emoji, label), or None when either field is unavailable."""
+    if vol_ratio is None or dist_days is None:
+        return None
+    if vol_ratio >= ENTRY_VOL_SURGE_MIN:
+        if dist_days <= ENTRY_CLEAN_DIST_MAX:
+            return ("🟢", "surge+clean")
+        return ("🔵", "surge")
+    if vol_ratio < ENTRY_VOL_QUIET_MAX:
+        return ("🟠", "quiet drift-in")
+    return ("⚪", "neutral")
+
+
 # Vol-collapse filter: detect names whose realized vol crashed in the second
 # half of the scoring window — the canonical signature of an acquisition
 # target trading at the announced cash offer price (single-day gap up, then
@@ -1771,6 +1799,16 @@ def main():
     now = datetime.now(timezone.utc)
     run_id = make_run_id(now, allow_same_day=args.allow_same_day)
     picks = enrich_with_persistence(picks, history, run_id, args.top_n)
+    # Entry-quality tags attach to episode STARTS (streak 1), not just
+    # first-ever debuts: the calibration backtest measured episodes, and
+    # ~40% of those were re-entries after a dropout — their entry-day
+    # volume character is equally predictive. Stored on the pick dict so
+    # the markdown section and JSON output read the same tier.
+    for p in picks[: args.top_n]:
+        if p.get("streak", 1) == 1:
+            q = entry_quality(p.get("vol_ratio_20d"), p.get("dist_days_25d"))
+            if q:
+                p["entry_quality"] = {"emoji": q[0], "label": q[1]}
     vol_target = compute_vol_target(prices, picks, args.top_n,
                                     args.target_vol_pct)
     picks = assign_weights(picks, args.top_n, vol_target)
@@ -1927,12 +1965,25 @@ def main():
                   f"{w}m={d['prev_return_pct']:+.1f}%){suffix}")
 
     if not history.empty:
-        new_entries = [p for p in picks[: args.top_n] if p.get("prev_rank") is None]
+        # Episode starts: streak 1 covers both first-ever debuts (🆕 in the
+        # table, prev_rank None) and re-entries after a dropout.
+        new_entries = [p for p in picks[: args.top_n]
+                       if p.get("streak", 1) == 1]
         if new_entries:
             print(f"\n## New entrants ({len(new_entries)})")
+            if any(p.get("entry_quality") for p in new_entries):
+                print("_entry quality: 🟢 volume surge + clean · 🔵 volume "
+                      "surge · ⚪ neutral · 🟠 quiet drift-in_")
             for p in new_entries:
-                print(f"- **{p['ticker']}** at #{p['rank']} "
-                      f"({w}m {p['return_pct']:+.1f}%, MaxDD {p['max_dd_pct']:.1f}%)")
+                q = p.get("entry_quality")
+                tag = f"{q['emoji']} " if q else ""
+                detail = (f" — vol {p['vol_ratio_20d']:.1f}×, "
+                          f"{int(p['dist_days_25d'])} dist" if q else "")
+                reentry = (f", re-entry, was #{p['prev_rank']}"
+                           if p.get("prev_rank") is not None else "")
+                print(f"- {tag}**{p['ticker']}** at #{p['rank']} "
+                      f"({w}m {p['return_pct']:+.1f}%, "
+                      f"MaxDD {p['max_dd_pct']:.1f}%{reentry}){detail}")
         min_streak = args.persistent_min_streak
         sticky = [p for p in picks[: args.top_n] if p.get("streak", 1) >= min_streak]
         if sticky:

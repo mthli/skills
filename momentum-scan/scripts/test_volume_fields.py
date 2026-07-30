@@ -121,6 +121,17 @@ def test_partial_session_trimmed_from_volume_trio():
     assert p2["vol_ratio_20d"] == 3.0
 
 
+def test_entry_quality_tiers():
+    assert scan.entry_quality(1.5, 1) == ("🟢", "surge+clean")
+    assert scan.entry_quality(1.5, 2) == ("🔵", "surge")
+    assert scan.entry_quality(2.4, 0) == ("🟢", "surge+clean")
+    assert scan.entry_quality(0.79, 0) == ("🟠", "quiet drift-in")
+    assert scan.entry_quality(0.8, 5) == ("⚪", "neutral")
+    assert scan.entry_quality(1.49, 0) == ("⚪", "neutral")
+    assert scan.entry_quality(None, 3) is None
+    assert scan.entry_quality(1.2, None) is None
+
+
 def test_single_partial_bar_does_not_crash():
     idx = pd.bdate_range(end="2026-07-24", periods=1)
     bars = make_bars(idx, AAA={"Close": [100.0], "Volume": [1e6]})

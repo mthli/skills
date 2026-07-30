@@ -108,9 +108,12 @@ A markdown table of the top N, plus three discovery sections. Sample (truncated)
 ...
 
 ## New entrants (6)
-- **MRVL** at #2 (3m +109.4%, MaxDD -10.8%)
-- **DELL** at #3 (3m +107.8%, MaxDD -10.8%)
+_entry quality: 🟢 volume surge + clean · 🔵 volume surge · ⚪ neutral · 🟠 quiet drift-in_
+- 🔵 **MRVL** at #2 (3m +109.4%, MaxDD -10.8%) — vol 2.1×, 3 dist
+- 🟠 **DELL** at #3 (3m +107.8%, MaxDD -10.8%, re-entry, was #24) — vol 0.6×, 5 dist
 ...
+
+(The section lists **episode starts** — `Streak = 1` — covering both first-ever debuts (🆕 in the table) and re-entries after a dropout; re-entries carry a `re-entry, was #N` note. Entry-quality tags tier each entrant by its entry-day volume character — `vol` is `vol_ratio_20d` (latest volume over its 20-session average), `dist` is `dist_days_25d`. Thresholds: surge ≥ 1.5×, quiet < 0.8×, clean ≤ 1 dist day. Calibration: a 220-episode single-regime backtest (2026-05→07) where surge entries averaged +9.0% held-to-dropout vs +3.1% for quiet drift-ins, and ≤1-dist-day entries doubled both tenure and top-10 reach — read the tag as a sizing/priority hint for which entrants deserve attention, not a buy signal. Tags appear only when the volume fields are available for that name. JSON output carries the same tier on each episode-start pick as `entry_quality: {emoji, label}`.)
 
 ## Persistent leaders (streak ≥ 3 runs)
 _rank trajectory vs top 30: █ = #1 · ▁ = #30 or worse; rising = climbing_
