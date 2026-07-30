@@ -1,11 +1,13 @@
 ---
 name: conviction-funnel
-description: End-to-end "scan → consensus → buyable picks" funnel — chains regime-scan (market gate) → momentum-scan (names) → cross-scan (signal agreement), then deep-dives the top N (default 3) into actionable entry / stop / size / invalidation briefs with regime threaded into sizing. Use whenever the user wants the whole pipeline from "what's the market doing" to "3 names I could actually buy, with where to get in and bail" — e.g. "what should I buy today", "give me 3 high-conviction picks", "run the funnel", "scan to picks", "best risk/reward setups with entries and stops". The orchestration layer ABOVE the individual scans — NOT for a single scan re-run (use that scan directly), a single-ticker lookup (use yfinance), or a pure market-health read (use regime-scan).
+description: End-to-end "scan → consensus → buyable picks" funnel — chains regime-scan (market gate) → momentum-scan (names) → cross-scan (overlap map: clean tech+tech confirmation vs options-froth crowding), then deep-dives the top N (default 3) into actionable entry / stop / size / invalidation briefs with regime threaded into sizing. Use whenever the user wants the whole pipeline from "what's the market doing" to "3 names I could actually buy, with where to get in and bail" — e.g. "what should I buy today", "give me 3 high-conviction picks", "run the funnel", "scan to picks", "best risk/reward setups with entries and stops". The orchestration layer ABOVE the individual scans — NOT for a single scan re-run (use that scan directly), a single-ticker lookup (use yfinance), or a pure market-health read (use regime-scan).
 ---
 
 # conviction-funnel
 
-Turn a market full of noise into a *small* set of researched, actionable names. The premise: any single scan can fire on a fluke, and a momentum name is usually already extended by the time it ranks — so picking off one screener tends to buy tops. This funnel stacks **independent** signals (trend, basing, oversold-bounce, options flow) so that only names where 2–3 of them *agree* survive, then spends real research effort only on that handful — ending in a side-by-side table of where to enter, where the stop goes, how big to size, and what kills the thesis.
+Turn a market full of noise into a *small* set of researched, actionable names. The premise: any single scan can fire on a fluke, and a momentum name is usually already extended by the time it ranks — so picking off one screener tends to buy tops. The funnel runs the market gate, pulls the name lists, cross-references them, then spends real research effort on only a handful — ending in a side-by-side table of where to enter, where the stop goes, how big to size, and what kills the thesis.
+
+⚠️ **How the 2026-05→07 backtests changed the middle step.** The five sister skills now carry outcome backtests, and the old "2–3 scans agree = conviction" premise did not survive them: overlap count ranked conviction **backwards** (3-scan names −4.5% excess at T+10 vs −1.5% for single-scan), mostly because co-appearing in unusual-options marks *froth*, not smart money (see cross-scan's **Backtested outcomes**). The funnel keeps the same pipeline but uses convergence differently: technical+technical overlaps and each scan's *validated pockets* form the candidate pool, the `uoa` column acts as a red flag, and the per-scan validated filters (BaseWks ≥ 20; MR Score ≥ 40 on a fresh listing; volume-backed momentum entries) do the ranking that overlap counting used to do.
 
 It orchestrates skills the user already has rather than re-implementing anything:
 
@@ -30,7 +32,7 @@ The sequence isn't arbitrary — each step changes how you read the next:
 
 1. **regime-scan first** because it's a *gate*, and it's cheap (~516 tickers, one batched download). If the market is 🔴 RISK-OFF with stacking divergences, the whole exercise changes character (you're looking for what's *holding up*, sized tiny, not what to chase) — and you might decide to defer the expensive deep-dives entirely. Knowing the regime first means you read the name list with a frame already in place, instead of picking names and then discovering the tape is rolling over. regime-scan is also a strictly richer read than momentum-scan's built-in `--regime-gate` banner: the banner is a 2-state trend+breadth gate, while regime-scan adds the 🟡 middle state, the divergence/turn flags, VIX term structure, credit, and cross-day slope. Use the banner as a free sanity check; use regime-scan for the actual gate.
 2. **momentum-scan second** because it's the primary name source *and* the only place you get the per-name buyability signals (the `Sig` column, MA20%, RSI, ATR stop) that the selection step leans on. cross-scan only reads each scan's saved `history.csv` (ranks/scores) — it does **not** carry the `Sig`/stop fields — so you must run momentum-scan itself to see them.
-3. **cross-scan third** because convergence is the real filter. It re-reads all four scans' latest snapshots and surfaces the 2+-scan overlap. Run it with `--refresh` so any *other* sister scan (base-breakout / mean-reversion / unusual-options) that's gone stale gets regenerated first — momentum you just ran, so it won't be re-run.
+3. **cross-scan third** because the overlap map changes how you read the name list — it tells you which momentum names are *cleanly confirmed* by a second technical signal and which are sitting in options-froth territory. It re-reads all four scans' latest snapshots and surfaces the 2+-scan overlap. Run it with `--refresh` so any *other* sister scan (base-breakout / mean-reversion / unusual-options) that's gone stale gets regenerated first — momentum you just ran, so it won't be re-run.
 
 ## Step 1 — regime gate
 
@@ -72,24 +74,22 @@ Pass `--scans-dir <SKILLS_DIR>` explicitly: cross-scan's own default is `~/.clau
 
 `--refresh` only regenerates sister scans whose snapshot is >3 days old (or missing); anything fresh today is skipped, so this is a no-op on the scans you just ran and a safety net on the ones you didn't. Read the freshness header — if a scan is still STALE after refresh (e.g. a weekend save-skip), treat its contribution as informational.
 
-The output gives you tickers in **≥3 scans** (rare, highest conviction — usually 0–2 names) and **≥2 scans**, each with the per-scan ranks and a `Composite read` label. That overlap set is the candidate pool for selection.
+The output gives you tickers in **≥3 scans** (rare — usually 0–8 names) and **≥2 scans**, each with per-scan ranks and a `Composite read` label. Note the ⚠️ line cross-scan now prints under the ≥3 tier: its overlap backtest found overlap count ranks conviction **backwards** (3-scan names −4.5% xT+10 vs −1.5% single-scan), with UOA co-membership as the main contaminant. So read the tables as a **context map, not a leaderboard**: tech+tech rows are the candidates, UOA-touched rows are de-risking flags on names the user holds, and the ⚠️ labels (`froth tell` / `crowding tell` / `bearish positioning` / `backtest-worst cell`) mean exactly what they say.
 
 The 2-scan table is **capped at `--top-n` rows (default 30)** and will say e.g. "29 of 45 shown" — the rest are hidden. If you want the full overlap (e.g. to make sure a non-tech name lower down isn't invisible to the diversification step), re-run with `--top-n 60` or `--format json` (the JSON always carries the complete set). Worth doing whenever the hidden tail is larger than a handful.
 
 ## Step 4 — select the top N (risk/reward lens)
 
-This is judgment, not a formula, but apply this priority order (it's tuned for "best *current* risk/reward" — entry quality and tight invalidation, not the highest-octane name):
+This is judgment, not a formula — but the priority order below was rebuilt on the sister scans' 2026-05→07 outcome backtests (each scan's **Backtested outcomes** section carries the full numbers). It's tuned for "best *current* risk/reward" — entry quality and tight invalidation, not the highest-octane name:
 
-1. **3+-scan overlaps first.** When a name clears three independent scans it's the standout — lead with it. This outranks the "diversify out of the crowded cohort" rule below: if the sole 3+-scan name *is* in the crowded cohort (e.g. tech in a narrow tape), still lead with it — but treat it as the crowded-cohort representative and push the diversification onto the *other* slots.
-2. **Among 2-scan names, weight the overlap *type*:**
-   - `base-breakout + *` (still coiling) → **best** — entry is near a definable base, so the stop is tight and the R/R is cleanest. This is the core of the lens.
-   - `momentum + mean-reversion` ("pullback in a leader") → strong — a confirmed leader on a buyable dip.
-   - `* + unusual-options` (call-heavy) → adds a smart-money tell, but cross-check the earnings calendar (post-news call buying isn't informed flow).
-   - `momentum + unusual-options` **put-heavy** → a *warning*, not a pick.
-3. **Prefer momentum `Sig` 🟢/🔵; downgrade 🔴 overextended.** A name that only clears via a vertical, RSI-80 move is a worse entry than one basing quietly.
-4. **Prefer a tight ATR stop (≤ ~8%) and low AnnVol.** Tight invalidation is the whole point.
-   - **Base-only names have no `Sig`/ATR-stop** — rules 3–4 read those off momentum-scan, but many `base-breakout + *` overlaps aren't in the momentum list at all. For those, break ties on the base-breakout snapshot instead: read `<SKILLS_DIR>/base-breakout-scan/state/history.csv` and rank on **higher `base_score`, tighter `width_pct`, and smaller `to_pivot`** (a tight base whose entry trigger is close = the same "tight invalidation, near entry" property rules 3–4 are after). Don't let a base-only name fall through just because it lacks a `Sig`.
-5. **Diversify sectors, and step out of the crowded cohort.** If momentum is tech-heavy and regime flagged a narrow tape, deliberately favor non-tech consensus names — concentration risk is real and a narrowing tape pulls sponsorship from the crowded names first.
+1. **Build the candidate pool from tech+tech overlaps and validated single-scan pockets — not from overlap count.** The pool is: `momentum+base`, `momentum+mean-reversion`, `base+mean-reversion` overlaps (the only ~neutral cells in the overlap backtest, Beat10 54-55%), **preferably in their 1st–2nd overlap session** — fresh overlaps ran −1.6% xT+10 vs −4.4% by the 4th+ consecutive session — plus any single-scan name that passes its own scan's validated filter (rules 4–6 below). A strong single-scan name that passes its filter beats a stale two-scan overlap that doesn't.
+2. **A 3+-scan overlap is the crowding representative, not the standout.** Don't auto-lead with it — in-sample, 3-scan names ran −4.5% xT+10 (Beat10 36%) and the mom+base+mr triple was the worst labeled cell (n=15, −8.0% xT+10, Beat10 10%). It makes the finalists only if it independently passes rules 3–7, and its brief must say the crowd is already there.
+3. **Treat the `uoa` column as a red flag on any row.** Call-heavy co-flag = crowding tell (−3.0% xT+10); put-heavy = the one backtest-validated warning (−5.3% xT+10). A UOA-touched name needs an explicit, verified reason to stay a finalist (a dated near-term catalyst, not "smart money is buying") — and **never after a >+10% five-session rip**: post-rip UOA flags were the single worst cell in the UOA backtest (−2.4% xT+5, 38% beating the universe). Default: push UOA-touched names to runner-up and mention them as de-risking flags if the user holds them.
+4. **Rank base-side names by base length, not base score.** BaseWks ≥ 20 is base-breakout's one big validated edge (75% win at +20 sessions vs 45% baseline); the composite base Score did **not** discriminate outcomes. Among `base-breakout + *` rows — and base-only candidates, which lack a momentum `Sig`/ATR-stop — read `<SKILLS_DIR>/base-breakout-scan/state/history.csv` and rank on **`base_weeks` ≥ 20 first, then smaller `to_pivot`** (entry trigger near = tight invalidation). Don't prize deep volume dry-up (inverted in-sample) and skip any entry that gaps >3% past the pivot.
+5. **Gate mean-reversion-side names on Score ≥ 40 and a 1st–2nd-day listing.** That combined filter ran +1.83%/signal (~3× baseline); 3rd+ consecutive listings ran negative. A `momentum+mean-reversion` "pullback in a leader" that fails this gate isn't a buyable dip — it's a name that stopped bouncing ("stuck oversold").
+6. **Prefer momentum `Sig` 🟢/🔵; downgrade 🔴 overextended.** A name that only clears via a vertical, RSI-80 move is a worse entry than one basing quietly. For fresh momentum entrants, check the entry-volume tier on the momentum history roster — volume-backed entries ran +9.0% episodes vs +3.1% for quiet ones in momentum's backtest.
+7. **Prefer a tight ATR stop (≤ ~8%) and low AnnVol.** Tight invalidation is the whole point.
+8. **Diversify sectors, and step out of the crowded cohort.** If momentum is tech-heavy and regime flagged a narrow tape, deliberately favor non-tech candidates — concentration risk is real and a narrowing tape pulls sponsorship from the crowded names first.
 
 Then **thread the regime conclusion in**: 🟢 → these are buy candidates at normal size; 🟡 → only the pullback-entry ones, smaller; 🔴 → observe, or minimal size with an explicit caveat.
 
@@ -112,7 +112,7 @@ Synthesize the briefs into one side-by-side table so the user can compare at a g
 | | <T1> | <T2> | <T3> |
 |---|---|---|---|
 | Sector | | | |
-| Consensus | (which scans, ⭐ if 3+) | | |
+| Consensus | (which scans + overlap spell; ⚠️ if UOA-touched or 3+) | | |
 | Spot | | | |
 | Trend | (vs 20/50/200DMA, dist from high) | | |
 | ⚠️ Earnings | (date + weeks out; flag if <4wk) | | |
@@ -127,13 +127,14 @@ Synthesize the briefs into one side-by-side table so the user can compare at a g
 
 For the **Risk/reward** row, anchor the R-multiple to a *defensible upside* — the analyst high target or a chart level — and state which. Don't anchor it to the analyst *mean* target when price already sits there: that's exactly the "reward capped at consensus" case (it makes R look like ~0), and the right move is to say the mean is already reached and measure R to a higher bull-case level instead.
 
-Follow the table with a 2–3 sentence-per-name plain-language verdict, then a short **"what the funnel did"** recap that makes the value explicit — e.g. how the deep-dive *changed* the picture vs the raw overlap (a name that looked great on signal agreement but turned out to have capped reward or a deteriorating fundamental backdrop). That recap is often the most useful part: it shows why "appears in N scans" ≠ "buy".
+Follow the table with a 2–3 sentence-per-name plain-language verdict, then a short **"what the funnel did"** recap that makes the value explicit — e.g. how the deep-dive *changed* the picture vs the raw overlap (a name that looked great on signal agreement but turned out to have capped reward or a deteriorating fundamental backdrop). That recap is often the most useful part: it shows why "appears in N scans" ≠ "buy" — now backtest-quantified, since overlap count alone ranked outcomes backwards.
 
 Close with concrete next-step offers: swap a finalist for a runner-up and re-dive; persist the theses (`/commit-invest` if available); or go deeper on one name (full `/deep-research`).
 
 ## Honesty rules (carry these through the whole funnel)
 
 - **Never frame output as "buy this".** These are *prioritized research candidates with risk parameters*, not advice. Say so.
+- **Quote the backtest numbers when rejecting a crowded name.** "In 3 scans" *sounds* bullish; the measured record says the opposite (−4.5% xT+10). Stating the number is what keeps the funnel honest against its own old framing — and it explains to the user why the obvious-looking pick got demoted.
 - **Report the tape faithfully.** If regime is 🟡/🔴, lead with that, don't bury it under exciting names.
 - **Surface what the deep-dive killed.** The funnel's job is as much to *reject* plausible names as to surface good ones — a consensus name with reward already capped at the analyst target, or a bullish options flow sitting on top of a weakening commodity, is a finding worth stating loudly.
 - **The single-run caveat:** the scans get sharper with history (streaks, slopes). A first-ever run is informationally thin; lean harder on the fundamental deep-dive when the scan history is short.
