@@ -420,6 +420,13 @@ svg a:hover text { text-decoration: underline; }
   </div>
 
   <div class="card">
+    <h2 id="pk-title">⭐ Pocket vs the rest</h2>
+    <p class="note" id="pk-note"></p>
+    <div class="scroll" id="pkchart"></div>
+    <div class="legend" id="pk-legend"></div>
+  </div>
+
+  <div class="card">
     <div class="head">
       <div>
         <h2 id="grid-title">Outcome grid</h2>
@@ -429,13 +436,6 @@ svg a:hover text { text-decoration: underline; }
     </div>
     <div class="scroll vclip" id="grid"></div>
     <div class="legend" id="grid-legend"></div>
-  </div>
-
-  <div class="card">
-    <h2 id="pk-title">⭐ Pocket vs the rest</h2>
-    <p class="note" id="pk-note"></p>
-    <div class="scroll" id="pkchart"></div>
-    <div class="legend" id="pk-legend"></div>
   </div>
 
   <div class="card">
