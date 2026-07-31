@@ -648,7 +648,20 @@ def regime_state(today: date, errors: list) -> dict | None:
         df = pd.read_csv(REGIME_HISTORY)
         if df.empty:
             return None
+        df = df.sort_values("run_id")
         row = df.iloc[-1].to_dict()
+        # 2-run-day confirmed state (regime-scan's 2026-07-31 whipsaw fix:
+        # 6 of the first 10 raw transitions were single-day threshold
+        # flips). Sizing/framing reads this; the raw state stays reported.
+        # The `>= 2` below must stay in lockstep with regime-scan scan.py's
+        # STATE_CONFIRM_DAYS and its backtest_outcomes.py --confirm-days.
+        states = [str(s).split(" (")[0] for s in df["state"]]
+        confirmed, streak_state, streak = states[0], states[0], 1
+        for s in states[1:]:
+            streak = streak + 1 if s == streak_state else 1
+            streak_state = s
+            if streak_state != confirmed and streak >= 2:
+                confirmed = streak_state
         snap = str(row.get("run_id", ""))
         snap_date = None
         try:
@@ -660,6 +673,8 @@ def regime_state(today: date, errors: list) -> dict | None:
             "snapshot": snap,
             "stale_days": stale,
             "state": row.get("state"),
+            "confirmed_state": confirmed,
+            "first_day_flip": confirmed != states[-1],
             "score": row.get("score"),
             "vix": row.get("vix"),
             "vix_term": row.get("vix_term"),

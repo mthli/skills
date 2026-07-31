@@ -75,6 +75,19 @@ BREADTH_BULL, BREADTH_BEAR = 60.0, 40.0   # % of names above an MA
 RSPSPY_DEADBAND = 0.5         # % move of RSP/SPY over the lookback to count
 CREDIT_DEADBAND = 0.25        # % move of HYG/LQD over the lookback to count
 ROTATION_DEADBAND = 0.5       # pp of (defensive − offensive) return to count
+# The rotation FLAG additionally requires the rotation to be deepening vs a
+# few sessions ago (2026-07-31 retune: as a pure level alarm it was on 83% of
+# logged days with a 14-day streak — chronic, untestable, habituating; the
+# score vote stays level-based, only the flag became a change alarm).
+ROTATION_SLOPE_SESSIONS = 5   # deepening is measured vs this many sessions ago
+ROTATION_WIDENING_PP = 0.5    # min pp of deepening over that span to flag
+STATE_CONFIRM_DAYS = 2        # run-days a new state must persist before the
+                              # Confirmed line flips (sizing reads that line;
+                              # 6 of the first 10 logged raw transitions were
+                              # single-day threshold whipsaws). Keep in
+                              # lockstep with backtest_outcomes.py's
+                              # --confirm-days default and the inline confirm
+                              # loop in premarket-brief/scripts/build_packet.py.
 NHNL_DEADBAND_PCT = 1.0       # pp of net new highs to count — without this a
                               # single name at a 52w high flips the vote in a
                               # ~500-name pool
@@ -164,6 +177,25 @@ def pct_over(series: pd.Series | None, lookback: int) -> float | None:
     if len(s) < lookback + 1:
         return None
     return (s.iloc[-1] / s.iloc[-1 - lookback] - 1) * 100
+
+
+def def_off_at(macro: dict, lookback: int, shift: int) -> float | None:
+    """(defensive − offensive) mean sector-ETF return over `lookback`
+    sessions, measured on the window ending `shift` sessions ago (0 = now).
+    Positive = defensives leading = risk-off tilt. None when either side
+    has no series long enough after clipping."""
+    def clip(s):
+        if s is None or shift == 0:
+            return s
+        s = s.dropna()
+        return s.iloc[:-shift] if len(s) > shift else None
+    off = [pct_over(clip(macro.get(t)), lookback) for t in SECTOR_OFFENSIVE]
+    def_ = [pct_over(clip(macro.get(t)), lookback) for t in SECTOR_DEFENSIVE]
+    off = [r for r in off if r is not None]
+    def_ = [r for r in def_ if r is not None]
+    if not (off and def_):
+        return None
+    return sum(def_) / len(def_) - sum(off) / len(off)
 
 
 def ratio_slope(a: pd.Series | None, b: pd.Series | None,
@@ -275,14 +307,8 @@ def compute_metrics(macro: dict[str, pd.Series],
     credit = ratio_slope(macro.get("HYG"), macro.get("LQD"), lookback)
 
     # Defensive vs offensive sector relative strength over the lookback.
-    off_rets = [pct_over(macro.get(t), lookback) for t in SECTOR_OFFENSIVE]
-    def_rets = [pct_over(macro.get(t), lookback) for t in SECTOR_DEFENSIVE]
-    off_rets = [r for r in off_rets if r is not None]
-    def_rets = [r for r in def_rets if r is not None]
-    def_off = None
-    if off_rets and def_rets:
-        # Positive = defensives leading = risk-off tilt.
-        def_off = sum(def_rets) / len(def_rets) - sum(off_rets) / len(off_rets)
+    def_off = def_off_at(macro, lookback, 0)
+    def_off_prior = def_off_at(macro, lookback, ROTATION_SLOPE_SESSIONS)
 
     return {
         "spy_trend": spy_trend,
@@ -296,6 +322,7 @@ def compute_metrics(macro: dict[str, pd.Series],
         "vix_term": vix_term,
         "credit_pct": credit,
         "def_off_pct": def_off,
+        "def_off_prior_pct": def_off_prior,
         "lookback": lookback,
         "n_breadth": len(breadth),
     }
@@ -423,8 +450,17 @@ def classify(m: dict) -> dict:
             flags.append(f"Credit weakening: HYG/LQD {m['credit_pct']:+.1f}%/{m['lookback']}d "
                          f"— credit not confirming equities")
         if m["def_off_pct"] is not None and m["def_off_pct"] > ROTATION_DEADBAND:
-            flags.append(f"Defensive rotation: defensives outran offensives over {m['lookback']}d by "
-                         f"{m['def_off_pct']:+.1f}pp")
+            prior = m.get("def_off_prior_pct")
+            if prior is None:
+                # Not enough data to measure deepening — fall back to the
+                # level alarm rather than silently never firing.
+                flags.append(f"Defensive rotation: defensives outran offensives over {m['lookback']}d by "
+                             f"{m['def_off_pct']:+.1f}pp")
+            elif m["def_off_pct"] - prior > ROTATION_WIDENING_PP:
+                flags.append(f"Defensive rotation: deepening — defensives outran offensives over "
+                             f"{m['lookback']}d by {m['def_off_pct']:+.1f}pp, "
+                             f"{m['def_off_pct'] - prior:+.1f}pp more than "
+                             f"{ROTATION_SLOPE_SESSIONS} sessions ago")
         if m["vix_term"] is not None and m["vix_term"] > 1.0:
             flags.append(f"Vol-curve inversion: VIX>VIX3M ({m['vix_term']:.2f}) — acute stress")
         if m["vix_5d_pct"] is not None and m["vix_5d_pct"] > VIX_SPIKE_5D_PCT:
@@ -492,6 +528,39 @@ def clear_history():
         tmp.unlink()
 
 
+def _base_state(label) -> str:
+    """'RISK-OFF (internals)' → 'RISK-OFF'."""
+    return str(label).split(" (")[0]
+
+
+def confirm_state(history: pd.DataFrame, run_id: str, today_label: str,
+                  n: int = STATE_CONFIRM_DAYS) -> tuple[str, bool]:
+    """The state under an n-run-day confirmation rule: the confirmed label
+    flips only once a new base state has persisted n consecutive run-days;
+    until then the previous confirmed state stands. Returns (confirmed base
+    state, first_day_flip) where first_day_flip means today's raw state
+    differs from the confirmed one — "watch, don't act". Sizing decisions
+    downstream read the confirmed state; the raw daily label is what gets
+    logged (backtest_outcomes.py grades both)."""
+    seq = []
+    if len(history):
+        prior = history[history["run_id"].astype(str) != run_id]
+        prior = prior.sort_values("run_id")
+        seq = [_base_state(s) for s in prior["state"]]
+    today = _base_state(today_label)
+    seq.append(today)
+    confirmed = seq[0]
+    streak_state, streak = seq[0], 1
+    for s in seq[1:]:
+        if s == streak_state:
+            streak += 1
+        else:
+            streak_state, streak = s, 1
+        if streak_state != confirmed and streak >= n:
+            confirmed = streak_state
+    return confirmed, confirmed != today
+
+
 def _round(v, n=1):
     return None if v is None else round(v, n)
 
@@ -550,8 +619,11 @@ VOTE_EMOJI = {1: "🟢", 0: "⚪", -1: "🔴"}
 LAYER_ORDER = ["Trend", "Breadth", "Vol", "Credit"]
 
 
+STATE_EMOJI = {"RISK-ON": "🟢", "CAUTION": "🟡", "RISK-OFF": "🔴"}
+
+
 def render_markdown(m: dict, c: dict, history: pd.DataFrame, run_id: str,
-                    now: datetime) -> str:
+                    now: datetime, confirmed: tuple[str, bool]) -> str:
     out = []
     out.append(f"# Regime scan — {now.strftime('%Y-%m-%d %H:%M UTC')}")
     out.append("")
@@ -560,6 +632,16 @@ def render_markdown(m: dict, c: dict, history: pd.DataFrame, run_id: str,
                f"{_plural(c['n_flags'], 'divergence')})")
     out.append(f"_{c['reason']}_")
     out.append(f"> **Action**: {c['action']}")
+    conf_label, flipped = confirmed
+    conf_emoji = STATE_EMOJI.get(conf_label, "⚪")
+    if flipped:
+        out.append(f"> **Confirmed ({STATE_CONFIRM_DAYS}-day)**: {conf_emoji} "
+                   f"{conf_label} — today's {_base_state(c['state_label'])} is "
+                   f"a first-day flip: watch, don't act. Sizing decisions "
+                   f"read this line.")
+    else:
+        out.append(f"> **Confirmed ({STATE_CONFIRM_DAYS}-day)**: {conf_emoji} "
+                   f"{conf_label} — sizing decisions read this line.")
     out.append("")
 
     # Turn detector — lead with it, it's the whole point.
@@ -641,6 +723,19 @@ def show_history_summary(history: pd.DataFrame):
               f"{g('vix', '', '{:.1f}')} | {g('vix_term', '', '{:.2f}')} | "
               f"{g('credit_pct', '%', '{:+.1f}')} | {int(r['n_flags'])} |")
 
+    # The Confirmed line prints here too: --show-history is the recommended
+    # no-refetch read (conviction-funnel step 1), and sizing reads this line.
+    last = history.sort_values("run_id").iloc[-1]
+    conf, flipped = confirm_state(history, str(last["run_id"]), last["state"])
+    emoji = STATE_EMOJI.get(conf, "⚪")
+    if flipped:
+        print(f"\n**Confirmed ({STATE_CONFIRM_DAYS}-day)**: {emoji} {conf} — "
+              f"latest {_base_state(last['state'])} is a first-day flip: "
+              f"watch, don't act. Sizing decisions read this line.")
+    else:
+        print(f"\n**Confirmed ({STATE_CONFIRM_DAYS}-day)**: {emoji} {conf} — "
+              f"sizing decisions read this line.")
+
 
 # --------------------------------------------------------------------------- #
 # Main
@@ -720,14 +815,18 @@ def main():
         else:
             append_history(history_row(run_id, now, m, c))
 
+    confirmed = confirm_state(history, run_id, c["state_label"])
+
     if args.format == "json":
         print(json.dumps({
             "run_id": run_id, "run_date": now.isoformat(),
             "lookback": args.lookback, "metrics": m, "classification": c,
+            "confirmed_state": confirmed[0],
+            "confirmed_first_day_flip": confirmed[1],
         }, indent=2, default=str))
         return
 
-    print(render_markdown(m, c, history, run_id, now))
+    print(render_markdown(m, c, history, run_id, now, confirmed))
 
 
 if __name__ == "__main__":

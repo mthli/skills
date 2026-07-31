@@ -88,7 +88,8 @@ premarket movers, market-wide premarket gappers (`premarket_gappers` — top
 large-cap movers outside your book, via TradingView), today's econ calendar +
 earnings, recent analyst rating changes on your names + watchlist
 (`rating_changes`), overnight macro headlines (`headlines`, CNBC RSS), Fear &
-Greed, the regime-scan state row, the sister-scan watchlist (`names.watchlist` —
+Greed, the regime-scan state row (incl. `confirmed_state` / `first_day_flip`,
+the 2-day whipsaw filter), the sister-scan watchlist (`names.watchlist` —
 momentum leaderboard + fresh high-score mean-reversion listings), your parsed
 positions (with `reports_today` / `on_watchlist` joins), special-day flags, an
 `errors` list, and a `data_quality` list (cross-source premarket disagreements
@@ -139,6 +140,14 @@ to not get fooled by them. Check these:
 - **Staleness.** `regime.stale_days > 1` means the structural backdrop predates
   recent action — say so and lean on the live tape. (A "RISK-ON" cache captured
   before a −4% day is worse than no read if quoted uncritically.)
+- **Chatter.** Frame the day off `regime.confirmed_state` (the 2-run-day
+  confirmed state), not the raw `regime.state` — the raw label chatters at the
+  score threshold (6 of the first 10 logged transitions were single-day
+  whipsaws; see regime-scan's **Signal quality & outcomes**). When
+  `regime.first_day_flip` is true, say exactly that: "regime printed CAUTION
+  yesterday, unconfirmed — framing stays RISK-ON, flip confirms if it holds
+  today". The exception is a trend-gate break (SPY losing its 200DMA): that's
+  mechanical, respect it same-day.
 - **Degradation.** If `errors` is non-empty or the calendar source is
   `unavailable`, the briefing must *say which inputs were missing* rather than
   silently omit them. Honest gaps beat invisible ones.

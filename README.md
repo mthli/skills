@@ -17,7 +17,7 @@ Three layers, top to bottom: a **gate** (is the market healthy?), three **finder
 
 ### Gate
 
-- `regime-scan` - Gauge whole-market health once a day — fold index trend, breadth, VIX term structure, credit spreads, and defensive rotation into one 🟢/🟡/🔴 state plus divergence flags, and log each reading so a sentiment turn shows up in the slope across runs.
+- `regime-scan` - Gauge whole-market health once a day — fold index trend, breadth, VIX term structure, credit spreads, and defensive rotation into one 🟢/🟡/🔴 state plus divergence flags, and log each reading so a sentiment turn shows up in the slope across runs. Signal-graded by `scripts/backtest_outcomes.py`: 6 of 10 raw state transitions were threshold whipsaws, so the banner now carries a 2-day-confirmed state that downstream sizing reads (first-day flips are "watch, not act"); the defensive-rotation flag — chronic at 83% of days as a level alarm — now requires the rotation to be deepening (both fixed 2026-07-31); SPY forward-return grading is plumbed and accrues with the log.
 
 ### Finders
 

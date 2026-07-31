@@ -41,6 +41,10 @@ uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' \
 
 # Longer slope/relative-strength window (default 20 sessions ≈ 1 trading month)
 ... python <SKILL_DIR>/scripts/scan.py --lookback 30
+
+# Signal-quality report + outcome grading (see "Signal quality & outcomes"). Re-run quarterly.
+uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy>=1.24,<3' \
+  python <SKILL_DIR>/scripts/backtest_outcomes.py
 ```
 
 ## Parameters
@@ -77,13 +81,15 @@ The generator dash-normalizes class shares (`BRK.B`→`BRK-B`), prints a per-sec
 - 🟡 **CAUTION** — trend still up but ≥2 divergence flags (or breadth weakening). *Tighten trail stops, raise cash buffer; new money only on pullbacks, never chase 🔴.*
 - 🔴 **RISK-OFF** — either the trend gate is off (SPY below / rolling 200DMA), **or** price is still above 200DMA but ≥4 internals broke (the "price hasn't dropped yet but internals are already rotting" late-stage top). *Cut gross exposure, let trail stops take over; don't bottom-fish an unconfirmed bounce.*
 
+**Confirmed (2-day) line** — the state under a 2-run-day confirmation rule (`confirmed_state` in JSON). The raw daily label chatters at the score threshold — 6 of the first 10 logged transitions were single-day whipsaws — so **position-sizing decisions (conviction-funnel, premarket framing) read this line; a first-day flip is "watch, don't act"**. The raw label above it remains the honest daily reading and is what history.csv logs; the confirmation costs one run-day of detection lag on genuine turns.
+
 **Score** — sum of 10 per-signal votes (🟢 +1 / ⚪ 0 / 🔴 −1) across the four layers. A blunt gauge; the **divergence flags and the trajectory matter more than the absolute score**.
 
 **⚠️ Turn warnings (divergence flags)** — the turn detector. Each fires *only while the uptrend is intact* (a broken internal under an already-broken tape is just the bear, not a divergence):
 - Breadth divergence — SPY near its 52w high but < 50% of names above their 50DMA
 - Narrowing rally — RSP/SPY falling (mega-cap-only rally)
 - Credit weakening — HYG/LQD rolling over while stocks hold
-- Defensive rotation — defensives outrunning offensives
+- Defensive rotation — defensives outrunning offensives **and the gap deepening vs 5 sessions ago** (2026-07-31 retune: as a pure level alarm it was on 83% of days — chronic and habituating; the score *vote* stays level-based, only the flag became a change alarm, so flag base rates before/after that date aren't comparable)
 - Vol-curve inversion — VIX > VIX3M
 - VIX 5-day spike
 
@@ -98,6 +104,16 @@ None alone is a sell; **2–3 stacking = de-risk**. This is the layer the user e
 - Breadth < ~60% + gate-off is the **kill switch** (`methodology.md` 2026-06-03): actively cut gross exposure.
 - Pairs with `regime-scan` → `momentum-scan`: read the **market** here first (are we in? add or trim?), then read **names** there.
 
+## Signal quality & outcomes (scripts/backtest_outcomes.py)
+
+The script grades the signal itself, in two honestly-separated halves — **signal quality** (readable immediately, even on weeks of data) and **SPY forward returns** (the grading framework is locked now; its strata stay marked `⚠︎thin` until each holds ~8 independent 20-session windows, so conclusions accrue with the log instead of being invented from it). Re-run quarterly alongside the sister scans' `backtest_outcomes.py`.
+
+First report (2026-07-31, 36 readings — findings about the *signal*, not about returns):
+
+1. **The daily label chatters at the state boundary.** 11 spells over 36 run-days, 36% of them a single run-day; 10 raw transitions, of which a 2-day confirmation rule removes **6 as whipsaws** at a 1-run-day detection lag (3-day: 8 removed, 2-day lag). The score oscillating around the RISK-ON/CAUTION threshold flips the label without the tape changing, and every flip reached downstream readers (funnel sizing, premarket framing) as a real regime change. **Fixed 2026-07-31**: the banner/JSON now carry a `Confirmed (2-day)` state (see "How to read the output"); funnel and premarket size off that line, and a first-day flip reads "watch, don't act". The raw daily label remains what history.csv logs.
+2. **The Defensive-rotation flag was chronic — on 83% of days (longest streak 14).** An always-on warning can't be tested (no contrast group) and habituates the reader; premarket's 2026-06-09 miss (the flag was footnoted, then led the tape) is the same lesson from the other side. **Fixed 2026-07-31**: the flag now additionally requires the rotation to be *deepening* (> +0.5pp vs 5 sessions ago) — a change alarm, matching the skill's own "read the slope" doctrine; the score vote stays level-based. Flag base rates in the next report straddle this change — compare on-shares only within one convention. Credit weakening (22%) and VIX spike (17%) were healthy and episodic already.
+3. **Forward returns are plumbed, not concluded.** ~2 independent 20-session windows exist so far, all inside one regime; the by-state / by-score / by-flag / transition-day tables print with thin-markers and should be read as pipe-verification until a few genuine regime turns are on record.
+
 ## Known limitations
 
 - **Breadth universe is the S&P 500 (~500 names), a quarterly snapshot** — not the full ~4,000-name market, and it applies *today's* membership to past prices (a mild survivorship bias that's standard and acceptable for a forward-looking gauge, not a backtest). Broad enough to smooth the breadth % and self-refreshing via `build_universe.py`; edit `state/breadth_universe.txt` to retune.
@@ -109,7 +125,7 @@ None alone is a sell; **2–3 stacking = de-risk**. This is the layer the user e
 
 ```bash
 cd <SKILL_DIR>/scripts && uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' \
-  --with pytest pytest test_classify.py -q
+  --with 'numpy>=1.24,<3' --with pytest pytest -q
 ```
 
-Pure-logic tests (no network) cover the state machine, every divergence flag, the vote helper, and the breadth/new-high-low math.
+Pure-logic tests (no network) cover the state machine, every divergence flag, the vote helper, the breadth/new-high-low math (`test_classify.py`), and the signal-report's spell/confirmation/flag-parsing/forward-window logic (`test_backtest_outcomes.py`).

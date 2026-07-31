@@ -47,11 +47,11 @@ uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' \
 # ... python <SKILLS_DIR>/regime-scan/scripts/scan.py --show-history
 ```
 
-**Read the banner and decide the tone for everything downstream:**
+**Read the banner and decide the tone for everything downstream — sizing reads the `Confirmed (2-day)` line, not the raw daily state.** The raw label chatters at the score threshold (6 of the first 10 logged transitions were single-day whipsaws — regime-scan's **Signal quality & outcomes** section has the numbers), so the banner carries both: when they disagree, today is a first-day flip — size off the confirmed state and note the flip in the output ("regime flipped to CAUTION today, unconfirmed — sizing still per RISK-ON, tighten if it confirms tomorrow").
 
-- 🟢 **RISK-ON** → proceed normally, normal sizing.
-- 🟡 **CAUTION** (≥2 divergences) → still proceed, but bias hard toward 🟢/🔵 pullback entries, smaller size, tighter stops. This is exactly the state a risk/reward lens cares most about — not "don't act", but "be choosier".
-- 🔴 **RISK-OFF** (gate off, or ≥4 internals broken under intact price) → consider stopping here. If you continue, frame finalists as "what's holding up", size minimal, and say so plainly.
+- 🟢 **RISK-ON** (confirmed) → proceed normally, normal sizing.
+- 🟡 **CAUTION** (confirmed; ≥2 divergences) → still proceed, but bias hard toward 🟢/🔵 pullback entries, smaller size, tighter stops. This is exactly the state a risk/reward lens cares most about — not "don't act", but "be choosier".
+- 🔴 **RISK-OFF** (confirmed; gate off, or ≥4 internals broken under intact price) → consider stopping here. If you continue, frame finalists as "what's holding up", size minimal, and say so plainly. **Exception: a raw first-day flip to RISK-OFF with the gate off (SPY lost its 200DMA) is not a whipsaw candidate to wait out — the trend gate is mechanical; respect it same-day.**
 
 Also note the **breadth** number even when no divergence fires: breadth in the mid-50s% with RSP/SPY narrowing is a *healthy-but-narrow, mega-cap-led* tape — not a flag, but a reason to deliberately diversify the final picks away from whatever's crowded (usually tech). Carry this conclusion forward; it feeds both selection (step 4) and sizing (step 5).
 

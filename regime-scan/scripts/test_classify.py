@@ -180,3 +180,84 @@ def test_load_breadth_universe_skips_comments(tmp_path):
         assert scan.load_breadth_universe() == ["AAPL", "MSFT", "NVDA"]
     finally:
         scan.BREADTH_UNIVERSE_FILE = orig
+
+
+def test_rotation_flag_requires_deepening_when_prior_known():
+    # Level above deadband but stable vs 5 sessions ago: no flag (the
+    # 2026-07-31 retune — as a level alarm it was on 83% of days).
+    c = scan.classify(_metrics(def_off_pct=4.0, def_off_prior_pct=3.8))
+    assert not any("Defensive rotation" in f for f in c["flags"])
+    # Same level, deepening by more than ROTATION_WIDENING_PP: flag fires
+    # and says so.
+    c2 = scan.classify(_metrics(def_off_pct=4.0, def_off_prior_pct=2.0))
+    assert any("Defensive rotation: deepening" in f for f in c2["flags"])
+    # Deepening fast but still below the level deadband: no flag.
+    c3 = scan.classify(_metrics(def_off_pct=0.4, def_off_prior_pct=-2.0))
+    assert not any("Defensive rotation" in f for f in c3["flags"])
+    # Prior unavailable (short data): level-only fallback still fires.
+    c4 = scan.classify(_metrics(def_off_pct=4.0))
+    assert any("Defensive rotation" in f for f in c4["flags"])
+
+
+def _hist(states):
+    import pandas as pd
+    return pd.DataFrame({
+        "run_id": [f"202607{i:02d}" for i in range(1, len(states) + 1)],
+        "state": states,
+    })
+
+
+def test_confirm_state_filters_single_day_whipsaw():
+    h = _hist(["RISK-ON", "RISK-ON", "CAUTION"])  # yesterday flipped to CA
+    # Today back to RISK-ON: the 1-day CAUTION blip never confirms.
+    conf, flipped = scan.confirm_state(h, "20260704", "RISK-ON")
+    assert (conf, flipped) == ("RISK-ON", False)
+    # Today CAUTION again: 2nd consecutive day confirms the flip.
+    conf2, flipped2 = scan.confirm_state(h, "20260704", "CAUTION")
+    assert (conf2, flipped2) == ("CAUTION", False)
+
+
+def test_confirm_state_first_day_flip_is_watch_not_act():
+    h = _hist(["RISK-ON", "RISK-ON", "RISK-ON"])
+    conf, flipped = scan.confirm_state(h, "20260704", "CAUTION")
+    assert (conf, flipped) == ("RISK-ON", True)
+
+
+def test_confirm_state_folds_variants_and_seeds_from_empty():
+    import pandas as pd
+    h = _hist(["RISK-OFF (internals)", "RISK-OFF"])
+    conf, _ = scan.confirm_state(h, "20260703", "RISK-OFF (internals)")
+    assert conf == "RISK-OFF"
+    # First-ever reading seeds the confirmed state.
+    empty = pd.DataFrame(columns=["run_id", "state"])
+    assert scan.confirm_state(empty, "20260701", "CAUTION") == ("CAUTION",
+                                                                False)
+
+
+def test_confirm_state_rerun_same_day_excluded_from_history():
+    # Today's run_id already in history (re-run): the stored row must not
+    # double-count today.
+    h = _hist(["RISK-ON", "CAUTION"])          # 20260702 = today, saved CA
+    conf, flipped = scan.confirm_state(h, "20260702", "CAUTION")
+    assert (conf, flipped) == ("RISK-ON", True)  # CA has persisted 1 day only
+
+
+def test_def_off_at_shift_and_short_data():
+    import pandas as pd
+    import pytest
+    idx = pd.bdate_range("2026-01-01", periods=40)
+    flat = pd.Series(100.0, index=idx)
+    # Offensives jump +10% on day 35 and hold: the current 20-session
+    # window sees the jump, the 5-shifted window (ending day 34) doesn't.
+    off = pd.Series([100.0] * 35 + [110.0] * 5, index=idx)
+    macro = {t: off for t in scan.SECTOR_OFFENSIVE} | \
+            {t: flat for t in scan.SECTOR_DEFENSIVE}
+    assert scan.def_off_at(macro, 20, 0) == pytest.approx(-10.0)
+    assert scan.def_off_at(macro, 20, 5) == pytest.approx(0.0)
+    # Clipping below lookback+1 sessions → None, not a crash.
+    short = {t: off.iloc[-22:] for t in (scan.SECTOR_OFFENSIVE
+                                         + scan.SECTOR_DEFENSIVE)}
+    assert scan.def_off_at(short, 20, 5) is None
+    # One whole side missing → None.
+    assert scan.def_off_at({t: off for t in scan.SECTOR_OFFENSIVE},
+                           20, 0) is None
