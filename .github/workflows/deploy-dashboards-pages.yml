@@ -1,0 +1,76 @@
+name: Deploy scan dashboards to Pages
+
+# One workflow for BOTH dashboards on purpose: a Pages deployment replaces
+# the whole site with its artifact, so a per-skill workflow that staged only
+# its own page would wipe the other skill's page on every run. Any trigger
+# below re-renders and re-stages both.
+#
+# develop only: the daily scan job commits data on develop, so master's
+# state files always lag — a master-triggered deploy would overwrite the
+# live pages with stale data. The github-pages environment's deployment
+# branch policy mirrors this (develop only); if the automation ever moves
+# branches, update both this filter and that policy.
+on:
+  push:
+    branches: [develop]
+    paths:
+      - momentum-scan/state/history.csv
+      - momentum-scan/state/sectors.json
+      - momentum-scan/scripts/render_history_html.py
+      - mean-reversion-scan/state/history.csv
+      - mean-reversion-scan/state/outcomes.csv
+      - mean-reversion-scan/state/sectors.json
+      - mean-reversion-scan/scripts/render_history_html.py
+      - .github/workflows/deploy-dashboards-pages.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one Pages deploy at a time; let an in-flight deploy finish so the
+# site never serves a half-written artifact.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+
+      # Both renderers are stdlib-only (no pip install needed) and read
+      # their tracked state files (history.csv + sectors.json; the
+      # mean-reversion one additionally joins outcomes.csv).
+      - name: Render dashboards
+        run: |
+          python3 momentum-scan/scripts/render_history_html.py
+          python3 mean-reversion-scan/scripts/render_history_html.py
+
+      # The staged directory layout IS the URL layout: each page is served
+      # at <pages-root>/<skill>/state/history.html, mirroring the repo
+      # path. Deliberately no index.html at the root.
+      - name: Stage site
+        run: |
+          mkdir -p _site/momentum-scan/state _site/mean-reversion-scan/state
+          cp momentum-scan/state/history.html _site/momentum-scan/state/
+          cp mean-reversion-scan/state/history.html _site/mean-reversion-scan/state/
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
