@@ -432,7 +432,7 @@ const I18N = {
     h1Suffix: "history",
     subtitle: (a, b, runs, n) => `${a} → ${b} · ${runs} trading days · persistence view of the daily top-${n} board`,
     winTag: (s, t) => ` Charts show the last ${s} of ${t} trading days.`,
-    kSpan: "History span", kDays: n => `${n} days`,
+    kDays: n => `${n} days`,
     kNo1: "Current #1", kScore: s => `Score ${s}`,
     kStreak: "Longest streak",
     kNew: "New entrants", kDrop: "Dropouts",
@@ -470,7 +470,7 @@ const I18N = {
     h1Suffix: "历史",
     subtitle: (a, b, runs, n) => `${a} → ${b} · 共 ${runs} 个交易日 · 每日 top-${n} 榜单的持续性视图`,
     winTag: (s, t) => `图表仅显示最近 ${s} / ${t} 个交易日。`,
-    kSpan: "历史跨度", kDays: n => `${n} 天`,
+    kDays: n => `${n} 天`,
     kNo1: "当前第 1 名", kScore: s => `评分 ${s}`,
     kStreak: "最长连续在榜",
     kNew: "新进榜", kDrop: "掉出榜",
@@ -513,7 +513,7 @@ const I18N = {
     h1Suffix: "歷史",
     subtitle: (a, b, runs, n) => `${a} → ${b} · 共 ${runs} 個交易日 · 每日 top-${n} 榜單的持續性視圖`,
     winTag: (s, t) => `圖表僅顯示最近 ${s} / ${t} 個交易日。`,
-    kSpan: "歷史跨度", kDays: n => `${n} 天`,
+    kDays: n => `${n} 天`,
     kNo1: "目前第 1 名", kScore: s => `評分 ${s}`,
     kStreak: "最長連續在榜",
     kNew: "新進榜", kDrop: "掉出榜",
@@ -556,7 +556,7 @@ const I18N = {
     h1Suffix: "履歴",
     subtitle: (a, b, runs, n) => `${a} → ${b} · 全 ${runs} 営業日 · 日次 top-${n} ランキングの持続性ビュー`,
     winTag: (s, t) => `チャートは直近 ${s} / ${t} 営業日のみ表示。`,
-    kSpan: "履歴期間", kDays: n => `${n} 日`,
+    kDays: n => `${n} 日`,
     kNo1: "現在の第 1 位", kScore: s => `スコア ${s}`,
     kStreak: "最長連続ランクイン",
     kNew: "新規ランクイン", kDrop: "圏外へ",
@@ -599,7 +599,7 @@ const I18N = {
     h1Suffix: "히스토리",
     subtitle: (a, b, runs, n) => `${a} → ${b} · 총 ${runs}거래일 · 일일 top-${n} 보드의 지속성 뷰`,
     winTag: (s, t) => `차트는 최근 ${s} / ${t}거래일만 표시합니다.`,
-    kSpan: "기록 기간", kDays: n => `${n}일`,
+    kDays: n => `${n}일`,
     kNo1: "현재 1위", kScore: s => `점수 ${s}`,
     kStreak: "최장 연속 진입",
     kNew: "신규 진입", kDrop: "이탈",
@@ -805,7 +805,6 @@ function tipRows(t, rows, keyColor, keyClass) {
       d.title = d.textContent;
     });
   };
-  tile(T.kSpan, T.kDays(k.runs), `${k.span[0]} → ${k.span[1]}`);
   if (k.no1) tile(T.kNo1, tickerLink(k.no1.t), T.kScore(k.no1.s.toFixed(2)));
   if (k.streak) tile(T.kStreak, T.kDays(k.streak.n), tickerLink(k.streak.t));
   tile(T.kNew, `${k.newEntrants.length}`, tickerList(k.newEntrants));
