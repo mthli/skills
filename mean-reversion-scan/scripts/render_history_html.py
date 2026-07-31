@@ -945,6 +945,10 @@ function renderGrid(minRes) {
       el("text", { x: GL + i * CW + CW / 2, y: 13, "text-anchor": "middle", class: "tick" }, hsvg).textContent = d;
   });
   const H = rows.length * CH + 4;
+  // Clip exactly on a row boundary: header height plus a whole number of
+  // rows, so no half-cut row peeks out at the bottom of the viewport.
+  const HEAD_H = 18, CAP = 540;
+  gridBox.style.maxHeight = (HEAD_H + Math.floor((CAP - HEAD_H) / CH) * CH) + "px";
   const svg = el("svg", { width: W, height: H, viewBox: `0 0 ${W} ${H}` }, gridBox);
   rows.forEach((s, ri) => {
     const y = ri * CH;
