@@ -69,13 +69,13 @@ Ignore the breadth figure in momentum-scan's own `Regime` banner — it uses a d
 No script to run here — read the two sister CSVs the daily job already writes, filtered to their latest `run_date`:
 
 ```
-<SKILLS_DIR>/base-breakout-scan/state/history.csv    # base_weeks, to_pivot, base_score
+<SKILLS_DIR>/base-breakout-scan/state/history.csv    # base_weeks, to_pivot_pct, base_score
 <SKILLS_DIR>/mean-reversion-scan/state/history.csv   # score (freshness derived from prior run_ids)
 ```
 
 Extract three things:
 
-- **Base pocket** — names with `base_weeks ≥ 20` (the one validated base edge; the composite `base_score` did not discriminate outcomes), noting `to_pivot` for entry proximity.
+- **Base pocket** — names with `base_weeks ≥ 20` (the one validated base edge; the composite `base_score` did not discriminate outcomes), noting `to_pivot_pct` for entry proximity.
 - **MR pocket** — names with `score ≥ 40` listed for the **1st–2nd consecutive run** (check whether the ticker appears under the immediately-preceding `run_id`s; 3rd+ consecutive listings ran negative).
 - **Crowding check** — names on momentum's list AND both pockets simultaneously. The mom+base+mr triple was the *worst* labeled cell in the overlap backtest (n=15, −8.0% xT+10, Beat10 10%) — treat as a crowding warning, never a conviction bonus.
 
@@ -87,7 +87,7 @@ This is judgment, not a formula — but the priority order below was rebuilt on 
 
 1. **Build the candidate pool from momentum's list plus the step-3 pockets — never from overlap counting.** A momentum name that also sits in one pocket is a fine candidate (those cells ran ~neutral in the overlap backtest, Beat10 54–55%) — **best when the co-listing is fresh**: 1st–2nd-session overlaps ran −1.6% xT+10 vs −4.4% by the 4th+ consecutive session (check the prior `run_id`s in the sister CSV). A base+MR co-listing with no momentum presence is the *weakest* pair (−2.65% xT+10, Beat10 37%, n=55) — admit it only when both rule-3 and rule-4 gates pass. A strong single-scan name that passes its own validated filter (rules 3–5) beats a stale co-listing that doesn't.
 2. **A name on all three lists is the crowding representative, not the standout.** Don't auto-lead with it — see the step-3 crowding numbers. It makes the finalists only if it independently passes rules 3–6, and its brief must say the crowd is already there.
-3. **Rank base-pocket names by base length, not base score.** BaseWks ≥ 20 is base-breakout's one big validated edge (75% win at +20 sessions vs 45% baseline); the composite base Score did **not** discriminate outcomes. Rank on **`base_weeks` first, then smaller `to_pivot`** (entry trigger near = tight invalidation). Don't prize deep volume dry-up (inverted in-sample) and skip any entry that gaps >3% past the pivot. Base-only candidates lack a momentum `Sig`/ATR-stop — say so in their brief.
+3. **Rank base-pocket names by base length, not base score.** BaseWks ≥ 20 is base-breakout's one big validated edge (75% win at +20 sessions vs 45% baseline); the composite base Score did **not** discriminate outcomes. Rank on **`base_weeks` first, then smaller `to_pivot_pct`** (entry trigger near = tight invalidation). Don't prize deep volume dry-up (inverted in-sample) and skip any entry that gaps >3% past the pivot. Base-only candidates lack a momentum `Sig`/ATR-stop — say so in their brief.
 4. **Gate mean-reversion-pocket names on Score ≥ 40 and a 1st–2nd-day listing** (step 3 already applies this — re-verify, don't re-derive). That combined filter ran +1.83%/signal (~3× baseline); 3rd+ consecutive listings ran negative. A `momentum+mean-reversion` "pullback in a leader" that fails this gate isn't a buyable dip — it's a name that stopped bouncing ("stuck oversold").
 5. **Prefer momentum `Sig` 🟢/🔵; downgrade 🔴 overextended.** A name that only clears via a vertical, RSI-80 move is a worse entry than one basing quietly. For fresh momentum entrants, check the entry-volume tier — the `Entry volume` column on momentum's history-dashboard roster, or in raw form the `vol_ratio_20d` field on the name's *first* run-day row in `<SKILLS_DIR>/momentum-scan/state/history.csv` — volume-backed entries ran +9.0% episodes vs +3.1% for quiet ones in momentum's backtest.
 6. **Prefer a tight ATR stop (≤ ~8%) and low AnnVol.** Tight invalidation is the whole point.
@@ -138,7 +138,7 @@ Close with concrete next-step offers: swap a finalist for a runner-up and re-div
 - **Never frame output as "buy this".** These are *prioritized research candidates with risk parameters*, not advice. Say so.
 - **Quote the backtest numbers when rejecting a crowded name.** "In 3 scans" *sounds* bullish; the measured record says the opposite (−4.5% xT+10). Stating the number is what keeps the funnel honest against its own old framing — and it explains to the user why the obvious-looking pick got demoted.
 - **Report the tape faithfully.** If regime is 🟡/🔴, lead with that, don't bury it under exciting names.
-- **Surface what the deep-dive killed.** The funnel's job is as much to *reject* plausible names as to surface good ones — a consensus name with reward already capped at the analyst target, or a bullish options flow sitting on top of a weakening commodity, is a finding worth stating loudly.
+- **Surface what the deep-dive killed.** The funnel's job is as much to *reject* plausible names as to surface good ones — a leaderboard name with reward already capped at the analyst target, or a fresh oversold listing whose sector backdrop is still deteriorating, is a finding worth stating loudly.
 - **The single-run caveat:** the scans get sharper with history (streaks, slopes). A first-ever run is informationally thin; lean harder on the fundamental deep-dive when the scan history is short.
 
 ## Quick reference — the whole funnel

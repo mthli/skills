@@ -690,7 +690,7 @@ def _sector_map() -> dict:
     return out
 
 
-def scan_watchlist_names(errors: list, mom_top_n: int = 30,
+def scan_watchlist_names(today: date, errors: list, mom_top_n: int = 30,
                          mr_min_score: float = 40.0) -> dict:
     """Watchlist from the sister-scan caches (pure file reads; no refresh).
 
@@ -704,10 +704,19 @@ def scan_watchlist_names(errors: list, mom_top_n: int = 30,
     watch: list = []
     freshness: dict = {}
 
+    def fresh_entry(run_id) -> dict:
+        # Mirrors the regime block's snapshot/stale_days shape so the Sources
+        # footer can date every cache the same way.
+        try:
+            stale = (today - datetime.strptime(str(run_id), "%Y%m%d").date()).days
+        except Exception:
+            stale = None
+        return {"run_id": str(run_id), "stale_days": stale}
+
     try:
         df = pd.read_csv(MOMENTUM_STATE / "history.csv")
         latest = df["run_id"].iloc[-1]
-        freshness["momentum"] = str(latest)
+        freshness["momentum"] = fresh_entry(latest)
         for _, r in df[df["run_id"] == latest].nsmallest(mom_top_n, "rank").iterrows():
             watch.append({"ticker": r["ticker"], "sector": sectors.get(r["ticker"]),
                           "sources": ["momentum"], "read": f"momentum #{int(r['rank'])}"})
@@ -718,7 +727,7 @@ def scan_watchlist_names(errors: list, mom_top_n: int = 30,
         df = pd.read_csv(MR_STATE / "history.csv")
         run_ids = list(dict.fromkeys(df["run_id"]))
         latest = run_ids[-1]
-        freshness["mean-reversion"] = str(latest)
+        freshness["mean-reversion"] = fresh_entry(latest)
         by_run = {rid: set(df.loc[df["run_id"] == rid, "ticker"]) for rid in run_ids}
         idx = {w["ticker"]: w for w in watch}
         for _, r in df[(df["run_id"] == latest) & (df["score"] >= mr_min_score)].iterrows():
@@ -841,7 +850,7 @@ def build(today: date, now: datetime | None = None) -> dict:
 
     positions = load_positions(errors)
     pos_tickers = {p["ticker"] for p in positions}
-    names = scan_watchlist_names(errors)
+    names = scan_watchlist_names(today, errors)
     watchlist = {w["ticker"] for w in names.get("watchlist", [])}
 
     earn = earnings_today(today, watchlist, pos_tickers, errors)

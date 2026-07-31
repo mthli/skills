@@ -18,9 +18,9 @@ what the structural scans miss:
 
 So this skill **reuses, never recomputes**: it reads regime-scan's latest state
 as the structural backdrop and the sister scans' validated pockets as the
-watchlist (momentum's leaderboard + mean-reversion's fresh score≥40 listings —
-this replaced cross-scan's consensus overlaps when that skill was retired
-2026-07 on its overlap backtest), then
+watchlist — momentum's leaderboard plus mean-reversion's fresh score≥40
+listings. (The watchlist replaced cross-scan's consensus overlaps when that
+skill was retired 2026-07 on its overlap backtest.) It then
 layers the overnight tape + catalysts + your positions on top. The output is a
 9-section briefing, archived daily, with a built-in expected-vs-actual feedback
 loop so the regime call gets calibrated instead of evaporating.
