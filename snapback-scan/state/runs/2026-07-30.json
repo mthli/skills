@@ -1,0 +1,1344 @@
+{
+  "as_of": "2026-07-30T12:23:41.167238-04:00",
+  "today": "2026-07-30",
+  "spark_window": [
+    "2026-07-30 (AMC only)",
+    "2026-07-31",
+    "2026-08-03",
+    "2026-08-04"
+  ],
+  "macro_note": "ForexFactory covers the current week only \u2014 macro sparks beyond Sunday not visible",
+  "regime": {
+    "snapshot": "20260729",
+    "state": "CAUTION",
+    "score": 4,
+    "vix": 20.7,
+    "spy_vs_200_pct": 4.7,
+    "flags": "Defensive rotation: defensives outran offensives over 20d by +8.1pp ; VIX 5-day spike +24%"
+  },
+  "mr_run": {
+    "run_id": "20260729",
+    "run_date": "2026-07-29",
+    "stale_days": 1,
+    "rows_in_run": 124,
+    "kegs_after_filter": 41
+  },
+  "uoa_snapshot": "2026-07-29",
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "MU",
+      "rank": 2,
+      "score": 78.7,
+      "rsi2": 2.67,
+      "dist_200dma_pct": 44.53,
+      "signal_close": 739.0,
+      "mr_target": 874.18,
+      "mr_stop": 542.33,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 0,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "AAPL",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AAPL (Technology, $4967B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AMZN",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AMZN ($2438B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "PLTR",
+          "date": "2026-08-03",
+          "slot": "AMC",
+          "detail": "PLTR (Technology, $295B) reports 2026-08-03 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "SPCX",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "SPCX ($1473B) reports 2026-08-04 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "AMD",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "AMD (Technology, $700B) reports 2026-08-04 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "ANET",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "ANET (Technology, $199B) reports 2026-08-04 AMC"
+        }
+      ],
+      "armed": true,
+      "uoa_flagged": true,
+      "latest_close": 859.01,
+      "since_signal_pct": 16.24,
+      "ignited": true,
+      "down_streak": 4,
+      "ret_5d_pct": -22.98,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 1.12,
+      "signal_day_low": 737.88,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "ASX",
+      "rank": 5,
+      "score": 76.4,
+      "rsi2": 1.37,
+      "dist_200dma_pct": 25.98,
+      "signal_close": 31.12,
+      "mr_target": 35.58,
+      "mr_stop": 24.83,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 3,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "AAPL",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AAPL (Technology, $4967B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AMZN",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AMZN ($2438B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "PLTR",
+          "date": "2026-08-03",
+          "slot": "AMC",
+          "detail": "PLTR (Technology, $295B) reports 2026-08-03 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "SPCX",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "SPCX ($1473B) reports 2026-08-04 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "AMD",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "AMD (Technology, $700B) reports 2026-08-04 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "ANET",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "ANET (Technology, $199B) reports 2026-08-04 AMC"
+        }
+      ],
+      "armed": true,
+      "uoa_flagged": true,
+      "latest_close": 34.75,
+      "since_signal_pct": 11.66,
+      "ignited": true,
+      "down_streak": 5,
+      "ret_5d_pct": -23.14,
+      "down_gaps_5d": 3,
+      "vol_ratio_5d_20d": 0.97,
+      "signal_day_low": 31.12,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "AMAT",
+      "rank": 6,
+      "score": 76.1,
+      "rsi2": 1.68,
+      "dist_200dma_pct": 17.94,
+      "signal_close": 436.45,
+      "mr_target": 505.77,
+      "mr_stop": 337.87,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "AAPL",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AAPL (Technology, $4967B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AMZN",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AMZN ($2438B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "PLTR",
+          "date": "2026-08-03",
+          "slot": "AMC",
+          "detail": "PLTR (Technology, $295B) reports 2026-08-03 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "SPCX",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "SPCX ($1473B) reports 2026-08-04 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "AMD",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "AMD (Technology, $700B) reports 2026-08-04 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "ANET",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "ANET (Technology, $199B) reports 2026-08-04 AMC"
+        }
+      ],
+      "armed": true,
+      "uoa_flagged": true,
+      "latest_close": 497.92,
+      "since_signal_pct": 14.08,
+      "ignited": true,
+      "down_streak": 4,
+      "ret_5d_pct": -21.21,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.89,
+      "signal_day_low": 436.33,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "KLAC",
+      "rank": 10,
+      "score": 73.6,
+      "rsi2": 1.36,
+      "dist_200dma_pct": 5.39,
+      "signal_close": 170.19,
+      "mr_target": 198.72,
+      "mr_stop": 135.24,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "AAPL",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AAPL (Technology, $4967B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AMZN",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AMZN ($2438B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "PLTR",
+          "date": "2026-08-03",
+          "slot": "AMC",
+          "detail": "PLTR (Technology, $295B) reports 2026-08-03 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "SPCX",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "SPCX ($1473B) reports 2026-08-04 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "AMD",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "AMD (Technology, $700B) reports 2026-08-04 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "ANET",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "ANET (Technology, $199B) reports 2026-08-04 AMC"
+        }
+      ],
+      "armed": true,
+      "uoa_flagged": false,
+      "latest_close": 183.35,
+      "since_signal_pct": 7.74,
+      "ignited": true,
+      "down_streak": 4,
+      "ret_5d_pct": -20.73,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 1.07,
+      "signal_day_low": 169.81,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "VSH",
+      "rank": 15,
+      "score": 69.5,
+      "rsi2": 1.82,
+      "dist_200dma_pct": 13.17,
+      "signal_close": 29.96,
+      "mr_target": 35.77,
+      "mr_stop": 21.41,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 4,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "AAPL",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AAPL (Technology, $4967B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AMZN",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AMZN ($2438B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "PLTR",
+          "date": "2026-08-03",
+          "slot": "AMC",
+          "detail": "PLTR (Technology, $295B) reports 2026-08-03 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "SPCX",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "SPCX ($1473B) reports 2026-08-04 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "AMD",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "AMD (Technology, $700B) reports 2026-08-04 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "ANET",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "ANET (Technology, $199B) reports 2026-08-04 AMC"
+        }
+      ],
+      "armed": true,
+      "uoa_flagged": false,
+      "latest_close": 34.35,
+      "since_signal_pct": 14.65,
+      "ignited": true,
+      "down_streak": 4,
+      "ret_5d_pct": -24.89,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 0.83,
+      "signal_day_low": 29.68,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "ALKS",
+      "rank": 18,
+      "score": 67.7,
+      "rsi2": 1.34,
+      "dist_200dma_pct": 36.86,
+      "signal_close": 48.34,
+      "mr_target": 51.49,
+      "mr_stop": 43.74,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AAPL",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AAPL ($4967B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AMZN",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AMZN ($2438B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "ABBV",
+          "date": "2026-07-31",
+          "slot": "BMO",
+          "detail": "ABBV (Healthcare, $465B) reports 2026-07-31 BMO"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "SPCX",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "SPCX ($1473B) reports 2026-08-04 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "MRK",
+          "date": "2026-08-04",
+          "slot": "BMO",
+          "detail": "MRK (Healthcare, $322B) reports 2026-08-04 BMO"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "AMGN",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "AMGN (Healthcare, $209B) reports 2026-08-04 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "GILD",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "GILD (Healthcare, $165B) reports 2026-08-04 AMC"
+        }
+      ],
+      "armed": true,
+      "uoa_flagged": false,
+      "latest_close": 49.46,
+      "since_signal_pct": 2.32,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -8.06,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 1.27,
+      "signal_day_low": 47.66,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "SMTC",
+      "rank": 19,
+      "score": 67.7,
+      "rsi2": 1.94,
+      "dist_200dma_pct": 4.71,
+      "signal_close": 103.55,
+      "mr_target": 120.19,
+      "mr_stop": 77.71,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "AAPL",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AAPL (Technology, $4967B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AMZN",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AMZN ($2438B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "PLTR",
+          "date": "2026-08-03",
+          "slot": "AMC",
+          "detail": "PLTR (Technology, $295B) reports 2026-08-03 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "SPCX",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "SPCX ($1473B) reports 2026-08-04 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "AMD",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "AMD (Technology, $700B) reports 2026-08-04 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "ANET",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "ANET (Technology, $199B) reports 2026-08-04 AMC"
+        }
+      ],
+      "armed": true,
+      "uoa_flagged": false,
+      "latest_close": 116.48,
+      "since_signal_pct": 12.49,
+      "ignited": true,
+      "down_streak": 4,
+      "ret_5d_pct": -24.38,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.82,
+      "signal_day_low": 103.1,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "NBIS",
+      "rank": 20,
+      "score": 66.8,
+      "rsi2": 2.37,
+      "dist_200dma_pct": 5.4,
+      "signal_close": 148.22,
+      "mr_target": 182.91,
+      "mr_stop": 90.43,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Communication Services",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AAPL",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AAPL ($4967B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AMZN",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AMZN ($2438B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "SPCX",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "SPCX ($1473B) reports 2026-08-04 AMC"
+        }
+      ],
+      "armed": false,
+      "uoa_flagged": true,
+      "latest_close": 189.41,
+      "since_signal_pct": 27.79,
+      "ignited": true,
+      "down_streak": 2,
+      "ret_5d_pct": -32.06,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.21,
+      "signal_day_low": 145.8,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-08-12"
+    },
+    {
+      "ticker": "CAT",
+      "rank": 22,
+      "score": 64.4,
+      "rsi2": 0.93,
+      "dist_200dma_pct": 6.87,
+      "signal_close": 782.71,
+      "mr_target": 856.02,
+      "mr_stop": 682.91,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "sector": "Industrials",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AAPL",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AAPL ($4967B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AMZN",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AMZN ($2438B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "own_earnings",
+          "symbol": "CAT",
+          "date": "2026-08-04",
+          "slot": "BMO",
+          "detail": "CAT reports 2026-08-04 BMO (eps est $6.25) \u2014 a coin flip, NOT a verdict: earnings-gap rule says zero directional trust"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "SPCX",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "SPCX (Industrials, $1473B) reports 2026-08-04 AMC"
+        }
+      ],
+      "armed": true,
+      "uoa_flagged": false,
+      "latest_close": 805.32,
+      "since_signal_pct": 2.89,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -11.99,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.15,
+      "signal_day_low": 776.0,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "ERAS",
+      "rank": 24,
+      "score": 64.1,
+      "rsi2": 1.74,
+      "dist_200dma_pct": 64.9,
+      "signal_close": 17.72,
+      "mr_target": 18.64,
+      "mr_stop": 14.42,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AAPL",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AAPL ($4967B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AMZN",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AMZN ($2438B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "ABBV",
+          "date": "2026-07-31",
+          "slot": "BMO",
+          "detail": "ABBV (Healthcare, $465B) reports 2026-07-31 BMO"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "SPCX",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "SPCX ($1473B) reports 2026-08-04 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "MRK",
+          "date": "2026-08-04",
+          "slot": "BMO",
+          "detail": "MRK (Healthcare, $322B) reports 2026-08-04 BMO"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "AMGN",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "AMGN (Healthcare, $209B) reports 2026-08-04 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "GILD",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "GILD (Healthcare, $165B) reports 2026-08-04 AMC"
+        }
+      ],
+      "armed": true,
+      "uoa_flagged": false,
+      "latest_close": 18.4,
+      "since_signal_pct": 3.84,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -9.17,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.77,
+      "signal_day_low": 17.13,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "RRX",
+      "rank": 25,
+      "score": 63.4,
+      "rsi2": 0.85,
+      "dist_200dma_pct": 2.82,
+      "signal_close": 187.6,
+      "mr_target": 205.63,
+      "mr_stop": 163.73,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "sector": "Industrials",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AAPL",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AAPL ($4967B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AMZN",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AMZN ($2438B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "SPCX",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "SPCX (Industrials, $1473B) reports 2026-08-04 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "CAT",
+          "date": "2026-08-04",
+          "slot": "BMO",
+          "detail": "CAT (Industrials, $361B) reports 2026-08-04 BMO"
+        }
+      ],
+      "armed": true,
+      "uoa_flagged": false,
+      "latest_close": 200.17,
+      "since_signal_pct": 6.7,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -12.66,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.95,
+      "signal_day_low": 186.12,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "TSEM",
+      "rank": 26,
+      "score": 63.4,
+      "rsi2": 3.27,
+      "dist_200dma_pct": 12.78,
+      "signal_close": 187.84,
+      "mr_target": 221.77,
+      "mr_stop": 129.3,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "AAPL",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AAPL (Technology, $4967B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AMZN",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AMZN ($2438B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "PLTR",
+          "date": "2026-08-03",
+          "slot": "AMC",
+          "detail": "PLTR (Technology, $295B) reports 2026-08-03 AMC"
+        },
+        {
+          "type": "own_earnings",
+          "symbol": "TSEM",
+          "date": "2026-08-04",
+          "slot": "BMO",
+          "detail": "TSEM reports 2026-08-04 BMO (eps est $0.69) \u2014 a coin flip, NOT a verdict: earnings-gap rule says zero directional trust"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "SPCX",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "SPCX ($1473B) reports 2026-08-04 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "AMD",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "AMD (Technology, $700B) reports 2026-08-04 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "ANET",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "ANET (Technology, $199B) reports 2026-08-04 AMC"
+        }
+      ],
+      "armed": true,
+      "uoa_flagged": false,
+      "latest_close": 209.5,
+      "since_signal_pct": 11.53,
+      "ignited": true,
+      "down_streak": 4,
+      "ret_5d_pct": -24.72,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.89,
+      "signal_day_low": 185.07,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "DELL",
+      "rank": 27,
+      "score": 62.9,
+      "rsi2": 3.52,
+      "dist_200dma_pct": 75.19,
+      "signal_close": 369.64,
+      "mr_target": 413.1,
+      "mr_stop": 284.63,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 0,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "AAPL",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AAPL (Technology, $4967B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AMZN",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AMZN ($2438B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "PLTR",
+          "date": "2026-08-03",
+          "slot": "AMC",
+          "detail": "PLTR (Technology, $295B) reports 2026-08-03 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "SPCX",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "SPCX ($1473B) reports 2026-08-04 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "AMD",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "AMD (Technology, $700B) reports 2026-08-04 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "ANET",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "ANET (Technology, $199B) reports 2026-08-04 AMC"
+        }
+      ],
+      "armed": true,
+      "uoa_flagged": false,
+      "latest_close": 408.55,
+      "since_signal_pct": 10.53,
+      "ignited": true,
+      "down_streak": 5,
+      "ret_5d_pct": -16.33,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.9,
+      "signal_day_low": 364.17,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "HUT",
+      "rank": 30,
+      "score": 62.3,
+      "rsi2": 4.06,
+      "dist_200dma_pct": 27.02,
+      "signal_close": 88.18,
+      "mr_target": 104.31,
+      "mr_stop": 61.25,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 2,
+      "sector": "Financial Services",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AAPL",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AAPL ($4967B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AMZN",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AMZN ($2438B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "SMFG",
+          "date": "2026-07-31",
+          "slot": "BMO",
+          "detail": "SMFG (Financial Services, $159B) reports 2026-07-31 BMO"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "MUFG",
+          "date": "2026-08-03",
+          "slot": "?",
+          "detail": "MUFG (Financial Services, $260B) reports 2026-08-03 ?"
+        },
+        {
+          "type": "own_earnings",
+          "symbol": "HUT",
+          "date": "2026-08-04",
+          "slot": "BMO",
+          "detail": "HUT reports 2026-08-04 BMO (eps est ($0.47)) \u2014 a coin flip, NOT a verdict: earnings-gap rule says zero directional trust"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "SPCX",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "SPCX ($1473B) reports 2026-08-04 AMC"
+        }
+      ],
+      "armed": true,
+      "uoa_flagged": true,
+      "latest_close": 107.14,
+      "since_signal_pct": 21.5,
+      "ignited": true,
+      "down_streak": 4,
+      "ret_5d_pct": -19.73,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.17,
+      "signal_day_low": 86.89,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "ROIV",
+      "rank": 31,
+      "score": 61.0,
+      "rsi2": 1.87,
+      "dist_200dma_pct": 25.26,
+      "signal_close": 32.87,
+      "mr_target": 34.31,
+      "mr_stop": 29.93,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 0,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AAPL",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AAPL ($4967B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AMZN",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AMZN ($2438B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "ABBV",
+          "date": "2026-07-31",
+          "slot": "BMO",
+          "detail": "ABBV (Healthcare, $465B) reports 2026-07-31 BMO"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "SPCX",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "SPCX ($1473B) reports 2026-08-04 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "MRK",
+          "date": "2026-08-04",
+          "slot": "BMO",
+          "detail": "MRK (Healthcare, $322B) reports 2026-08-04 BMO"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "AMGN",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "AMGN (Healthcare, $209B) reports 2026-08-04 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "GILD",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "GILD (Healthcare, $165B) reports 2026-08-04 AMC"
+        }
+      ],
+      "armed": true,
+      "uoa_flagged": false,
+      "latest_close": 33.94,
+      "since_signal_pct": 3.27,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -5.84,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.94,
+      "signal_day_low": 32.83,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "NXPI",
+      "rank": 32,
+      "score": 60.9,
+      "rsi2": 1.15,
+      "dist_200dma_pct": 0.58,
+      "signal_close": 240.98,
+      "mr_target": 262.86,
+      "mr_stop": 210.55,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": null,
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AAPL",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AAPL ($4967B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AMZN",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AMZN ($2438B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "SPCX",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "SPCX ($1473B) reports 2026-08-04 AMC"
+        }
+      ],
+      "armed": false,
+      "uoa_flagged": false,
+      "latest_close": 250.39,
+      "since_signal_pct": 3.9,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -13.57,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.3,
+      "signal_day_low": 239.0,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-10-27"
+    },
+    {
+      "ticker": "AVT",
+      "rank": 34,
+      "score": 60.5,
+      "rsi2": 2.14,
+      "dist_200dma_pct": 27.39,
+      "signal_close": 83.59,
+      "mr_target": 87.51,
+      "mr_stop": 76.3,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 0,
+      "sector": null,
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AAPL",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AAPL ($4967B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AMZN",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AMZN ($2438B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "SPCX",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "SPCX ($1473B) reports 2026-08-04 AMC"
+        }
+      ],
+      "armed": false,
+      "uoa_flagged": false,
+      "latest_close": 87.76,
+      "since_signal_pct": 4.99,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -7.26,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 0.96,
+      "signal_day_low": 83.48,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-08-05"
+    },
+    {
+      "ticker": "ANET",
+      "rank": 35,
+      "score": 59.1,
+      "rsi2": 1.52,
+      "dist_200dma_pct": 8.5,
+      "signal_close": 157.97,
+      "mr_target": 169.81,
+      "mr_stop": 134.04,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "sector": null,
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AAPL",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AAPL ($4967B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AMZN",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AMZN ($2438B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "own_earnings",
+          "symbol": "ANET",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "ANET reports 2026-08-04 AMC (eps est $0.80) \u2014 a coin flip, NOT a verdict: earnings-gap rule says zero directional trust"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "SPCX",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "SPCX ($1473B) reports 2026-08-04 AMC"
+        }
+      ],
+      "armed": true,
+      "uoa_flagged": true,
+      "latest_close": 168.24,
+      "since_signal_pct": 6.5,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -9.66,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.84,
+      "signal_day_low": 156.84,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "CMI",
+      "rank": 36,
+      "score": 58.3,
+      "rsi2": 1.3,
+      "dist_200dma_pct": 5.4,
+      "signal_close": 606.0,
+      "mr_target": 647.82,
+      "mr_stop": 545.73,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": null,
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AAPL",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AAPL ($4967B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AMZN",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AMZN ($2438B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "own_earnings",
+          "symbol": "CMI",
+          "date": "2026-08-04",
+          "slot": "BMO",
+          "detail": "CMI reports 2026-08-04 BMO (eps est $7.33) \u2014 a coin flip, NOT a verdict: earnings-gap rule says zero directional trust"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "SPCX",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "SPCX ($1473B) reports 2026-08-04 AMC"
+        }
+      ],
+      "armed": true,
+      "uoa_flagged": false,
+      "latest_close": 633.6,
+      "since_signal_pct": 4.55,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -8.29,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 1.16,
+      "signal_day_low": 597.35,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "BNY",
+      "rank": 37,
+      "score": 57.9,
+      "rsi2": 1.72,
+      "dist_200dma_pct": 22.18,
+      "signal_close": 152.5,
+      "mr_target": 156.9,
+      "mr_stop": 143.15,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 0,
+      "sector": null,
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AAPL",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AAPL ($4967B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AMZN",
+          "date": "2026-07-30",
+          "slot": "AMC",
+          "detail": "AMZN ($2438B) reports 2026-07-30 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "SPCX",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "SPCX ($1473B) reports 2026-08-04 AMC"
+        }
+      ],
+      "armed": false,
+      "uoa_flagged": true,
+      "latest_close": 155.5,
+      "since_signal_pct": 1.97,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -4.92,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 0.75,
+      "signal_day_low": 151.68,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-10-15"
+    }
+  ],
+  "macro_calendar": [],
+  "prior_run_review": {
+    "source": "mr:20260728",
+    "n": 110,
+    "pct_positive": 68.2,
+    "avg_pct": 2.08,
+    "median_pct": 2.38,
+    "best": [
+      {
+        "ticker": "SNDK",
+        "since_pct": 15.03
+      },
+      {
+        "ticker": "WDC",
+        "since_pct": 13.72
+      },
+      {
+        "ticker": "SIMO",
+        "since_pct": 12.81
+      }
+    ],
+    "worst": [
+      {
+        "ticker": "VRT",
+        "since_pct": -15.35
+      },
+      {
+        "ticker": "MOD",
+        "since_pct": -13.09
+      },
+      {
+        "ticker": "BG",
+        "since_pct": -9.16
+      }
+    ]
+  },
+  "errors": []
+}

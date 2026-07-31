@@ -20,6 +20,8 @@ sister CSVs   ── base-breakout + mean-reversion validated pockets (file read
 yfinance + edgartools + web + (conditional) wallstreetbets
    │
    ▼  per-name entry / stop / size / invalidation, regime threaded into sizing
+   │
+   ▼  state/runs/<date>.json ledger → scripts/grade_outcomes.py (quarterly)
 ```
 
 Default N is **3**. The user can ask for more ("give me 5") or fewer.
@@ -133,6 +135,47 @@ Follow the table with a 2–3 sentence-per-name plain-language verdict, then a s
 
 Close with concrete next-step offers: swap a finalist for a runner-up and re-dive; persist the theses (`/commit-invest` if available); or go deeper on one name (full `/deep-research`).
 
+## Step 6 — write the run ledger (non-optional)
+
+The funnel is the only layer of the pipeline that says "buy here, bail there" — and until 2026-07 its output evaporated the moment it was printed, so "does the funnel add value over the raw scans" was unanswerable. Every run now ends by transcribing the final table into `state/runs/<YYYY-MM-DD>.json`. **A run that isn't logged never happened**: the sample for the quarterly grade only accrues when the file is written.
+
+Log **all three roles** — the finalists with their full plans, the runner-ups, and the names the deep-dive *rejected* (with a one-line `reason`). Rejections are predictions too: if rejected names outperform finalists, the deep-dive is subtracting value, and only the ledger can catch that. Record what the table *said*, not what you hope happens — entry type/level, stop, and size exactly as briefed.
+
+```json
+{
+  "run_date": "2026-07-31",
+  "regime": {"state": "RISK-ON", "score": 6, "flags": "..."},
+  "picks": [
+    {"ticker": "ELV", "role": "finalist", "tags": ["momentum", "mr-pocket"],
+     "spot": 412.5, "verdict": "✅",
+     "entry": {"type": "pullback-limit", "level": 405.0},
+     "stop": 389.0, "size": "normal",
+     "upside_ref": {"level": 460.0, "basis": "analyst high"},
+     "invalidation": "loses 200DMA on volume"},
+    {"ticker": "CIEN", "role": "runner-up", "tags": ["momentum"], "spot": 118.0},
+    {"ticker": "MU", "role": "rejected", "tags": ["momentum", "mr-pocket"],
+     "spot": 739.0, "reason": "earnings in 2 days, reward capped at consensus"}
+  ]
+}
+```
+
+Field rules (the validator is the source of truth — the full schema lives in `scripts/grade_outcomes.py`'s docstring): `role` ∈ finalist / runner-up / rejected; `tags` ⊆ momentum / base-pocket / mr-pocket; `spot` = the reference close you worked from; finalists additionally require `verdict` (✅/⚠️), `entry` (`market` fills next open — omit `level`; `pullback-limit` / `pivot-stop` require it), `stop` (below the entry reference), and `size` (normal / half / minimal, regime-threaded). Two conventions the schema can't enforce: `entry.level` takes **one number, not a zone** — when the brief gives an entry zone, record its midpoint (or the specific trigger the brief named, if it named one) so hand-written ledgers stay comparable; and the filename is one-per-ET-date, so a second funnel run the same day **deliberately overwrites** that day's ledger — the later run is the day's view of record. After writing, self-check:
+
+```bash
+uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy>=1.24,<3' \
+  python <SKILLS_DIR>/conviction-funnel/scripts/grade_outcomes.py \
+  --validate <SKILLS_DIR>/conviction-funnel/state/runs/<date>.json
+```
+
+Quarterly (with the sister scans' `backtest_outcomes.py` reruns), grade the accumulated ledger — selection quality (finalists should beat runner-ups should beat rejected, all vs SPY) and execution quality (fill rate, stop-hit rate, realized R with gap-aware exits):
+
+```bash
+uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy>=1.24,<3' \
+  python <SKILLS_DIR>/conviction-funnel/scripts/grade_outcomes.py
+```
+
+Until the ledger holds ~30+ finalists across regimes, read the grade's per-run recap rather than its aggregate tables — the script says so in its own legend.
+
 ## Honesty rules (carry these through the whole funnel)
 
 - **Never frame output as "buy this".** These are *prioritized research candidates with risk parameters*, not advice. Say so.
@@ -140,6 +183,7 @@ Close with concrete next-step offers: swap a finalist for a runner-up and re-div
 - **Report the tape faithfully.** If regime is 🟡/🔴, lead with that, don't bury it under exciting names.
 - **Surface what the deep-dive killed.** The funnel's job is as much to *reject* plausible names as to surface good ones — a leaderboard name with reward already capped at the analyst target, or a fresh oversold listing whose sector backdrop is still deteriorating, is a finding worth stating loudly.
 - **The single-run caveat:** the scans get sharper with history (streaks, slopes). A first-ever run is informationally thin; lean harder on the fundamental deep-dive when the scan history is short.
+- **No ledger, no run.** Step 6 is part of the funnel, not an optional epilogue — skipping it silently deletes the sample the quarterly grade needs, and it's precisely the runs that felt unremarkable that keep the grade honest.
 
 ## Quick reference — the whole funnel
 
@@ -158,4 +202,10 @@ uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy>=1.24,<3' \
 
 # 4. select top-N by risk/reward lens (judgment — see Step 4)
 # 5. parallel deep-dive subagents per finalist (see references/deep-dive-template.md)
+
+# 6. write state/runs/<date>.json (finalists + runner-ups + rejected), then self-check:
+uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy>=1.24,<3' \
+  python <SKILLS_DIR>/conviction-funnel/scripts/grade_outcomes.py --validate \
+  <SKILLS_DIR>/conviction-funnel/state/runs/<date>.json
+# quarterly: grade the accumulated ledger (no args)
 ```
