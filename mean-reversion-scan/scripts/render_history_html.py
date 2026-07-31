@@ -1131,8 +1131,10 @@ function renderGrid(minDays) {
           const d = document.createElement("span");
           d.className = "ocdot";
           d.style.background = `var(${OC_VAR[s.st]})`;
+          d.title = T.oc[s.st];
+          d.setAttribute("aria-label", T.oc[s.st]);
+          d.setAttribute("role", "img");
           td.appendChild(d);
-          td.appendChild(document.createTextNode(T.oc[s.st]));
         }
         else td.textContent = c;
         tr.appendChild(td);
@@ -1146,6 +1148,13 @@ function renderGrid(minDays) {
     renderHead(); renderRows();
   }));
   renderHead(); renderRows();
+
+  const leg = document.getElementById("roster-legend");
+  OCATS.forEach(c => {
+    const k = div("key", leg); const r = div("rect", k);
+    r.style.background = `var(${OC_VAR[c]})`;
+    k.appendChild(document.createTextNode(T.oc[c]));
+  });
 }
 
 {
