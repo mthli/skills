@@ -51,6 +51,32 @@ SCREENER_MAX_PAGES = 20
 SECTORS_TTL_DAYS = 30
 MARKET_TZ = ZoneInfo("America/New_York")
 
+# Signal-breadth regime dial (backtest finding #6, 2026-05→07 sample,
+# n=1,584 resolved signals): days when the scan emitted <30 signals ran
+# −1.39%/signal and Score ≥ 40 did NOT rescue them (−1.62%) — a name
+# that's oversold when nothing else is usually has its own bad news.
+# Days >60 (market-wide washout) ran +1.29%, and +2.27% on Score ≥ 40.
+# Market-driven panic mean-reverts; idiosyncratic oversold doesn't.
+# Both cutoffs were chosen in-sample — re-validate quarterly via
+# scripts/backtest_outcomes.py before leaning harder on them.
+BREADTH_THIN_MAX = 30     # emitted signals < this → "thin"
+BREADTH_WASHOUT_MIN = 60  # emitted signals > this → "washout"
+
+
+def classify_signal_breadth(n_signals: int) -> dict:
+    """Tier today's emitted-signal count into the backtest's regime dial.
+    `n_signals` is the post-vol-collapse passed-filter count — the same
+    number the banner's "Passed filter" segment shows."""
+    if n_signals < BREADTH_THIN_MAX:
+        tier = "thin"
+    elif n_signals > BREADTH_WASHOUT_MIN:
+        tier = "washout"
+    else:
+        tier = "normal"
+    return {"n_signals": n_signals, "tier": tier,
+            "thin_max": BREADTH_THIN_MAX,
+            "washout_min": BREADTH_WASHOUT_MIN}
+
 # History schema. The two load-bearing additions vs sister skills are
 # `target_price` and `stop_price` — outcome resolution depends on having
 # the exact target/stop levels at signal time, not recomputing them later.
@@ -1559,6 +1585,8 @@ def main():
                       and regime is not None
                       and not regime["risk_on"])
 
+    signal_breadth = classify_signal_breadth(len(picks))
+
     if args.format == "json":
         print(json.dumps({
             "run_id": run_id,
@@ -1566,6 +1594,7 @@ def main():
             "params": vars(args),
             "universe_size": len(universe),
             "passed_filter": len(picks),
+            "signal_breadth": signal_breadth,
             "top_n": args.top_n,
             "regime": regime,
             "win_stats": win_stats,
@@ -1593,6 +1622,34 @@ def main():
         passed = f"**Passed filter**: {len(picks)}"
     print(f"**Universe**: {len(universe)} tickers · {passed} · "
           f"**Prior runs**: {n_prior}")
+    # Breadth line — backtest finding #6 promoted from interpretation
+    # doctrine to output: the emitted-signal count is itself a signal.
+    if signal_breadth["tier"] == "thin":
+        print(f"**Signal breadth**: {len(picks)} → **THIN** "
+              f"(<{BREADTH_THIN_MAX}) — ⚠️ isolated oversold: on days like "
+              f"this the backtest ran −1.39%/signal and Score ≥ 40 did not "
+              f"rescue it. Treat today's list as research-only.")
+    elif signal_breadth["tier"] == "washout":
+        # Finding #6 was measured INSIDE RISK-ON — a broad washout in a
+        # RISK-OFF tape is the canonical MR disaster case (2008 H2), so
+        # the "best regime" framing must never print next to a RISK-OFF
+        # regime banner.
+        risk_off = regime is not None and not regime["risk_on"]
+        if risk_off:
+            print(f"**Signal breadth**: {len(picks)} → **WASHOUT** "
+                  f"(>{BREADTH_WASHOUT_MIN}) — ⚠️ broad capitulation in a "
+                  f"RISK-OFF tape: the +1.29%/signal washout edge was "
+                  f"measured inside RISK-ON only. This combination is the "
+                  f"canonical MR disaster setup (2008 H2) — the regime "
+                  f"gate overrides the breadth dial.")
+        else:
+            print(f"**Signal breadth**: {len(picks)} → **WASHOUT** "
+                  f"(>{BREADTH_WASHOUT_MIN}) — market-wide panic, the "
+                  f"setup's best regime in-sample (RISK-ON tape): "
+                  f"+1.29%/signal on days like this, +2.27% on Score ≥ 40.")
+    else:
+        print(f"**Signal breadth**: {len(picks)} → normal "
+              f"({BREADTH_THIN_MAX}-{BREADTH_WASHOUT_MIN})")
     if args.regime_gate != "off":
         print(render_regime_banner(regime))
         if regime is not None and not regime["risk_on"]:

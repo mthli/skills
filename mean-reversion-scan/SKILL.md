@@ -99,13 +99,14 @@ uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy>=1.24,<3' \
 
 ## Output shape
 
-A regime banner, sector breakdown, an optional **Excluded by vol-collapse filter** section, the main top-N table with Sig column, and 2-3 discovery sections (recently-resolved picks with running win rate, stuck-oversold leaders). Sections with zero entries are skipped. Sample (illustrative — picks change daily):
+A regime banner (including a **Signal breadth** tier line — see below), sector breakdown, an optional **Excluded by vol-collapse filter** section, the main top-N table with Sig column, and 2-3 discovery sections (recently-resolved picks with running win rate, stuck-oversold leaders). Sections with zero entries are skipped. Sample (illustrative — picks change daily):
 
 ```
 # Mean-reversion scan — 2026-05-14 16:32 UTC
 
 **Params**: rsi2_threshold=5.0, target_window=5d, mcap>5e+09
 **Universe**: 1035 tickers · **Passed filter**: 18 (vol-collapse: 0 excluded) · **Prior runs**: 12
+**Signal breadth**: 18 → **THIN** (<30) — ⚠️ isolated oversold: on days like this the backtest ran −1.39%/signal and Score ≥ 40 did not rescue it. Treat today's list as research-only.
 **Regime**: SPY 742.3 vs 200DMA 672.2 (+10.4%) · 50DMA > 200DMA · 200DMA slope (20d): +1.50% · Breadth: 58% > 200DMA → **RISK-ON**
 **Win rate** (last 30d, 47 resolved): 73% (34W / 13L) · avg days to target: 1.9
 **Sectors**: Tech 5 · Health 4 · Financ 3 · Cons Cyc 2 · Energy 2 · Other 2
@@ -150,6 +151,10 @@ Column meanings:
 - **Target** — `5DMA × 1.0` (the canonical Connors exit). Format `$price (+%)`. Persisted to CSV alongside Stop for outcome resolution.
 
 The `Win rate` line in the banner aggregates **resolved** outcomes across all history (only WON or LOST count; OPEN and EXPIRED are excluded from the rate but counted in the resolved total). It becomes meaningful after ~10 resolved picks and reliable after ~30.
+
+### Signal breadth line
+
+**Backtested outcomes** #6 promoted from interpretation doctrine to output: the emitted-signal count (the post-vol-collapse "Passed filter" number) is tiered against the backtest's in-sample cutoffs — `thin` (< 30: −1.39%/signal, unrescued by Score ≥ 40), `normal` (30-60), `washout` (> 60: +1.29%, and +2.27% on Score ≥ 40). Thin days get an explicit research-only warning in the banner. **The washout framing is regime-conditional**: finding #6 was measured *inside RISK-ON*, so on RISK-ON (or gate-off) days the banner reads "best regime in-sample (RISK-ON tape)", while a washout on a RISK-OFF day flips to a disaster-case warning (broad capitulation in a weak tape = 2008 H2 — the regime gate overrides the breadth dial). JSON carries the same data as `signal_breadth: {n_signals, tier, thin_max, washout_min}` so downstream consumers (conviction-funnel, snapback-scan, premarket-brief) can read the dial without re-deriving it; pair it with the `regime` field — the tier is regime-agnostic data, the interpretation isn't. Both cutoffs were chosen in-sample — re-validate quarterly alongside the backtest re-run.
 
 ### Recently resolved section
 
@@ -243,17 +248,17 @@ The script gives you data; the user wants signal. Add a short interpretation pas
 
 6. **Stop discipline is non-negotiable for this style.** The 70% win rate only translates into profitability if losses are capped. Connors-style MR is asymmetric in the wrong direction: many small wins, occasional larger losses. Without the stop, one breakdown trade can wipe out 5-10 winners. The Stop column is the hard floor; Target is the take-profit. Both are persisted to history so the win rate stat reflects realistic execution.
 
-7. **Sector clustering means less here than in momentum — but total breadth means a lot.** A momentum scan with 16/30 Tech tells you AI infra is the cluster trade. A mean-reversion scan with 8/30 Tech in the same week probably means the Nasdaq had a bad day — that's a market-wide event, not a sector edge. And market-wide is what you want: the backtest found signals on broad-washout days (>60 emitted) ran +1.29%/signal while signals on quiet days (<30) ran **−1.39%, unrescued by high scores** (**Backtested outcomes** #6). Check the banner's "Passed filter" count before anything else — a near-empty scan is telling you today's oversold names are alone for a reason. Diversification still applies: ideally each pick from a different sector so all the stops don't fire together on one bad SPY day.
+7. **Sector clustering means less here than in momentum — but total breadth means a lot.** A momentum scan with 16/30 Tech tells you AI infra is the cluster trade. A mean-reversion scan with 8/30 Tech in the same week probably means the Nasdaq had a bad day — that's a market-wide event, not a sector edge. And market-wide is what you want: the backtest found signals on broad-washout days (>60 emitted) ran +1.29%/signal while signals on quiet days (<30) ran **−1.39%, unrescued by high scores** (**Backtested outcomes** #6). The banner's **Signal breadth** line now tiers this for you (thin / normal / washout) — lead with it: a THIN banner overrides everything below it, including high-score names. Diversification still applies: ideally each pick from a different sector so all the stops don't fire together on one bad SPY day.
 
 8. **Never recommend specific buys, especially not for this style.** The 70% win rate is a population statistic — any individual trade is a coin flip with 70% bias. Frame results as "names where the Connors RSI(2) setup is currently triggered, here are the entry/stop/target levels", not "buy this". And always flag that mean-reversion strategies have spectacular tail-risk events when fundamental selloffs are misread as panic — the 2008 H2 case study is the canonical lesson.
 
 ## State files
 
-- `state/history.csv` — one snapshot per US market day (America/New_York) × every top-N ticker. Columns: `run_id, run_date, ticker, rank, score_rank, score, rsi2, dist_5dma_pct, dist_50dma_pct, dist_200dma_pct, last_close, target_price, stop_price, signal, freq_60d`. Re-running the same ET day overwrites that day's rows. Writes are atomic (.tmp + rename). The `target_price` and `stop_price` columns are the load-bearing fields for outcome resolution — without them the win-rate stats can't be computed.
+- `state/history.csv` — one snapshot per US market day (America/New_York) × **every ticker that passed the filter that day** (all emitted signals, not just the displayed top-N — the row count doubles as the signal-breadth record, and Streak deliberately counts *any* filter-passing appearance, so it reads "consecutive days oversold", which is exactly what Stuck oversold needs). Columns: `run_id, run_date, ticker, rank, score_rank, score, rsi2, dist_5dma_pct, dist_50dma_pct, dist_200dma_pct, last_close, target_price, stop_price, signal, freq_60d`. Re-running the same ET day overwrites that day's rows. Writes are atomic (.tmp + rename). The `target_price` and `stop_price` columns are the load-bearing fields for outcome resolution — without them the win-rate stats can't be computed.
 - `state/universe.txt` — cached universe list, auto-refreshed every 7 days via Yahoo's screener.
 - `state/sectors.json` — per-ticker `{sector, industry, ts}` cache. 30-day TTL per ticker.
 
-Storage growth: ~30 rows × ~180 bytes ≈ 5.4 KB/day. A year of daily runs ≈ 2 MB; weekly ≈ 280 KB. Negligible.
+Storage growth: one row per emitted signal — ~20 rows on quiet days to 120+ on washout days, × ~180 bytes ≈ 4-22 KB/day. A year of daily runs ≈ 2-5 MB. Negligible.
 
 ## Cadence
 
