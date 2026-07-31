@@ -137,6 +137,7 @@ def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
     pocket_by_day: list[list[float]] = [[] for _ in run_ids]
     base_by_day: list[list[float]] = [[] for _ in run_ids]
 
+    today_pocket: list[str] = []
     for t, runs in by_ticker.items():
         ds = sorted(day_idx[rid] for rid in runs)
         dset = set(ds)
@@ -171,6 +172,8 @@ def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
                 (pocket_by_day if pocket else base_by_day)[d].append(pct)
             if pocket:
                 pocket_days += 1
+                if d == n_days - 1:
+                    today_pocket.append(t)
             pts.append({
                 "d": d, "o": cat, "p": 1 if pocket else 0, "k": streak,
                 "sc": score, "rsi": _f(r.get("rsi2")),
@@ -272,6 +275,7 @@ def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
                 "n": pkt_n[-1] if pkt_n else 0,
             },
             "latestBreadth": {"n": latest_total, "tier": latest_tier},
+            "todayPocket": sorted(today_pocket),
             "stuck": stuck,
             "tracked": len(by_ticker),
         },
@@ -429,8 +433,13 @@ svg a:hover text { text-decoration: underline; }
   </div>
 
   <div class="card">
-    <h2 id="roster-title">Roster</h2>
-    <p class="note" id="roster-note"></p>
+    <div class="head">
+      <div>
+        <h2 id="roster-title">Roster</h2>
+        <p class="note" id="roster-note"></p>
+      </div>
+      <select id="roster-filter"></select>
+    </div>
     <div class="scroll"><table id="tbl"></table></div>
     <div class="legend" id="roster-legend"></div>
   </div>
@@ -450,7 +459,9 @@ const I18N = {
     h1Suffix: "history",
     subtitle: (a, b, runs) => `${a} → ${b} · ${runs} trading days · every oversold signal's outcome: won / lost / expired`,
     winTag: (s, t) => ` Charts show the last ${s} of ${t} trading days.`,
-    kSpan: "History span", kDays: n => `${n} days`,
+    kToday: "Today's ⭐ pocket",
+    rosterFilterLabel: "Filter by resolved count",
+    geRes: n => `≥${n} resolved`,
     kResolved: "Resolved signals",
     kResolvedSub: (w, l, e, r) => `${w}W / ${l}L / ${e} expired${r !== null ? ` · win rate ${r}%` : ""}`,
     kExp: "Expectancy / signal",
@@ -501,7 +512,9 @@ const I18N = {
     h1Suffix: "历史",
     subtitle: (a, b, runs) => `${a} → ${b} · 共 ${runs} 个交易日 · 每个超卖信号的最终结局（赢 / 输 / 过期）`,
     winTag: (s, t) => `图表仅显示最近 ${s} / ${t} 个交易日。`,
-    kSpan: "历史跨度", kDays: n => `${n} 天`,
+    kToday: "今日 ⭐ 口袋",
+    rosterFilterLabel: "按已结算单数筛选",
+    geRes: n => `已结算 ≥ ${n} 单`,
     kResolved: "已结算信号",
     kResolvedSub: (w, l, e, r) => `${w} 赢 / ${l} 输 / ${e} 过期${r !== null ? ` · 胜率 ${r}%` : ""}`,
     kExp: "每信号期望",
@@ -557,7 +570,9 @@ const I18N = {
     h1Suffix: "歷史",
     subtitle: (a, b, runs) => `${a} → ${b} · 共 ${runs} 個交易日 · 每個超賣訊號的最終結局（贏 / 輸 / 過期）`,
     winTag: (s, t) => `圖表僅顯示最近 ${s} / ${t} 個交易日。`,
-    kSpan: "歷史跨度", kDays: n => `${n} 天`,
+    kToday: "今日 ⭐ 口袋",
+    rosterFilterLabel: "按已結算單數篩選",
+    geRes: n => `已結算 ≥ ${n} 單`,
     kResolved: "已結算訊號",
     kResolvedSub: (w, l, e, r) => `${w} 贏 / ${l} 輸 / ${e} 過期${r !== null ? ` · 勝率 ${r}%` : ""}`,
     kExp: "每訊號期望",
@@ -613,7 +628,9 @@ const I18N = {
     h1Suffix: "履歴",
     subtitle: (a, b, runs) => `${a} → ${b} · 全 ${runs} 営業日 · 各売られすぎシグナルの最終結果（勝ち / 負け / 期限切れ）`,
     winTag: (s, t) => `チャートは直近 ${s} / ${t} 営業日のみ表示。`,
-    kSpan: "履歴期間", kDays: n => `${n} 日`,
+    kToday: "本日の ⭐ ポケット",
+    rosterFilterLabel: "確定件数で絞り込み",
+    geRes: n => `確定 ${n} 件以上`,
     kResolved: "確定シグナル数",
     kResolvedSub: (w, l, e, r) => `${w} 勝 / ${l} 敗 / ${e} 期限切れ${r !== null ? ` · 勝率 ${r}%` : ""}`,
     kExp: "シグナルあたり期待値",
@@ -669,7 +686,9 @@ const I18N = {
     h1Suffix: "히스토리",
     subtitle: (a, b, runs) => `${a} → ${b} · 총 ${runs}거래일 · 각 과매도 신호의 최종 결과 (승 / 패 / 만료)`,
     winTag: (s, t) => `차트는 최근 ${s} / ${t}거래일만 표시합니다.`,
-    kSpan: "기록 기간", kDays: n => `${n}일`,
+    kToday: "오늘의 ⭐ 포켓",
+    rosterFilterLabel: "확정 건수로 필터",
+    geRes: n => `확정 ${n}건 이상`,
     kResolved: "확정 신호 수",
     kResolvedSub: (w, l, e, r) => `${w}승 / ${l}패 / ${e} 만료${r !== null ? ` · 승률 ${r}%` : ""}`,
     kExp: "신호당 기대값",
@@ -835,7 +854,6 @@ function tipRows(t, rows, keyColor) {
       d.title = d.textContent;
     });
   };
-  tile(T.kSpan, T.kDays(k.runs), `${k.span[0]} → ${k.span[1]}`);
   const r = k.resolved;
   tile(T.kResolved, `${r.n}`, T.kResolvedSub(r.w, r.l, r.e, r.rate));
   if (k.exp !== null)
@@ -845,6 +863,7 @@ function tipRows(t, rows, keyColor) {
          T.kPocketSub(k.pexp.n, DATA.pocket.refPkt));
   const b = k.latestBreadth;
   tile(T.kBreadth, `${b.n} · ${T.tierName[b.tier]}`, T.tierSub[b.tier]);
+  tile(T.kToday, `${k.todayPocket.length}`, tickerList(k.todayPocket));
   tile(T.kStuck, `${k.stuck.length}`, tickerList(k.stuck));
 }
 
@@ -1105,7 +1124,7 @@ function renderGrid(minDays) {
   const tb = document.createElement("tbody");
   tbl.appendChild(tb);
 
-  let sortCol = 7, sortDir = -1;
+  let sortCol = 7, sortDir = -1, minRes = 0;
   const renderHead = () => ths.forEach((th, i) => {
     th.textContent = COLS[i].h + (i === sortCol ? (sortDir === 1 ? " ▲" : " ▼") : "");
     th.className = i === sortCol ? "on" : "";
@@ -1113,7 +1132,7 @@ function renderGrid(minDays) {
   const renderRows = () => {
     tb.textContent = "";
     const v = COLS[sortCol].v;
-    [...DATA.summary].sort((a, b) => {
+    DATA.summary.filter(s => s.w + s.l + s.e >= minRes).sort((a, b) => {
       const x = v(a), y = v(b);
       const xn = x === null || x === undefined, yn = y === null || y === undefined;
       if (xn || yn) return xn && yn ? (b.days - a.days) : xn ? 1 : -1;  // nulls always sink
@@ -1151,6 +1170,19 @@ function renderGrid(minDays) {
     renderHead(); renderRows();
   }));
   renderHead(); renderRows();
+
+  // Resolved-count filter: opt-in guard so an expectancy sort isn't
+  // topped by single-lucky-win small samples. Default shows the full
+  // archive.
+  const sel = document.getElementById("roster-filter");
+  sel.setAttribute("aria-label", T.rosterFilterLabel);
+  new Map([[0, T.all], [1, T.geRes(1)], [3, T.geRes(3)]]).forEach((lbl, min) => {
+    const o = document.createElement("option");
+    o.value = min;
+    o.textContent = lbl;
+    sel.appendChild(o);
+  });
+  sel.addEventListener("change", () => { minRes = +sel.value; renderRows(); });
 
   const leg = document.getElementById("roster-legend");
   OCATS.forEach(c => {

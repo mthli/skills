@@ -133,6 +133,9 @@ def test_pocket_lines_and_kpi():
     assert k["exp"] == -0.5
     assert k["pexp"] == {"v": -0.5, "n": 2}
     assert k["latestBreadth"] == {"n": 2, "tier": "thin"}
+    # CCC signals on the latest day with score 45 on day 1 of its spell;
+    # EEE is on day 3 (stuck), which the pocket excludes by definition.
+    assert k["todayPocket"] == ["CCC"]
     assert k["stuck"] == ["EEE"]
     assert k["tracked"] == 5
 
