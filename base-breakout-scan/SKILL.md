@@ -106,7 +106,7 @@ uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy>=1.24,<3' \
 
 ## Output shape
 
-A funnel-summary line (stderr), regime banner, sector breakdown, an optional **Excluded by vol-collapse filter** section (printed between the Regime banner and the Top-N table when the filter rejects anything — see the `--vol-collapse-ratio` parameter), then an optional `🚀 Breakouts today` block, the main top-N table, and 2-4 discovery sections (dropouts with reasons, recent breakouts split by working/failed, new setups, maturing bases). Empty sections are skipped entirely. The Dropouts section gets a fifth reason category — **Vol-collapse filtered** — when a prior-run pick is excluded by the filter this run; it prints first in Dropouts (above broke_out/broke_down/deduped/faded) since it's the strongest "this is not a real signal" categorization. Sample below (illustrative — picks change daily; the exact tickers, scores, and counts will be different on your run):
+A funnel-summary line (stderr), regime banner, sector breakdown, an optional **Excluded by vol-collapse filter** section (printed between the Regime banner and the Top-N table when the filter rejects anything — see the `--vol-collapse-ratio` parameter), then an optional `🚀 Breakouts today` block, the **★ Validated pocket** section (BaseWks ≥ 20 — always printed, even when empty, because an empty pocket is itself the signal that today's list is entirely unvalidated candidates), the main top-N table, and 2-4 discovery sections (dropouts with reasons, recent breakouts split by working/failed, new setups, maturing bases). Empty sections are skipped entirely. The Dropouts section gets a fifth reason category — **Vol-collapse filtered** — when a prior-run pick is excluded by the filter this run; it prints first in Dropouts (above broke_out/broke_down/deduped/faded) since it's the strongest "this is not a real signal" categorization. Sample below (illustrative — picks change daily; the exact tickers, scores, and counts will be different on your run):
 
 ```
 Funnel: ~1000 → ~280 (RS≥70) → ~200 (TT) → ~130 (valid base) → ~50 (score≥40) → ~48 (after dedup, -1)
@@ -118,14 +118,18 @@ Funnel: ~1000 → ~280 (RS≥70) → ~200 (TT) → ~130 (valid base) → ~50 (sc
 **Regime**: SPY 733.3 vs 200DMA 671.6 (+9.2%) · 50DMA > 200DMA · 200DMA slope (20d): +1.48% · Breadth: 66% > 200DMA → **RISK-ON**
 **Sectors**: Financial Services 9 · Energy 7 · Technology 5 · Basic Materials 4 · Communication Services 2 · Other 3
 
+## ★ Validated pocket — BaseWks ≥ 20 (1)
+_The one stratum the outcome backtest validated (+4.9%/trade, 75% win vs −0.8% baseline, in-sample). Score does not rank outcomes — base length does._
+- **TD** (#4) — base 21wks, width 16.7%, -1.5% to $108.60 pivot, 📊
+
 ## Top 30
 
-| # | Ticker | Sector | Score | RS | BaseWks | Width% | Smooth% | BB%ile | Vol↓ | RSslope%/wk | ToPivot% | Pivot | Sig | Stop@trigger | Streak | RankΔ | FirstSeen |
+| # | Ticker | Sector | BaseWks | Score | RS | Width% | Smooth% | BB%ile | Vol↓ | RSslope%/wk | ToPivot% | Pivot | Sig | Stop@trigger | Streak | RankΔ | FirstSeen |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | **NEM** | Materials | 64 | 82 | 6.0 | 11.0 | 37 | 8 | 0.67 | -2.22 | -2.6 | $120.90 | 🔥 | $108.48 (-10.3%) | 2 | +1 ↗ | 2026-05-12 |
-| 2 | **HSBC** | Financ | 63 | 73 | 19.0 | 17.0 | 23 | 2 | 0.70 | +0.57 | -2.8 | $92.16 | 🔥 | $86.94 (-5.7%) | 2 | -1 ↘ | 2026-05-12 |
-| 3 | **PBR-A** _(also PBR, score 52)_ | Energy | 58 | 85 | 7.0 | 10.4 | 63 | 18 | 0.69 | -1.38 | -6.3 | $19.90 | ⏳ | $18.69 (-6.1%) | 2 | +2 ↗ | 2026-05-12 |
-| 4 | 🔒 **TD** | Financ | 56 | 76 | 21.0 | 16.7 | 27 | 26 | 0.71 | +0.55 | -1.5 | $108.60 | 📊 | $104.68 (-3.6%) | 2 | -1 ↘ | 2026-05-12 |
+| 1 | **NEM** | Materials | 6.0 | 64 | 82 | 11.0 | 37 | 8 | 0.67 | -2.22 | -2.6 | $120.90 | 🔥 | $108.48 (-10.3%) | 2 | +1 ↗ | 2026-05-12 |
+| 2 | **HSBC** | Financ | 19.0 | 63 | 73 | 17.0 | 23 | 2 | 0.70 | +0.57 | -2.8 | $92.16 | 🔥 | $86.94 (-5.7%) | 2 | -1 ↘ | 2026-05-12 |
+| 3 | **PBR-A** _(also PBR, score 52)_ | Energy | 7.0 | 58 | 85 | 10.4 | 63 | 18 | 0.69 | -1.38 | -6.3 | $19.90 | ⏳ | $18.69 (-6.1%) | 2 | +2 ↗ | 2026-05-12 |
+| 4 | ★ 🔒 **TD** | Financ | 21.0 | 56 | 76 | 16.7 | 27 | 26 | 0.71 | +0.55 | -1.5 | $108.60 | 📊 | $104.68 (-3.6%) | 2 | -1 ↘ | 2026-05-12 |
 ...
 
 ## Dropouts since last run (3)
@@ -160,7 +164,7 @@ Column meanings:
 
 - **Score** — composite 0-100 Base Score. Components (max points): Tightness 25 (lower width%=better, scaled 5%→25pts down to 25%→0), BB squeeze 20 (lower BB%ile=better, scaled 0pctile→20pts down to 40pctile→0), Vol dry-up 15 (0.55→15pts, 1.10→0), RS slope 20 (+2.5%/wk→20pts, -0.5%/wk→0), Pivot proximity 15 (bell curve, ideal -2% from pivot), Smoothness 10 (90%→10pts, 50%→0), Three-weeks-tight 5 bonus. Realistic top picks land 75-95; a 50-point pick is a solid setup; 70+ is high-conviction. Use as a *priority filter*, not a deterministic ranking — two names within 5 points are effectively tied. ⚠️ In the 2026-05→07 outcome backtest the Score bands did **not** discriminate post-trigger outcomes at all (see **Backtested outcomes** #3) — BaseWks was the far stronger ranker.
 - **RS** — O'Neil-style universe-relative RS Rating (1-99). Weighted average of trailing 3/6/9/12-month returns, percentile-ranked across the universe. ≥ 70 is the Minervini gate; ≥ 80 is the top quintile.
-- **BaseWks** — length of the current consolidation in trading weeks. Longer bases (15+) tend to fuel bigger moves when they break, at the cost of more time waiting. The algorithm picks the trailing window that maximizes `days / max(width, 1)` — so a 6-week base at 5% width can beat a 30-week base at 20% width.
+- **BaseWks** — length of the current consolidation in trading weeks. **The backtest-validated ranker** — ≥ 20 weeks is the ★ validated pocket (+4.9%/trade, 75% win vs −0.8% baseline in the 2026-05→07 sample); the column deliberately leads Score in the table. JSON carries the pocket membership per pick as `validated_pocket: true/false`. The algorithm picks the trailing window that maximizes `days / max(width, 1)` — so a 6-week base at 5% width can beat a 30-week base at 20% width.
 - **Width%** — `(base_high - base_low) / base_high × 100`. Tighter is better. Sub-15% is high quality; 20-25% is acceptable; capped by `--max-base-width`.
 - **Smooth%** — % of base bars within ±2% of the base mean. Discriminates real horizontal consolidations (high Smooth%) from V-shapes or jagged action that happens to fit the width envelope (low Smooth%). 50%+ is meaningfully horizontal; 70%+ is textbook smooth.
 - **BB%ile** — percentile rank of current Bollinger Band(20) width within the last 126 trading days (~6 months). 0 = tightest in 6 months (max squeeze), 100 = widest. Below 25 is meaningful compression.
@@ -178,6 +182,7 @@ Column meanings:
 - **RankΔ** — change in rank vs the latest prior appearance (positive ↗ = rising, negative ↘ = slipping, 🆕 = no prior).
 - **FirstSeen** — earliest date this base appeared in history. Combined with Streak gives the base's age in the watchlist.
 - **🔒 prefix on ticker** — "three weeks tight" signal: last 3 weekly closes within 1.5% of each other. Minervini's textbook indicator that supply has been fully absorbed — institutional selling has stopped.
+- **★ prefix on ticker** — validated-pocket membership (BaseWks ≥ 20). Same names as the ★ section above the table; the prefix keeps them visible when scanning the full table.
 
 Discovery sections (dropouts with reasons / recent breakouts / new setups / maturing bases) are computed against the most recent prior run + the last `--recent-breakout-days` of price data. Sections with zero entries are skipped entirely so the output stays clean on thin days. The **Maturing bases** section (streak ≥ `--persistent-min-streak`, default 4) is correctly omitted on the first few runs of a fresh history — it only fires once a ticker has actually persisted through multiple scan-days.
 
@@ -317,11 +322,11 @@ The script gives you data; the user wants signal. Add a short interpretation pas
 
 ## State files
 
-- `state/history.csv` — one snapshot per US market day (America/New_York) × every top-N ticker. Columns: `run_id, run_date, ticker, rank, base_score, base_weeks, width_pct, bb_pctile, vol_dryup_ratio, rs_slope_pct_per_wk, to_pivot_pct, pivot_price, signal`. (The `anchor_mode` field is computed but not persisted to history — it's only relevant for the current scan's Sig column markers.) Re-running the same ET day overwrites that day's rows. Writes are atomic (.tmp + rename) so a crash mid-write can't truncate. **The skill gets more useful with each subsequent run** — first run is just the picks; later runs add streak, RankΔ, breakout/breakdown tracking, and base-maturation signal.
+- `state/history.csv` — one snapshot per US market day (America/New_York) × **every ticker that passed the funnel that day** (all kept picks, not just the displayed top-N — below-cutoff rows preserve near-miss context, same design as momentum-scan; persistence stats filter to rank ≤ top-N at read time, so Streak / RankΔ only count appearances you actually saw). Columns: `run_id, run_date, ticker, rank, score_rank, base_score, base_weeks, width_pct, bb_pctile, vol_dryup_ratio, rs_slope_pct_per_wk, to_pivot_pct, pivot_price, signal`. (The `anchor_mode` field is computed but not persisted to history — it's only relevant for the current scan's Sig column markers.) Re-running the same ET day overwrites that day's rows. Writes are atomic (.tmp + rename) so a crash mid-write can't truncate. **The skill gets more useful with each subsequent run** — first run is just the picks; later runs add streak, RankΔ, breakout/breakdown tracking, and base-maturation signal.
 - `state/universe.txt` — cached universe list, auto-refreshed every 7 days via Yahoo's screener.
 - `state/sectors.json` — per-ticker `{sector, industry, ts}` cache. 30-day TTL per ticker. Fetched lazily on top-N picks only.
 
-Storage growth: at default `--top-n 30`, each run adds ~30 rows × ~150 bytes ≈ 4.5 KB. A year of daily runs ≈ 1.6 MB; weekly ≈ 230 KB. Negligible for years of typical use.
+Storage growth: each run adds one row per funnel-passing name — empirically ~50-90 rows × ~150 bytes ≈ 8-14 KB. A year of daily runs ≈ 2-3.5 MB; weekly ≈ 400-700 KB. Negligible for years of typical use.
 
 ## Cadence
 

@@ -55,6 +55,13 @@ SCREENER_PAGE_SLEEP_SEC = 0.2  # small gap between pages so a 5-page sweep doesn
 SCREENER_MAX_PAGES = 20  # absolute backstop (~5000 tickers) for the case where Yahoo's `total` field is missing and only the per-page guards stop the loop. 5000 is already 5× the realistic US large-cap match count, so hitting this is a strong signal something is wrong upstream.
 SECTORS_TTL_DAYS = 30  # sectors change slowly; long TTL keeps repeat runs fast
 MARKET_TZ = ZoneInfo("America/New_York")  # one snapshot per US market day
+# The 2026-05→07 outcome backtest's single big validated edge: bases ≥ 20
+# weeks ran +4.9%/trade (75% win) vs −0.8% baseline, while the composite
+# base_score did not discriminate outcomes at all. Names at or above this
+# threshold are foregrounded as the "validated pocket" in the output; the
+# score keeps its role as a display floor only. In-sample (one flat
+# regime) — revisit alongside the quarterly backtest_outcomes.py re-run.
+VALIDATED_BASE_WEEKS = 20.0
 
 HISTORY_COLS = [
     "run_id", "run_date", "ticker", "rank", "score_rank", "base_score",
@@ -1705,6 +1712,7 @@ def score_tickers(closes: dict[str, pd.Series],
             "three_wk_tight": three_wk_tight,
             "signal": signal,
             "last_close": base["last_close"],
+            "validated_pocket": base["base_weeks"] >= VALIDATED_BASE_WEEKS,
         })
 
     results.sort(key=lambda r: -r["base_score"])
@@ -1816,7 +1824,10 @@ def render_table(picks: list[dict], top_n: int) -> str:
     headers = ["#", "Ticker"]
     if show_sector:
         headers.append("Sector")
-    headers += ["Score", "RS", "BaseWks", "Width%"]
+    # BaseWks leads Score: the outcome backtest validated base length as
+    # the ranker (≥20wk = the only big edge) while the composite score
+    # showed no outcome discrimination — column order mirrors that.
+    headers += ["BaseWks", "Score", "RS", "Width%"]
     if show_smooth:
         headers.append("Smooth%")
     headers += ["BB%ile", "Vol↓", "RSslope%/wk", "ToPivot%", "Pivot", "Sig"]
@@ -1839,10 +1850,13 @@ def render_table(picks: list[dict], top_n: int) -> str:
             delta_str = "—"
 
         # Three-weeks-tight gets a 🔒 prefix on the ticker — quick visual
-        # for "supply absorbed" without an extra column.
+        # for "supply absorbed" without an extra column. ★ marks the
+        # validated pocket (BaseWks ≥ 20, the backtest's one big edge).
         ticker_disp = f"**{p['ticker']}**"
         if p.get("three_wk_tight"):
             ticker_disp = "🔒 " + ticker_disp
+        if p.get("validated_pocket"):
+            ticker_disp = "★ " + ticker_disp
         # If this ticker absorbed a same-issuer dedup, append the runner-
         # up as a parenthetical. Users still learn "PBR also passed" even
         # though we only list PBR-A as the canonical row.
@@ -1859,9 +1873,9 @@ def render_table(picks: list[dict], top_n: int) -> str:
         rs_slope = p.get("rs_slope_pct_per_wk")
         smooth = p.get("smoothness_pct")
         row += [
+            f"{p['base_weeks']:.1f}",
             f"{p['base_score']:.0f}",
             f"{rs:.0f}" if rs is not None else "—",
-            f"{p['base_weeks']:.1f}",
             f"{p['width_pct']:.1f}",
         ]
         if show_smooth:
@@ -2199,7 +2213,12 @@ def _render_single_ticker_markdown(args, result: dict) -> None:
         return
 
     print(f"✅ **Valid base** detected")
-    print(f"- Length: {base['base_weeks']:.1f} weeks ({base['days_in_base']} trading days)")
+    pocket_note = (" ★ validated pocket (≥20wk — the backtest's one big edge)"
+                   if base['base_weeks'] >= VALIDATED_BASE_WEEKS else
+                   f" (below the {VALIDATED_BASE_WEEKS:.0f}wk validated-pocket"
+                   f" threshold — unvalidated stratum)")
+    print(f"- Length: {base['base_weeks']:.1f} weeks "
+          f"({base['days_in_base']} trading days){pocket_note}")
     mode_label = "base-to-today" if base['anchor_mode'] == 0 else "breakout-today"
     print(f"- Anchor date: {base['anchor_date']} (mode={base['anchor_mode']}: "
           f"{mode_label})")
@@ -2760,6 +2779,31 @@ def main():
             print(f"- **{p['ticker']}** — broke above ${p['pivot_price']:.2f} pivot "
                   f"(base {p['base_weeks']:.0f}wks, width {p['width_pct']:.1f}%, "
                   f"today vol {vol_str})")
+
+    # Validated pocket — the one backtest-validated stratum (BaseWks ≥ 20:
+    # +4.9%/trade, 75% win vs −0.8% baseline in the 2026-05→07 sample).
+    # Printed even when the pocket is empty — an empty pocket is itself
+    # the signal that today's list is entirely unvalidated candidates —
+    # but skipped entirely when there are no picks at all ("the rest of
+    # the list" would refer to nothing).
+    if picks[: args.top_n]:
+        pocket = [p for p in picks[: args.top_n] if p.get("validated_pocket")]
+        print(f"\n## ★ Validated pocket — BaseWks ≥ "
+              f"{VALIDATED_BASE_WEEKS:.0f} ({len(pocket)})")
+        print("_The one stratum the outcome backtest validated "
+              "(+4.9%/trade, 75% win vs −0.8% baseline, in-sample). "
+              "Score does not rank outcomes — base length does._")
+        if pocket:
+            for p in pocket:
+                print(f"- **{p['ticker']}** (#{p['rank']}) — "
+                      f"base {p['base_weeks']:.0f}wks, "
+                      f"width {p['width_pct']:.1f}%, "
+                      f"{p['to_pivot_pct']:+.1f}% to "
+                      f"${p['pivot_price']:.2f} pivot, "
+                      f"{p.get('signal', '—')}")
+        else:
+            print("- (none today — treat the rest of the list as "
+                  "unvalidated candidates, not high-conviction setups)")
 
     print(f"\n## Top {args.top_n}\n")
     print(render_table(picks, args.top_n))
