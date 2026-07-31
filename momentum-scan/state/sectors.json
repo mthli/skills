@@ -247,7 +247,7 @@
   "HNGE": {
     "industry": "Health Information Services",
     "sector": "Healthcare",
-    "ts": 1782488479
+    "ts": 1785508599
   },
   "HPE": {
     "industry": "Communication Equipment",
@@ -369,6 +369,11 @@
     "sector": "Technology",
     "ts": 1782751347
   },
+  "MMED": {
+    "industry": "Medical Instruments & Supplies",
+    "sector": "Healthcare",
+    "ts": 1785508599
+  },
   "MNST": {
     "industry": "Beverages - Non-Alcoholic",
     "sector": "Consumer Defensive",
@@ -442,7 +447,7 @@
   "NTAP": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1779922424
+    "ts": 1785508599
   },
   "NUE": {
     "industry": "Steel",
@@ -548,6 +553,11 @@
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
     "ts": 1782744225
+  },
+  "RYAN": {
+    "industry": "Insurance - Specialty",
+    "sector": "Financial Services",
+    "ts": 1785508599
   },
   "SFTBY": {
     "industry": "Telecom Services",

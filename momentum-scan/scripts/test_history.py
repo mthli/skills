@@ -684,7 +684,9 @@ def test_argparser_atr_stop_mult_zero_to_disable():
     assert args.atr_stop_mult == 0.0
 
 
-def test_render_table_shows_pullback_columns_when_set():
+def test_render_table_slim_keeps_sig_hides_diagnostics():
+    # 2026-07-31 readability redesign: the slim default keeps Sig (which
+    # already encodes MA20/RSI) and drops the diagnostic numeric columns.
     picks = [{
         "ticker": "FOO", "rank": 1, "score": 5.0, "return_pct": 50.0,
         "max_dd_pct": -10.0, "from_high_pct": -1.0, "streak": 1,
@@ -692,12 +694,24 @@ def test_render_table_shows_pullback_columns_when_set():
         "ma20_dist_pct": -1.5, "rsi14": 48.2, "pullback_signal": "🟢",
     }]
     out = scan.render_table(picks, 5, 3)
-    assert "MA20%" in out
-    assert "RSI" in out
-    assert "Sig" in out
+    assert "Sig" in out and "🟢" in out
+    for col in ("MA20%", "RSI", "AnnVol%", "RankΔ", "FirstSeen", "FromHigh%"):
+        assert col not in out
+
+
+def test_render_table_verbose_restores_diagnostics():
+    picks = [{
+        "ticker": "FOO", "rank": 1, "score": 5.0, "return_pct": 50.0,
+        "max_dd_pct": -10.0, "from_high_pct": -1.0, "streak": 1,
+        "rank_delta": 3, "first_seen": "2026-07-01", "ann_vol_pct": 41.0,
+        "ma20_dist_pct": -1.5, "rsi14": 48.2, "pullback_signal": "🟢",
+    }]
+    out = scan.render_table(picks, 5, 3, verbose=True)
+    for col in ("MA20%", "RSI", "AnnVol%", "RankΔ", "FirstSeen", "FromHigh%"):
+        assert col in out
     assert "-1.5" in out
     assert "48" in out  # RSI rounded to no decimals
-    assert "🟢" in out
+    assert "+3 ↗" in out
 
 
 def test_render_table_omits_pullback_columns_when_unset():
@@ -709,6 +723,35 @@ def test_render_table_omits_pullback_columns_when_unset():
     out = scan.render_table(picks, 5, 3)
     assert "MA20%" not in out
     assert "| Sig |" not in out
+
+
+def test_render_table_trend_column_needs_history():
+    import pandas as pd
+    picks = [{
+        "ticker": "FOO", "rank": 1, "score_rank": 1, "score": 5.0,
+        "return_pct": 50.0, "max_dd_pct": -10.0, "from_high_pct": -1.0,
+        "streak": 2, "rank_delta": 0, "first_seen": "2026-07-01",
+    }]
+    assert "Trend" not in scan.render_table(picks, 5, 3)
+    empty = pd.DataFrame(columns=["run_id", "run_date", "ticker", "rank"])
+    assert "Trend" not in scan.render_table(picks, 5, 3, history=empty)
+    h = pd.DataFrame({
+        "run_id": ["20260701", "20260702"],
+        "run_date": pd.to_datetime(["2026-07-01", "2026-07-02"], utc=True),
+        "ticker": ["FOO", "FOO"],
+        "rank": [3, 2], "score_rank": [3, 2],
+    })
+    out = scan.render_table(picks, 5, 3, history=h, current_run_id="20260703")
+    assert "Trend" in out
+    # 3 points on a 1..5 scale ending at #1: strictly climbing sparkline.
+    assert "▅▆█" in out
+
+
+def test_render_sig_strip_counts_all_five():
+    picks = [{"pullback_signal": s} for s in ("🟢", "🟡", "🟡", "🔴")]
+    strip = scan.render_sig_strip(picks, 10)
+    assert strip == "**Sig**: 🟢1 🔵0 🟡2 🟠0 🔴1"
+    assert scan.render_sig_strip([{"ticker": "X"}], 10) is None
 
 
 # Sector / cache tests — pure dict ops, no network.
@@ -827,13 +870,15 @@ def test_render_table_shows_stop_column_when_set():
     assert "-4.5%" in out
 
 
-def test_render_table_shows_annvol_when_set():
+def test_render_table_annvol_is_verbose_only():
+    # AnnVol% moved to the verbose diagnostic set (2026-07-31 slim redesign).
     picks = [{
         "ticker": "FOO", "rank": 1, "score": 5.0, "return_pct": 50.0,
         "max_dd_pct": -10.0, "from_high_pct": -1.0, "streak": 1,
         "rank_delta": None, "first_seen": "🆕", "ann_vol_pct": 42.0,
     }]
-    out = scan.render_table(picks, 5, 3)
+    assert "AnnVol%" not in scan.render_table(picks, 5, 3)
+    out = scan.render_table(picks, 5, 3, verbose=True)
     assert "AnnVol%" in out
     assert "42" in out
 

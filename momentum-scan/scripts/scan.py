@@ -1368,7 +1368,29 @@ def dropouts(history: pd.DataFrame, current_picks: set[str],
     ]
 
 
-def render_table(picks: list[dict], top_n: int, window_months: int) -> str:
+def render_sig_strip(picks: list[dict], top_n: int) -> str | None:
+    """One-line cohort buyability read: how the top-N splits across the five
+    pullback signals. A 🔴-heavy strip says the cohort is extended; a shift
+    toward 🟢/🔵 says the correction already happened."""
+    rows = picks[:top_n]
+    sigs = [p.get("pullback_signal") for p in rows if p.get("pullback_signal")]
+    if not sigs:
+        return None
+    counts = {s: sigs.count(s) for s in ("🟢", "🔵", "🟡", "🟠", "🔴")}
+    strip = " ".join(f"{s}{n}" for s, n in counts.items())
+    return f"**Sig**: {strip}"
+
+
+def render_table(picks: list[dict], top_n: int, window_months: int, *,
+                 history: pd.DataFrame | None = None,
+                 current_run_id: str | None = None,
+                 verbose: bool = False) -> str:
+    """Top-N table. The default (slim) layout keeps the decision columns:
+    Trend (rank-trajectory sparkline), return, drawdown, Score, Streak, Sig,
+    Stop. The diagnostic columns (AnnVol%, RankΔ, FirstSeen, FromHigh%,
+    MA20%, RSI) print only with verbose=True — Sig already encodes MA20/RSI,
+    and the Trend sparkline supersedes RankΔ/FirstSeen. JSON carries every
+    field either way."""
     rows = picks[:top_n]
     if not rows:
         return "(no picks passed the filter)"
@@ -1377,13 +1399,24 @@ def render_table(picks: list[dict], top_n: int, window_months: int) -> str:
     show_weight = any(p.get("weight_pct") is not None for p in rows)
     show_stop = any(p.get("stop_price") is not None for p in rows)
     show_pullback = any(p.get("ma20_dist_pct") is not None for p in rows)
+    # A trajectory needs history: hide the column on a fresh install rather
+    # than rendering a full column of 🆕.
+    show_trend = history is not None and not history.empty
     headers = ["#", "Ticker"]
     if show_sector:
         headers.append("Sector")
-    headers += [f"{window_months}m%", "MaxDD%", "AnnVol%", "Score",
-                "Streak", "RankΔ", "FirstSeen", "FromHigh%"]
+    if show_trend:
+        headers.append("Trend")
+    headers += [f"{window_months}m%", "MaxDD%"]
+    if verbose:
+        headers.append("AnnVol%")
+    headers += ["Score", "Streak"]
+    if verbose:
+        headers += ["RankΔ", "FirstSeen", "FromHigh%"]
     if show_pullback:
-        headers += ["MA20%", "RSI", "Sig"]
+        if verbose:
+            headers += ["MA20%", "RSI"]
+        headers.append("Sig")
     if show_stop:
         headers.append("Stop")
     if show_weight:
@@ -1391,38 +1424,47 @@ def render_table(picks: list[dict], top_n: int, window_months: int) -> str:
     out = ["| " + " | ".join(headers) + " |",
            "|" + "|".join("---" for _ in headers) + "|"]
     for p in rows:
-        delta = p.get("rank_delta")
-        if delta is None:
-            delta_str = "🆕"
-        elif delta > 0:
-            delta_str = f"+{delta} ↗"
-        elif delta < 0:
-            delta_str = f"{delta} ↘"
-        else:
-            delta_str = "—"
         row = [
             str(p["rank"]),
             f"**{p['ticker']}**",
         ]
         if show_sector:
             row.append(abbreviate_sector(p.get("sector", "")))
-        ann_vol = p.get("ann_vol_pct")
+        if show_trend:
+            spark = rank_sparkline(
+                history, p["ticker"], p.get("score_rank", p.get("rank")),
+                top_n, current_run_id=current_run_id)
+            row.append(spark if spark else "🆕")
         row += [
             f"{p['return_pct']:+.1f}",
             f"{p['max_dd_pct']:.1f}",
-            f"{ann_vol:.0f}" if ann_vol is not None else "—",
+        ]
+        if verbose:
+            ann_vol = p.get("ann_vol_pct")
+            row.append(f"{ann_vol:.0f}" if ann_vol is not None else "—")
+        row += [
             f"{p['score']:.1f}",
             str(p.get("streak", 1)),
-            delta_str,
-            p.get("first_seen", "—"),
-            f"{p['from_high_pct']:.1f}",
         ]
+        if verbose:
+            delta = p.get("rank_delta")
+            if delta is None:
+                delta_str = "🆕"
+            elif delta > 0:
+                delta_str = f"+{delta} ↗"
+            elif delta < 0:
+                delta_str = f"{delta} ↘"
+            else:
+                delta_str = "—"
+            row += [delta_str, p.get("first_seen", "—"),
+                    f"{p['from_high_pct']:.1f}"]
         if show_pullback:
-            md = p.get("ma20_dist_pct")
-            rsi = p.get("rsi14")
+            if verbose:
+                md = p.get("ma20_dist_pct")
+                rsi = p.get("rsi14")
+                row.append(f"{md:+.1f}" if md is not None else "—")
+                row.append(f"{rsi:.0f}" if rsi is not None else "—")
             sig = p.get("pullback_signal")
-            row.append(f"{md:+.1f}" if md is not None else "—")
-            row.append(f"{rsi:.0f}" if rsi is not None else "—")
             row.append(sig if sig else "—")
         if show_stop:
             sp = p.get("stop_price")
@@ -1703,6 +1745,11 @@ def build_argparser() -> argparse.ArgumentParser:
                           "America/New_York date. Default behavior overwrites "
                           "today's snapshot."))
     ap.add_argument("--format", choices=["markdown", "json"], default="markdown")
+    ap.add_argument("--verbose", action="store_true",
+                    help="Show the full diagnostic table (AnnVol%%, RankΔ, "
+                         "FirstSeen, FromHigh%%, MA20%%, RSI). The default "
+                         "slim table keeps the decision columns; JSON always "
+                         "carries every field.")
     ap.add_argument("--regime-gate", choices=["off", "warn", "strict"],
                     default="warn",
                     help=("Market trend filter using SPY 200DMA + slope and "
@@ -1937,6 +1984,9 @@ def main():
         sector_line = render_sector_breakdown(picks, args.top_n)
         if sector_line is not None:
             print(sector_line)
+        sig_strip = render_sig_strip(picks, args.top_n)
+        if sig_strip is not None:
+            print(sig_strip)
 
     w = args.window_months
     # Excluded-by-vol-collapse section prints *before* the suppress_picks gate
@@ -1951,8 +2001,8 @@ def main():
         # 0.155 renders as "15.5%" (preserves the precision the user set).
         ratio_pct_str = f"{args.vol_collapse_ratio * 100:g}%"
         print(f"_2nd-half realized vol < "
-              f"{ratio_pct_str} of 1st-half — likely "
-              f"acquisition / lock-in, not tradable momentum._")
+              f"{ratio_pct_str} of 1st-half: likely an "
+              f"acquisition or lock-in, not tradable momentum._")
         for p in sorted(excluded_vol_collapse, key=lambda x: x["vol_ratio"]):
             print(f"- **{p['ticker']}** ({w}m {p['return_pct']:+.1f}%, "
                   f"MaxDD {p['max_dd_pct']:.1f}%, "
@@ -1964,7 +2014,14 @@ def main():
         return
 
     print(f"\n## Top {args.top_n}\n")
-    print(render_table(picks, args.top_n, args.window_months))
+    print(render_table(picks, args.top_n, args.window_months,
+                       history=history, current_run_id=run_id,
+                       verbose=args.verbose))
+    if picks[: args.top_n] and not history.empty:
+        print(f"\n_Trend: rank trajectory, last ≤10 runs · █ = #1 · "
+              f"▁ = #{args.top_n} or worse · rising = climbing"
+              + ("" if args.verbose else " · full diagnostic columns: --verbose")
+              + "_")
 
     # Tickers excluded by vol-collapse this run that were in the prior run's
     # top-N will surface in dropouts; label them so the reason is visible
@@ -1986,10 +2043,10 @@ def main():
         if new_entries:
             print(f"\n## New entrants ({len(new_entries)})")
             if any(p.get("entry_quality") for p in new_entries):
-                print("_entry quality (dist days primary — the validated "
-                      "edge): 🟢 clean ≤1 · ⚪ mixed 2-3 · 🟠 loaded 4+; "
-                      "+surge/+quiet = entry-day vol ≥1.5×/<0.8× (weak "
-                      "secondary)_")
+                print("_entry quality by entry-day distribution days (the "
+                      "validated edge): 🟢 clean ≤1 · ⚪ mixed 2-3 · "
+                      "🟠 loaded 4+. Suffix +surge/+quiet = entry-day "
+                      "volume ≥1.5×/<0.8×, a weak secondary signal_")
             for p in new_entries:
                 q = p.get("entry_quality")
                 tag = f"{q['emoji']} " if q else ""
@@ -1998,7 +2055,7 @@ def main():
                     parts = [f"{int(p['dist_days_25d'])} dist"]
                     if p.get("vol_ratio_20d") is not None:
                         parts.append(f"vol {p['vol_ratio_20d']:.1f}×")
-                    detail = " — " + ", ".join(parts)
+                    detail = " · " + ", ".join(parts)
                 reentry = (f", re-entry, was #{p['prev_rank']}"
                            if p.get("prev_rank") is not None else "")
                 print(f"- {tag}**{p['ticker']}** at #{p['rank']} "
@@ -2008,14 +2065,12 @@ def main():
         sticky = [p for p in picks[: args.top_n] if p.get("streak", 1) >= min_streak]
         if sticky:
             print(f"\n## Persistent leaders (streak ≥ {min_streak} runs)")
-            print(f"_rank trajectory vs top {args.top_n}: █ = #1 · "
-                  f"▁ = #{args.top_n} or worse; rising = climbing_")
             for p in sorted(sticky, key=lambda x: -x["streak"]):
                 spark = rank_sparkline(
                     history, p["ticker"], p.get("score_rank", p.get("rank")),
                     args.top_n, current_run_id=run_id)
                 spark_prefix = f"`{spark}` " if spark else ""
-                line = (f"- {spark_prefix}**{p['ticker']}** — streak {p['streak']}, "
+                line = (f"- {spark_prefix}**{p['ticker']}**: streak {p['streak']}, "
                         f"first seen {p.get('first_seen', '—')}, "
                         f"now #{p['rank']}")
                 # TrailStop attaches at the same min_streak threshold, so

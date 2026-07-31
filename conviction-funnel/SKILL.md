@@ -58,8 +58,10 @@ Also note the **breadth** number even when no divergence fires: breadth in the m
 ## Step 2 — momentum name list
 
 ```bash
+# --verbose: the funnel's selection lens reads the diagnostic columns
+# (MA20%, RSI, AnnVol%) that the slim default table hides
 uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy>=1.24,<3' \
-  python <SKILLS_DIR>/momentum-scan/scripts/scan.py
+  python <SKILLS_DIR>/momentum-scan/scripts/scan.py --verbose
 ```
 
 Note for later: the `Sig` column is the per-name buyability read (🟢 buy zone / 🔵 deep pullback / 🟡 in-trend / 🟠 stretched / 🔴 overextended), and momentum lists frequently come back mostly 🔴 — which is *itself* the warning that buying the raw leaderboard means chasing. Note the sector concentration too (e.g. "Tech 23 of 30") — it tells you which way to diversify in step 4.
@@ -192,9 +194,10 @@ Until the ledger holds ~30+ finalists across regimes, read the grade's per-run r
 uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' \
   python <SKILLS_DIR>/regime-scan/scripts/scan.py
 
-# 2. momentum name list (+ per-name Sig / stops)
+# 2. momentum name list (+ per-name Sig / stops; --verbose for the
+#    MA20/RSI/AnnVol diagnostics the selection lens uses)
 uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy>=1.24,<3' \
-  python <SKILLS_DIR>/momentum-scan/scripts/scan.py
+  python <SKILLS_DIR>/momentum-scan/scripts/scan.py --verbose
 
 # 3. sister pockets — pure file reads, no script (see Step 3)
 #    base-breakout-scan/state/history.csv   → base_weeks ≥ 20 pocket

@@ -81,6 +81,7 @@ python <SKILL_DIR>/scripts/render_history_html.py   # --top-n 30 --days 60 --out
 | `--allow-same-day` | — | Keep existing rows for today's ET date instead of overwriting them (debugging / forcing multiple snapshots). |
 | `--prune-non-trading-days` | — | One-shot cleanup: drop history rows whose ET-date `run_date` is not an NYSE trading day. Use after upgrading from a pre-guard version, or after intentional `--save-stale` runs. Runs no scan. |
 | `--format` | markdown | `markdown` or `json`. |
+| `--verbose` | — | Restore the diagnostic columns (AnnVol%, RankΔ, FirstSeen, FromHigh%, MA20%, RSI) to the top-N table. The default slim table (2026-07-31 redesign) keeps the decision columns — Trend sparkline, return, drawdown, Score, Streak, Sig, Stop — since Sig already encodes MA20/RSI and the Trend trajectory supersedes RankΔ/FirstSeen. JSON always carries every field. |
 | `--regime-gate` | warn | Market trend filter. `off` skips it entirely (and the longer data fetch). `warn` shows a SPY/breadth banner + a RISK-OFF caveat; top-N still printed. `strict` suppresses the top-N when RISK-OFF (history is still saved so streaks survive). RISK-ON means SPY > 200DMA *and* the 200DMA slope over the last 20 trading days is above a small `-0.05%` dead band (so a near-flat MA doesn't flip on single-bar noise). |
 | `--target-vol-pct` | (off) | Portfolio vol target in % (e.g. `15` for 15% annualized). When set: computes the equal-weight cohort's 60-day realized vol, surfaces `suggested leverage = target / cohort_vol` (clipped to `[0.25, 1.0]`, deleverage-only per Daniel-Moskowitz 2016), and adds a `Weight%` column using equal-risk-contribution × leverage. The weights sum to `leverage × 100`, so a 0.6× leverage means you hold 60% notional and 40% cash. Off = no Weight% column. |
 | `--atr-stop-mult` | 2.5 | ATR-based stop multiplier. Computes 14-day ATR for each top-N pick, adds a `Stop` column showing `last_close - mult × ATR` as both price and % from spot. Names with `Streak ≥ --persistent-min-streak` also get a `TrailStop` line in the Persistent leaders section, anchored to the peak since `FirstSeen`. Typical multipliers: `2.0` tight (frequent stop-outs, lower per-trade loss), `2.5` standard (default), `3.0` loose (rarer stop-outs, larger per-trade loss). Pass `0` or a negative value to disable the Stop column. |
@@ -101,17 +102,20 @@ A markdown table of the top N, plus three discovery sections. Sample (truncated)
 **Regime**: SPY 612.4 vs 200DMA 558.2 (+9.7%) · 50DMA > 200DMA · 200DMA slope (20d): +0.18% · Breadth: 68% > 200DMA → **RISK-ON**
 **Vol target**: cohort 60d vol 24.8% → suggested leverage **0.60x** (target 15%, raw 0.60x, clip 0.25–1.00x)
 **Sectors**: Technology 11 · Energy 5 · Healthcare 4 · Communication Services 3 · Industrials 2 · Other 5
+**Sig**: 🟢2 🔵0 🟡23 🟠5 🔴0
 
 ## Top 10
 
-| # | Ticker | Sector | 3m% | MaxDD% | AnnVol% | Score | Streak | RankΔ | FirstSeen | FromHigh% | MA20% | RSI | Sig | Stop | Weight% |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | **NOK**  | Tech  | +92.4  | -8.0  | 38 | 11.6 | 2 | +5 ↗ | 2026-05-11 | 0.0  | +19.9 | 74 | 🟠 | $5.42 (-5.5%)  | 2.6 |
-| 2 | **MRVL** | Tech  | +109.4 | -10.8 | 52 | 10.1 | 1 | 🆕   | 🆕         | 0.0  | +9.1  | 69 | 🟡 | $82.10 (-6.8%) | 1.5 |
-| 3 | **DELL** | Tech  | +107.8 | -10.8 | 50 | 10.0 | 1 | 🆕   | 🆕         | -3.8 | +16.0 | 69 | 🟠 | $128.40 (-7.1%)| 1.5 |
-| 4 | **AMD**  | Tech  | +115.0 | -11.6 | 55 | 9.9  | 1 | 🆕   | 🆕         | 0.0  | +36.2 | 81 | 🔴 | $231.10 (-7.4%)| 1.4 |
-| 5 | **CIEN** | Tech  | +103.5 | -16.8 | 58 | 6.2  | 2 | -7 ↘ | 2026-05-11 | 0.0  | +12.5 | 67 | 🟡 | $108.30 (-9.2%)| 1.2 |
+| # | Ticker | Sector | Trend | 3m% | MaxDD% | Score | Streak | Sig | Stop | Weight% |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | **NOK**  | Tech  | ▆▇█        | +92.4  | -8.0  | 11.6 | 3 | 🟠 | $5.42 (-5.5%)  | 2.6 |
+| 2 | **MRVL** | Tech  | 🆕         | +109.4 | -10.8 | 10.1 | 1 | 🟡 | $82.10 (-6.8%) | 1.5 |
+| 3 | **DELL** | Tech  | ▁▁▂▁▁▁▁▁▂▆ | +107.8 | -10.8 | 10.0 | 1 | 🟠 | $128.40 (-7.1%)| 1.5 |
+| 4 | **AMD**  | Tech  | ▁▁▁▁▁▁▁▁▅▆ | +115.0 | -11.6 | 9.9  | 2 | 🔴 | $231.10 (-7.4%)| 1.4 |
+| 5 | **CIEN** | Tech  | ▆▆▇▇▇▆     | +103.5 | -16.8 | 6.2  | 6 | 🟡 | $108.30 (-9.2%)| 1.2 |
 ...
+
+_Trend: rank trajectory, last ≤10 runs · █ = #1 · ▁ = #30 or worse · rising = climbing · full diagnostic columns: --verbose_
 
 ## Dropouts since last run (6)
 - **ASX** (was #2, 3m=+126.6%)
@@ -119,34 +123,36 @@ A markdown table of the top N, plus three discovery sections. Sample (truncated)
 ...
 
 ## New entrants (6)
-_entry quality (dist days primary — the validated edge): 🟢 clean ≤1 · ⚪ mixed 2-3 · 🟠 loaded 4+; +surge/+quiet = entry-day vol ≥1.5×/<0.8× (weak secondary)_
-- ⚪ **MRVL** at #2 (3m +109.4%, MaxDD -10.8%) — 3 dist, vol 2.1×
-- 🟠 **DELL** at #3 (3m +107.8%, MaxDD -10.8%, re-entry, was #24) — 5 dist, vol 0.6×
+_entry quality by entry-day distribution days (the validated edge): 🟢 clean ≤1 · ⚪ mixed 2-3 · 🟠 loaded 4+. Suffix +surge/+quiet = entry-day volume ≥1.5×/<0.8×, a weak secondary signal_
+- ⚪ **MRVL** at #2 (3m +109.4%, MaxDD -10.8%) · 3 dist, vol 2.1×
+- 🟠 **DELL** at #3 (3m +107.8%, MaxDD -10.8%, re-entry, was #24) · 5 dist, vol 0.6×
 ...
 
 ## Persistent leaders (streak ≥ 3 runs)
-_rank trajectory vs top 30: █ = #1 · ▁ = #30 or worse; rising = climbing_
-- `▆▆▇▇▇` **CIEN** — streak 4, first seen 2026-04-21, now #5 · trail stop $108.50 (-9.3% from spot, peak $120.30)
+- `▆▆▇▇▇▆` **CIEN**: streak 6, first seen 2026-04-21, now #5 · trail stop $108.50 (-9.3% from spot, peak $120.30)
 ```
+
+The **Sig** strip under the banner is the cohort-level buyability read (see interpretation point 5): a 🔴-heavy strip means the whole cohort is extended; a shift toward 🟢/🔵 usually means the correction already happened. The table is the **slim** default (2026-07-31 redesign); `--verbose` restores the AnnVol% / RankΔ / FirstSeen / FromHigh% / MA20% / RSI diagnostic columns, and JSON always carries every field.
 
 (The section lists **episode starts** (`Streak = 1`), covering both first-ever debuts (🆕 in the table) and re-entries after a dropout; re-entries carry a `re-entry, was #N` note. Entry-quality tags tier each entrant **by its entry-day distribution-day count** (`dist_days_25d`), the half of the signal the backtest validated (≤1-dist-day entrants roughly doubled tenure and top-10 reach; **Backtested outcomes** #2): 🟢 clean ≤ 1 dist · ⚪ mixed 2-3 · 🟠 loaded ≥ 4. The entry-day volume character (`vol_ratio_20d`) is only a label suffix (`+surge` ≥ 1.5×, `+quiet` < 0.8×) because its original calibration was convention-inflated (**Backtested outcomes** #3; tiers were volume-primary before 2026-07-31). Read the tag as a priority hint for which entrants deserve attention. Tags appear whenever `dist_days_25d` is available; the volume suffix also needs `vol_ratio_20d`. JSON output carries the tier on each episode-start pick as `entry_quality: {emoji, label}` (labels like `clean+surge`, `mixed`, `loaded+quiet`).)
 
 (The `trail stop ...` suffix only appears when `--atr-stop-mult` is set *and* `Streak ≥ --persistent-min-streak`, which controls both the Persistent leaders threshold and the trail-stop attach threshold. Names below it skip the suffix.)
 
-The leading `` `▆▆▇▇▇` `` sparkline is the name's **leaderboard-rank trajectory** over its last ≤10 appearances (from `score_rank`, current run appended; unlike Streak it includes below-cutoff days, which clamp to the floor block). Orientation is inverted (taller block = better rank, so a rising line means *climbing*), and heights use a fixed 1..`top_n` scale, so blocks are comparable across names (#1 is always tallest). The sparkline needs at least two data points. Read-only display nicety; affects no scoring or saved state.
+The **Trend** column in the table and the leading `` `▆▆▇▇▇` `` prefix in Persistent leaders are the same encoding: the name's **leaderboard-rank trajectory** over its last ≤10 appearances (from `score_rank`, current run appended; unlike Streak it includes below-cutoff days, which clamp to the floor block). Orientation is inverted (taller block = better rank, so a rising line means *climbing*), and heights use a fixed 1..`top_n` scale, so blocks are comparable across names (#1 is always tallest). With fewer than two data points the Trend cell shows 🆕. Read-only display nicety; affects no scoring or saved state.
 
 Numbers above are illustrative; real `Stop%` spans roughly -5% (sedate) to -22% (high-vol breakouts). The sample doesn't include a 🔵 row because deep pullbacks in still-strong momentum names are uncommon; they tend to follow sharp short-term sell-offs in otherwise-trending leaders.
 
-Column meanings:
+Column meanings (columns marked *verbose* print only with `--verbose`; JSON always carries them):
 
-- **AnnVol%**: annualized realized volatility over the scoring window (`--window-months`). Useful both as a per-name sanity check (a +100% return at 60% vol is a coin flip held the right way; the same return at 25% vol is a real trend) and as the input to the per-name `Weight%` allocation when `--target-vol-pct` is set.
+- **Trend**: rank-trajectory sparkline (see above). Supersedes the numeric `RankΔ`/`FirstSeen` pair in the slim table: `▁▁▁▁▁▁▁▆▆` reads as "just surged into the leaderboard", `▇█████████` as "entrenched leader", `██▅▃▁▁▁▁▁▁` as "former leader bleeding out".
+- **AnnVol%** (*verbose*): annualized realized volatility over the scoring window (`--window-months`). Useful both as a per-name sanity check (a +100% return at 60% vol is a coin flip held the right way; the same return at 25% vol is a real trend) and as the input to the per-name `Weight%` allocation when `--target-vol-pct` is set.
 - **Score**: return ÷ |max drawdown|. Higher = more return per unit of pain.
 - **Streak**: consecutive prior runs this ticker was in the *displayed* top N (1 = first appearance). History also stores below-cutoff rows (every name that passed the filter), but those don't count toward Streak / FirstSeen / RankΔ / 🆕; the stats only reference ranks you saw.
-- **RankΔ**: `(score_rank at latest prior top-N appearance) − (current score_rank)`. Positive ↗ = rising; negative ↘ = slipping; 🆕 = no prior top-N appearance in the entire history. Note: the "latest prior appearance" can predate the previous run: a ticker that fell out for a few runs and is now back shows the delta against its last-seen rank, not against the previous run (where it was absent). The `FirstSeen` column and the **New entrants** / **Dropouts** sections cover the "in-and-out" view; RankΔ stays focused on "how has this name moved since we last saw it". **Important**: the script computes the delta on `score_rank` (the pre-vol-collapse score-based rank; see Output shape), not on the display rank `#` in the leftmost column. This means a vol-collapse exclusion of a top pick won't produce false `+1 ↗` for every name below it. In rare cases when vol-collapse status flips between adjacent runs for the same name (e.g., a name re-passing the filter after a few days excluded), the displayed `prev_rank` and the new display `#` may not match RankΔ arithmetic; that's intentional (RankΔ measures real score movement, while `prev_rank` shows what the user saw last time).
-- **FirstSeen**: earliest date this ticker appeared in a past run's displayed top-N.
+- **RankΔ** (*verbose*): `(score_rank at latest prior top-N appearance) − (current score_rank)`. Positive ↗ = rising; negative ↘ = slipping; 🆕 = no prior top-N appearance in the entire history. Note: the "latest prior appearance" can predate the previous run: a ticker that fell out for a few runs and is now back shows the delta against its last-seen rank, not against the previous run (where it was absent). The `FirstSeen` column and the **New entrants** / **Dropouts** sections cover the "in-and-out" view; RankΔ stays focused on "how has this name moved since we last saw it". **Important**: the script computes the delta on `score_rank` (the pre-vol-collapse score-based rank; see Output shape), not on the display rank `#` in the leftmost column. This means a vol-collapse exclusion of a top pick won't produce false `+1 ↗` for every name below it. In rare cases when vol-collapse status flips between adjacent runs for the same name (e.g., a name re-passing the filter after a few days excluded), the displayed `prev_rank` and the new display `#` may not match RankΔ arithmetic; that's intentional (RankΔ measures real score movement, while `prev_rank` shows what the user saw last time).
+- **FirstSeen** (*verbose*): earliest date this ticker appeared in a past run's displayed top-N. Still shown in the Persistent leaders section either way.
 - **Weight%**: only present with `--target-vol-pct`. Equal-risk-contribution weight (∝ 1/ann_vol) scaled by the suggested leverage. The column sums to `leverage × 100` (so e.g. 60 means 60% notional, 40% cash). Treat it as a sizing *starting point* rather than a target portfolio; see Known limitations on the correlation simplification.
 - **Sector**: only present when sector tagging is enabled (default; disable with `--no-sectors`). Abbreviated GICS-ish sector from yfinance. The `**Sectors**` breakdown line above the table gives full names and counts.
-- **MA20%, RSI, Sig**: only present when the pullback indicator is enabled (default; disable with `--no-pullback`). `MA20%` is `(last_close / MA20 - 1) × 100`: positive means above the 20-day average, negative means below. `RSI` is the 14-day Wilder RSI (canonical, EWMA with α=1/14). `Sig` is the buy-zone classifier (🟢 buy / 🔵 deep pullback / 🟡 watch / 🟠 stretched / 🔴 overextended); see the `--no-pullback` row in the parameter table for thresholds. Reading rule: 🟢 and 🔵 are *candidates worth investigating today*; 🟠/🔴 are quality momentum but you're late: set a price alert at MA20 and wait.
+- **MA20%, RSI** (*verbose*) **and Sig**: only present when the pullback indicator is enabled (default; disable with `--no-pullback`); the slim table keeps `Sig`, which encodes both numerics. `MA20%` is `(last_close / MA20 - 1) × 100`: positive means above the 20-day average, negative means below. `RSI` is the 14-day Wilder RSI (canonical, EWMA with α=1/14). `Sig` is the buy-zone classifier (🟢 buy / 🔵 deep pullback / 🟡 watch / 🟠 stretched / 🔴 overextended); see the `--no-pullback` row in the parameter table for thresholds. Reading rule: 🟢 and 🔵 are *candidates worth investigating today*; 🟠/🔴 are quality momentum but you're late: set a price alert at MA20 and wait.
 - **Stop**: present by default (disable by passing `--atr-stop-mult 0`). Format: `$price (-%)`. The stop price = `last_close - mult × ATR(14)`. The % shows how far below the current price that sits. For names with `Streak ≥ --persistent-min-streak` (default 3), the Persistent leaders section also surfaces a `TrailStop` anchored to the peak since `FirstSeen` (locks in profits as the trend matures).
 
 The script computes the three discovery sections (dropouts / new entrants / persistent leaders) against the most recent prior run. When the vol-collapse filter removes one or more names, an **Excluded by vol-collapse filter** section appears *between the Regime banner and the Top-N table*. This placement is deliberate: the exclusions are warnings about names that *look* like momentum but aren't, and they print even when `--regime-gate strict` suppresses the rest of the output, so the user always sees them. The section lists each ticker with its `1st-half% → 2nd-half%` annualized vol and the resulting ratio, so you can sanity-check the trigger and recognize the underlying situation (most often a cash buyout pending shareholder vote).
@@ -160,6 +166,10 @@ JSON output mirrors the markdown structure: the top-level envelope has a `picks`
 ## How to interpret (Claude's job after running)
 
 The script gives you data; the user wants signal. Add a short interpretation pass: apply judgment rather than reciting the principles below.
+
+Relay the script's markdown output **in full — every row of the top-N table and every section**. Don't truncate or collapse rows to save space: the bottom of the table carries its own signal (names sliding out, names hovering at the cutoff), and the user chose the slim table precisely so the whole thing fits.
+
+Write the interpretation for a reader with **no finance background**, in the conversation's language. Translate each term the moment you use it — "momentum" means "stocks that have been rising steadily"; "Streak 48" means "on the leaderboard 48 scan-days in a row"; "Stop $96.92 (-14.2%)" means "if you owned this, the exit point that caps the loss at 14%". Lead with the story the glyphs tell (which theme is crowding the leaderboard, who's surging in, who's bleeding out), and close with what to do about it — usually "nothing today; these are names to research, not buys".
 
 1. **Read the Regime banner first.** SPY above a *rising* 200DMA with breadth above ~60% is where long-momentum has shown the cleanest risk/reward in the historical record. RISK-OFF banners (SPY below 200DMA, the 200DMA itself rolling over, or breadth collapsing while SPY still holds up) flip the read: treat the names below as *who's holding up* in a weak tape, not *what to buy*. Say up front that the filter doesn't defend against the post-bear momentum crashes (2009 Q2, 2020 Q2, early 2023); those hit right after the gate turns back on, when investors sell prior leaders to fund the rotation into the bombed-out cohort. The filter helps with bear-market downside, not with the regime-flip itself.
 
