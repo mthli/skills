@@ -445,25 +445,25 @@ def classify(m: dict) -> dict:
             flags.append(f"Breadth divergence: SPY {spy['from_high_pct']:+.1f}% from high but only "
                          f"{m['breadth_50_pct']:.0f}% of names above 50DMA")
         if m["rsp_spy_pct"] is not None and m["rsp_spy_pct"] < -RSPSPY_DEADBAND:
-            flags.append(f"Narrowing rally: equal-weight lagging cap-weight (RSP/SPY {m['rsp_spy_pct']:+.1f}%/"
-                         f"{m['lookback']}d) — only megacaps lifting the index")
+            flags.append(f"Narrowing rally: only megacaps lifting the index "
+                         f"(RSP/SPY {m['rsp_spy_pct']:+.1f}%/{m['lookback']}d)")
         if m["credit_pct"] is not None and m["credit_pct"] < -CREDIT_DEADBAND:
             flags.append(f"Credit weakening: HYG/LQD {m['credit_pct']:+.1f}%/{m['lookback']}d "
-                         f"— credit not confirming equities")
+                         f"while stocks hold")
         if m["def_off_pct"] is not None and m["def_off_pct"] > ROTATION_DEADBAND:
             prior = m.get("def_off_prior_pct")
             if prior is None:
                 # Not enough data to measure deepening — fall back to the
                 # level alarm rather than silently never firing.
-                flags.append(f"Defensive rotation: defensives outran offensives over {m['lookback']}d by "
-                             f"{m['def_off_pct']:+.1f}pp")
+                flags.append(f"Defensive rotation: defensives {m['def_off_pct']:+.1f}pp "
+                             f"over offensives / {m['lookback']}d")
             elif m["def_off_pct"] - prior > ROTATION_WIDENING_PP:
-                flags.append(f"Defensive rotation: deepening — defensives outran offensives over "
-                             f"{m['lookback']}d by {m['def_off_pct']:+.1f}pp, "
+                flags.append(f"Defensive rotation: deepening, defensives "
+                             f"{m['def_off_pct']:+.1f}pp over offensives / {m['lookback']}d, "
                              f"{m['def_off_pct'] - prior:+.1f}pp more than "
                              f"{ROTATION_SLOPE_SESSIONS} sessions ago")
         if m["vix_term"] is not None and m["vix_term"] > 1.0:
-            flags.append(f"Vol-curve inversion: VIX>VIX3M ({m['vix_term']:.2f}) — acute stress")
+            flags.append(f"Vol-curve inversion: VIX above VIX3M ({m['vix_term']:.2f})")
         if m["vix_5d_pct"] is not None and m["vix_5d_pct"] > VIX_SPIKE_5D_PCT:
             flags.append(f"VIX 5-day spike {m['vix_5d_pct']:+.0f}%")
     n_flags = len(flags)
@@ -472,23 +472,31 @@ def classify(m: dict) -> dict:
     b50 = m["breadth_50_pct"]
     if not uptrend_intact:
         state, label = "🔴", "RISK-OFF"
-        reason = "SPY broke below / flattened its 200DMA — trend gate off"
+        reason = "Trend gate off: SPY below or flattening its 200DMA"
         action = "Cut gross exposure, let trail stops take over; don't bottom-fish an unconfirmed bounce"
     elif n_flags >= 4 or score <= -3:
         state, label = "🔴", "RISK-OFF (internals)"
-        reason = f"Price still above 200DMA but internals broke ({_plural(n_flags, 'divergence')} / score {score})"
+        reason = "Price still above its 200DMA but internals broke"
         action = "Cut gross exposure; this is the 'price hasn't dropped yet but internals are already rotting' late-stage top"
     elif n_flags >= 2 or score <= -2 or (b50 is not None and b50 < 45):
         # CAUTION is driven by the turn detector (flags) + weak breadth, not by a
         # merely-neutral score: a trend-up, zero-divergence tape with lots of ⚪
         # neutral votes shouldn't cry wolf. score ≤ -2 is a net-bearish-votes
         # safety net that sits one notch above the 🔴 internals trigger (≤ -3).
+        # The reason names the trigger that actually fired, in trigger order.
         state, label = "🟡", "CAUTION"
-        reason = f"Trend intact but {_plural(n_flags, 'divergence')} firing (score {score})"
+        if n_flags >= 2:
+            why = f"{_plural(n_flags, 'divergence')} stacking"
+        elif score <= -2:
+            why = f"net-bearish votes (score {score})"
+        else:
+            why = f"thin breadth ({b50:.0f}% > 50DMA)"
+        reason = f"Trend intact but {why}"
         action = "Tighten trail stops, raise cash buffer; new money only on pullbacks, never chase 🔴"
     else:
         state, label = "🟢", "RISK-ON"
-        reason = f"All layers confirm each other (score {score}, {_plural(n_flags, 'divergence')})"
+        reason = ("Trend gate on, internals healthy" if n_flags == 0 else
+                  f"Trend gate on; {_plural(n_flags, 'divergence')}, not stacking")
         action = "Trend healthy, hold per rules; new money can scale in on pullbacks"
 
     return {
@@ -741,18 +749,21 @@ def render_markdown(m: dict, c: dict, history: pd.DataFrame, run_id: str,
     out.append(f"## {c['state']} **{c['state_label']}** · score {c['score']:+d} "
                f"({c['n_bull']}🟢 {n_neutral}⚪ {c['n_bear']}🔴) · "
                f"{_plural(c['n_flags'], 'divergence')}")
-    out.append(f"_{c['reason']}_")
+    if c["state"] == "🔴":
+        # Which red: gate off vs internals rot. For 🟢/🟡 the banner and the
+        # flag list already carry the reason, so the line would repeat them.
+        out.append(f"_{c['reason']}_")
     out.append(f"> **Action**: {c['action']}")
     conf_label, flipped = confirmed
     conf_emoji = STATE_EMOJI.get(conf_label, "⚪")
     if flipped:
         out.append(f"> **Confirmed ({STATE_CONFIRM_DAYS}-day)**: {conf_emoji} "
-                   f"{conf_label} — today's {_base_state(c['state_label'])} is "
+                   f"{conf_label}. Today's {_base_state(c['state_label'])} is "
                    f"a first-day flip: watch, don't act. Sizing decisions "
                    f"read this line.")
     else:
         out.append(f"> **Confirmed ({STATE_CONFIRM_DAYS}-day)**: {conf_emoji} "
-                   f"{conf_label} — sizing decisions read this line.")
+                   f"{conf_label}. Sizing decisions read this line.")
     out.append("")
 
     # Turn detector — lead with it, it's the whole point.
@@ -761,7 +772,7 @@ def render_markdown(m: dict, c: dict, history: pd.DataFrame, run_id: str,
         for f in c["flags"]:
             out.append(f"- {f}")
     else:
-        out.append("### ✅ No divergences — all layers agree with price")
+        out.append("### ✅ No divergences: all layers agree with price")
     out.append("")
 
     # Exceptions only: a 🟢 vote needs no explanation, the other votes do.
@@ -826,12 +837,12 @@ def show_history_summary(history: pd.DataFrame):
     conf, flipped = confirm_state(history, str(last["run_id"]), last["state"])
     emoji = STATE_EMOJI.get(conf, "⚪")
     if flipped:
-        print(f"\n**Confirmed ({STATE_CONFIRM_DAYS}-day)**: {emoji} {conf} — "
-              f"latest {_base_state(last['state'])} is a first-day flip: "
+        print(f"\n**Confirmed ({STATE_CONFIRM_DAYS}-day)**: {emoji} {conf}. "
+              f"Latest {_base_state(last['state'])} is a first-day flip: "
               f"watch, don't act. Sizing decisions read this line.")
     else:
-        print(f"\n**Confirmed ({STATE_CONFIRM_DAYS}-day)**: {emoji} {conf} — "
-              f"sizing decisions read this line.")
+        print(f"\n**Confirmed ({STATE_CONFIRM_DAYS}-day)**: {emoji} {conf}. "
+              f"Sizing decisions read this line.")
 
 
 # --------------------------------------------------------------------------- #
@@ -871,7 +882,7 @@ def main():
 
     breadth_universe = load_breadth_universe()
     if not breadth_universe:
-        print("WARNING: breadth_universe.txt missing/empty — breadth signals "
+        print("WARNING: breadth_universe.txt missing/empty; breadth signals "
               "will abstain.", file=sys.stderr)
     all_tickers = list(dict.fromkeys(MACRO_TICKERS + breadth_universe))
     bars = fetch_bars(all_tickers)
@@ -879,14 +890,14 @@ def main():
     breadth = extract_closes(bars, breadth_universe)
 
     if macro.get("SPY") is None:
-        print("ERROR: SPY data unavailable — cannot compute regime. Try again "
-              "in a few minutes (Yahoo may be throttling).", file=sys.stderr)
+        print("ERROR: SPY data unavailable; cannot compute regime. Retry in "
+              "a few minutes (Yahoo may be throttling).", file=sys.stderr)
         sys.exit(1)
 
     m = compute_metrics(macro, breadth, args.lookback)
     if m["spy_trend"] is None:
-        print("ERROR: SPY history too short to compute the 200DMA trend gate "
-              "— refusing to classify (a data failure must not read as "
+        print("ERROR: SPY history too short to compute the 200DMA trend gate; "
+              "refusing to classify (a data failure must not read as "
               "RISK-OFF).", file=sys.stderr)
         sys.exit(1)
     c = classify(m)
@@ -903,9 +914,9 @@ def main():
     today_is_trading = is_nyse_trading_day(today_et)
     if (data_date == today_et and today_is_trading
             and now_et.hour * 60 + now_et.minute < 16 * 60 + 15):
-        print(f"WARNING: run during the {today_et} session — today's bar is "
-              f"partial, so MAs/breadth reflect an in-progress day. The "
-              f"post-close run will overwrite this row.", file=sys.stderr)
+        print(f"WARNING: mid-session run: the {today_et} bar is partial, so "
+              f"MAs/breadth include an in-progress day. The post-close run "
+              f"overwrites this row.", file=sys.stderr)
 
     today_row = history_row(run_id, now, m, c)
     if not args.no_save:

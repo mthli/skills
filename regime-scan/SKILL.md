@@ -102,7 +102,9 @@ None alone is a sell; **2–3 stacking = de-risk**. This layer is the skill's fo
 
 **State strip + Trend lines**: the trajectory layer, as glyphs instead of a table (2026-07-31 redesign). The strip is the last ~14 run-days of state (🟢🟢🟡🟢…, today last); below it, one sparkline per watched series (breadth, RSP/SPY, VIX, VIX/VIX3M term, credit, defensive−offensive) with the current value, a ↗/→/↘ arrow vs ~5 runs ago, and ⚠️ on any series whose divergence flag is firing. **Read the slope**: a one-day snapshot can't tell you if sentiment is turning; the multi-day drift can. The full numeric log stays in `--show-history` (which now ends with the same dashboard).
 
-**Presenting the result**: the dashboard is already the readable form — relay it verbatim (keep the code block, or alignment breaks) rather than re-tabulating it, then add a 2–4 sentence interpretation in the conversation's language: what the state is, which flag/series is the live concern, and what would change the call. Don't re-list every number the dashboard already encodes.
+**Presenting the result**: the dashboard is already the readable form — relay it verbatim (keep the code block, or alignment breaks) rather than re-tabulating it, then add a short interpretation in the conversation's language: what the state is, which flag/series is the live concern, and what would change the call. Don't re-list every number the dashboard already encodes.
+
+Write the interpretation for a reader with **no finance background**. Translate every term into everyday language the moment you use it — "breadth 60%" means "60% of the 500 big stocks are still in short-term uptrends, so fewer stocks are participating"; "defensive rotation" means "money moving into utilities/groceries/pharma, the stocks people hide in when nervous"; "VIX 17.9" means "the market's fear gauge; under 20 is calm". State plainly what, if anything, the reader should do — usually "nothing".
 
 ## How it ties to the journal rules
 
