@@ -114,12 +114,12 @@ A markdown table of the top N, plus three discovery sections. Sample (truncated)
 ...
 
 ## New entrants (6)
-_entry quality: 🟢 volume surge + clean · 🔵 volume surge · ⚪ neutral · 🟠 quiet drift-in_
-- 🔵 **MRVL** at #2 (3m +109.4%, MaxDD -10.8%) — vol 2.1×, 3 dist
-- 🟠 **DELL** at #3 (3m +107.8%, MaxDD -10.8%, re-entry, was #24) — vol 0.6×, 5 dist
+_entry quality (dist days primary — the validated edge): 🟢 clean ≤1 · ⚪ mixed 2-3 · 🟠 loaded 4+; +surge/+quiet = entry-day vol ≥1.5×/<0.8× (weak secondary)_
+- ⚪ **MRVL** at #2 (3m +109.4%, MaxDD -10.8%) — 3 dist, vol 2.1×
+- 🟠 **DELL** at #3 (3m +107.8%, MaxDD -10.8%, re-entry, was #24) — 5 dist, vol 0.6×
 ...
 
-(The section lists **episode starts** — `Streak = 1` — covering both first-ever debuts (🆕 in the table) and re-entries after a dropout; re-entries carry a `re-entry, was #N` note. Entry-quality tags tier each entrant by its entry-day volume character — `vol` is `vol_ratio_20d` (latest volume over its 20-session average), `dist` is `dist_days_25d`. Thresholds: surge ≥ 1.5×, quiet < 0.8×, clean ≤ 1 dist day. Calibration: originally a one-off 220-episode single-regime backtest (2026-05→07, surge +9.0% held-to-dropout vs quiet +3.1%) — the re-runnable `scripts/backtest_outcomes.py` later showed those magnitudes were convention-inflated (look-ahead exits + open winners marked at their highs); under the honest convention the surge>quiet ordering survives but the gap is small, while the ≤1-dist-day tenure/top-10 edge replicates cleanly (see **Backtested outcomes** #2–3). Read the tag as a priority hint for which entrants deserve attention — the `dist` half carries most of the signal. Tags appear only when the volume fields are available for that name. JSON output carries the same tier on each episode-start pick as `entry_quality: {emoji, label}`.)
+(The section lists **episode starts** — `Streak = 1` — covering both first-ever debuts (🆕 in the table) and re-entries after a dropout; re-entries carry a `re-entry, was #N` note. Entry-quality tags tier each entrant **by its entry-day distribution-day count** (`dist_days_25d`) — the half of the signal the re-runnable backtest validated (≤1-dist-day entrants roughly doubled tenure and top-10 reach; see **Backtested outcomes** #2). Tiers: 🟢 clean ≤ 1 dist · ⚪ mixed 2-3 · 🟠 loaded ≥ 4. The entry-day volume character (`vol_ratio_20d`, latest volume over its 20-session average) is only a label suffix — `+surge` ≥ 1.5×, `+quiet` < 0.8× — because its original +9.0% vs +3.1% calibration was convention-inflated (look-ahead exits + open winners marked at their highs); under the honest convention the surge>quiet ordering survives but the gap shrinks to ~0.5pt (**Backtested outcomes** #3). (Tiers were volume-primary before 2026-07-31; the flip aligns the tag's visual hierarchy with where the signal lives.) Read the tag as a priority hint for which entrants deserve attention. Tags appear whenever `dist_days_25d` is available; the volume suffix additionally needs `vol_ratio_20d`. JSON output carries the same tier on each episode-start pick as `entry_quality: {emoji, label}` (labels like `clean+surge`, `mixed`, `loaded+quiet`).)
 
 ## Persistent leaders (streak ≥ 3 runs)
 _rank trajectory vs top 30: █ = #1 · ▁ = #30 or worse; rising = climbing_

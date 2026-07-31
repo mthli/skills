@@ -991,36 +991,46 @@ def attach_volume_fields(picks: list[dict], bars: pd.DataFrame,
     return picks
 
 
-# Entry-quality tiers, calibrated on the 2026-07 episode backtest (n=220
-# episodes over 49 runs) and re-measured by scripts/backtest_outcomes.py
-# (re-run it quarterly). The dist_days half is the durable edge:
-# low-distribution entries (dist_days ≤ 1) roughly doubled both tenure and
-# top-10 reach rate under every convention tried. The vol_ratio half is
-# weak: the original +9.0% (surge) vs +3.1% (quiet) held-to-dropout gap
-# came from look-ahead exits plus open winners marked at unrealized highs;
-# the honest convention (closed episodes, exit at the observed-dropout
-# close) keeps the surge>quiet ordering but shrinks the gap to ~0.5pt.
-# Small samples from a single regime — treat as a priority hint, not a
-# signal. Exit-side rules built on the same fields all failed vs the
+# Entry-quality tiers. The PRIMARY axis is dist_days — the re-runnable
+# backtest's one durable entry edge: low-distribution entries
+# (dist_days ≤ 1) roughly doubled both tenure and top-10 reach rate under
+# every convention tried, while loaded entries (4+) ran half the tenure at
+# a fraction of the reach. The vol_ratio character is a weak SECONDARY
+# suffix only: the original +9.0% (surge) vs +3.1% (quiet) held-to-dropout
+# gap came from look-ahead exits plus open winners marked at unrealized
+# highs; the honest convention (closed episodes, exit at the
+# observed-dropout close) keeps the surge>quiet ordering but shrinks the
+# gap to ~0.5pt. (Tiers were volume-primary before 2026-07-31; the flip
+# aligns the tag's visual hierarchy with where the signal actually lives.)
+# Re-measure via scripts/backtest_outcomes.py quarterly. Small samples
+# from a single regime — treat as a priority hint, not a signal.
+# Exit-side rules built on the same fields all failed vs the
 # hold-to-dropout baseline; that's why this attaches to entrants only.
 ENTRY_VOL_SURGE_MIN = 1.5
 ENTRY_VOL_QUIET_MAX = 0.8
 ENTRY_CLEAN_DIST_MAX = 1
+ENTRY_LOADED_DIST_MIN = 4
 
 
 def entry_quality(vol_ratio: float | None,
                   dist_days: float | None) -> tuple[str, str] | None:
-    """Tier a new entrant by its entry-day volume character. Returns
-    (emoji, label), or None when either field is unavailable."""
-    if vol_ratio is None or dist_days is None:
+    """Tier an episode start by its entry-day distribution-day count (the
+    validated edge), with the volume character as a weak label suffix.
+    Returns (emoji, label), or None when dist_days is unavailable."""
+    if dist_days is None:
         return None
-    if vol_ratio >= ENTRY_VOL_SURGE_MIN:
-        if dist_days <= ENTRY_CLEAN_DIST_MAX:
-            return ("🟢", "surge+clean")
-        return ("🔵", "surge")
-    if vol_ratio < ENTRY_VOL_QUIET_MAX:
-        return ("🟠", "quiet drift-in")
-    return ("⚪", "neutral")
+    if dist_days <= ENTRY_CLEAN_DIST_MAX:
+        emoji, label = "🟢", "clean"
+    elif dist_days < ENTRY_LOADED_DIST_MIN:
+        emoji, label = "⚪", "mixed"
+    else:
+        emoji, label = "🟠", "loaded"
+    if vol_ratio is not None:
+        if vol_ratio >= ENTRY_VOL_SURGE_MIN:
+            label += "+surge"
+        elif vol_ratio < ENTRY_VOL_QUIET_MAX:
+            label += "+quiet"
+    return (emoji, label)
 
 
 # Vol-collapse filter: detect names whose realized vol crashed in the second
@@ -1976,13 +1986,19 @@ def main():
         if new_entries:
             print(f"\n## New entrants ({len(new_entries)})")
             if any(p.get("entry_quality") for p in new_entries):
-                print("_entry quality: 🟢 volume surge + clean · 🔵 volume "
-                      "surge · ⚪ neutral · 🟠 quiet drift-in_")
+                print("_entry quality (dist days primary — the validated "
+                      "edge): 🟢 clean ≤1 · ⚪ mixed 2-3 · 🟠 loaded 4+; "
+                      "+surge/+quiet = entry-day vol ≥1.5×/<0.8× (weak "
+                      "secondary)_")
             for p in new_entries:
                 q = p.get("entry_quality")
                 tag = f"{q['emoji']} " if q else ""
-                detail = (f" — vol {p['vol_ratio_20d']:.1f}×, "
-                          f"{int(p['dist_days_25d'])} dist" if q else "")
+                detail = ""
+                if q:
+                    parts = [f"{int(p['dist_days_25d'])} dist"]
+                    if p.get("vol_ratio_20d") is not None:
+                        parts.append(f"vol {p['vol_ratio_20d']:.1f}×")
+                    detail = " — " + ", ".join(parts)
                 reentry = (f", re-entry, was #{p['prev_rank']}"
                            if p.get("prev_rank") is not None else "")
                 print(f"- {tag}**{p['ticker']}** at #{p['rank']} "

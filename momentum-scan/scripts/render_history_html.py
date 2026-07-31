@@ -42,6 +42,7 @@ def load_history(path: Path) -> list[dict]:
 ENTRY_VOL_SURGE_MIN = 1.5
 ENTRY_VOL_QUIET_MAX = 0.8
 ENTRY_CLEAN_DIST_MAX = 1
+ENTRY_LOADED_DIST_MIN = 4
 
 
 def load_sectors(path: Path) -> dict:
@@ -128,14 +129,19 @@ def build_payload(rows: list[dict], sectors: dict, top_n: int, days_window: int 
         eq = eqv = eqd = None
         vr_s = erow.get("vol_ratio_20d") or ""
         dd_s = erow.get("dist_days_25d") or ""
-        if vr_s and dd_s:
-            eqv, eqd = float(vr_s), int(float(dd_s))
-            if eqv >= ENTRY_VOL_SURGE_MIN:
-                eq = 3 if eqd <= ENTRY_CLEAN_DIST_MAX else 2
-            elif eqv < ENTRY_VOL_QUIET_MAX:
-                eq = 0
-            else:
+        if dd_s:
+            # Primary axis is dist days (the backtest-validated edge);
+            # 2 = clean (≤1), 1 = mixed (2-3), 0 = loaded (4+). The
+            # volume character only shows in the hover tip and is
+            # optional — same None-handling as scan.py's entry_quality.
+            eqd = int(float(dd_s))
+            eqv = float(vr_s) if vr_s else None
+            if eqd <= ENTRY_CLEAN_DIST_MAX:
+                eq = 2
+            elif eqd < ENTRY_LOADED_DIST_MIN:
                 eq = 1
+            else:
+                eq = 0
         summary.append({
             "t": t,
             "sec": sector_of(t),
@@ -255,9 +261,10 @@ HTML_TEMPLATE = r"""<!doctype html>
   --h0: #cde2fb; --h1: #b7d3f6; --h2: #9ec5f4; --h3: #86b6ef; --h4: #6da7ec;
   --h5: #5598e7; --h6: #3987e5; --h7: #2a78d6; --h8: #1c5cab; --h9: #0d366b;
   --hx: #eceae4;
-  /* Entry-quality ordinal ramp — 4 steps off the heat ramp, spaced for
-     adjacent distinguishability (validated ΔE ≥ 15 on both surfaces). */
-  --eq0: var(--h0); --eq1: var(--h3); --eq2: var(--h6); --eq3: var(--h9);
+  /* Entry-quality ordinal ramp — 3 steps off the heat ramp, spaced for
+     adjacent distinguishability (re-validated for the 3-step ramp:
+     CIE76 ΔE ≥ 28 adjacent on both surfaces; light 34/45, dark 29/42). */
+  --eq0: var(--h0); --eq1: var(--h4); --eq2: var(--h9);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -272,9 +279,9 @@ HTML_TEMPLATE = r"""<!doctype html>
     --h0: #184f95; --h1: #1c5cab; --h2: #256abf; --h3: #2a78d6; --h4: #3987e5;
     --h5: #5598e7; --h6: #6da7ec; --h7: #86b6ef; --h8: #9ec5f4; --h9: #cde2fb;
     --hx: #262624;
-    /* Dark ramp compresses at the deep end — widen the middle steps so
-       adjacent tiers keep ΔE ≥ 15 against the dark surface. */
-    --eq1: var(--h4); --eq2: var(--h7);
+    /* Dark ramp compresses at the deep end — pick the middle step so
+       adjacent tiers keep ΔE ≥ 28 against the dark surface (29/42). */
+    --eq1: var(--h5);
   }
 }
 * { box-sizing: border-box; }
@@ -351,13 +358,13 @@ td.tk { color: var(--ink); font-weight: 600; }
 .eqdot { display: inline-block; width: 12px; height: 12px; border-radius: 50%;
          border: 1px solid var(--border); vertical-align: -1px; box-sizing: border-box; }
 .eq0 { background: var(--eq0); } .eq1 { background: var(--eq1); }
-.eq2 { background: var(--eq2); } .eq3 { background: var(--eq3); }
+.eq2 { background: var(--eq2); }
 /* Ring variant: the latest spell did NOT start on the latest run — the
    tier is a frozen entry-day annotation, not a live signal. Hollow keeps
    the color readable while visually demoting it. */
 .eqdot.ring { background: transparent; border-width: 3px; }
 .ring.eq0 { border-color: var(--eq0); } .ring.eq1 { border-color: var(--eq1); }
-.ring.eq2 { border-color: var(--eq2); } .ring.eq3 { border-color: var(--eq3); }
+.ring.eq2 { border-color: var(--eq2); }
 .foot { color: var(--muted); font-size: 12px; margin-top: 24px; }
 a { color: inherit; text-decoration: none; }
 a:hover { text-decoration: underline; }
@@ -442,10 +449,10 @@ const I18N = {
     names: c => `${c} names`,
     others: "Others",
     rosterTitle: "Roster",
-    rosterNote: "One row per name that ever made the board. Click a header to sort; click again to reverse. Every hover value from the charts is readable here.\nEntry volume = entry-day volume character of the latest board spell (darker blue = stronger entry; hover or tap the dot for details).",
-    cols: ["Ticker", "Sector", "Current rank", "Latest score", "Entry volume", "Streak", "Days on board", "Best rank", "First seen", "Last seen"],
-    eqLabels: ["Quiet drift-in", "Neutral", "Volume surge", "Surge + clean"],
-    eqTip: (v, d, day) => [`Vol ${v}× (entry day / 20-day avg)`, `${d} dist days (down on higher vol, last 25)`, `Entered ${day}`],
+    rosterNote: "One row per name that ever made the board. Click a header to sort; click again to reverse. Every hover value from the charts is readable here.\nEntry quality = entry-day distribution-day count of the latest board spell (darker blue = cleaner entry — the backtest-validated edge; hover or tap the dot for the volume character).",
+    cols: ["Ticker", "Sector", "Current rank", "Latest score", "Entry quality", "Streak", "Days on board", "Best rank", "First seen", "Last seen"],
+    eqLabels: ["Loaded (4+ dist days)", "Mixed (2-3)", "Clean (≤1 dist day)"],
+    eqTip: (v, d, day) => [`${d} dist days (down on higher vol, last 25)`, ...(v == null ? [] : [`Vol ${v}× (entry day / 20-day avg)`]), `Entered ${day}`],
     eqFrozen: "Tier frozen that day",
     eqFreshNote: "Filled = entered this run; ring = earlier entry — tier frozen at entry day.",
     score: "Score", ret: "Return", dd: "Drawdown",
@@ -480,10 +487,10 @@ const I18N = {
     names: c => `${c} 只`,
     others: "其他",
     rosterTitle: "上榜名录",
-    rosterNote: "每个曾经上榜的标的一行。点击表头排序；再次点击反向。图表中所有悬停数值在此均可查阅。\n入场量能 = 最近一段在榜区间入场日的量能特征（蓝色越深入场越强；悬停或点按圆点看详情）。",
-    cols: ["代码", "行业", "当前排名", "最新评分", "入场量能", "连续在榜", "在榜天数", "最佳排名", "首次上榜", "最近上榜"],
-    eqLabels: ["缩量飘入", "中性", "放量入场", "放量且干净"],
-    eqTip: (v, d, day) => [`量比 ${v}×（当日量 / 20 日均量）`, `派发日 ${d} 天（近 25 日放量下跌）`, `${day} 入场`],
+    rosterNote: "每个曾经上榜的标的一行。点击表头排序；再次点击反向。图表中所有悬停数值在此均可查阅。\n入场质量 = 最近一段在榜区间入场日的派发日数（蓝色越深入场越干净 —— 回测验证的边际；悬停或点按圆点看量能特征）。",
+    cols: ["代码", "行业", "当前排名", "最新评分", "入场质量", "连续在榜", "在榜天数", "最佳排名", "首次上榜", "最近上榜"],
+    eqLabels: ["派发密集（≥4 天）", "中性（2-3 天）", "干净（≤1 天）"],
+    eqTip: (v, d, day) => [`派发日 ${d} 天（近 25 日放量下跌）`, ...(v == null ? [] : [`量比 ${v}×（当日量 / 20 日均量）`]), `${day} 入场`],
     eqFrozen: "评级定格于当日",
     eqFreshNote: "实心 = 本期新入榜；空心 = 历史入场 —— 评级定格于入场日。",
     score: "评分", ret: "收益", dd: "回撤",
@@ -523,10 +530,10 @@ const I18N = {
     names: c => `${c} 檔`,
     others: "其他",
     rosterTitle: "上榜名錄",
-    rosterNote: "每個曾經上榜的標的一行。點擊表頭排序；再次點擊反向。圖表中所有懸停數值在此均可查閱。\n進場量能 = 最近一段在榜區間進場日的量能特徵（藍色越深進場越強；懸停或點按圓點看詳情）。",
-    cols: ["代號", "產業", "目前排名", "最新評分", "進場量能", "連續在榜", "在榜天數", "最佳排名", "首次上榜", "最近上榜"],
-    eqLabels: ["縮量飄入", "中性", "放量進場", "放量且乾淨"],
-    eqTip: (v, d, day) => [`量比 ${v}×（當日量 / 20 日均量）`, `派發日 ${d} 天（近 25 日放量下跌）`, `${day} 進場`],
+    rosterNote: "每個曾經上榜的標的一行。點擊表頭排序；再次點擊反向。圖表中所有懸停數值在此均可查閱。\n進場品質 = 最近一段在榜區間進場日的派發日數（藍色越深進場越乾淨 —— 回測驗證的邊際；懸停或點按圓點看量能特徵）。",
+    cols: ["代號", "產業", "目前排名", "最新評分", "進場品質", "連續在榜", "在榜天數", "最佳排名", "首次上榜", "最近上榜"],
+    eqLabels: ["派發密集（≥4 天）", "中性（2-3 天）", "乾淨（≤1 天）"],
+    eqTip: (v, d, day) => [`派發日 ${d} 天（近 25 日放量下跌）`, ...(v == null ? [] : [`量比 ${v}×（當日量 / 20 日均量）`]), `${day} 進場`],
     eqFrozen: "評級定格於當日",
     eqFreshNote: "實心 = 本期新進榜；空心 = 歷史進場 —— 評級定格於進場日。",
     score: "評分", ret: "報酬", dd: "回撤",
@@ -566,10 +573,10 @@ const I18N = {
     names: c => `${c} 銘柄`,
     others: "その他",
     rosterTitle: "ランクイン銘柄一覧",
-    rosterNote: "ランクインしたことのある銘柄を 1 行ずつ表示。ヘッダーをクリックでソート、もう一度クリックで逆順。チャートのホバー数値はすべてこの表で確認できます。\nエントリー出来高 = 直近ランクイン期間の初日の出来高特性（青が濃いほど強い。ドットにホバーまたはタップで詳細）。",
-    cols: ["ティッカー", "セクター", "現在順位", "最新スコア", "エントリー出来高", "連続日数", "ランクイン日数", "最高順位", "初登場", "直近登場"],
-    eqLabels: ["薄商い流入", "中立", "出来高急増", "急増＋クリーン"],
-    eqTip: (v, d, day) => [`出来高比 ${v}×（当日 / 20日平均）`, `分配日 ${d}（直近25日・出来高増の下落日）`, `${day} エントリー`],
+    rosterNote: "ランクインしたことのある銘柄を 1 行ずつ表示。ヘッダーをクリックでソート、もう一度クリックで逆順。チャートのホバー数値はすべてこの表で確認できます。\nエントリー品質 = 直近ランクイン期間の初日の分配日数（青が濃いほどクリーンなエントリー —— バックテストで検証されたエッジ。ドットにホバーまたはタップで出来高特性）。",
+    cols: ["ティッカー", "セクター", "現在順位", "最新スコア", "エントリー品質", "連続日数", "ランクイン日数", "最高順位", "初登場", "直近登場"],
+    eqLabels: ["分配日過多（4 日以上）", "中間（2-3 日）", "クリーン（1 日以下）"],
+    eqTip: (v, d, day) => [`分配日 ${d}（直近25日・出来高増の下落日）`, ...(v == null ? [] : [`出来高比 ${v}×（当日 / 20日平均）`]), `${day} エントリー`],
     eqFrozen: "評価は当日で確定",
     eqFreshNote: "塗りつぶし = 今回新規ランクイン、リング = 過去のエントリー —— 評価はエントリー日で確定。",
     score: "スコア", ret: "リターン", dd: "ドローダウン",
@@ -609,10 +616,10 @@ const I18N = {
     names: c => `${c}개 종목`,
     others: "기타",
     rosterTitle: "진입 종목 목록",
-    rosterNote: "순위에 오른 적 있는 종목을 한 행씩 표시. 헤더를 클릭해 정렬, 다시 클릭하면 역순. 차트의 모든 호버 값을 이 표에서 확인할 수 있습니다.\n진입 거래량 = 최근 순위권 구간 첫날의 거래량 특성 (파란색이 진할수록 강한 진입; 점에 호버하거나 탭하면 상세).",
-    cols: ["티커", "섹터", "현재 순위", "최신 점수", "진입 거래량", "연속 일수", "진입 일수", "최고 순위", "첫 진입", "최근 진입"],
-    eqLabels: ["거래량 미달 진입", "중립", "거래량 급증", "급증+클린"],
-    eqTip: (v, d, day) => [`거래량비 ${v}× (당일 / 20일 평균)`, `분배일 ${d} (최근 25일 · 거래량 증가 하락일)`, `${day} 진입`],
+    rosterNote: "순위에 오른 적 있는 종목을 한 행씩 표시. 헤더를 클릭해 정렬, 다시 클릭하면 역순. 차트의 모든 호버 값을 이 표에서 확인할 수 있습니다.\n진입 품질 = 최근 순위권 구간 첫날의 분배일 수 (파란색이 진할수록 깨끗한 진입 — 백테스트로 검증된 엣지; 점에 호버하거나 탭하면 거래량 특성).",
+    cols: ["티커", "섹터", "현재 순위", "최신 점수", "진입 품질", "연속 일수", "진입 일수", "최고 순위", "첫 진입", "최근 진입"],
+    eqLabels: ["분배일 과다 (4일 이상)", "중간 (2-3일)", "클린 (1일 이하)"],
+    eqTip: (v, d, day) => [`분배일 ${d} (최근 25일 · 거래량 증가 하락일)`, ...(v == null ? [] : [`거래량비 ${v}× (당일 / 20일 평균)`]), `${day} 진입`],
     eqFrozen: "등급은 당일 확정",
     eqFreshNote: "채움 = 이번 런 신규 진입; 링 = 과거 진입 — 등급은 진입일에 확정.",
     score: "점수", ret: "수익률", dd: "낙폭",
@@ -1136,7 +1143,7 @@ function renderHeat(minApps) {
   // Entry-quality legend under the table — same pattern as the heatmap's,
   // strongest tier first to match the ramp's reading direction.
   const leg = document.getElementById("roster-legend");
-  [3, 2, 1, 0].forEach(q => {
+  [2, 1, 0].forEach(q => {
     const k = div("key", leg);
     const d = document.createElement("span");
     d.className = "eqdot eq" + q;

@@ -129,16 +129,23 @@ def test_entry_quality_thresholds_match_render_script():
     assert rh.ENTRY_VOL_SURGE_MIN == scan.ENTRY_VOL_SURGE_MIN
     assert rh.ENTRY_VOL_QUIET_MAX == scan.ENTRY_VOL_QUIET_MAX
     assert rh.ENTRY_CLEAN_DIST_MAX == scan.ENTRY_CLEAN_DIST_MAX
+    assert rh.ENTRY_LOADED_DIST_MIN == scan.ENTRY_LOADED_DIST_MIN
 
 
 def test_entry_quality_tiers():
-    assert scan.entry_quality(1.5, 1) == ("🟢", "surge+clean")
-    assert scan.entry_quality(1.5, 2) == ("🔵", "surge")
-    assert scan.entry_quality(2.4, 0) == ("🟢", "surge+clean")
-    assert scan.entry_quality(0.79, 0) == ("🟠", "quiet drift-in")
-    assert scan.entry_quality(0.8, 5) == ("⚪", "neutral")
-    assert scan.entry_quality(1.49, 0) == ("⚪", "neutral")
-    assert scan.entry_quality(None, 3) is None
+    # Primary axis is dist_days (the validated edge); volume is a suffix.
+    assert scan.entry_quality(1.5, 1) == ("🟢", "clean+surge")
+    assert scan.entry_quality(1.0, 0) == ("🟢", "clean")
+    assert scan.entry_quality(0.79, 1) == ("🟢", "clean+quiet")
+    assert scan.entry_quality(1.5, 2) == ("⚪", "mixed+surge")
+    assert scan.entry_quality(1.0, 3) == ("⚪", "mixed")
+    assert scan.entry_quality(0.5, 2) == ("⚪", "mixed+quiet")
+    assert scan.entry_quality(2.4, 4) == ("🟠", "loaded+surge")
+    assert scan.entry_quality(0.8, 5) == ("🟠", "loaded")
+    assert scan.entry_quality(0.79, 7) == ("🟠", "loaded+quiet")
+    # dist available without volume still tiers; missing dist doesn't.
+    assert scan.entry_quality(None, 1) == ("🟢", "clean")
+    assert scan.entry_quality(None, 3) == ("⚪", "mixed")
     assert scan.entry_quality(1.2, None) is None
 
 
