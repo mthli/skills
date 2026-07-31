@@ -307,6 +307,7 @@ h1 { font-size: 21px; margin: 0 0 2px; }
 .kpi .val { font-size: 22px; font-weight: 600; margin-top: 2px; }
 .kpi .sub2 { color: var(--muted); font-size: 12px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .scroll { overflow-x: auto; }
+.vclip { max-height: 540px; overflow-y: auto; }
 svg { display: block; }
 svg text { font: 11px system-ui, -apple-system, "Segoe UI", sans-serif; fill: var(--muted); }
 svg text.tick { font-variant-numeric: tabular-nums; }
@@ -347,7 +348,8 @@ select {
 #tip .eqdot { margin-right: 6px; }
 table { border-collapse: collapse; width: 100%; font-size: 13px; }
 th, td { text-align: right; padding: 6px 10px; border-bottom: 1px solid var(--grid); white-space: nowrap; }
-th { color: var(--muted); font-weight: 500; font-size: 12px; cursor: pointer; user-select: none; }
+th { color: var(--muted); font-weight: 500; font-size: 12px; cursor: pointer; user-select: none;
+     position: sticky; top: 0; background: var(--surface); z-index: 1; }
 th:hover { color: var(--ink-2); }
 th.on { color: var(--ink); }
 th:first-child, td:first-child, th:nth-child(2), td:nth-child(2) { text-align: left; }
@@ -413,7 +415,7 @@ svg a:hover text { text-decoration: underline; }
   <div class="card">
     <h2 id="roster-title">Roster</h2>
     <p class="note" id="roster-note"></p>
-    <div class="scroll"><table id="tbl"></table></div>
+    <div class="scroll vclip"><table id="tbl"></table></div>
     <div class="legend" id="roster-legend"></div>
   </div>
 
