@@ -135,6 +135,8 @@ For the **Risk/reward** row, anchor the R-multiple to a *defensible upside* (the
 
 Follow the table with a 2–3 sentence-per-name plain-language verdict, then a short **"what the funnel did"** recap that makes the value explicit: e.g. how the deep-dive *changed* the picture vs the raw scan signals (a name that looked great on signal agreement but turned out to have capped reward or a deteriorating fundamental backdrop). That recap is often the most useful part: it shows why "appears in N scans" ≠ "buy", now backtest-quantified, since overlap count alone ranked outcomes backwards.
 
+Write the verdicts (and the regime read) in the conversation's language, for a reader with **no finance background**. Translate every term into everyday language the moment you use it: "pivot $253.18" means "the trigger price where a 32-week sideways range resolves; no buy until price clears it"; "stop -3.7%" means "the pre-committed bail price, the most this trade is allowed to lose"; "~0.9R" means "risking $1 to make $0.90, so the trade leans on hit rate, not payoff"; "LTL trucking" gets one plain clause on what the business does. End each verdict by stating outright what to do: enter where, bail where, at what size, or what to wait for.
+
 Close with concrete next-step offers: swap a finalist for a runner-up and re-dive; persist the theses (`/commit-invest` if available); or go deeper on one name (full `/deep-research`).
 
 ## Step 6: write the run ledger (non-optional)
