@@ -22,8 +22,11 @@ watchlist — momentum's leaderboard plus mean-reversion's fresh score≥40
 listings. (The watchlist replaced cross-scan's consensus overlaps when that
 skill was retired 2026-07 on its overlap backtest.) It then
 layers the overnight tape + catalysts + your positions on top. The output is a
-9-section briefing, archived daily, with a built-in expected-vs-actual feedback
-loop so the regime call gets calibrated instead of evaporating.
+dashboard-first briefing in plain Chinese (glyph 仪表盘 → 人话解读 → if/then
+playbook → capped appendix; 2026-08-01 redesign — the reader stopped reading
+the old 300-line English long-form), archived daily, with a built-in
+expected-vs-actual feedback loop so the regime call gets calibrated instead of
+evaporating.
 
 `<SKILL_DIR>` below is the directory containing this file.
 
@@ -58,7 +61,9 @@ uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' \
 
 Compare what that briefing **called** (regime direction, which sectors, whether
 the index key levels held/broke, the focus names) against what the tape
-**actually did**. Append a `## Reconciliation` section to that archive file with:
+**actually did**. Append a `## Reconciliation` section to that archive file
+(keep that literal English header — this step greps for it; write the body in
+the same plain Chinese as the briefing) with:
 expected vs actual in 3–5 lines, then **one honest calibration line**
 — what the call got right, what it missed, and *why* (e.g. "over-weighted a VIX
 spike that futures never confirmed"). Also append a one-row summary to
@@ -162,11 +167,13 @@ with packet facts — don't block on it.
 
 ### 5. Synthesize the briefing
 
-Read **`references/briefing-template.md`** and follow it. It holds the 9-section
-structure, the game-plan framing (section 9 is the one that can do harm if
-written lazily — conditional/event-gated, tied to positions, never a directional
-call), and the output honesty rules (don't pad, check the premarket `as_of`
-date, state what was missing, times in ET).
+Read **`references/briefing-template.md`** and follow it. It holds the
+four-layer structure (① glyph dashboard → ② 人话解读 with an explicit 要不要动
+→ ③ if/then playbook → ④ capped appendix), the language & length contract
+(简体中文 for a no-finance-background reader, terms translated in place, hard
+line caps), the playbook framing (③ is the section that can do harm if written
+lazily — conditional/event-gated, tied to positions, never a directional call),
+the standing doctrine promoted from calibration, and the output honesty rules.
 
 Then read **`calibration.md`** (at least the last ~10 rows) and carry its
 standing rules into today's synthesis — the lessons column is accumulated

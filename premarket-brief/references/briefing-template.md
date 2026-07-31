@@ -1,196 +1,171 @@
 # Briefing template & output rules
 
 The output spec for premarket-brief's step 5 (synthesize). SKILL.md is the
-process; this is how the finished brief should look and read. Follow the
-structure, then apply the game-plan framing and honesty rules below.
+process; this is how the finished brief should look and read.
+
+2026-08-01 redesign: the old 9-section English long-form averaged ~300 dense
+lines and the reader stopped reading it. The brief now leads with a glyph
+dashboard and a plain-Chinese interpretation; everything below them is capped.
+A briefing nobody reads is worth exactly as much as one nobody grades.
+
+## Language & length contract
+
+- **Write the briefing in 简体中文** for a reader with **no finance
+  background**. Tickers, index names, and data-source names stay in their
+  original form. Times in ET with Beijing time alongside (header + event rows).
+- **Translate every term of art in place, the moment it first appears**:
+  "VIX 17.3(市场紧张指数,20 以下算平静)"、"contango(近期合约比远期便宜,
+  说明市场不觉得眼下有事)"、"breadth(还有多少只股票在涨)"、"防御轮动
+  (钱躲进水电、超市、制药这类避险股)"、"鹰派(主张加息压通胀)"。A term
+  the reader must look up is a term that didn't get communicated.
+- **Hard length caps: quiet day ≤ 60 lines total, heavy day ≤ 120.** The caps
+  bind — cutting detail to fit is correct, padding to reach them is not. Depth
+  lives in the packet JSON and the caches; the brief is the readable layer.
+- **Every block leads with its conclusion in plain language.** Numbers support
+  the sentence; they don't replace it.
+- **Glyphs over prose for state**: 🟢/🟡/🔴 for the call and regime,
+  ↑↗→↘↓ for direction, ⭐ for backtest-validated-pocket names, ⚠️ for a
+  suspect/unverified number. Same conventions as the sister scans.
 
 ## Template
 
-Write the briefing in **English**. Use this structure — evidence first, the call
-up top, the game plan last. The ordering is deliberate: leading with the one-line
-call forces a committed read, and burying suggestions under the evidence guards
-against headline-driven hand-waving.
+Four layers, in order — dashboard first, plain-language read second, the
+gradeable playbook third, capped reference detail last. Layers ① + ② must
+stand alone: a reader who stops after them has the day.
 
 ```markdown
-# Premarket Brief — <YYYY-MM-DD ET> (as of <HH:MM ET>)
+# 盘前简报 — <YYYY-MM-DD>(美东)· 生成 <HH:MM> ET / 北京 <HH:MM>
 
-## 1. The call
+## ① 今日一眼
 
-<Risk-on / Risk-off / Wait-and-see + confidence (high/med/low)>. One sentence
-fusing the regime backdrop with today's event overlay. e.g. "Structure still
-constructive but the cache is stale; overnight Asia rout + oil spike, wait for
-the 8:30 CPI, and SPY 737 is the line that matters."
+**<🟢 可参与 / 🟡 先看再动 / 🔴 别动> · 信心<高/中/低>** — <一句人话说清今天的性格>
 
-## 2. Overnight tape
+| 信号 | 读数 | 人话 |
+|---|---|---|
+| 隔夜方向 | QQQ +0.85% ↑ · SPY +0.19% ↗ | 科技股明显高开,大盘微高开 |
+| 紧张指数 VIX | 17.3 → · 结构平静 | 市场不慌(20 以下算平静) |
+| 情绪温度 | 恐惧 39/100(昨 39 →) | 大家还在怕,没人追高 |
+| 大环境 | 🟢 RISK-ON(2 日确认) | 结构健康,允许参与 |
+| 今天的事 | 08:30 ECI · 10:00 通胀预期(北京 20:30 / 22:00) | 数据日:10 点前别急着动 |
+| 今日考题 | QQQ 收盘站上 684.23? | 站上 = 修复确认,可以加仓 |
 
-A compact table: futures (ES/NQ/YM/RTY gap %), VIX (level + live term structure —
-detailed in §4; flag a lone spike on thin overnight volume),
-Asia/Europe (Nikkei/HSI/Shanghai/DAX/FTSE), yields (13wk/5y/10y/30y level +
-change — note Yahoo exposes no clean 2y, so read the short end off 13wk+5y), DXY,
-oil/gold/copper, BTC. Then 2–3 lines reading the tape: who's leading, risk-on vs
-risk-off tilt, any divergence.
+## ② 人话解读
 
-## 3. Today's catalysts ⭐
+<3–8 句连贯中文:昨晚发生了什么 → 今天是什么日子 → 最大的风险在哪。
+术语就地翻译;存疑数字带 ⚠️ 和一句为什么。>
 
-The unique core. From the calendar + earnings:
-- Econ data: time (ET) — event — forecast vs previous — why it matters (rate
-  path? growth?). If none: say "no major US data today (quiet day)" — that itself
-  sets a calmer character.
-- Earnings: pre/after-market megacaps + any of YOUR names or watchlist names
-  (call those out).
-- Overnight headlines (`headlines`): the macro / geopolitical / central-bank /
-  M&A catalysts the calendar can't schedule — what broke while you slept. Lead
-  with anything genuinely market-moving (war, central-bank surprise, big M&A);
-  each is timestamped ET so you can gauge freshness. Skip the section if it's all
-  noise rather than padding with filler headlines.
-- Fed speakers / special days (OpEx, quarter-end, half-day) from special_days.
+**要不要动:**<明确的一句,例如"可以小仓位买 ⭐ 口袋里的 ODFL/VTR;
+别追已经 +18% 的芯片股;10 点数据落地前什么都别做"。
+没有动作时明说:"今天不用动"。>
 
-## 4. Sentiment
+## ③ 今日剧本(如果…就…)
 
-F&G score + rating + trend (vs prior day / week / month) — is fear/greed
-stretched or turning? + VIX term structure, read LIVE off `overnight_tape.vix`:
-`vix_3m_ratio` = VIX/VIX3M, **> 1 = backwardation = acute near-term stress,
-< 1 = contango = calm** (`shape` says which). Cross-check regime.vix_term (same
-convention, but end-of-day — on a fast overnight move the live ratio wins). The
-classic trap: a lone VIX9D spike on thin overnight volume while VIX/VIX3M is
-still in contango is a stale print, not real stress — let the *ratio*, not the
-level, lead. Then the gap's tone. Quantified, not "sentiment is cautious".
+- **如果** <可观察的触发,如"QQQ 收在 684.23 上方"> → **就** <动作>。
+  **作废条件:**<什么情况这条不算数>。
+<≤ 5 条,每条 ≤ 2 行;挂在持仓或观察名单上,不做裸方向判断。>
 
-## 5. Sectors
+## ④ 备查细节
 
-Premarket sector ETF moves (sectors_premarket) + regime-scan's rotation read
-(def_off_pct, rsp_spy). Leaders/laggards, rotation direction, which sector has
-an event driver today.
+### 隔夜盘面
+<小表,≤ 7 行:期货 / 亚洲 / 欧洲 / 利率 / 美元与油金 / BTC 各一行,
+每行结尾一小句人话。>
 
-## 6. Index levels
+### 今日催化剂 ⭐
+<econ 数据 + 财报 + 隔夜新闻合计 ≤ 8 条,每条一行,时间 ET(+北京)。
+自家持仓或观察名单名字点名。全是噪音就整段省略,不硬凑。>
 
-SPY/QQQ/IWM: prior close, premarket gap (index_premarket), regime's 50/200DMA
-context (spy_vs_200_pct). Cross-check the gap against the ES/NQ/RTY futures in
-section 2 — by default futures are the cleaner overnight read (index-ETF
-premarket prints are thin), EXCEPT on AMC-earnings mornings: a big after-hours
-print gets folded into the 17:00 ET futures settle, so the futures pct
-understates or even inverts vs the true gap (07-30: NQ +0.99% vs QQQ +1.86%
-after MSFT/META). On those mornings the ETF premarket vs official prior close
-is the honest gap size; futures keep only the risk-tone vote. The levels that
-matter today — gap fill, resistance above / support below.
+### 板块与指数位
+<领涨 / 领跌各一行;SPY/QQQ/IWM 关键位小表:前收 · 盘前 · 缺口 · 上方压力 /
+下方支撑。>
 
-## 7. Focus names
+### 焦点名字
+<≤ 6 条,每条一行:名字 — 今天为什么值得看。⭐ 标记回测验证口袋里的名字;
+分析师评级只留真升降级和堆墙信号(见 doctrine)。>
 
-the sister-scan watchlist (`names.watchlist` — momentum leaderboard + fresh
-high-score mean-reversion listings) ∩ premarket movers ∩ your positions.
-The handful worth attention today and *why* (leader gapping on news? fresh
-oversold name reporting? in your book?). Keep it short — this is a focus list,
-not a re-scan.
-
-**Market-wide gappers** (`premarket_gappers`): the biggest premarket movers
-*outside* your book/watchlist — a name gapping on an FDA nod, M&A, or guidance
-cut you'd otherwise be blind to. Surface 2–3 only if they're real (respect the
-volume floor; thin pre-8:00 ET prints are noise — see honesty rules) and say why
-each moved if it's knowable. Don't relist names already covered above.
-
-**Analyst actions** (`rating_changes`): fresh upgrades/downgrades + price-target
-moves on your names or the watchlist — these gap singles pre-open. Call the
-direction and the PT delta (e.g. "ROKU PT 150→170, MS reit Overweight"); weight
-genuine up/down-grades over a routine "maintains + PT nudge". A **raise-wall
-into a gap** — multiple same-morning PT raises stacked on an already-large
-premarket gap — is a no-chase flag, not confirmation: three exhibits (TSM
-07-17, AMD 07-27, FTNT 07-30) all round-tripped the morning after
-vindication.
-
-## 8. Watch-outs
-
-The traps: event timing (don't get caught before the 8:30 print), thin premarket
-liquidity in single names, OpEx pinning, stale-cache caveats, any data gaps.
-
-## 9. Game plan
-
-See the framing below. Conditional, event-gated, tied to positions/watchlist,
-with explicit invalidation. NOT a directional call.
+### 坑(watch-outs)
+<≤ 5 条:事件时点陷阱、盘前流动性、存疑数字、缓存过期、数据盲区。>
 
 ---
 
-*Sources: <one-line provenance + freshness footer>. e.g. "yfinance
-(tape/VIX/movers/ratings), ForexFactory (calendar — empty), Nasdaq (earnings),
-CNN F&G, TradingView (gappers), CNBC RSS (headlines), regime + momentum + MR
-caches (Fri 6/05, 3d stale). `errors`: none."*
+*Sources: <one-line provenance + freshness footer>*
 ```
 
-The closing `*Sources: …*` footer is **required**: a single italic line after a
-`---` rule (keep the blank line between the rule and the footer). It names which
-sources actually fed this run, flags any that came back empty/unavailable, dates
-the regime/momentum/MR caches with their staleness, and ends with the `errors`
-count plus any `data_quality` flags. This is the at-a-glance provenance +
-freshness stamp — it complements the per-section honesty notes (§3/§7/§8), it
-doesn't replace them.
+The closing `*Sources: …*` footer is **required** and keeps its old convention
+(may stay in English): a single italic line after a `---` rule naming which
+sources fed this run, which came back empty/unavailable, the regime/momentum/MR
+cache dates with staleness, and the `errors` count plus any `data_quality`
+flags. It complements the inline ⚠️ caveats, it doesn't replace them.
 
----
+Reconciliation sections appended by step 1 keep the **literal English header
+`## Reconciliation`** (step 1 greps for it) but the body is written in the same
+plain Chinese as the briefing. `calibration.md` rows keep their existing terse
+convention — that file is the model-facing grading log, not the reader's.
 
-## Writing the game plan (section 9) — read this carefully
+## Writing ③ 今日剧本 — read this carefully
 
 This is the section that can do harm if written lazily, so frame it honestly:
 
 - **Conditional and event-gated, not directional.** On a CPI/FOMC/NFP day the
-  tape before the print is a coin flip — the useful instruction is *"size down /
-  wait for the print; if SPY holds X with yields down afterward, momentum names
-  get a green light; if it breaks X, defensives lead."* Write "if → then → what
-  invalidates it", never a bare "buy NVDA". Explain the *why* so the user can
-  adapt when reality diverges from the scenarios.
-- **Anchored to the user, not the market in the abstract.** Generic "the market
-  may be volatile" advice is noise. Tie every suggestion to either a **position**
-  (event risk on a name they hold, a stop exposed to the gap, an extended winner
-  into earnings) or a **watchlist name** from the overlap list. When
-  `positions.md` is empty, this section is watchlist- and regime-level only —
-  say so plainly rather than inventing position advice.
-- **P&L-aware when cost basis is available.** With `avg_cost`, you can be
-  specific and careful: "+35% into tonight's print — a partial trim caps event
-  risk vs. round-tripping the gain; invalidation: ...". Without it, stay at
-  event-risk flagging. Never fabricate a basis.
-- **Respect the regime.** If the structural read (even if cautiously stale) plus
-  the overnight tape say risk-off with stacking divergences, the plan is "what's
-  holding up, sized small, defense" — not chasing. Thread the regime into sizing.
-- **Grade catalyst claims by % of gap kept at the close, per-name.** >70% kept
-  = catalyst-owned; <30% = traded like sympathy, whatever bucket the name was
-  put in premarket (07-20 SIMO inverted inside the catalyst bucket; 07-30 FTNT
-  kept 10% of its own-print gap while the demand corner kept >100%). Close-graded
-  tests also need an explicit middle branch — a finish within ~0.2% of the line
-  or green-but-below-gap is "unconfirmed, next session decides," not a verdict.
+  tape before the print is a coin flip — the useful instruction is "数据落地前
+  减仓/别动;落地后如果 SPY 守住 X 且利率回落,动量名单开绿灯;跌破 X 则
+  避险股接管". Write 如果 → 就 → 作废条件, never a bare "买 NVDA". Explain
+  the *why* so the reader can adapt when reality diverges from the scenarios.
+- **Anchored to the user, not the market in the abstract.** Tie every line to
+  a **position** (event risk on a held name, a stop exposed to the gap) or a
+  **watchlist name**. When `positions.md` is empty, the playbook is watchlist-
+  and regime-level only — say so plainly rather than inventing position advice.
+- **P&L-aware when cost basis is available.** With `avg_cost` you can be
+  specific: "+35% 进今晚财报 — 部分止盈锁住事件风险,免得利润坐一轮过山车;
+  作废条件:…". Without it, stay at event-risk flagging. Never fabricate a basis.
+- **Respect the regime.** If the structural read plus the overnight tape say
+  risk-off with stacking divergences, the plan is "what's holding up, sized
+  small, defense" — not chasing. Thread the regime into sizing.
+- The honest test: would the playbook still read as sound *after* the day plays
+  out either direction? If it only looks smart in one outcome, it's a
+  prediction dressed as a plan — rewrite it as scenarios.
 
-The honest test for this section: would it still read as sound *after* the day
-plays out either direction? If it only looks smart in one outcome, it's a
-prediction dressed as a plan — rewrite it as scenarios.
+## Standing doctrine (promoted from calibration — keep dates when citing)
 
----
+- **AMC-earnings settle artifact (07-30).** Futures fold a big after-hours
+  print into the 17:00 ET settle, so next-morning ES/NQ % can understate or
+  invert the true gap (07-30: NQ +0.99% vs QQQ +1.86% after MSFT/META). On
+  those mornings grade gap *size* off index ETFs vs official closes; futures
+  keep only the risk-tone vote. Default otherwise: futures are the cleaner
+  overnight read (ETF premarket prints are thin).
+- **Lone-VIX-spike trap.** A big VIX % move with futures ±0.3% and Europe flat
+  is a thin/stale print — flag it ⚠️, don't headline it. Let the VIX/VIX3M
+  *ratio* lead over the level: > 1(倒挂)= 急性紧张, < 1(contango)= 平静;
+  on a fast overnight move the live ratio beats the end-of-day cache.
+- **Raise-wall no-chase (TSM 07-17, AMD 07-27, FTNT 07-30 — all
+  round-tripped).** Multiple same-morning analyst price-target raises stacked
+  on an already-large premarket gap is a crowding gauge, not confirmation:
+  stalk the pullback, don't chase. Weight genuine upgrades/downgrades over a
+  routine "maintains + PT nudge".
+- **Grade catalyst claims by % of gap kept at the close, per name.** > 70%
+  kept = the catalyst is real for that name; < 30% = it traded like sympathy
+  (07-20 SIMO inverted inside the catalyst bucket; 07-30 FTNT kept 10% of its
+  own print's gap). Close-graded tests need an explicit middle branch — a
+  finish within ~0.2% of the line is "未确认,明天再判", not a verdict.
+- **Premarket single-stock prints are thin.** Weight the futures gap, Europe,
+  and sector ETFs over individual moves; respect the gappers' volume floor —
+  pre-8:00 ET thin prints are noise.
 
 ## Output honesty rules
 
 - **Run window first (`session`).** If `session.valid` is false you should have
-  already **stopped at SKILL.md step 3** — an out-of-window run does not build or
-  archive a briefing. The only time you reach this template out-of-window is on an
-  **explicit user-requested** out-of-window read; in that case lead with
-  `session.warning` and treat **every** premarket block as **void** (single names,
-  sectors, indices, market-wide gappers — each carries the stamped warning), not
-  as a gap read. `intraday` → `premkt` is a live regular-hours price;
-  `after-hours` → an AH price; `pre-dawn` → still the prior session's close.
-  Futures + the overnight tape stay valid; fall back to them. Never present a 2pm
-  tick as a pre-open gap — and even then, don't archive it as the day's briefing.
-- **Pre-market single-stock prints are thin and noisy.** Weight the futures gap,
-  Europe, and sector ETFs over individual premarket moves; a single name's
-  premarket % can be one odd-lot trade. The packet's `premarket_movers.note`
-  tells you when there's no premarket data yet (e.g. run before 4:00 ET).
-- **Check the premarket `as_of` date.** Each mover carries a timestamp. If you
-  run before ~4:00 ET (or on a Monday pre-dawn), the "last bar" is the *prior*
-  session's after-hours print, NOT live premarket — its date won't be today.
-  When that's the case, label those numbers as the prior close/after-hours read,
-  not as today's premarket gap, or you'll mistake yesterday's move for today's.
-- **Don't pad.** A quiet Monday with no US data, a benign tape, and a calm
-  regime should produce a *short* briefing that says "low-event day, range-bound
-  likely, no action needed" — that's a valid and useful output. Length should
-  track how much is actually happening.
+  stopped at SKILL.md step 3. The only time you reach this template
+  out-of-window is on an **explicit user-requested** read; then lead with
+  `session.warning`, treat **every** premarket block as void (fall back to
+  futures + overnight tape), and do not archive it as the day's briefing.
+- **Check the premarket `as_of` date.** A run before ~4:00 ET (or Monday
+  pre-dawn) sees the *prior* session's after-hours print, not live premarket —
+  label those numbers as such or you'll mistake yesterday's move for today's.
+- **Don't pad.** A quiet day should produce a *short* brief — dashboard + "今天
+  不用动" + a thin appendix is a valid, useful output. Length tracks how much
+  is actually happening, never the cap.
 - **State what was missing — and what disagreed.** Surface `errors`, stale
-  caches, and unavailable sources in the relevant section, plus every
-  `data_quality` flag (cross-source premarket % disagreements, prev-close
-  fallbacks): a flagged number that still gets quoted must carry its caveat
-  inline. A briefing that hides its blind spots is worse than one that names
-  them.
-- **Times are ET.** The calendar is ET-stamped; keep everything in ET and note
-  the "as of" time so the user knows how fresh the premarket read is.
+  caches, and every `data_quality` flag in the relevant block with an inline
+  ⚠️ + one plain-language reason ("这个数字两个数据源对不上,先别信"). A
+  briefing that hides its blind spots is worse than one that names them.
+- **Times are ET** (Beijing alongside where the reader acts on them), and the
+  header carries the "生成于" timestamp so freshness is visible.
