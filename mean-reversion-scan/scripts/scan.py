@@ -19,6 +19,15 @@ Usage:
   python scan.py --show-history               # win-rate stats, no new scan
   python scan.py --clear-history              # wipe history.csv (no prompt)
 """
+from yfinance import EquityQuery
+from pandas.tseries.holiday import (
+    AbstractHolidayCalendar, GoodFriday, Holiday, USLaborDay,
+    USMartinLutherKingJr, USMemorialDay, USPresidentsDay,
+    USThanksgivingDay, nearest_workday,
+)
+import yfinance as yf
+import pandas as pd
+import numpy as np
 import argparse
 import json
 import sys
@@ -29,15 +38,6 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 warnings.filterwarnings("ignore")
-import numpy as np
-import pandas as pd
-import yfinance as yf
-from pandas.tseries.holiday import (
-    AbstractHolidayCalendar, GoodFriday, Holiday, USLaborDay,
-    USMartinLutherKingJr, USMemorialDay, USPresidentsDay,
-    USThanksgivingDay, nearest_workday,
-)
-from yfinance import EquityQuery
 
 SKILL_DIR = Path(__file__).resolve().parent.parent
 STATE_DIR = SKILL_DIR / "state"
@@ -63,6 +63,27 @@ BREADTH_THIN_MAX = 30     # emitted signals < this → "thin"
 BREADTH_WASHOUT_MIN = 60  # emitted signals > this → "washout"
 
 
+# The funnel's validated MR pocket (2026-05→07 outcome backtest): score ≥ 40
+# on a 1st/2nd-day listing ran +1.83%/signal (~3× baseline); 3rd-day-plus
+# listings ran negative. Computed here so the ⭐️ section, the table prefix,
+# JSON, and conviction-funnel all read the same flag.
+VALIDATED_MIN_SCORE = 40.0
+VALIDATED_MAX_STREAK = 2
+
+# Recently-resolved section: wins/expiries aggregate to one line each; only
+# losses itemize (worst first), capped here. A washout week can push 300+
+# resolved picks through the 2× display window, and itemizing every +1.x%
+# bounce buried the losses — the half of the section that carries signal.
+LOST_ITEMIZE_MAX = 10
+
+
+def attach_validated_pocket(picks: list[dict]) -> None:
+    for p in picks:
+        p["validated_pocket"] = bool(
+            p.get("score", 0) >= VALIDATED_MIN_SCORE
+            and p.get("streak", 1) <= VALIDATED_MAX_STREAK)
+
+
 def classify_signal_breadth(n_signals: int) -> dict:
     """Tier today's emitted-signal count into the backtest's regime dial.
     `n_signals` is the post-vol-collapse passed-filter count — the same
@@ -76,6 +97,7 @@ def classify_signal_breadth(n_signals: int) -> dict:
     return {"n_signals": n_signals, "tier": tier,
             "thin_max": BREADTH_THIN_MAX,
             "washout_min": BREADTH_WASHOUT_MIN}
+
 
 # History schema. The two load-bearing additions vs sister skills are
 # `target_price` and `stop_price` — outcome resolution depends on having
@@ -104,7 +126,8 @@ class _NYSECalendar(AbstractHolidayCalendar):
         USMemorialDay,
         Holiday("Juneteenth", month=6, day=19, observance=nearest_workday,
                 start_date="2022-06-19"),
-        Holiday("Independence Day", month=7, day=4, observance=nearest_workday),
+        Holiday("Independence Day", month=7,
+                day=4, observance=nearest_workday),
         USLaborDay,
         USThanksgivingDay,
         Holiday("Christmas Day", month=12, day=25, observance=nearest_workday),
@@ -202,7 +225,8 @@ def load_universe(min_market_cap: float, min_volume: int, count: int | None,
         print(f"Universe cache has {len(cached)} tickers but {count} requested, "
               f"refreshing...", file=sys.stderr)
         return refresh_universe(min_market_cap, min_volume, count)
-    age_days = (datetime.now().timestamp() - UNIVERSE_FILE.stat().st_mtime) / 86400
+    age_days = (datetime.now().timestamp() -
+                UNIVERSE_FILE.stat().st_mtime) / 86400
     if age_days > UNIVERSE_TTL_DAYS:
         print(f"Universe cache stale ({age_days:.1f}d), refreshing...",
               file=sys.stderr)
@@ -219,7 +243,8 @@ def fetch_bars(tickers: list[str], history_months: int = DATA_HISTORY_MONTHS):
     trading days for the 200DMA gate, plus 60 for the frequency lookback,
     plus headroom for outcome resolution — ~13 months covers everything."""
     period = f"{history_months}mo"
-    print(f"Fetching {len(tickers)} tickers, period={period}...", file=sys.stderr)
+    print(
+        f"Fetching {len(tickers)} tickers, period={period}...", file=sys.stderr)
     return yf.download(
         tickers, period=period, interval="1d", auto_adjust=True,
         progress=False, threads=True, group_by="ticker",
@@ -345,8 +370,10 @@ def compute_rsi_wilder(close: pd.Series, period: int) -> pd.Series:
     delta = close.diff()
     gain = delta.where(delta > 0, 0.0)
     loss = -delta.where(delta < 0, 0.0)
-    avg_gain = gain.ewm(alpha=1 / period, adjust=False, min_periods=period).mean()
-    avg_loss = loss.ewm(alpha=1 / period, adjust=False, min_periods=period).mean()
+    avg_gain = gain.ewm(alpha=1 / period, adjust=False,
+                        min_periods=period).mean()
+    avg_loss = loss.ewm(alpha=1 / period, adjust=False,
+                        min_periods=period).mean()
     # Avoid div-by-zero: when avg_loss == 0 the all-gain case is RSI=100.
     rs = avg_gain / avg_loss.replace(0.0, np.nan)
     rsi = 100 - (100 / (1 + rs))
@@ -385,7 +412,7 @@ def passes_trend_filter(close: pd.Series) -> tuple[bool, dict]:
 
 
 def count_past_triggers(close: pd.Series, threshold: float,
-                       lookback: int = FREQ_LOOKBACK_DAYS) -> int:
+                        lookback: int = FREQ_LOOKBACK_DAYS) -> int:
     """Count how many days in the last `lookback` trading days had RSI(2)
     cross from above-threshold to below-threshold (a 'fresh trigger' event,
     not just 'sat below threshold for 5 days in a row'). The crossing
@@ -465,7 +492,8 @@ def score_tickers(closes: dict[str, pd.Series],
         if not passes:
             continue
         rsi_series = compute_rsi_wilder(close, RSI_PERIOD)
-        rsi2 = float(rsi_series.iloc[-1]) if not pd.isna(rsi_series.iloc[-1]) else None
+        rsi2 = float(
+            rsi_series.iloc[-1]) if not pd.isna(rsi_series.iloc[-1]) else None
         if rsi2 is None:
             continue
         # Only include candidates with RSI < threshold (the trigger zone).
@@ -538,7 +566,8 @@ def compute_atrs_from_bars(bars: pd.DataFrame, tickers: list[str],
             close = bars[(t, "Close")].dropna()
             if min(len(high), len(low), len(close)) < period + 1:
                 continue
-            common = high.index.intersection(low.index).intersection(close.index)
+            common = high.index.intersection(
+                low.index).intersection(close.index)
             if len(common) < period + 1:
                 continue
             high, low, close = high.loc[common], low.loc[common], close.loc[common]
@@ -711,7 +740,8 @@ def refresh_sectors(tickers: list[str], existing: dict | None = None,
     ]
     if not to_fetch:
         return cache
-    print(f"Fetching sectors for {len(to_fetch)} ticker(s)...", file=sys.stderr)
+    print(
+        f"Fetching sectors for {len(to_fetch)} ticker(s)...", file=sys.stderr)
     fetched = failed = 0
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
         futures = [pool.submit(_fetch_sector_one, t) for t in to_fetch]
@@ -972,7 +1002,8 @@ def resolve_outcomes(history: pd.DataFrame, bars: pd.DataFrame,
         except Exception:
             continue
         # bars index is tz-naive; convert signal_date to a comparable form.
-        sig_ts = pd.Timestamp(signal_date).tz_convert(None) if signal_date.tz is not None else pd.Timestamp(signal_date)
+        sig_ts = pd.Timestamp(signal_date).tz_convert(
+            None) if signal_date.tz is not None else pd.Timestamp(signal_date)
         # Align datetime unit to the index's unit — pandas 2.x rejects
         # searchsorted with a mismatched-precision Timestamp ("Cannot
         # losslessly convert units"). Daily bars at midnight have no sub-second
@@ -991,7 +1022,8 @@ def resolve_outcomes(history: pd.DataFrame, bars: pd.DataFrame,
         if len(post_high) == 0:
             continue  # OPEN: no post-signal data yet
         target = float(row["target_price"])
-        stop = float(row["stop_price"]) if pd.notna(row["stop_price"]) else None
+        stop = float(row["stop_price"]) if pd.notna(
+            row["stop_price"]) else None
 
         # Walk forward day-by-day — first hit wins, except WON > LOST on same day.
         outcome = None
@@ -1021,7 +1053,8 @@ def resolve_outcomes(history: pd.DataFrame, bars: pd.DataFrame,
                 continue  # OPEN — skip from output
 
         entry = float(row["last_close"])
-        result_pct = ((resolve_price / entry - 1) * 100) if resolve_price else None
+        result_pct = ((resolve_price / entry - 1) *
+                      100) if resolve_price else None
         outcomes.append({
             "ticker": ticker,
             "signal_date": pd.Timestamp(signal_date).strftime("%Y-%m-%d"),
@@ -1123,7 +1156,8 @@ def run_single_ticker(args) -> dict:
 
     # Stage 2: short-term metrics (always computed — useful even on TT-fail).
     rsi_series = compute_rsi_wilder(close, RSI_PERIOD)
-    rsi2 = float(rsi_series.iloc[-1]) if not pd.isna(rsi_series.iloc[-1]) else None
+    rsi2 = float(rsi_series.iloc[-1]
+                 ) if not pd.isna(rsi_series.iloc[-1]) else None
     sma5 = float(close.rolling(SMA_TARGET_PERIOD).mean().iloc[-1])
     dist_5dma_pct = (last / sma5 - 1) * 100 if sma5 > 0 else None
     result["stages"]["short_term"] = {
@@ -1155,7 +1189,8 @@ def run_single_ticker(args) -> dict:
             if info is not None:
                 stop = last - args.atr_stop_mult * info["atr"]
                 target = sma5
-                rr = ((target - last) / (last - stop)) if (last - stop) > 0 else None
+                rr = ((target - last) / (last - stop)
+                      ) if (last - stop) > 0 else None
                 result["stages"]["risk"] = {
                     "atr_14d": round(info["atr"], 4),
                     "atr_pct": round(info["atr_pct"], 2),
@@ -1169,9 +1204,9 @@ def run_single_ticker(args) -> dict:
     # Stage 5: historical reliability — scan past 60 days for triggers and
     # resolve their outcomes. Pure-from-data, no history.csv required.
     historical = scan_ticker_historical_triggers(close, bars, ticker,
-                                                  args.rsi2_threshold,
-                                                  args.atr_stop_mult,
-                                                  args.target_window_days)
+                                                 args.rsi2_threshold,
+                                                 args.atr_stop_mult,
+                                                 args.target_window_days)
     if historical:
         result["stages"]["historical"] = historical
 
@@ -1272,7 +1307,25 @@ def scan_ticker_historical_triggers(close: pd.Series, bars: pd.DataFrame,
 # Render: markdown table + sections.
 # -----------------------------------------------------------------------
 
-def render_table(picks: list[dict], top_n: int) -> str:
+def render_sig_strip(picks: list[dict], top_n: int) -> str | None:
+    """One-line cohort read: how the top-N splits across the four signal
+    tiers. Mostly 🟢/🔵 = fresh triggers; 🟡-heavy = still forming;
+    🔴 = the bounce already left."""
+    rows = picks[:top_n]
+    sigs = [p.get("signal") for p in rows if p.get("signal")]
+    if not sigs:
+        return None
+    counts = {s: sigs.count(s) for s in ("🟢", "🔵", "🟡", "🔴")}
+    strip = " ".join(f"{s}{n}" for s, n in counts.items())
+    return f"**Sig**: {strip}"
+
+
+def render_table(picks: list[dict], top_n: int, verbose: bool = False) -> str:
+    """Top-N table. The slim default keeps the decision columns: RSI(2),
+    Score, Sig, Streak, Stop, Target. The diagnostic columns (5DMA%,
+    50DMA%, 200DMA%, Freq60d) print only with verbose=True — they feed
+    the Score, and the Target column already encodes the 5DMA distance.
+    JSON carries every field either way."""
     rows = picks[:top_n]
     if not rows:
         return "(no picks passed the filter)"
@@ -1282,26 +1335,37 @@ def render_table(picks: list[dict], top_n: int) -> str:
     headers = ["#", "Ticker"]
     if show_sector:
         headers.append("Sector")
-    headers += ["RSI(2)", "5DMA%", "50DMA%", "200DMA%", "Score", "Sig",
-                "Streak", "Freq60d"]
+    headers.append("RSI(2)")
+    if verbose:
+        headers += ["5DMA%", "50DMA%", "200DMA%"]
+    headers += ["Score", "Sig", "Streak"]
+    if verbose:
+        headers.append("Freq60d")
     if show_stop:
         headers += ["Stop", "Target"]
     out = ["| " + " | ".join(headers) + " |",
            "|" + "|".join("---" for _ in headers) + "|"]
     for p in rows:
-        row = [str(p["rank"]), f"**{p['ticker']}**"]
+        ticker_disp = f"**{p['ticker']}**"
+        if p.get("validated_pocket"):
+            ticker_disp = "⭐️ " + ticker_disp
+        row = [str(p["rank"]), ticker_disp]
         if show_sector:
             row.append(abbreviate_sector(p.get("sector", "")))
+        row.append(f"{p['rsi2']:.1f}")
+        if verbose:
+            row += [
+                f"{p['dist_5dma_pct']:+.1f}",
+                f"{p['dist_50dma_pct']:+.1f}",
+                f"{p['dist_200dma_pct']:+.1f}",
+            ]
         row += [
-            f"{p['rsi2']:.1f}",
-            f"{p['dist_5dma_pct']:+.1f}",
-            f"{p['dist_50dma_pct']:+.1f}",
-            f"{p['dist_200dma_pct']:+.1f}",
             f"{p['score']:.0f}",
             p.get("signal", "—"),
             str(p.get("streak", 1)),
-            str(p.get("freq_60d", 0)),
         ]
+        if verbose:
+            row.append(str(p.get("freq_60d", 0)))
         if show_stop:
             sp = p.get("stop_price")
             tp = p.get("target_price")
@@ -1341,31 +1405,39 @@ def render_resolved_section(outcomes: list[dict],
     won = [o for o in recent if o["outcome"] == "WON"]
     lost = [o for o in recent if o["outcome"] == "LOST"]
     expired = [o for o in recent if o["outcome"] == "EXPIRED"]
-    out = [f"\n## Recently resolved (last {target_window_days * 2} days, {len(recent)} picks)"]
+    out = [
+        f"\n## Recently resolved (last {target_window_days * 2} days, {len(recent)} picks)"]
+    # Wins and expiries aggregate to one line each: itemizing hundreds of
+    # +1.x% bounces after a washout week buries the section's real signal
+    # (the losses). Per-outcome detail stays in JSON `outcomes`.
     if won:
-        out.append(f"**Won** ({len(won)}):")
-        for o in sorted(won, key=lambda x: x["days_to_resolve"]):
-            out.append(f"- **{o['ticker']}** — signaled {o['signal_date']} "
-                       f"@ ${o['entry_price']:.2f}, hit target "
-                       f"${o['target_price']:.2f} in "
-                       f"{o['days_to_resolve']} day(s) "
-                       f"({o['result_pct']:+.1f}%)")
+        avg_pct = sum(o["result_pct"] for o in won) / len(won)
+        avg_days = sum(o["days_to_resolve"] for o in won) / len(won)
+        best = sorted(won, key=lambda o: -o["result_pct"])[:3]
+        best_str = ", ".join(f"{o['ticker']} {o['result_pct']:+.1f}%"
+                             for o in best)
+        out.append(f"**Won** ({len(won)}): avg {avg_pct:+.1f}% in "
+                   f"{avg_days:.1f} day(s) · best {best_str}")
     if lost:
-        out.append(f"**Lost** ({len(lost)}):")
-        for o in sorted(lost, key=lambda x: x["days_to_resolve"]):
+        # Losses are the section's information: itemize them (worst first,
+        # capped) — each one is a stop-out worth a look.
+        out.append(f"**Lost** ({len(lost)}, worst first):")
+        worst = sorted(lost, key=lambda o: o["result_pct"])
+        for o in worst[:LOST_ITEMIZE_MAX]:
             stop = o.get("stop_price")
             stop_str = f"${stop:.2f}" if stop is not None else "stop"
-            out.append(f"- **{o['ticker']}** — signaled {o['signal_date']} "
+            out.append(f"- **{o['ticker']}**: signaled {o['signal_date']} "
                        f"@ ${o['entry_price']:.2f}, stopped at "
                        f"{stop_str} ({o['result_pct']:+.1f}%) "
                        f"in {o['days_to_resolve']} day(s)")
+        if len(lost) > LOST_ITEMIZE_MAX:
+            out.append(f"- … and {len(worst) - LOST_ITEMIZE_MAX} more "
+                       f"(mildest {worst[-1]['result_pct']:+.1f}%)")
     if expired:
-        out.append(f"**Expired** ({len(expired)}):")
-        for o in expired:
-            out.append(f"- **{o['ticker']}** — signaled {o['signal_date']}, "
-                       f"drifted {o['result_pct']:+.1f}% over "
-                       f"{o['days_to_resolve']} days, neither target nor "
-                       f"stop hit")
+        avg_pct = sum(o["result_pct"] for o in expired) / len(expired)
+        out.append(f"**Expired** ({len(expired)}): drifted "
+                   f"{avg_pct:+.1f}% on average; neither target nor stop "
+                   f"hit within the window")
     return out
 
 
@@ -1377,7 +1449,10 @@ def render_stuck_section(picks: list[dict], top_n: int,
     sticky = [p for p in picks[:top_n] if p.get("streak", 1) >= min_streak]
     if not sticky:
         return []
-    out = [f"\n## Stuck oversold (streak ≥ {min_streak} runs — REVIEW for structural break)"]
+    out = [f"\n## Stuck oversold (streak ≥ {min_streak} runs: REVIEW for structural break)",
+           "_The bounce hasn't materialized across multiple runs. Usual "
+           "causes: real breakdown, missed news catalyst, or sector-wide "
+           "pressure; a warning list, not a bargain bin._"]
     for p in sorted(sticky, key=lambda x: -x["streak"]):
         # Pull the RSI history for this ticker so we can show the trajectory.
         history_for_t = (history[history["ticker"] == p["ticker"]]
@@ -1385,11 +1460,9 @@ def render_stuck_section(picks: list[dict], top_n: int,
         rsi_traj = " → ".join(f"{float(r['rsi2']):.1f}"
                               for _, r in history_for_t.iterrows()
                               if pd.notna(r['rsi2']))
-        out.append(f"- **{p['ticker']}** — streak {p['streak']}, "
+        out.append(f"- **{p['ticker']}**: streak {p['streak']}, "
                    f"first seen {p.get('first_seen', '—')}, "
                    f"RSI(2) trajectory: {rsi_traj}")
-        out.append(f"  ⚠️ Bounce hasn't materialized in {p['streak']} session(s). "
-                   f"Possible: real breakdown, missed news catalyst, sector-wide pressure.")
     return out
 
 
@@ -1489,7 +1562,13 @@ def build_argparser() -> argparse.ArgumentParser:
     ap.add_argument("--no-save", action="store_true")
     ap.add_argument("--save-stale", action="store_true")
     ap.add_argument("--allow-same-day", action="store_true")
-    ap.add_argument("--format", choices=["markdown", "json"], default="markdown")
+    ap.add_argument(
+        "--format", choices=["markdown", "json"], default="markdown")
+    ap.add_argument("--verbose", action="store_true",
+                    help="Show the full diagnostic table (5DMA%%, 50DMA%%, "
+                         "200DMA%%, Freq60d). The default slim table keeps "
+                         "the decision columns; JSON always carries every "
+                         "field.")
     ap.add_argument("--regime-gate", choices=["off", "warn", "strict"],
                     default="warn")
     ap.add_argument("--atr-stop-mult", type=float, default=2.5)
@@ -1560,6 +1639,7 @@ def main():
     now = datetime.now(timezone.utc)
     run_id = make_run_id(now, allow_same_day=args.allow_same_day)
     picks = enrich_with_persistence(picks, history, run_id)
+    attach_validated_pocket(picks)
 
     if not args.no_sectors:
         top_tickers = [p["ticker"] for p in picks[:args.top_n]]
@@ -1606,7 +1686,8 @@ def main():
         return
 
     # Markdown render.
-    n_prior = len(history["run_id"].drop_duplicates()) if not history.empty else 0
+    n_prior = len(history["run_id"].drop_duplicates()
+                  ) if not history.empty else 0
     print(f"# Mean-reversion scan — {now.strftime('%Y-%m-%d %H:%M UTC')}")
     print(f"\n**Params**: rsi2_threshold={args.rsi2_threshold}, "
           f"target_window={args.target_window_days}d, "
@@ -1626,7 +1707,7 @@ def main():
     # doctrine to output: the emitted-signal count is itself a signal.
     if signal_breadth["tier"] == "thin":
         print(f"**Signal breadth**: {len(picks)} → **THIN** "
-              f"(<{BREADTH_THIN_MAX}) — ⚠️ isolated oversold: on days like "
+              f"(<{BREADTH_THIN_MAX}). ⚠️ Isolated oversold: on days like "
               f"this the backtest ran −1.39%/signal and Score ≥ 40 did not "
               f"rescue it. Treat today's list as research-only.")
     elif signal_breadth["tier"] == "washout":
@@ -1637,14 +1718,14 @@ def main():
         risk_off = regime is not None and not regime["risk_on"]
         if risk_off:
             print(f"**Signal breadth**: {len(picks)} → **WASHOUT** "
-                  f"(>{BREADTH_WASHOUT_MIN}) — ⚠️ broad capitulation in a "
+                  f"(>{BREADTH_WASHOUT_MIN}). ⚠️ Broad capitulation in a "
                   f"RISK-OFF tape: the +1.29%/signal washout edge was "
-                  f"measured inside RISK-ON only. This combination is the "
-                  f"canonical MR disaster setup (2008 H2) — the regime "
+                  f"measured inside RISK-ON only, and this combination is "
+                  f"the canonical MR disaster setup (2008 H2). The regime "
                   f"gate overrides the breadth dial.")
         else:
             print(f"**Signal breadth**: {len(picks)} → **WASHOUT** "
-                  f"(>{BREADTH_WASHOUT_MIN}) — market-wide panic, the "
+                  f"(>{BREADTH_WASHOUT_MIN}). Market-wide panic, the "
                   f"setup's best regime in-sample (RISK-ON tape): "
                   f"+1.29%/signal on days like this, +2.27% on Score ≥ 40.")
     else:
@@ -1685,12 +1766,16 @@ def main():
         sector_line = render_sector_breakdown(picks, args.top_n)
         if sector_line:
             print(sector_line)
+        sig_strip = render_sig_strip(picks, args.top_n)
+        if sig_strip is not None:
+            print(sig_strip)
 
     if excluded_vol_collapse:
-        print(f"\n## Excluded by vol-collapse filter ({len(excluded_vol_collapse)})")
+        print(
+            f"\n## Excluded by vol-collapse filter ({len(excluded_vol_collapse)})")
         ratio_pct_str = f"{args.vol_collapse_ratio * 100:g}%"
-        print(f"_2nd-half realized vol < {ratio_pct_str} of 1st-half — likely "
-              f"acquisition / lock-in, not tradable mean reversion._")
+        print(f"_2nd-half realized vol < {ratio_pct_str} of 1st-half: likely "
+              f"an acquisition or lock-in, not tradable mean reversion._")
         for p in sorted(excluded_vol_collapse, key=lambda x: x["vol_ratio"]):
             print(f"- **{p['ticker']}** (RSI(2)={p['rsi2']:.1f}, "
                   f"vol {p['vol_first_pct']:.1f}% → "
@@ -1700,14 +1785,37 @@ def main():
     if suppress_picks:
         return
 
+    # ⭐️ pocket before the table — the funnel's validated stratum, printed
+    # even when empty because an empty pocket is itself the signal that
+    # today's list is all unvalidated candidates.
+    if picks[: args.top_n]:
+        pocket = [p for p in picks[: args.top_n] if p.get("validated_pocket")]
+        print(f"\n## ⭐️ Validated pocket — Score ≥ "
+              f"{VALIDATED_MIN_SCORE:.0f} & listing day ≤ "
+              f"{VALIDATED_MAX_STREAK} ({len(pocket)})")
+        print("_The stratum the outcome backtest validated (+1.83%/signal, "
+              "~3× baseline, in-sample); 3rd-day-plus listings ran "
+              "negative._")
+        if pocket:
+            for p in pocket:
+                print(f"- **{p['ticker']}** (#{p['rank']}): "
+                      f"score {p['score']:.0f}, day {p.get('streak', 1)}, "
+                      f"RSI(2) {p['rsi2']:.1f}, {p.get('signal', '—')}")
+        else:
+            print("- (none today: no fresh high-score listings; treat the "
+                  "list below as unvalidated candidates)")
+
     print(f"\n## Top {min(args.top_n, len(picks))}\n")
-    print(render_table(picks, args.top_n))
+    print(render_table(picks, args.top_n, verbose=args.verbose))
+    if picks[: args.top_n] and not args.verbose:
+        print(f"\n_Diagnostic columns (5DMA%, 50DMA%, 200DMA%, Freq60d): "
+              f"--verbose_")
 
     # Recently-resolved + stuck-oversold sections.
     for line in render_resolved_section(outcomes, args.target_window_days):
         print(line)
     for line in render_stuck_section(picks, args.top_n,
-                                      args.persistent_min_streak, history):
+                                     args.persistent_min_streak, history):
         print(line)
 
 
@@ -1785,7 +1893,8 @@ def render_single_ticker_markdown(result: dict, args):
     risk = result["stages"].get("risk")
     if risk:
         print(f"\n## Stage 4: Risk levels (ATR-based, {args.atr_stop_mult}×)")
-        print(f"- 14-day ATR: ${risk['atr_14d']:.4f} ({risk['atr_pct']:.2f}% of price)")
+        print(
+            f"- 14-day ATR: ${risk['atr_14d']:.4f} ({risk['atr_pct']:.2f}% of price)")
         print(f"- **Stop**: ${risk['stop_price']:.2f} "
               f"({risk['stop_pct_from_spot']:+.1f}% from spot)")
         print(f"- **Target (5DMA)**: ${risk['target_price']:.2f} "

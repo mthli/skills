@@ -107,7 +107,7 @@ uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy>=1.24,<3' \
 
 ## Output shape
 
-A funnel-summary line (stderr), regime banner, sector breakdown, the **Sig** cohort strip (🚀/🔥/⏳/📊 counts across the top-N), an optional **Excluded by vol-collapse filter** section (printed between the Regime banner and the Top-N table when the filter rejects anything; see the `--vol-collapse-ratio` parameter), then an optional `🚀 Breakouts today` block, the **★ Validated pocket** section (BaseWks ≥ 20; always printed, even when empty, because an empty pocket is itself the signal that today's list is all unvalidated candidates), the main top-N table, and 2-4 discovery sections (dropouts with reasons, recent breakouts split by working/failed, new setups, maturing bases). The script skips empty sections. The Dropouts section gets a fifth reason category, **Vol-collapse filtered**, when the filter excludes a prior-run pick this run; it prints first in Dropouts (above broke_out/broke_down/deduped/faded) since it's the strongest "this is not a real signal" categorization. Sample below (illustrative; picks change daily, and the exact tickers, scores, and counts will differ on your run):
+A funnel-summary line (stderr), regime banner, sector breakdown, the **Sig** cohort strip (🚀/🔥/⏳/📊 counts across the top-N), an optional **Excluded by vol-collapse filter** section (printed between the Regime banner and the Top-N table when the filter rejects anything; see the `--vol-collapse-ratio` parameter), then an optional `🚀 Breakouts today` block, the **⭐️ Validated pocket** section (BaseWks ≥ 20; always printed, even when empty, because an empty pocket is itself the signal that today's list is all unvalidated candidates), the main top-N table, and 2-4 discovery sections (dropouts with reasons, recent breakouts split by working/failed, new setups, maturing bases). The script skips empty sections. The Dropouts section gets a fifth reason category, **Vol-collapse filtered**, when the filter excludes a prior-run pick this run; it prints first in Dropouts (above broke_out/broke_down/deduped/faded) since it's the strongest "this is not a real signal" categorization. Sample below (illustrative; picks change daily, and the exact tickers, scores, and counts will differ on your run):
 
 ```
 Funnel: ~1000 → ~280 (RS≥70) → ~200 (TT) → ~130 (valid base) → ~50 (score≥40) → ~48 (after dedup, -1)
@@ -120,7 +120,7 @@ Funnel: ~1000 → ~280 (RS≥70) → ~200 (TT) → ~130 (valid base) → ~50 (sc
 **Sectors**: Financial Services 9 · Energy 7 · Technology 5 · Basic Materials 4 · Communication Services 2 · Other 3
 **Sig**: 🚀0 🔥6 ⏳14 📊10
 
-## ★ Validated pocket — BaseWks ≥ 20 (1)
+## ⭐️ Validated pocket — BaseWks ≥ 20 (1)
 _The one stratum the outcome backtest validated (+4.9%/trade, 75% win vs −0.8% baseline, in-sample). Score does not rank outcomes; base length does._
 - **TD** (#4): base 21wks, width 16.7%, -1.5% to $108.60 pivot, 📊
 
@@ -131,7 +131,7 @@ _The one stratum the outcome backtest validated (+4.9%/trade, 75% win vs −0.8%
 | 1 | **NEM** | Materials | 6.0 | 64 | 11.0 | -2.6 | $120.90 | 🔥 | $108.48 (-10.3%) | 2 |
 | 2 | **HSBC** | Financ | 19.0 | 63 | 17.0 | -2.8 | $92.16 | 🔥 | $86.94 (-5.7%) | 2 |
 | 3 | **PBR-A** _(also PBR, score 52)_ | Energy | 7.0 | 58 | 10.4 | -6.3 | $19.90 | ⏳ | $18.69 (-6.1%) | 2 |
-| 4 | ★ 🔒 **TD** | Financ | 21.0 | 56 | 16.7 | -1.5 | $108.60 | 📊 | $104.68 (-3.6%) | 2 |
+| 4 | ⭐️ 🔒 **TD** | Financ | 21.0 | 56 | 16.7 | -1.5 | $108.60 | 📊 | $104.68 (-3.6%) | 2 |
 ...
 
 _Diagnostic columns (RS, Smooth%, BB%ile, Vol↓, RSslope%/wk, RankΔ, FirstSeen): --verbose_
@@ -170,7 +170,7 @@ Column meanings (columns marked *verbose* print only with `--verbose`; JSON alwa
 
 - **Score**: composite 0-100 Base Score. Components (max points): Tightness 25 (lower width%=better, scaled 5%→25pts down to 25%→0), BB squeeze 20 (lower BB%ile=better, scaled 0pctile→20pts down to 40pctile→0), Vol dry-up 15 (0.55→15pts, 1.10→0), RS slope 20 (+2.5%/wk→20pts, -0.5%/wk→0), Pivot proximity 15 (bell curve, ideal -2% from pivot), Smoothness 10 (90%→10pts, 50%→0), Three-weeks-tight 5 bonus. Realistic top picks land 75-95; a 50-point pick is a solid setup; 70+ is high-conviction. Use it as a *priority filter*, not a deterministic ranking; treat two names within 5 points as tied. ⚠️ In the 2026-05→07 outcome backtest the Score bands did **not** discriminate post-trigger outcomes at all (see **Backtested outcomes** #3); BaseWks was the far stronger ranker.
 - **RS** (*verbose*): O'Neil-style universe-relative RS Rating (1-99). Weighted average of trailing 3/6/9/12-month returns, percentile-ranked across the universe. ≥ 70 is the Minervini gate; ≥ 80 is the top quintile.
-- **BaseWks**: length of the current consolidation in trading weeks. **The backtest-validated ranker**: ≥ 20 weeks is the ★ validated pocket (+4.9%/trade, 75% win vs −0.8% baseline in the 2026-05→07 sample); the column leads Score in the table by design. JSON carries the pocket membership per pick as `validated_pocket: true/false`. The algorithm picks the trailing window that maximizes `days / max(width, 1)`, so a 6-week base at 5% width can beat a 30-week base at 20% width.
+- **BaseWks**: length of the current consolidation in trading weeks. **The backtest-validated ranker**: ≥ 20 weeks is the ⭐️ validated pocket (+4.9%/trade, 75% win vs −0.8% baseline in the 2026-05→07 sample); the column leads Score in the table by design. JSON carries the pocket membership per pick as `validated_pocket: true/false`. The algorithm picks the trailing window that maximizes `days / max(width, 1)`, so a 6-week base at 5% width can beat a 30-week base at 20% width.
 - **Width%**: `(base_high - base_low) / base_high × 100`. Tighter is better. Sub-15% is high quality; 20-25% is acceptable; capped by `--max-base-width`.
 - **Smooth%** (*verbose*): % of base bars within ±2% of the base mean. Discriminates real horizontal consolidations (high Smooth%) from V-shapes or jagged action that happens to fit the width envelope (low Smooth%). 50%+ reads as horizontal; 70%+ is textbook smooth.
 - **BB%ile** (*verbose*): percentile rank of current Bollinger Band(20) width within the last 126 trading days (~6 months). 0 = tightest in 6 months (max squeeze), 100 = widest. Below 25 is meaningful compression.
@@ -188,7 +188,7 @@ Column meanings (columns marked *verbose* print only with `--verbose`; JSON alwa
 - **RankΔ** (*verbose*): change in rank vs the latest prior appearance (positive ↗ = rising, negative ↘ = slipping, 🆕 = no prior).
 - **FirstSeen** (*verbose*): earliest date this base appeared in history. Combined with Streak gives the base's age in the watchlist.
 - **🔒 prefix on ticker**: "three weeks tight" signal: last 3 weekly closes within 1.5% of each other. Minervini's textbook indicator that supply is absorbed; institutional selling has stopped.
-- **★ prefix on ticker**: validated-pocket membership (BaseWks ≥ 20). Same names as the ★ section above the table; the prefix keeps them visible when scanning the full table.
+- **⭐️ prefix on ticker**: validated-pocket membership (BaseWks ≥ 20). Same names as the ⭐️ section above the table; the prefix keeps them visible when scanning the full table.
 
 The script computes the discovery sections (dropouts with reasons / recent breakouts / new setups / maturing bases) against the most recent prior run plus the last `--recent-breakout-days` of price data, and skips sections with zero entries so the output stays clean on thin days. The **Maturing bases** section (streak ≥ `--persistent-min-streak`, default 4) stays absent on the first few runs of a fresh history, as designed; it only fires once a ticker has persisted through multiple scan-days.
 
@@ -282,7 +282,7 @@ When base detection fails but the ticker broke out in the last 10 trading days, 
 
 `scripts/backtest_outcomes.py` replays `state/history.csv` as the canonical trade: while a name stays on the watchlist, a buy-stop sits at the most recent pivot (gaps pay real slippage); dropout cancels the order. 426 testable episodes over a flat tape; re-run quarterly. Findings, strongest first; full evidence, magnitudes, and caveats in `references/backtest-findings.md` (sections throughout this file reference the numbering below):
 
-1. **Base length ≥ 20 weeks is the one big validated edge**: +4.9%/trade, 75% win vs −0.8% baseline; sub-10-week bases are where the failures live. The ★ validated pocket.
+1. **Base length ≥ 20 weeks is the one big validated edge**: +4.9%/trade, 75% win vs −0.8% baseline; sub-10-week bases are where the failures live. The ⭐️ validated pocket.
 2. **Volume dry-up is INVERTED vs doctrine in this sample**: deep dry-up (< 0.70) ran −8.8% with 61% stop-hit; no-dry-up was the only profitable band. Re-validate before hard-coding.
 3. **The composite Base Score does not discriminate outcomes**: bands statistically identical; treat Score as a display floor and rank by BaseWks.
 4. **The watchlist as a whole did not pay**: post-trigger avg −2.6%, 66% fall back below pivot within 5 sessions; selection (which base) is everything.
@@ -295,7 +295,7 @@ When base detection fails but the ticker broke out in the last 10 trading days, 
 
 The script gives you data; the user wants signal. Add a short interpretation pass: apply judgment rather than reciting the principles below. **Where the backtest above and the doctrine below disagree, lead with the backtest and say so**: e.g. weight BaseWks > 20 over Score, and do not sell deep Vol↓ as a bullish tell.
 
-Relay the script's markdown output **in full — every row of the top-N table and every section**; don't truncate to save space. Then write the interpretation for a reader with **no finance background**, in the conversation's language, translating each term the moment you use it — a "base" is "a stock that already rose a lot and has been moving sideways in a tight range while sellers run out"; "pivot $108.60" is "the price line that, once crossed, is the buy trigger"; "Stop@trigger -3.6%" is "if you bought at the trigger, the exit that caps the loss at 3.6%". Lead with the Sig strip story (is the watchlist loaded or quiet?) and the ★ pocket (the only stratum with backtest-proven odds), and close with what to do — usually "set alerts, buy nothing today".
+Relay the script's markdown output **in full — every row of the top-N table and every section**; don't truncate to save space. Then write the interpretation for a reader with **no finance background**, in the conversation's language, translating each term the moment you use it — a "base" is "a stock that already rose a lot and has been moving sideways in a tight range while sellers run out"; "pivot $108.60" is "the price line that, once crossed, is the buy trigger"; "Stop@trigger -3.6%" is "if you bought at the trigger, the exit that caps the loss at 3.6%". Lead with the Sig strip story (is the watchlist loaded or quiet?) and the ⭐️ pocket (the only stratum with backtest-proven odds), and close with what to do — usually "set alerts, buy nothing today".
 
 1. **Lead with the 🚀 Breakouts section if non-empty.** This is the most actionable, time-sensitive subset: a base broke today *with* volume confirmation. The decision space is narrow: enter now near pivot, or wait for the retest of the breakout level (it tends to come within 5 sessions). Quantify the per-trade risk using the Stop column; reject the entry if the per-trade loss exceeds the user's risk budget. Remind the user: most breakouts fail (40-60% by various studies). Stop discipline is non-negotiable.
 

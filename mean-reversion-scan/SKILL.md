@@ -90,6 +90,7 @@ uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy>=1.24,<3' \
 | `--save-stale` | — | Override the non-trading-day guard. By default the script skips `append_history` on weekends / NYSE holidays so streak counts and outcome resolution don't double-count duplicate-data days. Pre-market runs on a real trading day still save. |
 | `--allow-same-day` | — | Append even if a row exists for today's ET date. Default overwrites today's snapshot. |
 | `--format` | markdown | `markdown` or `json`. |
+| `--verbose` | — | Restore the diagnostic columns (5DMA%, 50DMA%, 200DMA%, Freq60d) to the top-N table. The default slim table (2026-07-31 redesign) keeps the decision columns — RSI(2), Score, Sig, Streak, Stop, Target — since the Target column already encodes the 5DMA distance and the rest feed the Score. JSON always carries every field. |
 | `--regime-gate` | warn | `off` skips SPY trend calc. `warn` shows banner + RISK-OFF caveat but still prints top-N. `strict` suppresses top-N when RISK-OFF (history still saved). RISK-ON requires SPY > 200DMA AND 200DMA slope (20 trading days) above a small `-0.05%` dead band. **Mean-reversion longs are at their most dangerous in RISK-OFF**: the canonical failure mode is "every oversold bounce is followed by more selling" (2008 H2, 2020 March, 2022 H1). Use the strict gate for live trading. |
 | `--atr-stop-mult` | 2.5 | ATR-based stop multiplier. Computes 14-day ATR and adds a `Stop` column showing `last_close - mult × ATR`. Typical: 2.0 tight, 2.5 standard, 3.0 loose. Pass `0` or negative to disable the column. The script **also persists the stop to history.csv** so outcome resolution can check whether price hit the stop between signal and target. |
 | `--no-sectors` | — | Disable sector tagging. Default fetches sector/industry from yfinance for top-N picks (cached, 30-day TTL) and shows a Sector column + breakdown line. |
@@ -99,7 +100,7 @@ uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy>=1.24,<3' \
 
 ## Output shape
 
-A regime banner (including a **Signal breadth** tier line; see below), sector breakdown, an optional **Excluded by vol-collapse filter** section, the main top-N table with Sig column, and 2-3 discovery sections (recently-resolved picks with running win rate, stuck-oversold leaders). The script skips sections with zero entries. Sample (illustrative; picks change daily):
+A regime banner (including a **Signal breadth** tier line; see below), sector breakdown, the **Sig** cohort strip (🟢/🔵/🟡/🔴 counts across the top-N), an optional **Excluded by vol-collapse filter** section, the **⭐️ Validated pocket** section (Score ≥ 40 on a day-1/2 listing — the funnel's validated stratum; always printed when there are picks, because an empty pocket is itself the signal), the main top-N table, and 2-3 discovery sections (recently-resolved picks with running win rate, stuck-oversold leaders). The script skips sections with zero entries. The table is the **slim** default (2026-07-31 redesign, decision columns only); `--verbose` restores the 5DMA%/50DMA%/200DMA%/Freq60d diagnostics, and JSON always carries every field (including `validated_pocket` per pick). Sample (illustrative; picks change daily):
 
 ```
 # Mean-reversion scan — 2026-05-14 16:32 UTC
@@ -110,35 +111,38 @@ A regime banner (including a **Signal breadth** tier line; see below), sector br
 **Regime**: SPY 742.3 vs 200DMA 672.2 (+10.4%) · 50DMA > 200DMA · 200DMA slope (20d): +1.50% · Breadth: 58% > 200DMA → **RISK-ON**
 **Win rate** (last 30d, 47 resolved): 73% (34W / 13L) · avg days to target: 1.9
 **Sectors**: Tech 5 · Health 4 · Financ 3 · Cons Cyc 2 · Energy 2 · Other 2
+**Sig**: 🟢8 🔵3 🟡7 🔴0
+
+## ⭐️ Validated pocket — Score ≥ 40 & listing day ≤ 2 (1)
+_The stratum the outcome backtest validated (+1.83%/signal, ~3× baseline, in-sample); 3rd-day-plus listings ran negative._
+- **AAPL** (#1): score 65, day 1, RSI(2) 1.8, 🔵
 
 ## Top 18
 
-| # | Ticker | Sector | RSI(2) | 5DMA% | 50DMA% | 200DMA% | Score | Sig | Streak | Freq60d | Stop | Target |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | **AAPL** | Tech | 1.8 | -3.2 | +4.1 | +14.2 | 65 | 🔵 | 1 | 2 | $228.40 (-2.7%) | $237.55 (+1.2%) |
-| 2 | **JNJ** | Health | 4.2 | -2.8 | +1.1 | +8.5 | 35 | 🟢 | 1 | 1 | $158.20 (-4.3%) | $164.10 (+0.9%) |
+| # | Ticker | Sector | RSI(2) | Score | Sig | Streak | Stop | Target |
+|---|---|---|---|---|---|---|---|---|
+| 1 | ⭐️ **AAPL** | Tech | 1.8 | 65 | 🔵 | 1 | $228.40 (-2.7%) | $237.55 (+1.2%) |
+| 2 | **JNJ** | Health | 4.2 | 35 | 🟢 | 1 | $158.20 (-4.3%) | $164.10 (+0.9%) |
 ...
 
-## Recently resolved (last 5 days, 6 picks)
-**Won** (4):
-- **NVDA** — signaled 2026-05-09 @ $144.20, hit target $147.10 in 1 day (+2.0%)
-- **MSFT** — signaled 2026-05-12 @ $431.50, hit target $437.20 in 2 days (+1.3%)
-- ...
-**Lost** (1):
-- **XYZ** — signaled 2026-05-10 @ $52.80, stopped at $48.10 (-8.9%) in 3 days
-**Expired** (1):
-- **DEF** — signaled 2026-05-08, drifted -0.4% over 5 days, neither target nor stop hit
+_Diagnostic columns (5DMA%, 50DMA%, 200DMA%, Freq60d): --verbose_
 
-## Stuck oversold (streak ≥ 3 runs — REVIEW for structural break)
-- **GHI** — streak 4, first seen 2026-05-08, RSI(2) still 3.1 (was 4.5 → 2.8 → 3.6 → 3.1)
-  ⚠️ Bounce hasn't materialized in 4 sessions. Possible: real breakdown, missed news catalyst, sector-wide pressure.
+## Recently resolved (last 10 days, 6 picks)
+**Won** (4): avg +1.7% in 1.5 day(s) · best NVDA +2.0%, MSFT +1.3%, JPM +1.2%
+**Lost** (1, worst first):
+- **XYZ**: signaled 2026-05-10 @ $52.80, stopped at $48.10 (-8.9%) in 3 day(s)
+**Expired** (1): drifted -0.4% on average; neither target nor stop hit within the window
+
+## Stuck oversold (streak ≥ 3 runs: REVIEW for structural break)
+_The bounce hasn't materialized across multiple runs. Usual causes: real breakdown, missed news catalyst, or sector-wide pressure; a warning list, not a bargain bin._
+- **GHI**: streak 4, first seen 2026-05-08, RSI(2) trajectory: 4.5 → 2.8 → 3.6 → 3.1
 ```
 
-Column meanings:
+Column meanings (columns marked *verbose* print only with `--verbose`; JSON always carries them; a ⭐️ ticker prefix marks validated-pocket membership, same names as the ⭐️ section):
 
 - **RSI(2)**: 2-period RSI using Wilder's smoothing. Connors's canonical signal. Below threshold = oversold; lower = more oversold.
-- **5DMA%**: `(last_close / SMA(5) - 1) × 100`. Negative = price below 5-day average (the canonical Connors target for the bounce). The reversion target is the 5DMA itself; this column shows how far you are from it.
-- **50DMA%, 200DMA%**: distance from the longer averages. Both should be positive for a healthy "MR inside uptrend" setup. If 50DMA% goes negative, the trend is wobbling and the MR signal is lower-conviction.
+- **5DMA%** (*verbose*): `(last_close / SMA(5) - 1) × 100`. Negative = price below 5-day average (the canonical Connors target for the bounce). The reversion target is the 5DMA itself; this column shows how far you are from it.
+- **50DMA%, 200DMA%** (*verbose*): distance from the longer averages. Both should be positive for a healthy "MR inside uptrend" setup. If 50DMA% goes negative, the trend is wobbling and the MR signal is lower-conviction.
 - **Score**: composite 0-100 Reversion Score. All components are *variable* (no constant offsets; the trend filter is a hard gate before scoring). Components: RSI(2) depth (40pts: rsi2=0 → 40, rsi2=threshold → 0), 5DMA pullback magnitude (30pts: dist_5dma=-15% → 30), trend buffer quality (15pts: dist_200dma=+30% → 15, rewards "MR inside a real uptrend, not a borderline one"), frequency uniqueness (15pts: never-fired → 15, freq=8 → 0). Realistic calibration: textbook 🟢 picks land 50-65, 🔵 with buffer + low freq lands 70-85, 90+ is rare. ⚠️ The 2026-05→07 outcome backtest validated **absolute Score ≥ 40** as the strongest entry filter (+1.29%/signal vs +0.33% below) but found the RSI-depth component (40pts) anti-predictive in-sample; the edge lives in the pullback/trend/frequency components. See **Backtested outcomes** #2 and #5.
 - **Sig**: entry classifier:
   - **🟢 fresh trigger**: RSI(2) below threshold AND price > 200DMA AND trend healthy. The canonical Connors setup; act today or set a price-improvement limit.
@@ -146,7 +150,7 @@ Column meanings:
   - **🟡 setup forming**: RSI(2) within `[threshold, threshold × 2]`. Approaching trigger; monitor for a further selloff to confirm.
   - **🔴 too late**: RSI(2) > 50 (already bouncing). Don't initiate; part of the move is already gone.
 - **Streak**: consecutive prior runs this ticker has appeared. **In MR, high streak is a warning, not a confirmation**; see the "Stuck oversold" section. Backtest-validated: day 1-2 listings ran +0.76-0.93%/signal, day 3+ ran −0.12% (**Backtested outcomes** #3).
-- **Freq60d**: number of times this ticker triggered RSI(2) < threshold in the last 60 trading days. Lower = more idiosyncratic event = better signal. Higher = noisy name where this signal fires often and carries less information.
+- **Freq60d** (*verbose*): number of times this ticker triggered RSI(2) < threshold in the last 60 trading days. Lower = more idiosyncratic event = better signal. Higher = noisy name where this signal fires often and carries less information.
 - **Stop**: ATR-based stop level: `last_close - mult × ATR(14)`. Format `$price (-%)`. The persisted-to-CSV stop level used for outcome resolution.
 - **Target**: `5DMA × 1.0` (the canonical Connors exit). Format `$price (+%)`. Persisted to CSV alongside Stop for outcome resolution.
 
@@ -160,9 +164,9 @@ The `Win rate` line in the banner aggregates **resolved** outcomes across all hi
 
 For each pick from the last `--target-window-days × 2` calendar days, the script looks at the price action since the signal date and classifies:
 
-- **WON**: high reached `target` within `--target-window-days` (default 5). Shows entry price → target price + days to target.
-- **LOST**: low touched `stop` before the target was hit. Shows entry → stop level + days to stop.
-- **EXPIRED**: neither target nor stop hit within the window. Shows the drift % over the window.
+- **WON**: high reached `target` within `--target-window-days` (default 5). Aggregated to one line (count, avg %, avg days, best 3) — a washout week can push 300+ resolved picks through the display window, and itemizing every +1.x% bounce buried the losses. Per-outcome detail stays in JSON `outcomes`.
+- **LOST**: low touched `stop` before the target was hit. Itemized worst-first (capped at 10, remainder counted) — each stop-out is worth an individual look.
+- **EXPIRED**: neither target nor stop hit within the window. Aggregated to one line (count, avg drift).
 - **OPEN**: fewer than `--target-window-days` trading days have passed since signal. Not displayed (still in flight).
 
 Resolution is **deterministic from history.csv plus current price data**: no separate outcome ledger to maintain. Each run re-resolves the relevant prior signals using fresh price data.
@@ -229,6 +233,8 @@ The historical reliability section is unique to single-ticker mode: it scans the
 ## How to interpret (Claude's job after running)
 
 The script gives you data; the user wants signal. Add a short interpretation pass: apply judgment rather than reciting the principles below.
+
+Relay the script's markdown output **in full — every row of the top-N table and every section**; don't truncate to save space. Then write the interpretation for a reader with **no finance background**, in the conversation's language, translating each term the moment you use it — "mean reversion" is "strong stocks that just took a short, sharp hit and tend to snap back"; "RSI(2) 1.8" is "a 0-100 panic meter for the last two days; under 5 is heavily oversold"; the ⭐️ pocket is "the only slice with backtest-proven odds: high score AND on the list no more than 2 days"; "Win rate 94%" needs its caveat in the same breath (the high rate is structural — the KPI is the per-signal expectancy, not the rate). Lead with the breadth tier and the ⭐️ pocket, flag stuck-oversold names as warnings not bargains, and close with what to do — usually "nothing; if researching, start and stop at the ⭐️ names".
 
 1. **Lead with the regime banner.** Mean reversion has its worst regime in confirmed bear markets; this is non-negotiable. If RISK-OFF, the recommendation should be "wait" or "paper-trade only", not "here's a name to buy". Even in `--regime-gate warn` mode where the table still prints, frame the names as research-only when SPY is below a falling 200DMA.
 

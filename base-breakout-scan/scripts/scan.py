@@ -24,6 +24,15 @@ Usage:
   python scan.py --min-rs-rating 80           # only top-quintile RS
   python scan.py --show-history               # dump history summary
 """
+from yfinance import EquityQuery
+from pandas.tseries.holiday import (
+    AbstractHolidayCalendar, GoodFriday, Holiday, USLaborDay,
+    USMartinLutherKingJr, USMemorialDay, USPresidentsDay,
+    USThanksgivingDay, nearest_workday,
+)
+import yfinance as yf
+import pandas as pd
+import numpy as np
 import argparse
 import json
 import sys
@@ -34,15 +43,6 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 warnings.filterwarnings("ignore")
-import numpy as np
-import pandas as pd
-import yfinance as yf
-from pandas.tseries.holiday import (
-    AbstractHolidayCalendar, GoodFriday, Holiday, USLaborDay,
-    USMartinLutherKingJr, USMemorialDay, USPresidentsDay,
-    USThanksgivingDay, nearest_workday,
-)
-from yfinance import EquityQuery
 
 SKILL_DIR = Path(__file__).resolve().parent.parent
 STATE_DIR = SKILL_DIR / "state"
@@ -50,9 +50,12 @@ UNIVERSE_FILE = STATE_DIR / "universe.txt"
 HISTORY_FILE = STATE_DIR / "history.csv"
 SECTORS_FILE = STATE_DIR / "sectors.json"
 UNIVERSE_TTL_DAYS = 7
-SCREENER_PAGE_SIZE = 250  # Yahoo's hard cap per request — yf.screen raises ValueError above this
-SCREENER_PAGE_SLEEP_SEC = 0.2  # small gap between pages so a 5-page sweep doesn't trip Yahoo throttling
-SCREENER_MAX_PAGES = 20  # absolute backstop (~5000 tickers) for the case where Yahoo's `total` field is missing and only the per-page guards stop the loop. 5000 is already 5× the realistic US large-cap match count, so hitting this is a strong signal something is wrong upstream.
+# Yahoo's hard cap per request — yf.screen raises ValueError above this
+SCREENER_PAGE_SIZE = 250
+# small gap between pages so a 5-page sweep doesn't trip Yahoo throttling
+SCREENER_PAGE_SLEEP_SEC = 0.2
+# absolute backstop (~5000 tickers) for the case where Yahoo's `total` field is missing and only the per-page guards stop the loop. 5000 is already 5× the realistic US large-cap match count, so hitting this is a strong signal something is wrong upstream.
+SCREENER_MAX_PAGES = 20
 SECTORS_TTL_DAYS = 30  # sectors change slowly; long TTL keeps repeat runs fast
 MARKET_TZ = ZoneInfo("America/New_York")  # one snapshot per US market day
 # The 2026-05→07 outcome backtest's single big validated edge: bases ≥ 20
@@ -89,7 +92,8 @@ class _NYSECalendar(AbstractHolidayCalendar):
         USMemorialDay,
         Holiday("Juneteenth", month=6, day=19, observance=nearest_workday,
                 start_date="2022-06-19"),
-        Holiday("Independence Day", month=7, day=4, observance=nearest_workday),
+        Holiday("Independence Day", month=7,
+                day=4, observance=nearest_workday),
         USLaborDay,
         USThanksgivingDay,
         Holiday("Christmas Day", month=12, day=25, observance=nearest_workday),
@@ -247,9 +251,11 @@ def load_universe(min_market_cap: float, min_volume: int, count: int | None,
         print(f"Universe cache has {len(cached)} tickers but {count} requested, "
               f"refreshing...", file=sys.stderr)
         return refresh_universe(min_market_cap, min_volume, count)
-    age_days = (datetime.now().timestamp() - UNIVERSE_FILE.stat().st_mtime) / 86400
+    age_days = (datetime.now().timestamp() -
+                UNIVERSE_FILE.stat().st_mtime) / 86400
     if age_days > UNIVERSE_TTL_DAYS:
-        print(f"Universe cache stale ({age_days:.1f}d), refreshing...", file=sys.stderr)
+        print(
+            f"Universe cache stale ({age_days:.1f}d), refreshing...", file=sys.stderr)
         return refresh_universe(min_market_cap, min_volume, count)
     return cached
 
@@ -266,7 +272,8 @@ def fetch_bars(tickers: list[str], history_months: int = DEFAULT_HISTORY_MONTHS)
     indicators (ATR, BB, vol, RS) reuse this single download — a second
     round-trip for the same 250 tickers would cost another ~10 sec."""
     period = f"{history_months}mo"
-    print(f"Fetching {len(tickers)} tickers, period={period}...", file=sys.stderr)
+    print(
+        f"Fetching {len(tickers)} tickers, period={period}...", file=sys.stderr)
     return yf.download(
         tickers, period=period, interval="1d", auto_adjust=True,
         progress=False, threads=True, group_by="ticker",
@@ -380,7 +387,7 @@ def _compute_rs_proxy(close: pd.Series, spy_close: pd.Series) -> float | None:
     # Linear map from excess return to 1-99 rating; clip outside the
     # calibration range.
     excess_clipped = max(RS_PROXY_RETURN_AT_1,
-                          min(RS_PROXY_RETURN_AT_99, weighted_excess))
+                         min(RS_PROXY_RETURN_AT_99, weighted_excess))
     span = RS_PROXY_RETURN_AT_99 - RS_PROXY_RETURN_AT_1
     rating = 1 + (excess_clipped - RS_PROXY_RETURN_AT_1) / span * 98
     return float(rating)
@@ -632,19 +639,23 @@ def detect_base(close: pd.Series, volume: pd.Series,
     if len(volume) >= 80:
         vol_recent = float(volume.tail(20).mean())
         vol_trailing = float(volume.iloc[-80:-20].mean())
-        vol_dryup_ratio = (vol_recent / vol_trailing) if vol_trailing > 0 else None
+        vol_dryup_ratio = (
+            vol_recent / vol_trailing) if vol_trailing > 0 else None
     else:
         vol_dryup_ratio = None
 
     if len(volume) >= 21:
         today_vol = float(volume.iloc[-1])
         avg_20d_vol = float(volume.iloc[-21:-1].mean())
-        today_vol_ratio = (today_vol / avg_20d_vol) if avg_20d_vol > 0 else None
+        today_vol_ratio = (
+            today_vol / avg_20d_vol) if avg_20d_vol > 0 else None
     else:
         today_vol_ratio = None
 
-    best["vol_dryup_ratio"] = round(vol_dryup_ratio, 2) if vol_dryup_ratio else None
-    best["today_vol_ratio"] = round(today_vol_ratio, 2) if today_vol_ratio else None
+    best["vol_dryup_ratio"] = round(
+        vol_dryup_ratio, 2) if vol_dryup_ratio else None
+    best["today_vol_ratio"] = round(
+        today_vol_ratio, 2) if today_vol_ratio else None
     best["smoothness_pct"] = (round(smoothness_pct, 1)
                               if smoothness_pct is not None else None)
     best["last_close"] = last
@@ -772,7 +783,7 @@ def three_weeks_tight(close: pd.Series,
 
 # ─── RS slope during base ────────────────────────────────────────────────
 def compute_rs_slope_pct_per_wk(close: pd.Series, spy_close: pd.Series,
-                                 anchor_idx) -> float | None:
+                                anchor_idx) -> float | None:
     """OLS slope of (close / spy_close) over the base period, expressed as
     % per trading week. Positive = stock outperforming SPY while ranging
     (the single most important pre-breakout signal). Negative = stock
@@ -807,7 +818,7 @@ SCORE_WEIGHT_TIGHTNESS = 25       # width% — lower is better
 SCORE_WEIGHT_BB_SQUEEZE = 20      # bb_pctile — lower is better
 SCORE_WEIGHT_VOL_DRYUP = 15       # vol_dryup_ratio — lower is better
 SCORE_WEIGHT_RS_SLOPE = 20        # rs_slope — positive is better
-SCORE_WEIGHT_PIVOT_PROXIMITY = 15 # close to pivot is better
+SCORE_WEIGHT_PIVOT_PROXIMITY = 15  # close to pivot is better
 SCORE_WEIGHT_SMOOTHNESS = 10      # smoothness_pct — higher is better
 SCORE_BONUS_3WK_TIGHT = 5
 # Theoretical max: 25+20+15+20+15+10+5 = 110, so the score is capped at 100.
@@ -878,24 +889,24 @@ def compute_base_score(base: dict, bb_pctile: float | None,
     pts = 0.0
 
     pts += _linear_score(base["width_pct"], best=5.0, worst=25.0,
-                          max_pts=SCORE_WEIGHT_TIGHTNESS)
+                         max_pts=SCORE_WEIGHT_TIGHTNESS)
 
     pts += _linear_score(bb_pctile, best=0.0, worst=40.0,
-                          max_pts=SCORE_WEIGHT_BB_SQUEEZE)
+                         max_pts=SCORE_WEIGHT_BB_SQUEEZE)
 
     pts += _linear_score(base.get("vol_dryup_ratio"),
-                          best=0.55, worst=1.10,
-                          max_pts=SCORE_WEIGHT_VOL_DRYUP)
+                         best=0.55, worst=1.10,
+                         max_pts=SCORE_WEIGHT_VOL_DRYUP)
 
     pts += _linear_score(rs_slope, best=2.5, worst=-0.5,
-                          max_pts=SCORE_WEIGHT_RS_SLOPE)
+                         max_pts=SCORE_WEIGHT_RS_SLOPE)
 
     pts += _bell_score(base["to_pivot_pct"], ideal=-2.0, falloff=4.0,
                        max_pts=SCORE_WEIGHT_PIVOT_PROXIMITY)
 
     pts += _linear_score(base.get("smoothness_pct"),
-                          best=70.0, worst=20.0,
-                          max_pts=SCORE_WEIGHT_SMOOTHNESS)
+                         best=70.0, worst=20.0,
+                         max_pts=SCORE_WEIGHT_SMOOTHNESS)
 
     if three_wk_tight:
         pts += SCORE_BONUS_3WK_TIGHT
@@ -1142,7 +1153,8 @@ def compute_atrs(bars: pd.DataFrame, tickers: list[str],
             close = bars[(t, "Close")].dropna()
             if min(len(high), len(low), len(close)) < period + 1:
                 continue
-            common = high.index.intersection(low.index).intersection(close.index)
+            common = high.index.intersection(
+                low.index).intersection(close.index)
             if len(common) < period + 1:
                 continue
             high, low, close = high.loc[common], low.loc[common], close.loc[common]
@@ -1277,7 +1289,8 @@ def refresh_sectors(tickers: list[str], existing: dict | None = None,
     ]
     if not to_fetch:
         return cache
-    print(f"Fetching sectors for {len(to_fetch)} ticker(s)...", file=sys.stderr)
+    print(
+        f"Fetching sectors for {len(to_fetch)} ticker(s)...", file=sys.stderr)
     fetched, failed = 0, 0
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
         futures = [pool.submit(_fetch_sector_one, t) for t in to_fetch]
@@ -1376,7 +1389,8 @@ def prune_non_trading_days() -> tuple[int, int]:
     # Match append_history's column ordering — keeps prune output consistent
     # with normal writes. Without this, pruning an old-schema file leaves it
     # in old-schema order even if the file has gained score_rank rows since.
-    canonical = HISTORY_COLS + [c for c in kept.columns if c not in HISTORY_COLS]
+    canonical = HISTORY_COLS + \
+        [c for c in kept.columns if c not in HISTORY_COLS]
     kept = kept.reindex(columns=canonical)
     tmp_path = HISTORY_FILE.with_suffix(".csv.tmp")
     kept.to_csv(tmp_path, index=False)
@@ -1533,12 +1547,12 @@ BROKE_DOWN_THRESHOLD_PCT = -8.0
 
 
 def dropouts_with_reason(history: pd.DataFrame, current_picks: set[str],
-                          current_run_id: str, top_n: int,
-                          current_prices: dict[str, pd.Series],
-                          broke_out_pct: float = BROKE_OUT_THRESHOLD_PCT,
-                          broke_down_pct: float = BROKE_DOWN_THRESHOLD_PCT,
-                          excluded_tickers: set[str] | None = None,
-                          ) -> list[dict]:
+                         current_run_id: str, top_n: int,
+                         current_prices: dict[str, pd.Series],
+                         broke_out_pct: float = BROKE_OUT_THRESHOLD_PCT,
+                         broke_down_pct: float = BROKE_DOWN_THRESHOLD_PCT,
+                         excluded_tickers: set[str] | None = None,
+                         ) -> list[dict]:
     """Names in prior run's top N but missing now. Where possible, infer
     *why*: vol-collapse filter excluded this run (acquisition/lock-in),
     deduped against a same-issuer pair, broke out above pivot (good),
@@ -1595,7 +1609,8 @@ def dropouts_with_reason(history: pd.DataFrame, current_picks: set[str],
             reason = "faded"
             if (current_close is not None and prev_pivot is not None
                     and prev_pivot > 0):
-                change_from_pivot_pct = (current_close / float(prev_pivot) - 1) * 100
+                change_from_pivot_pct = (
+                    current_close / float(prev_pivot) - 1) * 100
                 if change_from_pivot_pct >= broke_out_pct:
                     reason = "broke_out"
                 elif change_from_pivot_pct < broke_down_pct:
@@ -1679,7 +1694,8 @@ def score_tickers(closes: dict[str, pd.Series],
         rs_slope = (compute_rs_slope_pct_per_wk(close, spy_close, anchor_idx)
                     if anchor_idx is not None else None)
 
-        base_score = compute_base_score(base, bb_pctile, rs_slope, three_wk_tight)
+        base_score = compute_base_score(
+            base, bb_pctile, rs_slope, three_wk_tight)
         if base_score < min_base_score:
             continue
         n_passes_score += 1
@@ -1747,7 +1763,7 @@ def score_tickers(closes: dict[str, pd.Series],
 
     if verbose and tt_failure_reasons:
         top_reasons = sorted(tt_failure_reasons.items(),
-                              key=lambda kv: -kv[1])[:5]
+                             key=lambda kv: -kv[1])[:5]
         print("Trend template failures: " +
               ", ".join(f"{r}={n}" for r, n in top_reasons),
               file=sys.stderr)
@@ -1867,13 +1883,13 @@ def render_table(picks: list[dict], top_n: int, verbose: bool = False) -> str:
            "|" + "|".join("---" for _ in headers) + "|"]
     for p in rows:
         # Three-weeks-tight gets a 🔒 prefix on the ticker — quick visual
-        # for "supply absorbed" without an extra column. ★ marks the
+        # for "supply absorbed" without an extra column. ⭐️ marks the
         # validated pocket (BaseWks ≥ 20, the backtest's one big edge).
         ticker_disp = f"**{p['ticker']}**"
         if p.get("three_wk_tight"):
             ticker_disp = "🔒 " + ticker_disp
         if p.get("validated_pocket"):
-            ticker_disp = "★ " + ticker_disp
+            ticker_disp = "⭐️ " + ticker_disp
         # If this ticker absorbed a same-issuer dedup, append the runner-
         # up as a parenthetical. Users still learn "PBR also passed" even
         # though we only list PBR-A as the canonical row.
@@ -1942,7 +1958,7 @@ def render_table(picks: list[dict], top_n: int, verbose: bool = False) -> str:
 
 # ─── History summary ─────────────────────────────────────────────────────
 def _longest_consecutive_streak(run_ids_for_ticker: list[str],
-                                 ordered_run_ids: list[str]) -> int:
+                                ordered_run_ids: list[str]) -> int:
     present = set(run_ids_for_ticker)
     best = cur = 0
     for rid in ordered_run_ids:
@@ -1985,7 +2001,8 @@ def show_history_summary(history: pd.DataFrame):
     longest_historical.sort(key=lambda x: -x[1])
 
     if longest_active:
-        print(f"\nLongest active base streaks (still in setup through {latest_run_id}):")
+        print(
+            f"\nLongest active base streaks (still in setup through {latest_run_id}):")
         for t, n in longest_active[:10]:
             print(f"  {t:<8} {n} runs")
 
@@ -2051,7 +2068,7 @@ def _run_single_ticker_pipeline(args) -> dict:
     # SPY for RS slope (during base) and RS Rating proxy.
     try:
         spy_bars = yf.download("SPY", period=f"{DEFAULT_HISTORY_MONTHS}mo",
-                                interval="1d", auto_adjust=True, progress=False)
+                               interval="1d", auto_adjust=True, progress=False)
         spy_close = spy_bars["Close"]
         if isinstance(spy_close, pd.DataFrame):
             spy_close = spy_close.iloc[:, 0]
@@ -2079,11 +2096,11 @@ def _run_single_ticker_pipeline(args) -> dict:
 
     # Stage 2: Base detection
     base = detect_base(close, volume,
-                        min_base_weeks=args.min_base_weeks,
-                        max_base_weeks=args.max_base_weeks,
-                        max_base_width_pct=args.max_base_width,
-                        max_to_52w_high_pct=args.max_to_52w_high,
-                        smoothness_band_pct=args.smoothness_band_pct)
+                       min_base_weeks=args.min_base_weeks,
+                       max_base_weeks=args.max_base_weeks,
+                       max_base_width_pct=args.max_base_width,
+                       max_to_52w_high_pct=args.max_to_52w_high,
+                       smoothness_band_pct=args.smoothness_band_pct)
     result["stages"]["base"] = base
     if base is None:
         # Recent-breakout fallback for "broke out, no longer a base" names.
@@ -2123,7 +2140,8 @@ def _run_single_ticker_pipeline(args) -> dict:
         info = atrs.get(ticker)
         if info is not None:
             stop_now = info["last_close"] - args.atr_stop_mult * info["atr"]
-            stop_trigger = base["pivot_price"] - args.atr_stop_mult * info["atr"]
+            stop_trigger = base["pivot_price"] - \
+                args.atr_stop_mult * info["atr"]
             result["atr"] = {
                 "atr_14d": round(info["atr"], 2),
                 "atr_pct": round(info["atr_pct"], 2),
@@ -2201,13 +2219,15 @@ def _render_single_ticker_markdown(args, result: dict) -> None:
     print(f"- 50DMA: ${tt_details.get('ma50', 0):.2f}, "
           f"150DMA: ${tt_details.get('ma150', 0):.2f}, "
           f"200DMA: ${tt_details.get('ma200', 0):.2f}")
-    print(f"- 200DMA slope (21d): {tt_details.get('ma200_slope_pct', 0):+.2f}%")
+    print(
+        f"- 200DMA slope (21d): {tt_details.get('ma200_slope_pct', 0):+.2f}%")
     print(f"- 52w high: ${tt_details.get('high_52w', 0):.2f} "
           f"({tt_details.get('dist_from_52w_high_pct', 0):+.1f}% from current)")
     print(f"- 52w low: ${tt_details.get('low_52w', 0):.2f} "
           f"({tt_details.get('dist_from_52w_low_pct', 0):+.1f}% from current)")
     if rs_rating is not None:
-        print(f"- RS proxy: ~{rs_rating:.0f} (gate is ≥ {args.min_rs_rating:.0f})")
+        print(
+            f"- RS proxy: ~{rs_rating:.0f} (gate is ≥ {args.min_rs_rating:.0f})")
     else:
         print(f"- RS proxy: —")
 
@@ -2241,7 +2261,7 @@ def _render_single_ticker_markdown(args, result: dict) -> None:
         return
 
     print(f"✅ **Valid base** detected")
-    pocket_note = (" ★ validated pocket (≥20wk — the backtest's one big edge)"
+    pocket_note = (" ⭐️ validated pocket (≥20wk — the backtest's one big edge)"
                    if base['base_weeks'] >= VALIDATED_BASE_WEEKS else
                    f" (below the {VALIDATED_BASE_WEEKS:.0f}wk validated-pocket"
                    f" threshold — unvalidated stratum)")
@@ -2250,7 +2270,8 @@ def _render_single_ticker_markdown(args, result: dict) -> None:
     mode_label = "base-to-today" if base['anchor_mode'] == 0 else "breakout-today"
     print(f"- Anchor date: {base['anchor_date']} (mode={base['anchor_mode']}: "
           f"{mode_label})")
-    print(f"- Width: {base['width_pct']:.1f}% (${base['base_low']:.2f} – ${base['base_high']:.2f})")
+    print(
+        f"- Width: {base['width_pct']:.1f}% (${base['base_low']:.2f} – ${base['base_high']:.2f})")
     if base.get('smoothness_pct') is not None:
         print(f"- Smoothness: {base['smoothness_pct']:.0f}% of bars within "
               f"±{args.smoothness_band_pct:.1f}% of mean")
@@ -2271,10 +2292,12 @@ def _render_single_ticker_markdown(args, result: dict) -> None:
     else:
         print(f"- BB squeeze pctile: —")
     if q['rs_slope_pct_per_wk'] is not None:
-        print(f"- RS slope vs SPY during base: {q['rs_slope_pct_per_wk']:+.2f}%/wk")
+        print(
+            f"- RS slope vs SPY during base: {q['rs_slope_pct_per_wk']:+.2f}%/wk")
     else:
         print(f"- RS slope: —")
-    print(f"- Three-weeks-tight (🔒): {'yes' if q['three_weeks_tight'] else 'no'}")
+    print(
+        f"- Three-weeks-tight (🔒): {'yes' if q['three_weeks_tight'] else 'no'}")
 
     # Stage 4
     s = result["stages"]["score"]
@@ -2457,7 +2480,8 @@ def build_argparser() -> argparse.ArgumentParser:
                           "use since intra-day re-runs should refresh, not "
                           "duplicate. Only enable if you specifically want "
                           "multiple snapshots per ET date in the history."))
-    ap.add_argument("--format", choices=["markdown", "json"], default="markdown")
+    ap.add_argument(
+        "--format", choices=["markdown", "json"], default="markdown")
     ap.add_argument("--regime-gate", choices=["off", "warn", "strict"],
                     default="warn",
                     help=("Market trend filter using SPY 200DMA + slope and "
@@ -2558,7 +2582,7 @@ def main():
     # SPY: separate fetch (it's not in the screener universe). We need it
     # for both regime detection and per-name RS slope during base.
     spy_bars = yf.download("SPY", period=f"{DEFAULT_HISTORY_MONTHS}mo",
-                            interval="1d", auto_adjust=True, progress=False)
+                           interval="1d", auto_adjust=True, progress=False)
     if spy_bars is None or spy_bars.empty:
         print("SPY fetch failed — RS slope and regime banner will be unavailable.",
               file=sys.stderr)
@@ -2729,7 +2753,8 @@ def main():
         }, indent=2, default=str))
         return
 
-    n_prior = len(history["run_id"].drop_duplicates()) if not history.empty else 0
+    n_prior = len(history["run_id"].drop_duplicates()
+                  ) if not history.empty else 0
     print(f"# Base-breakout scan — {now.strftime('%Y-%m-%d %H:%M UTC')}")
     print(f"\n**Params**: base={args.min_base_weeks:.0f}-{args.max_base_weeks:.0f}wks, "
           f"max_width={args.max_base_width:.0f}%, "
@@ -2823,7 +2848,7 @@ def main():
     # the list" would refer to nothing).
     if picks[: args.top_n]:
         pocket = [p for p in picks[: args.top_n] if p.get("validated_pocket")]
-        print(f"\n## ★ Validated pocket — BaseWks ≥ "
+        print(f"\n## ⭐️ Validated pocket — BaseWks ≥ "
               f"{VALIDATED_BASE_WEEKS:.0f} ({len(pocket)})")
         print("_The one stratum the outcome backtest validated "
               "(+4.9%/trade, 75% win vs −0.8% baseline, in-sample). "
@@ -2856,7 +2881,8 @@ def main():
               f"cross above prior range._")
 
     if drops:
-        vol_collapse_drops = [d for d in drops if d["reason"] == "vol_collapse"]
+        vol_collapse_drops = [
+            d for d in drops if d["reason"] == "vol_collapse"]
         broke_out = [d for d in drops if d["reason"] == "broke_out"]
         broke_down = [d for d in drops if d["reason"] == "broke_down"]
         deduped = [d for d in drops if d["reason"] == "deduped"]
@@ -2901,8 +2927,10 @@ def main():
     # noise — the user just needs the signal that some are breaking down).
     if recent_breakouts:
         days_w = args.recent_breakout_days
-        working = [r for r in recent_breakouts if r.get("follow_through_pct", 0) >= 0]
-        failed = [r for r in recent_breakouts if r.get("follow_through_pct", 0) < 0]
+        working = [r for r in recent_breakouts if r.get(
+            "follow_through_pct", 0) >= 0]
+        failed = [r for r in recent_breakouts if r.get(
+            "follow_through_pct", 0) < 0]
         print(f"\n## Recent breakouts (last {days_w} trading days, "
               f"{len(working)} working / {len(failed)} failed)")
         if working:
@@ -2919,7 +2947,8 @@ def main():
             # Show the worst 5 — these are the cleanest "broken breakout"
             # signals (price gave back the most after triggering). Sort
             # ascending by follow_through means most negative first.
-            worst = sorted(failed, key=lambda r: r.get("follow_through_pct", 0))[:5]
+            worst = sorted(failed, key=lambda r: r.get(
+                "follow_through_pct", 0))[:5]
             print(f"**Failed** (back below pivot, top {len(worst)} worst):")
             for rb in worst:
                 print(f"- **{rb['ticker']}**: broke ${rb['prior_pivot']:.2f} "
@@ -2928,7 +2957,8 @@ def main():
                       f"({rb['follow_through_pct']:+.1f}% below pivot ↘)")
 
     if not history.empty:
-        new_entries = [p for p in picks[: args.top_n] if p.get("prev_rank") is None]
+        new_entries = [p for p in picks[: args.top_n]
+                       if p.get("prev_rank") is None]
         if new_entries:
             print(f"\n## New setups ({len(new_entries)})")
             for p in new_entries:
@@ -2936,7 +2966,8 @@ def main():
                       f"(score {p['base_score']:.0f}, base {p['base_weeks']:.0f}wks, "
                       f"{p['signal']})")
         min_streak = args.persistent_min_streak
-        mature = [p for p in picks[: args.top_n] if p.get("streak", 1) >= min_streak]
+        mature = [p for p in picks[: args.top_n]
+                  if p.get("streak", 1) >= min_streak]
         if mature:
             print(f"\n## Maturing bases (streak ≥ {min_streak} runs)")
             for p in sorted(mature, key=lambda x: -x["streak"]):

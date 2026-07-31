@@ -22,7 +22,7 @@
   "AAPL": {
     "industry": "Consumer Electronics",
     "sector": "Technology",
-    "ts": 1781049862
+    "ts": 1785510645
   },
   "ABBV": {
     "industry": "Drug Manufacturers - General",
@@ -44,6 +44,11 @@
     "sector": "Technology",
     "ts": 1784592170
   },
+  "ADM": {
+    "industry": "Farm Products",
+    "sector": "Consumer Defensive",
+    "ts": 1785511111
+  },
   "AEP": {
     "industry": "Utilities - Regulated Electric",
     "sector": "Utilities",
@@ -63,6 +68,11 @@
     "industry": "REIT - Mortgage",
     "sector": "Real Estate",
     "ts": 1784678594
+  },
+  "AHR": {
+    "industry": "REIT - Healthcare Facilities",
+    "sector": "Real Estate",
+    "ts": 1785510935
   },
   "AKAM": {
     "industry": "Software - Infrastructure",
@@ -219,6 +229,11 @@
     "sector": "Technology",
     "ts": 1784246577
   },
+  "BBIO": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1785510645
+  },
   "BCE": {
     "industry": "Telecom Services",
     "sector": "Communication Services",
@@ -278,6 +293,11 @@
     "industry": "Restaurants",
     "sector": "Consumer Cyclical",
     "ts": 1783555398
+  },
+  "BRX": {
+    "industry": "REIT - Retail",
+    "sector": "Real Estate",
+    "ts": 1785510645
   },
   "BTI": {
     "industry": "Tobacco",
@@ -494,6 +514,11 @@
     "sector": "Technology",
     "ts": 1782518609
   },
+  "CSX": {
+    "industry": "Railroads",
+    "sector": "Industrials",
+    "ts": 1785510645
+  },
   "CTRA": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
@@ -507,7 +532,7 @@
   "CTVA": {
     "industry": "Agricultural Inputs",
     "sector": "Basic Materials",
-    "ts": 1780944731
+    "ts": 1785510645
   },
   "CVE": {
     "industry": "Oil & Gas Integrated",
@@ -599,6 +624,11 @@
     "sector": "Basic Materials",
     "ts": 1779848102
   },
+  "DRS": {
+    "industry": "Aerospace & Defense",
+    "sector": "Industrials",
+    "ts": 1785510645
+  },
   "DTE": {
     "industry": "Utilities - Regulated Electric",
     "sector": "Utilities",
@@ -628,6 +658,11 @@
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
     "ts": 1782345778
+  },
+  "EIX": {
+    "industry": "Utilities - Regulated Electric",
+    "sector": "Utilities",
+    "ts": 1785510645
   },
   "ELV": {
     "industry": "Healthcare Plans",
@@ -889,6 +924,11 @@
     "sector": "Technology",
     "ts": 1781136248
   },
+  "HR": {
+    "industry": "REIT - Healthcare Facilities",
+    "sector": "Real Estate",
+    "ts": 1785510935
+  },
   "HSIC": {
     "industry": "Medical Distribution",
     "sector": "Healthcare",
@@ -1023,6 +1063,11 @@
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
     "ts": 1780114451
+  },
+  "KMX": {
+    "industry": "Auto & Truck Dealerships",
+    "sector": "Consumer Cyclical",
+    "ts": 1785510645
   },
   "KNX": {
     "industry": "Trucking",
@@ -1269,6 +1314,11 @@
     "sector": "Technology",
     "ts": 1784851400
   },
+  "NNN": {
+    "industry": "REIT - Retail",
+    "sector": "Real Estate",
+    "ts": 1785510645
+  },
   "NOK": {
     "industry": "Communication Equipment",
     "sector": "Technology",
@@ -1318,6 +1368,11 @@
     "industry": "Solar",
     "sector": "Technology",
     "ts": 1780946303
+  },
+  "O": {
+    "industry": "REIT - Retail",
+    "sector": "Real Estate",
+    "ts": 1785510645
   },
   "ODFL": {
     "industry": "Trucking",
@@ -1434,6 +1489,11 @@
     "sector": "Utilities",
     "ts": 1785456162
   },
+  "PPG": {
+    "industry": "Specialty Chemicals",
+    "sector": "Basic Materials",
+    "ts": 1785511111
+  },
   "PR": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
@@ -1478,6 +1538,11 @@
     "industry": "Electronic Components",
     "sector": "Technology",
     "ts": 1785456162
+  },
+  "RBA": {
+    "industry": "Specialty Business Services",
+    "sector": "Industrials",
+    "ts": 1785510645
   },
   "REG": {
     "industry": "REIT - Retail",
@@ -1612,7 +1677,7 @@
   "SGHC": {
     "industry": "Gambling",
     "sector": "Consumer Cyclical",
-    "ts": 1780114450
+    "ts": 1785510935
   },
   "SHEL": {
     "industry": "Oil & Gas Integrated",
@@ -1783,6 +1848,11 @@
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
     "ts": 1782950590
+  },
+  "TROW": {
+    "industry": "Asset Management",
+    "sector": "Financial Services",
+    "ts": 1785510645
   },
   "TRP": {
     "industry": "Oil & Gas Midstream",
@@ -2013,6 +2083,11 @@
     "industry": "Discount Stores",
     "sector": "Consumer Defensive",
     "ts": 1779543663
+  },
+  "WPC": {
+    "industry": "REIT - Diversified",
+    "sector": "Real Estate",
+    "ts": 1785510645
   },
   "WSC": {
     "industry": "Rental & Leasing Services",

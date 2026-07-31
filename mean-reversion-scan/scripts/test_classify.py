@@ -45,12 +45,15 @@ def test_breadth_carries_cutoffs_for_json_consumers():
 def test_sig_tiers():
     th = 5.0
     assert scan.classify_signal(1.0, th) == "🔵"
-    assert scan.classify_signal(2.5, th) == "🟢"   # exactly half-threshold is not deep
+    # exactly half-threshold is not deep
+    assert scan.classify_signal(2.5, th) == "🟢"
     assert scan.classify_signal(4.9, th) == "🟢"
     assert scan.classify_signal(5.0, th) == "🟡"   # at threshold → forming
     assert scan.classify_signal(9.9, th) == "🟡"
-    assert scan.classify_signal(30.0, th) == "🟡"  # between 2×th and 50 → neutral watch
-    assert scan.classify_signal(50.0, th) == "🟡"  # 50 exactly is not "too late"
+    # between 2×th and 50 → neutral watch
+    assert scan.classify_signal(30.0, th) == "🟡"
+    # 50 exactly is not "too late"
+    assert scan.classify_signal(50.0, th) == "🟡"
     assert scan.classify_signal(50.1, th) == "🔴"
     assert scan.classify_signal(None, th) == "—"
 
@@ -122,11 +125,13 @@ def test_trend_flat_fails_on_strict_above():
 # ---------------------------------------------------------------- frequency
 
 def test_freq_short_series_zero():
-    assert scan.count_past_triggers(_series(np.linspace(100, 110, 30)), 5.0) == 0
+    assert scan.count_past_triggers(
+        _series(np.linspace(100, 110, 30)), 5.0) == 0
 
 
 def test_freq_monotonic_rise_zero():
-    assert scan.count_past_triggers(_series(np.linspace(100, 160, 120)), 5.0) == 0
+    assert scan.count_past_triggers(
+        _series(np.linspace(100, 160, 120)), 5.0) == 0
 
 
 def test_freq_stuck_oversold_counts_one_crossing():
@@ -197,7 +202,8 @@ def test_vol_filter_excludes_and_reranks():
 
 def test_vol_filter_low_vol_floor_keeps_quiet_names():
     picks = [{"ticker": "QUIET", "rank": 1}]
-    kept, excluded = scan.filter_vol_collapse(picks, {"QUIET": _quiet_series()}, 0.2)
+    kept, excluded = scan.filter_vol_collapse(
+        picks, {"QUIET": _quiet_series()}, 0.2)
     assert excluded == [] and kept[0]["ticker"] == "QUIET"
 
 
@@ -219,8 +225,10 @@ def test_trading_day_weekend_and_weekday():
 def test_trading_day_nyse_holidays():
     assert scan.is_nyse_trading_day(date(2026, 4, 3)) is False    # Good Friday
     assert scan.is_nyse_trading_day(date(2026, 6, 19)) is False   # Juneteenth
-    assert scan.is_nyse_trading_day(date(2026, 7, 3)) is False    # Jul 4 observed (Sat→Fri)
-    assert scan.is_nyse_trading_day(date(2026, 7, 6)) is True     # the Monday after is open
+    assert scan.is_nyse_trading_day(
+        date(2026, 7, 3)) is False    # Jul 4 observed (Sat→Fri)
+    assert scan.is_nyse_trading_day(
+        date(2026, 7, 6)) is True     # the Monday after is open
     assert scan.is_nyse_trading_day(date(2026, 12, 25)) is False  # Christmas
 
 
@@ -251,10 +259,12 @@ def test_persistence_streak_gap_and_delta():
              {"ticker": "CCC", "rank": 9, "score_rank": 9}]
     scan.enrich_with_persistence(picks, hist, current_run_id="20260729")
     aaa, bbb, ccc = picks
-    assert aaa["streak"] == 3                       # 2 consecutive priors + today
+    # 2 consecutive priors + today
+    assert aaa["streak"] == 3
     assert aaa["first_seen"] == "2026-07-27"
     assert aaa["rank_delta"] == 1                   # prev score_rank 2 → now 1
-    assert bbb["streak"] == 1                       # gap resets ("stuck" needs consecutive)
+    # gap resets ("stuck" needs consecutive)
+    assert bbb["streak"] == 1
     assert bbb["prev_rank"] == 5
     assert ccc["first_seen"] == "🆕" and ccc["streak"] == 1
 
@@ -351,3 +361,71 @@ def test_win_rate_all_expired_has_no_rate():
     s = scan.compute_win_rate_stats([{"outcome": "EXPIRED",
                                       "days_to_resolve": 5}])
     assert s["win_rate_pct"] is None and s["n_expired"] == 1
+
+
+# ── Slim/verbose table + ⭐️ pocket + Sig strip (2026-07-31 redesign) ──────
+def test_validated_pocket_flag():
+    picks = [
+        {"score": 45, "streak": 1},   # in
+        {"score": 45, "streak": 3},   # stale listing
+        {"score": 39, "streak": 1},   # score below floor
+        {"score": 40, "streak": 2},   # both boundaries inclusive
+    ]
+    scan.attach_validated_pocket(picks)
+    assert [p["validated_pocket"] for p in picks] == [True, False, False, True]
+
+
+def test_render_table_slim_verbose_and_pocket_prefix():
+    p = {"ticker": "FOO", "rank": 1, "rsi2": 1.8, "dist_5dma_pct": -3.2,
+         "dist_50dma_pct": 4.1, "dist_200dma_pct": 14.2, "score": 65.0,
+         "signal": "🔵", "streak": 1, "freq_60d": 2,
+         "stop_price": 228.40, "target_price": 237.55, "last_close": 234.70,
+         "validated_pocket": True}
+    slim = scan.render_table([p], 5)
+    assert "⭐️" in slim
+    for col in ("RSI(2)", "Score", "Sig", "Streak", "Stop", "Target"):
+        assert col in slim
+    for col in ("5DMA%", "50DMA%", "200DMA%", "Freq60d"):
+        assert col not in slim
+    full = scan.render_table([p], 5, verbose=True)
+    for col in ("5DMA%", "50DMA%", "200DMA%", "Freq60d"):
+        assert col in full
+
+
+def test_render_sig_strip_counts_and_none():
+    picks = [{"signal": s} for s in ("🟢", "🟢", "🔵", "🟡")]
+    assert scan.render_sig_strip(picks, 10) == "**Sig**: 🟢2 🔵1 🟡1 🔴0"
+    assert scan.render_sig_strip([{"ticker": "X"}], 10) is None
+
+
+def test_resolved_section_aggregates_wins_and_caps_losses():
+    won = [{"ticker": f"W{i}", "outcome": "WON", "result_pct": 1.0 + i * 0.1,
+            "days_to_resolve": 1, "signal_date": "2026-07-30",
+            "entry_price": 10.0, "target_price": 10.2} for i in range(50)]
+    lost = [{"ticker": f"L{i}", "outcome": "LOST", "result_pct": -5.0 - i,
+             "days_to_resolve": 1, "signal_date": "2026-07-30",
+             "entry_price": 10.0, "stop_price": 9.0} for i in range(12)]
+    expired = [{"ticker": "E0", "outcome": "EXPIRED", "result_pct": -0.4,
+                "days_to_resolve": 5, "signal_date": "2026-07-30",
+                "entry_price": 10.0}]
+    out = "\n".join(scan.render_resolved_section(won + lost + expired, 5))
+    assert "**Won** (50): avg" in out          # one line, not 50
+    assert out.count("hit target") == 0
+    assert out.count("stopped at") == 10        # losses capped at 10
+    assert "and 2 more" in out
+    assert "-16.0%" in out                      # worst loss leads
+    assert "**Expired** (1): drifted" in out
+
+
+def test_stuck_section_legend_prints_once():
+    import pandas as pd
+    picks = [{"ticker": t, "streak": 3, "first_seen": "2026-07-28"}
+             for t in ("AAA", "BBB")]
+    h = pd.DataFrame({
+        "ticker": ["AAA"] * 3 + ["BBB"] * 3,
+        "run_date": pd.to_datetime(["2026-07-28", "2026-07-29", "2026-07-30"] * 2),
+        "rsi2": [4.5, 2.8, 3.1, 5.0, 4.0, 3.0],
+    })
+    out = "\n".join(scan.render_stuck_section(picks, 10, 3, h))
+    assert out.count("warning list") == 1       # legend once, not per name
+    assert out.count("trajectory") == 2         # one line per name

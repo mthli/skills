@@ -529,7 +529,7 @@ class TestRenderTableSlimVerbose:
         for col in ("| RS |", "Smooth%", "BB%ile", "Vol↓", "RSslope%/wk",
                     "RankΔ", "FirstSeen"):
             assert col not in out
-        assert "★" in out          # pocket prefix survives the slim cut
+        assert "⭐️" in out          # pocket prefix survives the slim cut
 
     def test_verbose_restores_diagnostics(self):
         out = scan.render_table([_pick()], 5, verbose=True)
