@@ -24,6 +24,10 @@ def test_breadth_constants_match_scan():
     assert rh.BREADTH_WASHOUT_MIN == scan.BREADTH_WASHOUT_MIN
 
 
+def test_target_window_matches_scan():
+    assert rh.TARGET_WINDOW_DAYS == scan.TARGET_WINDOW_DAYS
+
+
 def test_outcome_schema_matches_scan():
     # The payload joins history and ledger on (run_id, ticker) and reads
     # these resolution fields — if scan.py's ledger schema changes, the

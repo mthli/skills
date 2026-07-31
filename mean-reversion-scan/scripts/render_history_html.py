@@ -52,9 +52,9 @@ BREADTH_WASHOUT_MIN = 60
 # Mirrors scan.py's --persistent-min-streak argparse default (no module
 # constant to drift-guard against; change both together).
 STUCK_MIN_STREAK = 3
-# Mirrors scan.py's --target-window-days default: signals from the last
-# N run days without a ledger row are OPEN (in flight), older ones are
-# UNRESOLVED (no price data reached them — delisted ticker or a ledger
+# Mirrors scan.py's TARGET_WINDOW_DAYS (drift-guard tested): signals from
+# the last N run days without a ledger row are OPEN (in flight), older ones
+# are UNRESOLVED (no price data reached them — delisted ticker or a ledger
 # gap that needs --backfill-outcomes).
 TARGET_WINDOW_DAYS = 5
 # In-sample reference expectancies from the 2026-05→07 outcome backtest
@@ -472,12 +472,12 @@ const I18N = {
       washout: "market-wide panic — best regime in-sample",
     },
     kStuck: "Stuck oversold now",
-    kStuckSub: n => `streak ≥ ${n} on the latest run`,
+    kStuckSub: n => `streak ≥ ${n} on the latest run · all signals, wider than the CLI's top-N section`,
     none: "none",
     brTitle: "Signal breadth × outcome",
     brNote: (thin, wo) => `One column per day: every emitted signal, stacked by how it eventually resolved. Green = bounced to target, red = stopped out, gray = expired flat.\nDashed cutoffs from the backtest: below ${thin} signals ("thin", −1.39%/signal in-sample) the oversold is isolated and tends to keep falling; above ${wo} ("washout", +1.29%) the panic is market-wide and tends to snap back.`,
     gridTitle: "Outcome grid",
-    gridNote: min => `One row per name, one cell per listed day, colored by that day's eventual outcome. A center dot marks ⭐ pocket days (Score ≥ ${DATA.pocket.minScore} on day ≤ ${DATA.pocket.maxStreak} of the spell). Long unbroken rows are stuck oversold — the bounce never came; a warning, not a bargain.\nClick a row to open its RSI(2) / Score / Result strip.`,
+    gridNote: () => `One row per name, one cell per listed day, colored by that day's eventual outcome. A center dot marks ⭐ pocket days (Score ≥ ${DATA.pocket.minScore} on day ≤ ${DATA.pocket.maxStreak} of the spell). Long unbroken rows are stuck oversold — the bounce never came; a warning, not a bargain.\nClick a row to open its RSI(2) / Score / Result strip.`,
     gridFilterLabel: "Filter by days listed",
     geDays: n => `≥${n} days`, all: "All",
     pkTitle: "⭐ Pocket vs the rest",
@@ -526,12 +526,12 @@ const I18N = {
       washout: "全市场恐慌——回测中的最佳环境",
     },
     kStuck: "当前卡死名单",
-    kStuckSub: n => `最新一期连续在榜 ≥ ${n} 天`,
+    kStuckSub: n => `最新一期连续在榜 ≥ ${n} 天 · 全部信号口径，比 CLI 的 top-N 段更宽`,
     none: "无",
     brTitle: "信号广度 × 结局",
     brNote: (thin, wo) => `每天一根柱：当天发出的全部信号，按最终结局分段着色。绿 = 弹回目标价，红 = 打到止损，灰 = 到期没动静。\n虚线是回测的档位线：低于 ${thin}（接刀线，样本内 −1.39%/信号）说明超卖是孤立的、往往继续跌；高于 ${wo}（洗盘线，+1.29%）说明恐慌是全市场的、往往弹回来。`,
     gridTitle: "结局网格",
-    gridNote: min => `每个标的一行，每个上榜日一格，颜色 = 该日信号的最终结局。带中心点的格子是 ⭐ 口袋日（Score ≥ ${DATA.pocket.minScore} 且上榜 ≤ ${DATA.pocket.maxStreak} 天）。连续不断的长行就是卡死超卖——反弹一直没来，是警告不是便宜货。\n点击任意行展开其 RSI(2) / 评分 / 盈亏走势。`,
+    gridNote: () => `每个标的一行，每个上榜日一格，颜色 = 该日信号的最终结局。带中心点的格子是 ⭐ 口袋日（Score ≥ ${DATA.pocket.minScore} 且上榜 ≤ ${DATA.pocket.maxStreak} 天）。连续不断的长行就是卡死超卖——反弹一直没来，是警告不是便宜货。\n点击任意行展开其 RSI(2) / 评分 / 盈亏走势。`,
     gridFilterLabel: "按上榜天数筛选",
     geDays: n => `≥${n} 天`, all: "全部",
     pkTitle: "⭐ 口袋 vs 其余",
@@ -585,12 +585,12 @@ const I18N = {
       washout: "全市場恐慌——回測中的最佳環境",
     },
     kStuck: "目前卡死名單",
-    kStuckSub: n => `最新一期連續在榜 ≥ ${n} 天`,
+    kStuckSub: n => `最新一期連續在榜 ≥ ${n} 天 · 全部訊號口徑，比 CLI 的 top-N 段更寬`,
     none: "無",
     brTitle: "訊號廣度 × 結局",
     brNote: (thin, wo) => `每天一根柱：當天發出的全部訊號，按最終結局分段著色。綠 = 彈回目標價，紅 = 打到止損，灰 = 到期沒動靜。\n虛線是回測的檔位線：低於 ${thin}（接刀線，樣本內 −1.39%/訊號）說明超賣是孤立的、往往繼續跌；高於 ${wo}（洗盤線，+1.29%）說明恐慌是全市場的、往往彈回來。`,
     gridTitle: "結局網格",
-    gridNote: min => `每個標的一行，每個上榜日一格，顏色 = 該日訊號的最終結局。帶中心點的格子是 ⭐ 口袋日（Score ≥ ${DATA.pocket.minScore} 且上榜 ≤ ${DATA.pocket.maxStreak} 天）。連續不斷的長行就是卡死超賣——反彈一直沒來，是警告不是便宜貨。\n點擊任意行展開其 RSI(2) / 評分 / 盈虧走勢。`,
+    gridNote: () => `每個標的一行，每個上榜日一格，顏色 = 該日訊號的最終結局。帶中心點的格子是 ⭐ 口袋日（Score ≥ ${DATA.pocket.minScore} 且上榜 ≤ ${DATA.pocket.maxStreak} 天）。連續不斷的長行就是卡死超賣——反彈一直沒來，是警告不是便宜貨。\n點擊任意行展開其 RSI(2) / 評分 / 盈虧走勢。`,
     gridFilterLabel: "按上榜天數篩選",
     geDays: n => `≥${n} 天`, all: "全部",
     pkTitle: "⭐ 口袋 vs 其餘",
@@ -644,12 +644,12 @@ const I18N = {
       washout: "市場全体のパニック——イン・サンプルで最良の環境",
     },
     kStuck: "現在の停滞銘柄",
-    kStuckSub: n => `最新ランで連続 ${n} 日以上リスト入り`,
+    kStuckSub: n => `最新ランで連続 ${n} 日以上リスト入り · 全シグナル対象（CLI の top-N 節より広い）`,
     none: "なし",
     brTitle: "シグナル数 × 結果",
     brNote: (thin, wo) => `1 日 1 本の柱：その日に発生した全シグナルを最終結果で積み上げ。緑 = 目標到達、赤 = ストップ到達、グレー = 期限切れ。\n破線はバックテストのカットオフ：${thin} 未満（「thin」、イン・サンプル −1.39%/シグナル）は孤立した売られすぎで下げ続きやすく、${wo} 超（「washout」、+1.29%）は市場全体のパニックで反発しやすい。`,
     gridTitle: "結果グリッド",
-    gridNote: min => `1 銘柄 1 行、リスト入りした日ごとに 1 セル、色 = その日のシグナルの最終結果。中心に点があるセルは ⭐ ポケット日（Score ≥ ${DATA.pocket.minScore} かつ ${DATA.pocket.maxStreak} 日目以内）。途切れない長い行は停滞した売られすぎ——反発が来なかった警告であり、掘り出し物ではない。\n行をクリックすると RSI(2) / スコア / 損益の推移が開きます。`,
+    gridNote: () => `1 銘柄 1 行、リスト入りした日ごとに 1 セル、色 = その日のシグナルの最終結果。中心に点があるセルは ⭐ ポケット日（Score ≥ ${DATA.pocket.minScore} かつ ${DATA.pocket.maxStreak} 日目以内）。途切れない長い行は停滞した売られすぎ——反発が来なかった警告であり、掘り出し物ではない。\n行をクリックすると RSI(2) / スコア / 損益の推移が開きます。`,
     gridFilterLabel: "リスト入り日数で絞り込み",
     geDays: n => `${n} 日以上`, all: "すべて",
     pkTitle: "⭐ ポケット vs その他",
@@ -703,12 +703,12 @@ const I18N = {
       washout: "시장 전체 패닉 — 인샘플 최고 환경",
     },
     kStuck: "현재 정체 종목",
-    kStuckSub: n => `최신 런에서 연속 ${n}일 이상 등재`,
+    kStuckSub: n => `최신 런에서 연속 ${n}일 이상 등재 · 전체 신호 기준, CLI의 top-N 섹션보다 넓음`,
     none: "없음",
     brTitle: "신호 수 × 결과",
     brNote: (thin, wo) => `하루 1개 기둥: 그날 발생한 모든 신호를 최종 결과별로 적층. 초록 = 목표 도달, 빨강 = 손절 도달, 회색 = 만료.\n점선은 백테스트 컷오프: ${thin} 미만("thin", 인샘플 −1.39%/신호)은 고립된 과매도로 더 떨어지기 쉽고, ${wo} 초과("washout", +1.29%)는 시장 전체 패닉으로 반등하기 쉽습니다.`,
     gridTitle: "결과 그리드",
-    gridNote: min => `종목당 1행, 등재일마다 1셀, 색 = 그날 신호의 최종 결과. 중심에 점이 있는 셀은 ⭐ 포켓일 (Score ≥ ${DATA.pocket.minScore}, 등재 ${DATA.pocket.maxStreak}일 이내). 끊기지 않는 긴 행은 정체된 과매도 — 반등이 오지 않은 경고이지 헐값이 아닙니다.\n행을 클릭하면 RSI(2) / 점수 / 손익 추이가 열립니다.`,
+    gridNote: () => `종목당 1행, 등재일마다 1셀, 색 = 그날 신호의 최종 결과. 중심에 점이 있는 셀은 ⭐ 포켓일 (Score ≥ ${DATA.pocket.minScore}, 등재 ${DATA.pocket.maxStreak}일 이내). 끊기지 않는 긴 행은 정체된 과매도 — 반등이 오지 않은 경고이지 헐값이 아닙니다.\n행을 클릭하면 RSI(2) / 점수 / 손익 추이가 열립니다.`,
     gridFilterLabel: "등재 일수로 필터",
     geDays: n => `${n}일 이상`, all: "전체",
     pkTitle: "⭐ 포켓 vs 나머지",
@@ -968,6 +968,14 @@ function renderDetail(det, t, onClose) {
     }
     el("path", { d: dstr, fill: "none", stroke: "var(--accent)", "stroke-width": 1.5,
       "stroke-linecap": "round", "stroke-linejoin": "round" }, sv);
+    // A moveto with no lineto draws nothing — isolated days (no adjacent-day
+    // neighbor in this metric, common for sparse Result values) get a dot so
+    // they don't vanish from the strip.
+    const dset = new Set(pts.map(p => p.d));
+    pts.slice(0, -1).forEach(p => {
+      if (!dset.has(p.d - 1) && !dset.has(p.d + 1))
+        el("circle", { cx: x2(p.d).toFixed(1), cy: y2(get(p)).toFixed(1), r: 1.8, fill: "var(--accent)" }, sv);
+    });
     const last = pts[pts.length - 1];
     el("circle", { cx: x2(last.d).toFixed(1), cy: y2(get(last)).toFixed(1), r: 2.5, fill: "var(--accent)" }, sv);
   });
@@ -1124,10 +1132,12 @@ function renderGrid(minDays) {
     const k = div("key", leg); const l = div("line", k); l.style.background = L.col;
     k.appendChild(document.createTextNode(L.lbl));
   });
-  [[P.refPkt, T.pkPocket], [P.refBase, T.pkBase]].forEach(([v, lbl]) => {
+  [[P.refPkt, T.pkPocket, "var(--accent)"],
+   [P.refBase, T.pkBase, "var(--ctx-line)"]].forEach(([v, lbl, col]) => {
     const k = div("key", leg);
     const l = div("line", k);
-    l.style.cssText = "background:repeating-linear-gradient(90deg,var(--muted) 0 4px,transparent 4px 7px)";
+    // Same color as that series' on-chart dash, dashed the same way.
+    l.style.cssText = `background:repeating-linear-gradient(90deg,${col} 0 4px,transparent 4px 7px)`;
     k.appendChild(document.createTextNode(`${lbl}: ${T.pkRef(v)}`));
   });
   const cross = el("line", { y1: MT - 4, y2: MT + PH, stroke: "var(--axis)", "stroke-width": 1, visibility: "hidden" }, svg);
@@ -1161,7 +1171,9 @@ function renderGrid(minDays) {
     { h: T.cols[6], v: s => s.exp,    dir: -1 },
     { h: T.cols[7], v: s => s.tot,    dir: -1 },
     { h: T.cols[8], v: s => s.lastD,  dir: -1 },
-    { h: T.cols[9], v: s => s.st,     dir: 1 },
+    // Sort by the outcome slot order (won, lost, expired, open, no-data),
+    // not the alphabet of the category codes.
+    { h: T.cols[9], v: s => OCATS.indexOf(s.st), dir: 1 },
   ];
   const thead = document.createElement("thead");
   const hr = document.createElement("tr");

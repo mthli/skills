@@ -71,6 +71,12 @@ BREADTH_WASHOUT_MIN = 60  # emitted signals > this → "washout"
 VALIDATED_MIN_SCORE = 40.0
 VALIDATED_MAX_STREAK = 2
 
+# Canonical Connors exit window — days for the bounce-to-target to count as
+# WON; the --target-window-days default. render_history_html.py mirrors this
+# to split ledger-less signals into OPEN vs UNRESOLVED (drift-guarded by
+# test_render_html.py).
+TARGET_WINDOW_DAYS = 5
+
 # Recently-resolved section: wins/expiries aggregate to one line each; only
 # losses itemize (worst first), capped here. A washout week can push 300+
 # resolved picks through the 2× display window, and itemizing every +1.x%
@@ -1636,7 +1642,8 @@ def build_argparser() -> argparse.ArgumentParser:
     ap.add_argument("--vol-collapse-ratio", type=_vol_collapse_ratio,
                     default=0.2)
     ap.add_argument("--persistent-min-streak", type=int, default=3)
-    ap.add_argument("--target-window-days", type=_positive_int, default=5,
+    ap.add_argument("--target-window-days", type=_positive_int,
+                    default=TARGET_WINDOW_DAYS,
                     help="Days within which target must be hit for WON "
                          "(must be a positive integer; typical 3-10).")
     return ap
