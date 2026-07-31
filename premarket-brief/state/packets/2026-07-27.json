@@ -1,0 +1,1501 @@
+{
+  "as_of": "2026-07-27T09:03:28.984540-04:00",
+  "today_et": "2026-07-27",
+  "trading_day": true,
+  "session": {
+    "phase": "pre-open",
+    "et_time": "09:03",
+    "valid": true,
+    "intended_window": "04:00\u201309:30 ET (pre-open)",
+    "warning": ""
+  },
+  "special_days": [],
+  "overnight_tape": {
+    "futures": {
+      "ES=F": {
+        "label": "S&P 500",
+        "last": 7513.25,
+        "prev_close": 7499.25,
+        "pct": 0.19
+      },
+      "NQ=F": {
+        "label": "Nasdaq 100",
+        "last": 28682.25,
+        "prev_close": 28613.5,
+        "pct": 0.24
+      },
+      "YM=F": {
+        "label": "Dow",
+        "last": 52738.0,
+        "prev_close": 52427.0,
+        "pct": 0.59
+      },
+      "RTY=F": {
+        "label": "Russell 2000",
+        "last": 2972.6001,
+        "prev_close": 2968.3,
+        "pct": 0.14
+      }
+    },
+    "vix": {
+      "levels": {
+        "^VIX9D": {
+          "label": "VIX9D",
+          "last": 17.62,
+          "prev_close": 18.15,
+          "pct": -2.92
+        },
+        "^VIX": {
+          "label": "VIX",
+          "last": 17.71,
+          "prev_close": 18.57,
+          "pct": -4.63
+        },
+        "^VIX3M": {
+          "label": "VIX3M",
+          "last": 20.51,
+          "prev_close": 20.6,
+          "pct": -0.44
+        }
+      },
+      "vix_3m_ratio": 0.863,
+      "vix_9d_ratio": 0.995,
+      "shape": "contango"
+    },
+    "global": {
+      "^N225": {
+        "label": "Nikkei",
+        "last": 64931.1914,
+        "prev_close": 64604.8398,
+        "pct": 0.51
+      },
+      "^HSI": {
+        "label": "Hang Seng",
+        "last": 25207.1797,
+        "prev_close": 24963.2305,
+        "pct": 0.98
+      },
+      "000001.SS": {
+        "label": "Shanghai",
+        "last": 3858.2451,
+        "prev_close": 3810.3975,
+        "pct": 1.26
+      },
+      "^KS11": {
+        "label": "KOSPI",
+        "last": 6755.75,
+        "prev_close": 6690.62,
+        "pct": 0.97
+      },
+      "^GDAXI": {
+        "label": "DAX",
+        "last": 25501.2598,
+        "prev_close": 25090.8906,
+        "pct": 1.64
+      },
+      "^FTSE": {
+        "label": "FTSE 100",
+        "last": 10778.4502,
+        "prev_close": 10738.2998,
+        "pct": 0.37
+      },
+      "^STOXX50E": {
+        "label": "Euro Stoxx 50",
+        "last": 6361.3901,
+        "prev_close": 6280.8799,
+        "pct": 1.28
+      },
+      "^FCHI": {
+        "label": "CAC 40",
+        "last": 8444.5,
+        "prev_close": 8372.1299,
+        "pct": 0.86
+      }
+    },
+    "yields": {
+      "^IRX": {
+        "label": "13wk",
+        "last": 3.807,
+        "prev_close": 3.805,
+        "pct": 0.05
+      },
+      "^FVX": {
+        "label": "5y",
+        "last": 4.404,
+        "prev_close": 4.426,
+        "pct": -0.5
+      },
+      "^TNX": {
+        "label": "10y",
+        "last": 4.647,
+        "prev_close": 4.679,
+        "pct": -0.68
+      },
+      "^TYX": {
+        "label": "30y",
+        "last": 5.127,
+        "prev_close": 5.162,
+        "pct": -0.68
+      }
+    },
+    "fx": {
+      "DX-Y.NYB": {
+        "label": "DXY",
+        "last": 101.382,
+        "prev_close": 101.209,
+        "pct": 0.17
+      },
+      "EURUSD=X": {
+        "label": "EUR/USD",
+        "last": 1.1386,
+        "prev_close": 1.1375,
+        "pct": 0.09
+      },
+      "USDJPY=X": {
+        "label": "USD/JPY",
+        "last": 163.694,
+        "prev_close": 163.791,
+        "pct": -0.06
+      }
+    },
+    "commodities": {
+      "CL=F": {
+        "label": "WTI crude",
+        "last": 84.13,
+        "prev_close": 85.21,
+        "pct": -1.27
+      },
+      "BZ=F": {
+        "label": "Brent",
+        "last": 90.56,
+        "prev_close": 92.87,
+        "pct": -2.49
+      },
+      "GC=F": {
+        "label": "Gold",
+        "last": 4085.8999,
+        "prev_close": 4092.5,
+        "pct": -0.16
+      },
+      "SI=F": {
+        "label": "Silver",
+        "last": 59.22,
+        "prev_close": 59.595,
+        "pct": -0.63
+      },
+      "HG=F": {
+        "label": "Copper",
+        "last": 6.392,
+        "prev_close": 6.346,
+        "pct": 0.72
+      },
+      "NG=F": {
+        "label": "Nat gas",
+        "last": 2.808,
+        "prev_close": 2.817,
+        "pct": -0.32
+      }
+    },
+    "crypto": {
+      "BTC-USD": {
+        "label": "Bitcoin",
+        "last": 65040.3203,
+        "prev_close": 65336.3086,
+        "pct": -0.45
+      },
+      "ETH-USD": {
+        "label": "Ethereum",
+        "last": 1957.4,
+        "prev_close": 1952.89,
+        "pct": 0.23
+      }
+    }
+  },
+  "index_premarket": {
+    "note": "",
+    "movers": {
+      "DIA": {
+        "premkt": 524.94,
+        "prev_close": 518.58,
+        "pct": 1.23,
+        "as_of": "2026-07-27 09:01:59-04:00"
+      },
+      "IWM": {
+        "premkt": 294.39,
+        "prev_close": 291.3999,
+        "pct": 1.03,
+        "as_of": "2026-07-27 09:03:36-04:00"
+      },
+      "QQQ": {
+        "premkt": 693.9,
+        "prev_close": 683.964,
+        "pct": 1.45,
+        "as_of": "2026-07-27 09:03:40-04:00"
+      },
+      "SPY": {
+        "premkt": 745.44,
+        "prev_close": 738.66,
+        "pct": 0.92,
+        "as_of": "2026-07-27 09:03:33-04:00"
+      }
+    }
+  },
+  "sectors_premarket": {
+    "note": "",
+    "movers": {
+      "XLB": {
+        "premkt": 51.51,
+        "prev_close": 51.25,
+        "pct": 0.51,
+        "as_of": "2026-07-27 08:59:39-04:00"
+      },
+      "XLC": {
+        "premkt": 107.0,
+        "prev_close": 106.21,
+        "pct": 0.74,
+        "as_of": "2026-07-27 09:03:27-04:00"
+      },
+      "XLE": {
+        "premkt": 58.0707,
+        "prev_close": 59.7801,
+        "pct": -2.86,
+        "as_of": "2026-07-27 09:03:26-04:00"
+      },
+      "XLF": {
+        "premkt": 56.74,
+        "prev_close": 56.23,
+        "pct": 0.91,
+        "as_of": "2026-07-27 09:02:10-04:00"
+      },
+      "XLI": {
+        "premkt": 184.33,
+        "prev_close": 183.09,
+        "pct": 0.68,
+        "as_of": "2026-07-27 09:03:18-04:00"
+      },
+      "XLK": {
+        "premkt": 178.61,
+        "prev_close": 176.17,
+        "pct": 1.39,
+        "as_of": "2026-07-27 09:03:03-04:00"
+      },
+      "XLP": {
+        "premkt": 84.5,
+        "prev_close": 84.041,
+        "pct": 0.55,
+        "as_of": "2026-07-27 08:56:49-04:00"
+      },
+      "XLRE": {
+        "premkt": 46.1,
+        "prev_close": 46.1,
+        "pct": 0.0,
+        "as_of": "2026-07-27 08:54:37-04:00"
+      },
+      "XLU": {
+        "premkt": 46.4592,
+        "prev_close": 46.29,
+        "pct": 0.37,
+        "as_of": "2026-07-27 09:03:11-04:00"
+      },
+      "XLV": {
+        "premkt": 163.2,
+        "prev_close": 163.0804,
+        "pct": 0.07,
+        "as_of": "2026-07-27 08:59:38-04:00"
+      },
+      "XLY": {
+        "premkt": 110.64,
+        "prev_close": 109.4015,
+        "pct": 1.13,
+        "as_of": "2026-07-27 08:52:17-04:00"
+      }
+    }
+  },
+  "premarket_movers": {
+    "note": "",
+    "movers": {
+      "ALKS": {
+        "premkt": 52.9,
+        "prev_close": 52.66,
+        "pct": 0.46,
+        "as_of": "2026-07-27 08:08:00-04:00"
+      },
+      "AMD": {
+        "premkt": 534.75,
+        "prev_close": 521.6,
+        "pct": 2.52,
+        "as_of": "2026-07-27 09:03:49-04:00"
+      },
+      "AMRX": {
+        "premkt": 18.02,
+        "prev_close": 18.2,
+        "pct": -0.99,
+        "as_of": "2026-07-27 06:02:00-04:00"
+      },
+      "BE": {
+        "premkt": 193.71,
+        "prev_close": 186.3042,
+        "pct": 3.98,
+        "as_of": "2026-07-27 09:03:47-04:00"
+      },
+      "BRKR": {
+        "premkt": 59.95,
+        "prev_close": 60.45,
+        "pct": -0.83,
+        "as_of": "2026-07-27 07:59:00-04:00"
+      },
+      "BTSG": {
+        "premkt": 73.7,
+        "prev_close": 73.2,
+        "pct": 0.68,
+        "as_of": "2026-07-27 08:50:41-04:00"
+      },
+      "CNC": {
+        "premkt": 63.99,
+        "prev_close": 63.0,
+        "pct": 1.57,
+        "as_of": "2026-07-27 08:54:18-04:00"
+      },
+      "CROX": {
+        "premkt": 136.74,
+        "prev_close": 134.72,
+        "pct": 1.5,
+        "as_of": "2026-07-27 08:01:00-04:00"
+      },
+      "CRWD": {
+        "premkt": 187.2,
+        "prev_close": 183.27,
+        "pct": 2.14,
+        "as_of": "2026-07-27 09:03:38-04:00"
+      },
+      "CUZ": {
+        "premkt": 32.2,
+        "prev_close": 32.15,
+        "pct": 0.16,
+        "as_of": "2026-07-27 08:15:00-04:00"
+      },
+      "CVS": {
+        "premkt": 107.9937,
+        "prev_close": 107.77,
+        "pct": 0.21,
+        "as_of": "2026-07-27 09:03:25-04:00"
+      },
+      "DDOG": {
+        "premkt": 255.0,
+        "prev_close": 251.49,
+        "pct": 1.4,
+        "as_of": "2026-07-27 09:03:45-04:00"
+      },
+      "DELL": {
+        "premkt": 444.5393,
+        "prev_close": 435.3848,
+        "pct": 2.1,
+        "as_of": "2026-07-27 09:02:42-04:00"
+      },
+      "DINO": {
+        "premkt": 85.0975,
+        "prev_close": 88.61,
+        "pct": -3.96,
+        "as_of": "2026-07-27 09:03:42-04:00"
+      },
+      "DOC": {
+        "premkt": 22.5399,
+        "prev_close": 22.26,
+        "pct": 1.26,
+        "as_of": "2026-07-27 08:35:00-04:00"
+      },
+      "EAT": {
+        "premkt": 191.34,
+        "prev_close": 186.82,
+        "pct": 2.42,
+        "as_of": "2026-07-27 08:15:00-04:00"
+      },
+      "FITB": {
+        "premkt": 57.67,
+        "prev_close": 57.25,
+        "pct": 0.73,
+        "as_of": "2026-07-27 09:01:55-04:00"
+      },
+      "FTNT": {
+        "premkt": 154.19,
+        "prev_close": 152.86,
+        "pct": 0.87,
+        "as_of": "2026-07-27 09:00:02-04:00"
+      },
+      "HNGE": {
+        "premkt": 76.0,
+        "prev_close": 74.31,
+        "pct": 2.27,
+        "as_of": "2026-07-27 08:48:21-04:00"
+      },
+      "HPE": {
+        "premkt": 48.75,
+        "prev_close": 47.65,
+        "pct": 2.31,
+        "as_of": "2026-07-27 09:03:41-04:00"
+      },
+      "HUM": {
+        "premkt": 390.0,
+        "prev_close": 387.0,
+        "pct": 0.78,
+        "as_of": "2026-07-27 08:36:00-04:00"
+      },
+      "ILMN": {
+        "premkt": 196.5,
+        "prev_close": 194.8974,
+        "pct": 0.82,
+        "as_of": "2026-07-27 08:58:55-04:00"
+      },
+      "IMVT": {
+        "premkt": 39.8,
+        "prev_close": 39.41,
+        "pct": 0.99,
+        "as_of": "2026-07-27 09:02:27-04:00"
+      },
+      "IP": {
+        "premkt": 42.56,
+        "prev_close": 41.94,
+        "pct": 1.48,
+        "as_of": "2026-07-27 09:01:05-04:00"
+      },
+      "KMX": {
+        "premkt": 58.3,
+        "prev_close": 58.91,
+        "pct": -1.04,
+        "as_of": "2026-07-27 07:30:00-04:00"
+      },
+      "LLY": {
+        "premkt": 1205.5,
+        "prev_close": 1197.3354,
+        "pct": 0.68,
+        "as_of": "2026-07-27 09:03:43-04:00"
+      },
+      "LTH": {
+        "premkt": 43.0,
+        "prev_close": 42.38,
+        "pct": 1.46,
+        "as_of": "2026-07-27 08:31:51-04:00"
+      },
+      "MRNA": {
+        "premkt": 54.9998,
+        "prev_close": 53.9801,
+        "pct": 1.89,
+        "as_of": "2026-07-27 09:03:15-04:00"
+      },
+      "NOK": {
+        "premkt": 9.43,
+        "prev_close": 8.99,
+        "pct": 4.89,
+        "as_of": "2026-07-27 09:03:42-04:00"
+      },
+      "OSCR": {
+        "premkt": 28.4007,
+        "prev_close": 27.7,
+        "pct": 2.53,
+        "as_of": "2026-07-27 09:00:20-04:00"
+      },
+      "PANW": {
+        "premkt": 329.48,
+        "prev_close": 324.55,
+        "pct": 1.52,
+        "as_of": "2026-07-27 09:03:45-04:00"
+      },
+      "RAL": {
+        "premkt": 70.5,
+        "prev_close": 69.43,
+        "pct": 1.54,
+        "as_of": "2026-07-27 08:13:00-04:00"
+      },
+      "RBRK": {
+        "premkt": 74.7,
+        "prev_close": 72.68,
+        "pct": 2.78,
+        "as_of": "2026-07-27 08:57:13-04:00"
+      },
+      "ROKU": {
+        "premkt": 141.5,
+        "prev_close": 140.453,
+        "pct": 0.75,
+        "as_of": "2026-07-27 08:44:00-04:00"
+      },
+      "RVMD": {
+        "premkt": 190.78,
+        "prev_close": 189.44,
+        "pct": 0.71,
+        "as_of": "2026-07-27 09:02:14-04:00"
+      },
+      "SNOW": {
+        "premkt": 273.79,
+        "prev_close": 267.3,
+        "pct": 2.43,
+        "as_of": "2026-07-27 09:02:48-04:00"
+      },
+      "SYRE": {
+        "premkt": 103.02,
+        "prev_close": 102.89,
+        "pct": 0.13,
+        "as_of": "2026-07-27 08:11:00-04:00"
+      },
+      "TGTX": {
+        "premkt": 56.64,
+        "prev_close": 55.5,
+        "pct": 2.05,
+        "as_of": "2026-07-27 09:00:52-04:00"
+      },
+      "TKR": {
+        "premkt": 142.23,
+        "prev_close": 141.3,
+        "pct": 0.66,
+        "as_of": "2026-07-27 08:38:10-04:00"
+      },
+      "TVTX": {
+        "premkt": 57.92,
+        "prev_close": 56.3039,
+        "pct": 2.87,
+        "as_of": "2026-07-27 08:31:00-04:00"
+      },
+      "UNH": {
+        "premkt": 421.7325,
+        "prev_close": 420.3,
+        "pct": 0.34,
+        "as_of": "2026-07-27 09:02:59-04:00"
+      },
+      "UNM": {
+        "premkt": 85.64,
+        "prev_close": 86.22,
+        "pct": -0.67,
+        "as_of": "2026-07-27 08:39:10-04:00"
+      },
+      "VIK": {
+        "premkt": 102.4325,
+        "prev_close": 100.71,
+        "pct": 1.71,
+        "as_of": "2026-07-27 08:48:00-04:00"
+      },
+      "VSXY": {
+        "premkt": 88.0525,
+        "prev_close": 83.15,
+        "pct": 5.9,
+        "as_of": "2026-07-27 08:54:08-04:00"
+      }
+    }
+  },
+  "premarket_gappers": {
+    "source": "tradingview",
+    "note": "",
+    "filters": {
+      "min_mktcap": 2000000000.0,
+      "min_premkt_vol": 50000
+    },
+    "gainers": [
+      {
+        "ticker": "TOELF",
+        "name": "Tokyo Electron Ltd.",
+        "pct": 9.15,
+        "premkt_vol": 60135,
+        "mktcap": 169292018286.80667,
+        "sector": "Producer Manufacturing"
+      },
+      {
+        "ticker": "NBIS",
+        "name": "Nebius Group N.V. Class A",
+        "pct": 5.73,
+        "premkt_vol": 373129,
+        "mktcap": 47252403645,
+        "sector": "Technology Services"
+      },
+      {
+        "ticker": "SAP",
+        "name": "SAP SE Sponsored ADR",
+        "pct": 5.64,
+        "premkt_vol": 231327,
+        "mktcap": 186035688221.0395,
+        "sector": "Technology Services"
+      },
+      {
+        "ticker": "BMNR",
+        "name": "BitMine Immersion Technologies Inc",
+        "pct": 5.46,
+        "premkt_vol": 778804,
+        "mktcap": 9524944508,
+        "sector": "Finance"
+      },
+      {
+        "ticker": "MBLY",
+        "name": "Mobileye Global, Inc. Class A",
+        "pct": 4.97,
+        "premkt_vol": 187000,
+        "mktcap": 6844010229,
+        "sector": "Technology Services"
+      },
+      {
+        "ticker": "BE",
+        "name": "Bloom Energy Corporation Class A",
+        "pct": 4.95,
+        "premkt_vol": 171837,
+        "mktcap": 52590828462,
+        "sector": "Electronic Technology"
+      },
+      {
+        "ticker": "SKHY",
+        "name": "SK hynix Inc. Sponsored ADR",
+        "pct": 4.7,
+        "premkt_vol": 862925,
+        "mktcap": 873092650538.818,
+        "sector": "Electronic Technology"
+      },
+      {
+        "ticker": "IONQ",
+        "name": "IonQ, Inc.",
+        "pct": 4.11,
+        "premkt_vol": 412704,
+        "mktcap": 12258184492,
+        "sector": "Electronic Technology"
+      },
+      {
+        "ticker": "RGTI",
+        "name": "Rigetti Computing, Inc.",
+        "pct": 4.1,
+        "premkt_vol": 410933,
+        "mktcap": 4703442946,
+        "sector": "Electronic Technology"
+      },
+      {
+        "ticker": "AAL",
+        "name": "American Airlines Group Inc.",
+        "pct": 4.04,
+        "premkt_vol": 507455,
+        "mktcap": 9582014695,
+        "sector": "Transportation"
+      }
+    ],
+    "losers": [
+      {
+        "ticker": "LEGN",
+        "name": "Legend Biotech Corp. Sponsored ADR",
+        "pct": -5.94,
+        "premkt_vol": 96608,
+        "mktcap": 4127138040,
+        "sector": "Health Technology"
+      },
+      {
+        "ticker": "VG",
+        "name": "Venture Global, Inc. Class A",
+        "pct": -5.24,
+        "premkt_vol": 132434,
+        "mktcap": 35551163994,
+        "sector": "Industrial Services"
+      },
+      {
+        "ticker": "EQNR",
+        "name": "Equinor ASA Sponsored ADR",
+        "pct": -3.82,
+        "premkt_vol": 80842,
+        "mktcap": 97890653214.03967,
+        "sector": "Energy Minerals"
+      },
+      {
+        "ticker": "OXY",
+        "name": "Occidental Petroleum Corporation",
+        "pct": -3.42,
+        "premkt_vol": 94745,
+        "mktcap": 56992567814.00001,
+        "sector": "Energy Minerals"
+      },
+      {
+        "ticker": "DVN",
+        "name": "Devon Energy Corporation",
+        "pct": -3.42,
+        "premkt_vol": 74863,
+        "mktcap": 51949275607.00001,
+        "sector": "Energy Minerals"
+      },
+      {
+        "ticker": "BP",
+        "name": "BP PLC Sponsored ADR",
+        "pct": -3.35,
+        "premkt_vol": 233607,
+        "mktcap": 112854396366.19499,
+        "sector": "Energy Minerals"
+      },
+      {
+        "ticker": "PBR",
+        "name": "Petroleo Brasileiro SA Sponsored ADR",
+        "pct": -3.3,
+        "premkt_vol": 75075,
+        "mktcap": 113416654771.68842,
+        "sector": "Energy Minerals"
+      },
+      {
+        "ticker": "XOM",
+        "name": "Exxonmobil Holdings Corporation",
+        "pct": -3.08,
+        "premkt_vol": 80200,
+        "mktcap": 650430866709.9999,
+        "sector": "Energy Minerals"
+      },
+      {
+        "ticker": "RIG",
+        "name": "Transocean Ltd.",
+        "pct": -2.43,
+        "premkt_vol": 69898,
+        "mktcap": 5973927969.999999,
+        "sector": "Industrial Services"
+      },
+      {
+        "ticker": "SHEL",
+        "name": "Shell Plc Sponsored ADR",
+        "pct": -1.96,
+        "premkt_vol": 150452,
+        "mktcap": 243948353562.3886,
+        "sector": "Energy Minerals"
+      }
+    ]
+  },
+  "calendar": {
+    "source": "forexfactory",
+    "events": []
+  },
+  "earnings": {
+    "source": "nasdaq",
+    "before": [
+      {
+        "symbol": "AZN",
+        "name": "AstraZeneca PLC",
+        "slot": "before",
+        "mktcap": 263458548902.0,
+        "eps_forecast": "$2.50"
+      },
+      {
+        "symbol": "VOD",
+        "name": "Vodafone Group Plc",
+        "slot": "before",
+        "mktcap": 37101404907.0,
+        "eps_forecast": ""
+      }
+    ],
+    "after": [
+      {
+        "symbol": "WELL",
+        "name": "Welltower Inc.",
+        "slot": "after",
+        "mktcap": 174396164873.0,
+        "eps_forecast": "$1.55"
+      },
+      {
+        "symbol": "CDNS",
+        "name": "Cadence Design Systems, Inc.",
+        "slot": "after",
+        "mktcap": 91146155360.0,
+        "eps_forecast": "$1.62"
+      },
+      {
+        "symbol": "NUE",
+        "name": "Nucor Corporation",
+        "slot": "after",
+        "mktcap": 54919730093.0,
+        "eps_forecast": "$4.57"
+      },
+      {
+        "symbol": "CLS",
+        "name": "Celestica, Inc.",
+        "slot": "after",
+        "mktcap": 38436462329.0,
+        "eps_forecast": "$2.12"
+      },
+      {
+        "symbol": "CINF",
+        "name": "Cincinnati Financial Corporation",
+        "slot": "after",
+        "mktcap": 27747707780.0,
+        "eps_forecast": "$1.82"
+      },
+      {
+        "symbol": "PFG",
+        "name": "Principal Financial Group Inc",
+        "slot": "after",
+        "mktcap": 23182449051.0,
+        "eps_forecast": "$2.33"
+      },
+      {
+        "symbol": "BRO",
+        "name": "Brown & Brown, Inc.",
+        "slot": "after",
+        "mktcap": 22282431067.0,
+        "eps_forecast": "$1.08"
+      },
+      {
+        "symbol": "FFIV",
+        "name": "F5, Inc.",
+        "slot": "after",
+        "mktcap": 21895181376.0,
+        "eps_forecast": "$3.04"
+      },
+      {
+        "symbol": "AMKR",
+        "name": "Amkor Technology, Inc.",
+        "slot": "after",
+        "mktcap": 16193511601.0,
+        "eps_forecast": "$0.47"
+      },
+      {
+        "symbol": "SUI",
+        "name": "Sun Communities, Inc.",
+        "slot": "after",
+        "mktcap": 14787690840.0,
+        "eps_forecast": "$1.76"
+      },
+      {
+        "symbol": "UDR",
+        "name": "UDR, Inc.",
+        "slot": "after",
+        "mktcap": 12827669980.0,
+        "eps_forecast": "$0.63"
+      },
+      {
+        "symbol": "TFII",
+        "name": "TFI International Inc.",
+        "slot": "after",
+        "mktcap": 12507546336.0,
+        "eps_forecast": "$1.59"
+      }
+    ],
+    "unknown_time": [
+      {
+        "symbol": "VIV",
+        "name": "Telefonica Brasil S.A.",
+        "slot": "unknown",
+        "mktcap": 21889903511.0,
+        "eps_forecast": "$0.23"
+      }
+    ],
+    "watchlist_matches": [],
+    "position_matches": [],
+    "total_reporting": 72
+  },
+  "rating_changes": {
+    "source": "yfinance",
+    "lookback_days": 4,
+    "changes": [
+      {
+        "ticker": "HNGE",
+        "date": "2026-07-27",
+        "firm": "Citizens",
+        "action": "main",
+        "from_grade": "Market Outperform",
+        "to_grade": "Market Outperform",
+        "pt_action": "Raises",
+        "pt": 96.0,
+        "prior_pt": 80.0
+      },
+      {
+        "ticker": "CVS",
+        "date": "2026-07-25",
+        "firm": "UBS",
+        "action": "main",
+        "from_grade": "Buy",
+        "to_grade": "Buy",
+        "pt_action": "Raises",
+        "pt": 122.0,
+        "prior_pt": 115.0
+      },
+      {
+        "ticker": "FTNT",
+        "date": "2026-07-23",
+        "firm": "Cantor Fitzgerald",
+        "action": "main",
+        "from_grade": "Neutral",
+        "to_grade": "Neutral",
+        "pt_action": "Raises",
+        "pt": 165.0,
+        "prior_pt": 110.0
+      }
+    ]
+  },
+  "sentiment": {
+    "fear_greed": {
+      "score": 39.4,
+      "rating": "fear",
+      "prev_close": 39.4,
+      "week_ago": 37.9,
+      "month_ago": 24.7,
+      "year_ago": 74.7,
+      "as_of": "2026-07-27T12:44:01+00:00"
+    }
+  },
+  "headlines": {
+    "source": "cnbc",
+    "window_h": 18,
+    "headlines": [
+      {
+        "time_et": "Mon 09:00 ET",
+        "title": "Spain and France wildfires force more than 300,000 to flee as Macron calls crisis meeting",
+        "feed": "Top News",
+        "link": "https://www.cnbc.com/2026/07/27/wildfires-spain-france-bordeaux-heatwave.html"
+      },
+      {
+        "time_et": "Mon 08:59 ET",
+        "title": "Europe wildfire in pictures: Gigantic fire cloud engulfing France, Spain regions",
+        "feed": "Top News",
+        "link": "https://www.cnbc.com/2026/07/27/wildfire-pictures-spain-france-bordeaux-heatwave.html"
+      },
+      {
+        "time_et": "Mon 08:53 ET",
+        "title": "Why Trump's new tariff blitz is very different this time around",
+        "feed": "Top News",
+        "link": "https://www.cnbc.com/2026/07/27/donald-trump-tariffs-trade-war-iran.html"
+      },
+      {
+        "time_et": "Mon 08:52 ET",
+        "title": "Jim Cramer's top 10 things to watch in the stock market Monday",
+        "feed": "Top News",
+        "link": "https://www.cnbc.com/2026/07/27/jim-cramers-top-10-things-to-watch-in-the-stock-market-monday.html"
+      },
+      {
+        "time_et": "Mon 08:15 ET",
+        "title": "Federal Reserve is likely to hold interest rates steady. Here's what that means for consumers",
+        "feed": "Top News",
+        "link": "https://www.cnbc.com/2026/07/27/fed-interest-rates-july.html"
+      },
+      {
+        "time_et": "Mon 07:56 ET",
+        "title": "U.S. and Iran pause fighting to give peace talks 'space.' Here's where negotiations stand",
+        "feed": "Top News",
+        "link": "https://www.cnbc.com/2026/07/27/us-iran-war-trump-hormuz.html"
+      },
+      {
+        "time_et": "Mon 07:32 ET",
+        "title": "Nvidia, SpaceX, Microsoft launch AI safety initiative as OpenAI cyberattack fallout continues",
+        "feed": "Top News",
+        "link": "https://www.cnbc.com/2026/07/27/nvidia-ai-initiative-openai-cyber-attack.html"
+      },
+      {
+        "time_et": "Mon 06:58 ET",
+        "title": "Apple options are doing something unusual into earnings",
+        "feed": "Top News",
+        "link": "https://www.cnbc.com/2026/07/27/apple-options-are-doing-something-unusual-into-earnings.html"
+      },
+      {
+        "time_et": "Mon 06:00 ET",
+        "title": "Ford wants more customers to customize vehicles to boost profits as it eyes 'Nike shoe drop' moments",
+        "feed": "Top News",
+        "link": "https://www.cnbc.com/2026/07/27/ford-vehicle-customization-bronco.html"
+      },
+      {
+        "time_et": "Mon 05:39 ET",
+        "title": "Cocoa prices are easing. So why is chocolate still so expensive?",
+        "feed": "Top News",
+        "link": "https://www.cnbc.com/2026/07/26/cocoa-prices-chocolate-lindt-barry-callebaut-nestle.html"
+      },
+      {
+        "time_et": "Mon 04:46 ET",
+        "title": "Finland\u2019s radical answer to renewable energy\u2019s biggest headache: The world\u2019s largest sand battery",
+        "feed": "Top News",
+        "link": "https://www.cnbc.com/2026/07/25/finland-sand-battery-renewable-energy-storage.html"
+      },
+      {
+        "time_et": "Mon 04:03 ET",
+        "title": "Chipmaker CXMT\u2019s 466% market debut surge makes it the most valuable China-listed company",
+        "feed": "Top News",
+        "link": "https://www.cnbc.com/2026/07/27/cxmt-china-market-debut-chipmaker-ipo.html"
+      }
+    ]
+  },
+  "regime": {
+    "snapshot": "20260724",
+    "stale_days": 3,
+    "state": "RISK-ON",
+    "score": 4,
+    "vix": 18.6,
+    "vix_term": 0.91,
+    "breadth_50_pct": 66.0,
+    "breadth_200_pct": 66.0,
+    "rsp_spy_pct": 0.2,
+    "credit_pct": 2.4,
+    "def_off_pct": 4.4,
+    "spy_vs_200_pct": 6.3,
+    "ma200_slope_pct": 1.31,
+    "flags": "Defensive rotation: defensives outran offensives over 20d by +4.4pp"
+  },
+  "names": {
+    "source": "cross-scan",
+    "scan_freshness": [
+      {
+        "name": "momentum",
+        "snapshot_date": "2026-07-24",
+        "row_count": 61,
+        "stale_days": 3,
+        "error": null
+      },
+      {
+        "name": "base-breakout",
+        "snapshot_date": "2026-07-24",
+        "row_count": 73,
+        "stale_days": 3,
+        "error": null
+      },
+      {
+        "name": "mean-reversion",
+        "snapshot_date": "2026-07-24",
+        "row_count": 36,
+        "stale_days": 3,
+        "error": null
+      },
+      {
+        "name": "unusual-options",
+        "snapshot_date": "2026-07-24",
+        "row_count": 157,
+        "stale_days": 3,
+        "error": null
+      }
+    ],
+    "overlaps": [
+      {
+        "ticker": "CRWD",
+        "sector": "Technology",
+        "overlap_count": 4,
+        "scans": [
+          "momentum",
+          "base-breakout",
+          "mean-reversion",
+          "unusual-options"
+        ],
+        "read": "base setup + options activity \u00b7 pullback in a leader \u00b7 leader, in base, pulled back hard \u2014 rare"
+      },
+      {
+        "ticker": "CVS",
+        "sector": "Healthcare",
+        "overlap_count": 3,
+        "scans": [
+          "momentum",
+          "base-breakout",
+          "unusual-options"
+        ],
+        "read": "\u2b50 pre-breakout + call flow \u2014 best pattern \u00b7 trend + call-flow confirmation"
+      },
+      {
+        "ticker": "PANW",
+        "sector": "Technology",
+        "overlap_count": 3,
+        "scans": [
+          "momentum",
+          "base-breakout",
+          "mean-reversion"
+        ],
+        "read": "pullback in a leader \u00b7 leader, in base, pulled back hard \u2014 rare"
+      },
+      {
+        "ticker": "HUM",
+        "sector": "Healthcare",
+        "overlap_count": 2,
+        "scans": [
+          "momentum",
+          "base-breakout"
+        ],
+        "read": "leader still consolidating"
+      },
+      {
+        "ticker": "BE",
+        "sector": "Industrials",
+        "overlap_count": 2,
+        "scans": [
+          "mean-reversion",
+          "unusual-options"
+        ],
+        "read": "in 2 scans"
+      },
+      {
+        "ticker": "LTH",
+        "sector": "Consumer Cyclical",
+        "overlap_count": 2,
+        "scans": [
+          "momentum",
+          "base-breakout"
+        ],
+        "read": "leader still consolidating"
+      },
+      {
+        "ticker": "BTSG",
+        "sector": "Healthcare",
+        "overlap_count": 2,
+        "scans": [
+          "momentum",
+          "base-breakout"
+        ],
+        "read": "leader still consolidating"
+      },
+      {
+        "ticker": "ALKS",
+        "sector": "Healthcare",
+        "overlap_count": 2,
+        "scans": [
+          "momentum",
+          "base-breakout"
+        ],
+        "read": "leader still consolidating"
+      },
+      {
+        "ticker": "DOC",
+        "sector": "Real Estate",
+        "overlap_count": 2,
+        "scans": [
+          "momentum",
+          "base-breakout"
+        ],
+        "read": "leader still consolidating"
+      },
+      {
+        "ticker": "LLY",
+        "sector": "Healthcare",
+        "overlap_count": 2,
+        "scans": [
+          "momentum",
+          "base-breakout"
+        ],
+        "read": "leader still consolidating"
+      },
+      {
+        "ticker": "CNC",
+        "sector": "Healthcare",
+        "overlap_count": 2,
+        "scans": [
+          "momentum",
+          "base-breakout"
+        ],
+        "read": "leader still consolidating"
+      },
+      {
+        "ticker": "TVTX",
+        "sector": "Healthcare",
+        "overlap_count": 2,
+        "scans": [
+          "momentum",
+          "base-breakout"
+        ],
+        "read": "leader still consolidating"
+      },
+      {
+        "ticker": "HNGE",
+        "sector": "Healthcare",
+        "overlap_count": 2,
+        "scans": [
+          "momentum",
+          "mean-reversion"
+        ],
+        "read": "pullback in a leader"
+      },
+      {
+        "ticker": "ILMN",
+        "sector": "Healthcare",
+        "overlap_count": 2,
+        "scans": [
+          "momentum",
+          "base-breakout"
+        ],
+        "read": "leader still consolidating"
+      },
+      {
+        "ticker": "FTNT",
+        "sector": "Technology",
+        "overlap_count": 2,
+        "scans": [
+          "momentum",
+          "base-breakout"
+        ],
+        "read": "leader still consolidating"
+      },
+      {
+        "ticker": "RAL",
+        "sector": "Technology",
+        "overlap_count": 2,
+        "scans": [
+          "momentum",
+          "base-breakout"
+        ],
+        "read": "leader still consolidating"
+      },
+      {
+        "ticker": "BRKR",
+        "sector": "Healthcare",
+        "overlap_count": 2,
+        "scans": [
+          "momentum",
+          "base-breakout"
+        ],
+        "read": "leader still consolidating"
+      },
+      {
+        "ticker": "TKR",
+        "sector": "Industrials",
+        "overlap_count": 2,
+        "scans": [
+          "momentum",
+          "base-breakout"
+        ],
+        "read": "leader still consolidating"
+      },
+      {
+        "ticker": "IMVT",
+        "sector": "Healthcare",
+        "overlap_count": 2,
+        "scans": [
+          "momentum",
+          "base-breakout"
+        ],
+        "read": "leader still consolidating"
+      },
+      {
+        "ticker": "CUZ",
+        "sector": "Real Estate",
+        "overlap_count": 2,
+        "scans": [
+          "momentum",
+          "base-breakout"
+        ],
+        "read": "leader still consolidating"
+      },
+      {
+        "ticker": "RVMD",
+        "sector": "Healthcare",
+        "overlap_count": 2,
+        "scans": [
+          "momentum",
+          "base-breakout"
+        ],
+        "read": "leader still consolidating"
+      },
+      {
+        "ticker": "VIK",
+        "sector": "Consumer Cyclical",
+        "overlap_count": 2,
+        "scans": [
+          "base-breakout",
+          "unusual-options"
+        ],
+        "read": "base setup but put-flow disagrees \u2014 caution"
+      },
+      {
+        "ticker": "AMRX",
+        "sector": "Healthcare",
+        "overlap_count": 2,
+        "scans": [
+          "momentum",
+          "base-breakout"
+        ],
+        "read": "leader still consolidating"
+      },
+      {
+        "ticker": "KMX",
+        "sector": "Consumer Cyclical",
+        "overlap_count": 2,
+        "scans": [
+          "momentum",
+          "base-breakout"
+        ],
+        "read": "leader still consolidating"
+      },
+      {
+        "ticker": "MRNA",
+        "sector": "Healthcare",
+        "overlap_count": 2,
+        "scans": [
+          "mean-reversion",
+          "unusual-options"
+        ],
+        "read": "in 2 scans"
+      },
+      {
+        "ticker": "TGTX",
+        "sector": "Healthcare",
+        "overlap_count": 2,
+        "scans": [
+          "momentum",
+          "base-breakout"
+        ],
+        "read": "leader still consolidating"
+      },
+      {
+        "ticker": "OSCR",
+        "sector": "Healthcare",
+        "overlap_count": 2,
+        "scans": [
+          "momentum",
+          "base-breakout"
+        ],
+        "read": "leader still consolidating"
+      },
+      {
+        "ticker": "CROX",
+        "sector": "Consumer Cyclical",
+        "overlap_count": 2,
+        "scans": [
+          "momentum",
+          "base-breakout"
+        ],
+        "read": "leader still consolidating"
+      },
+      {
+        "ticker": "ROKU",
+        "sector": "Communication Services",
+        "overlap_count": 2,
+        "scans": [
+          "base-breakout",
+          "unusual-options"
+        ],
+        "read": "base setup + options activity"
+      },
+      {
+        "ticker": "AMD",
+        "sector": "Technology",
+        "overlap_count": 2,
+        "scans": [
+          "momentum",
+          "unusual-options"
+        ],
+        "read": "in 2 scans"
+      },
+      {
+        "ticker": "DELL",
+        "sector": "Technology",
+        "overlap_count": 2,
+        "scans": [
+          "base-breakout",
+          "unusual-options"
+        ],
+        "read": "base setup + options activity"
+      },
+      {
+        "ticker": "VSXY",
+        "sector": "Consumer Cyclical",
+        "overlap_count": 2,
+        "scans": [
+          "momentum",
+          "base-breakout"
+        ],
+        "read": "leader still consolidating"
+      },
+      {
+        "ticker": "SNOW",
+        "sector": "Technology",
+        "overlap_count": 2,
+        "scans": [
+          "momentum",
+          "unusual-options"
+        ],
+        "read": "in 2 scans"
+      },
+      {
+        "ticker": "SYRE",
+        "sector": "Healthcare",
+        "overlap_count": 2,
+        "scans": [
+          "momentum",
+          "base-breakout"
+        ],
+        "read": "leader still consolidating"
+      },
+      {
+        "ticker": "UNM",
+        "sector": "Financial Services",
+        "overlap_count": 2,
+        "scans": [
+          "mean-reversion",
+          "unusual-options"
+        ],
+        "read": "in 2 scans"
+      },
+      {
+        "ticker": "UNH",
+        "sector": "Healthcare",
+        "overlap_count": 2,
+        "scans": [
+          "base-breakout",
+          "unusual-options"
+        ],
+        "read": "base setup + options activity"
+      },
+      {
+        "ticker": "EAT",
+        "sector": null,
+        "overlap_count": 2,
+        "scans": [
+          "momentum",
+          "base-breakout"
+        ],
+        "read": "leader still consolidating"
+      },
+      {
+        "ticker": "FITB",
+        "sector": "Financial Services",
+        "overlap_count": 2,
+        "scans": [
+          "base-breakout",
+          "unusual-options"
+        ],
+        "read": "base setup but put-flow disagrees \u2014 caution"
+      },
+      {
+        "ticker": "NOK",
+        "sector": "Technology",
+        "overlap_count": 2,
+        "scans": [
+          "mean-reversion",
+          "unusual-options"
+        ],
+        "read": "in 2 scans"
+      },
+      {
+        "ticker": "DDOG",
+        "sector": "Technology",
+        "overlap_count": 2,
+        "scans": [
+          "base-breakout",
+          "unusual-options"
+        ],
+        "read": "base setup + options activity"
+      },
+      {
+        "ticker": "DINO",
+        "sector": "Energy",
+        "overlap_count": 2,
+        "scans": [
+          "momentum",
+          "unusual-options"
+        ],
+        "read": "trend + call-flow confirmation"
+      },
+      {
+        "ticker": "IP",
+        "sector": null,
+        "overlap_count": 2,
+        "scans": [
+          "momentum",
+          "unusual-options"
+        ],
+        "read": "trend + call-flow confirmation"
+      },
+      {
+        "ticker": "RBRK",
+        "sector": "Technology",
+        "overlap_count": 2,
+        "scans": [
+          "momentum",
+          "unusual-options"
+        ],
+        "read": "trend + call-flow confirmation"
+      },
+      {
+        "ticker": "HPE",
+        "sector": "Technology",
+        "overlap_count": 2,
+        "scans": [
+          "base-breakout",
+          "unusual-options"
+        ],
+        "read": "base setup + options activity"
+      }
+    ]
+  },
+  "positions": [],
+  "errors": []
+}

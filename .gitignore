@@ -160,6 +160,14 @@ vite.config.ts.timestamp-*
 # outcome-grading sample the quarterly scripts replay.
 !**/state/runs/
 !**/state/runs/**
+# premarket-brief daily data packets: point-in-time pre-open snapshots
+# (premarket prints, that morning's headlines, F&G) that no API can
+# reconstruct after the fact — the raw layer behind each archived briefing,
+# and the sample for backtesting premkt-vs-close relationships. CAVEAT: the
+# packet embeds parsed positions; if positions.md ever gains real holdings,
+# revisit this exception before the next daily auto-commit.
+!**/state/packets/
+!**/state/packets/**
 # premarket-brief personal positions (private account facts — keep the template
 # header in the repo, but never commit a user's real holdings)
 premarket-brief/positions.md
