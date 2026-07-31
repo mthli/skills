@@ -464,7 +464,7 @@ const I18N = {
     subtitle: (a, b, runs) => `${a} → ${b} · ${runs} trading days · every oversold signal's outcome: won / lost / expired`,
     winTag: (s, t) => ` Charts show the last ${s} of ${t} trading days.`,
     kToday: "Today's ⭐ pocket",
-    rosterFilterLabel: "Filter by resolved count",
+    resFilterLabel: "Filter by resolved count",
     geRes: n => `≥${n} resolved`,
     kResolved: "Resolved signals",
     kResolvedSub: (w, l, e, r) => `${w}W / ${l}L / ${e} expired${r !== null ? ` · win rate ${r}%` : ""}`,
@@ -485,8 +485,7 @@ const I18N = {
     brNote: (thin, wo) => `One column per day: all of that day's signals, colored by how they ended.\nTwo dashed lines: under ${thin} (thin) the selling is isolated and tends to keep falling; over ${wo} (washout) the panic is market-wide and tends to snap back.`,
     gridTitle: "Outcome grid",
     gridNote: () => `One row per name, one cell per listed day, color = that day's outcome; a center dot = ⭐ pocket day (Score ≥ ${DATA.pocket.minScore}, day ≤ ${DATA.pocket.maxStreak}).\nRows sorted by expectancy, best first (matching the roster); nothing-resolved names sink. Row-end = expectancy (%/signal).\nRows running ≥ __STUCK_MIN_STREAK__ days unbroken = stuck oversold, a warning, not a bargain.`,
-    gridFilterLabel: "Filter by days listed",
-    geDays: n => `≥${n} days`, all: "All",
+    all: "All",
     pkTitle: "⭐ Pocket vs the rest",
     pkNote: "Solid lines: the running expectancy (avg %/signal to date) of ⭐ pocket signals vs the rest.\nDashed lines: the backtest references. Pocket holding above its dash = the validated edge still pays.",
     pkPocket: "⭐ Pocket", pkBase: "The rest",
@@ -517,7 +516,7 @@ const I18N = {
     subtitle: (a, b, runs) => `${a} → ${b} · 共 ${runs} 个交易日 · 每个超卖信号的最终结局（赢 / 输 / 过期）`,
     winTag: (s, t) => `图表仅显示最近 ${s} / ${t} 个交易日。`,
     kToday: "今日 ⭐ 口袋",
-    rosterFilterLabel: "按已结算单数筛选",
+    resFilterLabel: "按已结算单数筛选",
     geRes: n => `已结算 ≥ ${n} 单`,
     kResolved: "已结算信号",
     kResolvedSub: (w, l, e, r) => `${w} 赢 / ${l} 输 / ${e} 过期${r !== null ? ` · 胜率 ${r}%` : ""}`,
@@ -538,8 +537,7 @@ const I18N = {
     brNote: (thin, wo) => `每天一根柱：当天的全部信号，颜色 = 最终结局。\n两条虚线：矮过 ${thin}（接刀线）= 零星下跌，往往继续跌，别接；高过 ${wo}（洗盘线）= 全场恐慌，反而最容易弹回来。`,
     gridTitle: "结局网格",
     gridNote: () => `一行一只票，一格一个上榜日，颜色 = 那天的结局；带中心点 = ⭐ 口袋日（Score ≥ ${DATA.pocket.minScore} 且上榜 ≤ ${DATA.pocket.maxStreak} 天）。\n行序按期望从高到低（与名录一致），无结算的沉底；行尾 = 该票期望（%/单）。\n连续 ≥ __STUCK_MIN_STREAK__ 天的长行 = 卡死超卖，是警告不是便宜货。`,
-    gridFilterLabel: "按上榜天数筛选",
-    geDays: n => `≥${n} 天`, all: "全部",
+    all: "全部",
     pkTitle: "⭐ 口袋 vs 其余",
     pkNote: "实线：⭐ 口袋与其余信号各自的滚动期望（截至当日平均每单盈亏 %）。\n虚线：回测参考值。口袋线稳在自己虚线上方 = 验证过的边际还在兑现。",
     pkPocket: "⭐ 口袋", pkBase: "其余信号",
@@ -575,7 +573,7 @@ const I18N = {
     subtitle: (a, b, runs) => `${a} → ${b} · 共 ${runs} 個交易日 · 每個超賣訊號的最終結局（贏 / 輸 / 過期）`,
     winTag: (s, t) => `圖表僅顯示最近 ${s} / ${t} 個交易日。`,
     kToday: "今日 ⭐ 口袋",
-    rosterFilterLabel: "按已結算單數篩選",
+    resFilterLabel: "按已結算單數篩選",
     geRes: n => `已結算 ≥ ${n} 單`,
     kResolved: "已結算訊號",
     kResolvedSub: (w, l, e, r) => `${w} 贏 / ${l} 輸 / ${e} 過期${r !== null ? ` · 勝率 ${r}%` : ""}`,
@@ -596,8 +594,7 @@ const I18N = {
     brNote: (thin, wo) => `每天一根柱：當天的全部訊號，顏色 = 最終結局。\n兩條虛線：矮過 ${thin}（接刀線）= 零星下跌，往往繼續跌，別接；高過 ${wo}（洗盤線）= 全場恐慌，反而最容易彈回來。`,
     gridTitle: "結局網格",
     gridNote: () => `一行一檔票，一格一個上榜日，顏色 = 那天的結局；帶中心點 = ⭐ 口袋日（Score ≥ ${DATA.pocket.minScore} 且上榜 ≤ ${DATA.pocket.maxStreak} 天）。\n行序按期望從高到低（與名錄一致），無結算的沉底；行尾 = 該檔期望（%/單）。\n連續 ≥ __STUCK_MIN_STREAK__ 天的長行 = 卡死超賣，是警告不是便宜貨。`,
-    gridFilterLabel: "按上榜天數篩選",
-    geDays: n => `≥${n} 天`, all: "全部",
+    all: "全部",
     pkTitle: "⭐ 口袋 vs 其餘",
     pkNote: "實線：⭐ 口袋與其餘訊號各自的滾動期望（截至當日平均每單盈虧 %）。\n虛線：回測參考值。口袋線穩在自己虛線上方 = 驗證過的邊際還在兌現。",
     pkPocket: "⭐ 口袋", pkBase: "其餘訊號",
@@ -633,7 +630,7 @@ const I18N = {
     subtitle: (a, b, runs) => `${a} → ${b} · 全 ${runs} 営業日 · 各売られすぎシグナルの最終結果（勝ち / 負け / 期限切れ）`,
     winTag: (s, t) => `チャートは直近 ${s} / ${t} 営業日のみ表示。`,
     kToday: "本日の ⭐ ポケット",
-    rosterFilterLabel: "確定件数で絞り込み",
+    resFilterLabel: "確定件数で絞り込み",
     geRes: n => `確定 ${n} 件以上`,
     kResolved: "確定シグナル数",
     kResolvedSub: (w, l, e, r) => `${w} 勝 / ${l} 敗 / ${e} 期限切れ${r !== null ? ` · 勝率 ${r}%` : ""}`,
@@ -654,8 +651,7 @@ const I18N = {
     brNote: (thin, wo) => `1 日 1 本の柱：その日の全シグナル、色 = 最終結果。\n破線は 2 本：${thin} 未満（thin）なら散発的な下げでまだ下がりやすく、${wo} 超（washout）なら市場全体のパニックでかえって反発しやすい。`,
     gridTitle: "結果グリッド",
     gridNote: () => `1 行 = 1 銘柄、1 セル = リスト入り 1 日、色 = その日の結果。中心の点 = ⭐ ポケット日（Score ≥ ${DATA.pocket.minScore} かつ ${DATA.pocket.maxStreak} 日目以内）。\n行は期待値の高い順（一覧表と同じ）。確定なしは下へ。行末 = 期待値（%/シグナル）。\n__STUCK_MIN_STREAK__ 日以上続く行は停滞した売られすぎ。警告であり掘り出し物ではない。`,
-    gridFilterLabel: "リスト入り日数で絞り込み",
-    geDays: n => `${n} 日以上`, all: "すべて",
+    all: "すべて",
     pkTitle: "⭐ ポケット vs その他",
     pkNote: "実線：⭐ ポケットとその他それぞれのローリング期待値（当日までの平均損益 %/シグナル）。\n破線：バックテストの参考値。ポケット線が自身の破線の上にあれば、検証済みのエッジは健在。",
     pkPocket: "⭐ ポケット", pkBase: "その他",
@@ -691,7 +687,7 @@ const I18N = {
     subtitle: (a, b, runs) => `${a} → ${b} · 총 ${runs}거래일 · 각 과매도 신호의 최종 결과 (승 / 패 / 만료)`,
     winTag: (s, t) => `차트는 최근 ${s} / ${t}거래일만 표시합니다.`,
     kToday: "오늘의 ⭐ 포켓",
-    rosterFilterLabel: "확정 건수로 필터",
+    resFilterLabel: "확정 건수로 필터",
     geRes: n => `확정 ${n}건 이상`,
     kResolved: "확정 신호 수",
     kResolvedSub: (w, l, e, r) => `${w}승 / ${l}패 / ${e} 만료${r !== null ? ` · 승률 ${r}%` : ""}`,
@@ -712,8 +708,7 @@ const I18N = {
     brNote: (thin, wo) => `하루 1개 기둥: 그날의 모든 신호, 색 = 최종 결과.\n점선 2개: ${thin} 미만(thin)이면 산발적 하락이라 더 떨어지기 쉽고, ${wo} 초과(washout)면 시장 전체 패닉이라 오히려 반등하기 쉽습니다.`,
     gridTitle: "결과 그리드",
     gridNote: () => `1행 = 1종목, 1셀 = 등재 1일, 색 = 그날의 결과. 중심의 점 = ⭐ 포켓일 (Score ≥ ${DATA.pocket.minScore}, 등재 ${DATA.pocket.maxStreak}일 이내).\n행은 기대값 높은 순(목록과 동일), 확정 없는 종목은 아래로. 행 끝 = 기대값(%/신호).\n__STUCK_MIN_STREAK__일 이상 이어지는 행은 정체된 과매도, 경고이지 헐값이 아닙니다.`,
-    gridFilterLabel: "등재 일수로 필터",
-    geDays: n => `${n}일 이상`, all: "전체",
+    all: "전체",
     pkTitle: "⭐ 포켓 vs 나머지",
     pkNote: "실선: ⭐ 포켓과 나머지 각각의 롤링 기대값(현재까지 평균 손익 %/신호).\n점선: 백테스트 참고값. 포켓 선이 자기 점선 위에 있으면 검증된 엣지가 유효합니다.",
     pkPocket: "⭐ 포켓", pkBase: "나머지",
@@ -778,7 +773,6 @@ document.title = T.title;
   document.getElementById("pk-title").textContent = T.pkTitle;
   document.getElementById("roster-title").textContent = T.rosterTitle;
   document.getElementById("roster-note").textContent = T.rosterNote;
-  document.getElementById("grid-filter").setAttribute("aria-label", T.gridFilterLabel);
 }
 
 const DAYS = DATA.days.length;
@@ -931,9 +925,10 @@ function tipRows(t, rows, keyColor) {
 // ---- outcome grid ----
 const gridBox = document.getElementById("grid");
 const EXP = new Map(DATA.summary.map(s => [s.t, s.exp]));
-function renderGrid(minDays) {
+const RES = new Map(DATA.summary.map(s => [s.t, s.w + s.l + s.e]));
+function renderGrid(minRes) {
   gridBox.textContent = "";
-  const rows = DATA.series.filter(s => s.days >= minDays);
+  const rows = DATA.series.filter(s => RES.get(s.t) >= minRes);
   const GL = 64, MT = 20, CW = 16, CH = 14;
   const W = GL + DAYS * CW + 56, H = MT + rows.length * CH + 6;
   const svg = el("svg", { width: W, height: H, viewBox: `0 0 ${W} ${H}` }, gridBox);
@@ -982,19 +977,18 @@ function renderGrid(minDays) {
 }
 {
   document.getElementById("grid-note").textContent = T.gridNote() + WIN_TAG;
+  // Same filter dimension AND default as the roster, so the two panels
+  // show the same rows in the same order.
   const sel = document.getElementById("grid-filter");
-  // Cut points scale with history length, same rule as momentum's heatmap:
-  // >=5% attendance filters one-day noise, >=20% marks regulars.
-  const c5 = Math.max(2, Math.ceil(DATA.window.total * 0.05));
-  const c20 = Math.ceil(DATA.window.total * 0.20);
-  new Map([[c5, T.geDays(c5)], [c20, T.geDays(c20)], [1, T.all]]).forEach((lbl, min) => {
+  sel.setAttribute("aria-label", T.resFilterLabel);
+  new Map([[0, T.all], [1, T.geRes(1)], [3, T.geRes(3)]]).forEach((lbl, min) => {
     const o = document.createElement("option");
     o.value = min;
     o.textContent = lbl;
     sel.appendChild(o);
   });
+  sel.value = 3;
   sel.addEventListener("change", () => renderGrid(+sel.value));
-  sel.value = c20;
   renderGrid(+sel.value);
   const leg = document.getElementById("grid-legend");
   OCATS.forEach(c => {
@@ -1182,7 +1176,7 @@ function renderGrid(minDays) {
   // topped by single-lucky-win small samples. Default shows the full
   // archive.
   const sel = document.getElementById("roster-filter");
-  sel.setAttribute("aria-label", T.rosterFilterLabel);
+  sel.setAttribute("aria-label", T.resFilterLabel);
   new Map([[0, T.all], [1, T.geRes(1)], [3, T.geRes(3)]]).forEach((lbl, min) => {
     const o = document.createElement("option");
     o.value = min;
