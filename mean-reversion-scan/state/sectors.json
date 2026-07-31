@@ -417,7 +417,7 @@
   "CNC": {
     "industry": "Healthcare Plans",
     "sector": "Healthcare",
-    "ts": 1781747799
+    "ts": 1785456162
   },
   "CNQ": {
     "industry": "Oil & Gas E&P",
@@ -467,7 +467,7 @@
   "CP": {
     "industry": "Railroads",
     "sector": "Industrials",
-    "ts": 1781747799
+    "ts": 1785456162
   },
   "CPT": {
     "industry": "REIT - Residential",
@@ -482,7 +482,7 @@
   "CROX": {
     "industry": "Footwear & Accessories",
     "sector": "Consumer Cyclical",
-    "ts": 1782259384
+    "ts": 1785456162
   },
   "CRWD": {
     "industry": "Software - Infrastructure",
@@ -533,6 +533,11 @@
     "industry": "Biotechnology",
     "sector": "Healthcare",
     "ts": 1783987531
+  },
+  "CZR": {
+    "industry": "Resorts & Casinos",
+    "sector": "Consumer Cyclical",
+    "ts": 1785456162
   },
   "D": {
     "industry": "Utilities - Regulated Electric",
@@ -689,6 +694,11 @@
     "sector": "Consumer Cyclical",
     "ts": 1784764989
   },
+  "EVRG": {
+    "industry": "Utilities - Regulated Electric",
+    "sector": "Utilities",
+    "ts": 1785456162
+  },
   "EW": {
     "industry": "Medical Devices",
     "sector": "Healthcare",
@@ -752,7 +762,7 @@
   "FTI": {
     "industry": "Oil & Gas Equipment & Services",
     "sector": "Energy",
-    "ts": 1781654633
+    "ts": 1785456162
   },
   "FTNT": {
     "industry": "Software - Infrastructure",
@@ -904,6 +914,11 @@
     "sector": "Industrials",
     "ts": 1782777789
   },
+  "HXL": {
+    "industry": "Aerospace & Defense",
+    "sector": "Industrials",
+    "ts": 1785456162
+  },
   "IBKR": {
     "industry": "Capital Markets",
     "sector": "Financial Services",
@@ -988,6 +1003,11 @@
     "industry": "Oil & Gas Equipment & Services",
     "sector": "Energy",
     "ts": 1783382616
+  },
+  "KIM": {
+    "industry": "REIT - Retail",
+    "sector": "Real Estate",
+    "ts": 1785456162
   },
   "KLAC": {
     "industry": "Semiconductor Equipment & Materials",
@@ -1302,7 +1322,12 @@
   "ODFL": {
     "industry": "Trucking",
     "sector": "Industrials",
-    "ts": 1781747799
+    "ts": 1785456162
+  },
+  "OGE": {
+    "industry": "Utilities - Regulated Electric",
+    "sector": "Utilities",
+    "ts": 1785456162
   },
   "OHI": {
     "industry": "REIT - Healthcare Facilities",
@@ -1399,10 +1424,15 @@
     "sector": "Industrials",
     "ts": 1780849076
   },
+  "PNW": {
+    "industry": "Utilities - Regulated Electric",
+    "sector": "Utilities",
+    "ts": 1785456162
+  },
   "POR": {
     "industry": "Utilities - Regulated Electric",
     "sector": "Utilities",
-    "ts": 1778771638
+    "ts": 1785456162
   },
   "PR": {
     "industry": "Oil & Gas E&P",
@@ -1443,6 +1473,11 @@
     "industry": "Semiconductors",
     "sector": "Technology",
     "ts": 1782777789
+  },
+  "RAL": {
+    "industry": "Electronic Components",
+    "sector": "Technology",
+    "ts": 1785456162
   },
   "REG": {
     "industry": "REIT - Retail",
@@ -1543,6 +1578,11 @@
     "industry": "Electronic Components",
     "sector": "Technology",
     "ts": 1783382616
+  },
+  "SBRA": {
+    "industry": "REIT - Healthcare Facilities",
+    "sector": "Real Estate",
+    "ts": 1785456162
   },
   "SBS": {
     "industry": "Utilities - Regulated Water",
@@ -1654,6 +1694,11 @@
     "sector": "Technology",
     "ts": 1781136248
   },
+  "STAG": {
+    "industry": "REIT - Industrial",
+    "sector": "Real Estate",
+    "ts": 1785456163
+  },
   "STLD": {
     "industry": "Steel",
     "sector": "Basic Materials",
@@ -1703,6 +1748,11 @@
     "industry": "Drug Manufacturers - Specialty & Generic",
     "sector": "Healthcare",
     "ts": 1783987530
+  },
+  "TEX": {
+    "industry": "Farm & Heavy Construction Machinery",
+    "sector": "Industrials",
+    "ts": 1785456162
   },
   "TGT": {
     "industry": "Discount Stores",
@@ -1764,6 +1814,11 @@
     "sector": "Consumer Defensive",
     "ts": 1779543663
   },
+  "TT": {
+    "industry": "Building Products & Equipment",
+    "sector": "Industrials",
+    "ts": 1785456162
+  },
   "TTE": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
@@ -1813,6 +1868,11 @@
     "industry": "Insurance - Life",
     "sector": "Financial Services",
     "ts": 1784764989
+  },
+  "UNP": {
+    "industry": "Railroads",
+    "sector": "Industrials",
+    "ts": 1785456162
   },
   "USAR": {
     "industry": "Other Industrial Metals & Mining",
@@ -1897,7 +1957,7 @@
   "VTR": {
     "industry": "REIT - Healthcare Facilities",
     "sector": "Real Estate",
-    "ts": 1780114451
+    "ts": 1785456162
   },
   "VTRS": {
     "industry": "Drug Manufacturers - Specialty & Generic",
@@ -1937,7 +1997,7 @@
   "WELL": {
     "industry": "REIT - Healthcare Facilities",
     "sector": "Real Estate",
-    "ts": 1780452118
+    "ts": 1785456162
   },
   "WFRD": {
     "industry": "Oil & Gas Equipment & Services",
@@ -1977,7 +2037,7 @@
   "XPO": {
     "industry": "Trucking",
     "sector": "Industrials",
-    "ts": 1781747799
+    "ts": 1785456162
   },
   "YOU": {
     "industry": "Software - Application",

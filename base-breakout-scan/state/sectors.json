@@ -244,6 +244,11 @@
     "sector": "Industrials",
     "ts": 1781568198
   },
+  "CUZ": {
+    "industry": "REIT - Office",
+    "sector": "Real Estate",
+    "ts": 1785456117
+  },
   "CVS": {
     "industry": "Healthcare Plans",
     "sector": "Healthcare",
@@ -749,6 +754,11 @@
     "sector": "Financial Services",
     "ts": 1785369754
   },
+  "RYCEY": {
+    "industry": "Aerospace & Defense",
+    "sector": "Industrials",
+    "ts": 1785456117
+  },
   "SAN": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
@@ -937,7 +947,7 @@
   "VOYA": {
     "industry": "Financial Conglomerates",
     "sector": "Financial Services",
-    "ts": 1781225233
+    "ts": 1785456117
   },
   "VSXY": {
     "industry": "Apparel Retail",

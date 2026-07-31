@@ -112,7 +112,7 @@
   "ABBV": {
     "sector": "Healthcare",
     "industry": "Drug Manufacturers - General",
-    "ts": "2026-06-24T00:06:07.405522+00:00"
+    "ts": "2026-07-31T00:30:37.030818+00:00"
   },
   "INTC": {
     "sector": "Technology",
@@ -222,7 +222,7 @@
   "WFC": {
     "sector": "Financial Services",
     "industry": "Banks - Diversified",
-    "ts": "2026-06-24T00:06:07.837415+00:00"
+    "ts": "2026-07-31T00:30:37.020268+00:00"
   },
   "QCOM": {
     "sector": "Technology",
@@ -302,7 +302,7 @@
   "APP": {
     "sector": "Communication Services",
     "industry": "Advertising Agencies",
-    "ts": "2026-06-25T00:05:36.863637+00:00"
+    "ts": "2026-07-31T00:30:37.000029+00:00"
   },
   "GLW": {
     "sector": "Technology",
@@ -607,7 +607,7 @@
   "BIDU": {
     "sector": "Communication Services",
     "industry": "Internet Content & Information",
-    "ts": "2026-06-25T00:05:37.247319+00:00"
+    "ts": "2026-07-31T00:30:37.329223+00:00"
   },
   "HPE": {
     "sector": "Technology",
@@ -752,7 +752,7 @@
   "NVT": {
     "sector": "Industrials",
     "industry": "Electrical Equipment & Parts",
-    "ts": "2026-06-25T00:05:37.618940+00:00"
+    "ts": "2026-07-31T00:30:37.332310+00:00"
   },
   "RPRX": {
     "sector": "Healthcare",
@@ -792,7 +792,7 @@
   "SBAC": {
     "sector": "Real Estate",
     "industry": "REIT - Specialty",
-    "ts": "2026-05-23T12:44:34.672973+00:00"
+    "ts": "2026-07-31T00:30:37.352721+00:00"
   },
   "AKAM": {
     "sector": "Technology",
@@ -1337,7 +1337,7 @@
   "CDW": {
     "sector": "Technology",
     "industry": "Information Technology Services",
-    "ts": "2026-05-27T17:37:22.339388+00:00"
+    "ts": "2026-07-31T00:30:37.356516+00:00"
   },
   "BBY": {
     "sector": "Consumer Cyclical",
@@ -1722,7 +1722,7 @@
   "DE": {
     "sector": "Industrials",
     "industry": "Farm & Heavy Construction Machinery",
-    "ts": "2026-06-03T02:09:19.338295+00:00"
+    "ts": "2026-07-31T00:30:37.018293+00:00"
   },
   "BN": {
     "sector": "Financial Services",
@@ -1757,7 +1757,7 @@
   "PWR": {
     "sector": "Industrials",
     "industry": "Engineering & Construction",
-    "ts": "2026-06-03T02:09:19.880137+00:00"
+    "ts": "2026-07-31T00:30:37.003834+00:00"
   },
   "INFY": {
     "sector": "Technology",
@@ -1817,7 +1817,7 @@
   "KEY": {
     "sector": "Financial Services",
     "industry": "Banks - Regional",
-    "ts": "2026-06-03T02:09:20.828462+00:00"
+    "ts": "2026-07-31T00:30:37.353753+00:00"
   },
   "ROL": {
     "sector": "Consumer Cyclical",
@@ -2197,7 +2197,7 @@
   "SPG": {
     "sector": "Real Estate",
     "industry": "REIT - Retail",
-    "ts": "2026-06-11T00:07:35.898849+00:00"
+    "ts": "2026-07-31T00:30:37.327334+00:00"
   },
   "PSX": {
     "sector": "Energy",
@@ -2267,7 +2267,7 @@
   "FLUT": {
     "sector": "Consumer Cyclical",
     "industry": "Gambling",
-    "ts": "2026-06-11T00:07:36.794950+00:00"
+    "ts": "2026-07-31T00:30:37.349540+00:00"
   },
   "AGI": {
     "sector": "Basic Materials",
@@ -2387,7 +2387,7 @@
   "WMB": {
     "sector": "Energy",
     "industry": "Oil & Gas Midstream",
-    "ts": "2026-06-12T00:52:45.273329+00:00"
+    "ts": "2026-07-31T00:30:37.009523+00:00"
   },
   "CB": {
     "sector": "Financial Services",
@@ -2782,7 +2782,7 @@
   "MTZ": {
     "sector": "Industrials",
     "industry": "Engineering & Construction",
-    "ts": "2026-06-25T00:05:37.549748+00:00"
+    "ts": "2026-07-31T00:30:37.329785+00:00"
   },
   "TECK": {
     "sector": "Basic Materials",
@@ -3763,5 +3763,60 @@
     "sector": "Consumer Cyclical",
     "industry": "Gambling",
     "ts": "2026-07-30T00:31:15.612446+00:00"
+  },
+  "ETN": {
+    "sector": "Industrials",
+    "industry": "Specialty Industrial Machinery",
+    "ts": "2026-07-31T00:30:37.011534+00:00"
+  },
+  "EPD": {
+    "sector": "Energy",
+    "industry": "Oil & Gas Midstream",
+    "ts": "2026-07-31T00:30:37.027440+00:00"
+  },
+  "DOC": {
+    "sector": "Real Estate",
+    "industry": "REIT - Healthcare Facilities",
+    "ts": "2026-07-31T00:30:37.644263+00:00"
+  },
+  "PAA": {
+    "sector": "Energy",
+    "industry": "Oil & Gas Midstream",
+    "ts": "2026-07-31T00:30:37.662469+00:00"
+  },
+  "ACMR": {
+    "sector": "Technology",
+    "industry": "Semiconductor Equipment & Materials",
+    "ts": "2026-07-31T00:30:37.663696+00:00"
+  },
+  "PAYP": {
+    "sector": "Technology",
+    "industry": "Software - Infrastructure",
+    "ts": "2026-07-31T00:30:37.665003+00:00"
+  },
+  "AVTR": {
+    "sector": "Healthcare",
+    "industry": "Medical Instruments & Supplies",
+    "ts": "2026-07-31T00:30:37.694900+00:00"
+  },
+  "OWL": {
+    "sector": "Financial Services",
+    "industry": "Asset Management",
+    "ts": "2026-07-31T00:30:37.695861+00:00"
+  },
+  "BEPC": {
+    "sector": "Utilities",
+    "industry": "Utilities - Renewable",
+    "ts": "2026-07-31T00:30:37.697411+00:00"
+  },
+  "SON": {
+    "sector": "Consumer Cyclical",
+    "industry": "Packaging & Containers",
+    "ts": "2026-07-31T00:30:37.704655+00:00"
+  },
+  "IRDM": {
+    "sector": "Communication Services",
+    "industry": "Telecom Services",
+    "ts": "2026-07-31T00:30:37.961272+00:00"
   }
 }
