@@ -312,6 +312,7 @@ HTML_TEMPLATE = r"""<!doctype html>
   --oW: #0ca30c; --oL: #a02525; --oO: #2a78d6;
   --oE: #b5b4ad; --oU: #eceae4;
   --accent: #2a78d6;
+  --tpos: #006300; --tneg: #a02525;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -323,6 +324,7 @@ HTML_TEMPLATE = r"""<!doctype html>
     --oW: #0eb30e; --oL: #b83636; --oO: #3987e5;
     --oE: #55544d; --oU: #262624;
     --accent: #3987e5;
+    --tpos: #0ca30c; --tneg: #e66767;
   }
 }
 * { box-sizing: border-box; }
@@ -476,7 +478,7 @@ const I18N = {
     brTitle: "Signal breadth × outcome",
     brNote: (thin, wo) => `One column per day: all of that day's signals, colored by how they ended.\nTwo dashed lines: under ${thin} (thin) the selling is isolated and tends to keep falling; over ${wo} (washout) the panic is market-wide and tends to snap back.`,
     gridTitle: "Outcome grid",
-    gridNote: () => `One row per name, one cell per listed day, color = that day's outcome; a center dot = ⭐ pocket day (Score ≥ ${DATA.pocket.minScore}, day ≤ ${DATA.pocket.maxStreak}).\nRows running ≥ __STUCK_MIN_STREAK__ days unbroken = stuck oversold, a warning, not a bargain. Click a row for its RSI(2) / Score / Result strip.`,
+    gridNote: () => `One row per name, one cell per listed day, color = that day's outcome; a center dot = ⭐ pocket day (Score ≥ ${DATA.pocket.minScore}, day ≤ ${DATA.pocket.maxStreak}).\nRows running ≥ __STUCK_MIN_STREAK__ days unbroken = stuck oversold, a warning, not a bargain. Click a row for its RSI(2) / Score / Result strip.\nRow order = days listed, not a recommendation; the number at the row's end is that name's expectancy (avg %/signal), and the regulars up top mostly run negative.`,
     gridFilterLabel: "Filter by days listed",
     geDays: n => `≥${n} days`, all: "All",
     pkTitle: "⭐ Pocket vs the rest",
@@ -529,7 +531,7 @@ const I18N = {
     brTitle: "信号广度 × 结局",
     brNote: (thin, wo) => `每天一根柱：当天的全部信号，颜色 = 最终结局。\n两条虚线：矮过 ${thin}（接刀线）= 零星下跌，往往继续跌，别接；高过 ${wo}（洗盘线）= 全场恐慌，反而最容易弹回来。`,
     gridTitle: "结局网格",
-    gridNote: () => `一行一只票，一格一个上榜日，颜色 = 那天的结局；带中心点 = ⭐ 口袋日（Score ≥ ${DATA.pocket.minScore} 且上榜 ≤ ${DATA.pocket.maxStreak} 天）。\n连续 ≥ __STUCK_MIN_STREAK__ 天的长行 = 卡死超卖，是警告不是便宜货。点击任意行看 RSI(2) / 评分 / 盈亏走势。`,
+    gridNote: () => `一行一只票，一格一个上榜日，颜色 = 那天的结局；带中心点 = ⭐ 口袋日（Score ≥ ${DATA.pocket.minScore} 且上榜 ≤ ${DATA.pocket.maxStreak} 天）。\n连续 ≥ __STUCK_MIN_STREAK__ 天的长行 = 卡死超卖，是警告不是便宜货。点击任意行看 RSI(2) / 评分 / 盈亏走势。\n行序 = 上榜天数，不是推荐度；行尾数字 = 该票的历史期望（平均 %/单），排得高的常客大多是负的。`,
     gridFilterLabel: "按上榜天数筛选",
     geDays: n => `≥${n} 天`, all: "全部",
     pkTitle: "⭐ 口袋 vs 其余",
@@ -587,7 +589,7 @@ const I18N = {
     brTitle: "訊號廣度 × 結局",
     brNote: (thin, wo) => `每天一根柱：當天的全部訊號，顏色 = 最終結局。\n兩條虛線：矮過 ${thin}（接刀線）= 零星下跌，往往繼續跌，別接；高過 ${wo}（洗盤線）= 全場恐慌，反而最容易彈回來。`,
     gridTitle: "結局網格",
-    gridNote: () => `一行一檔票，一格一個上榜日，顏色 = 那天的結局；帶中心點 = ⭐ 口袋日（Score ≥ ${DATA.pocket.minScore} 且上榜 ≤ ${DATA.pocket.maxStreak} 天）。\n連續 ≥ __STUCK_MIN_STREAK__ 天的長行 = 卡死超賣，是警告不是便宜貨。點擊任意行看 RSI(2) / 評分 / 盈虧走勢。`,
+    gridNote: () => `一行一檔票，一格一個上榜日，顏色 = 那天的結局；帶中心點 = ⭐ 口袋日（Score ≥ ${DATA.pocket.minScore} 且上榜 ≤ ${DATA.pocket.maxStreak} 天）。\n連續 ≥ __STUCK_MIN_STREAK__ 天的長行 = 卡死超賣，是警告不是便宜貨。點擊任意行看 RSI(2) / 評分 / 盈虧走勢。\n行序 = 上榜天數，不是推薦度；行尾數字 = 該檔的歷史期望（平均 %/單），排得高的常客大多是負的。`,
     gridFilterLabel: "按上榜天數篩選",
     geDays: n => `≥${n} 天`, all: "全部",
     pkTitle: "⭐ 口袋 vs 其餘",
@@ -645,7 +647,7 @@ const I18N = {
     brTitle: "シグナル数 × 結果",
     brNote: (thin, wo) => `1 日 1 本の柱：その日の全シグナル、色 = 最終結果。\n破線は 2 本：${thin} 未満（thin）なら散発的な下げでまだ下がりやすく、${wo} 超（washout）なら市場全体のパニックでかえって反発しやすい。`,
     gridTitle: "結果グリッド",
-    gridNote: () => `1 行 = 1 銘柄、1 セル = リスト入り 1 日、色 = その日の結果。中心の点 = ⭐ ポケット日（Score ≥ ${DATA.pocket.minScore} かつ ${DATA.pocket.maxStreak} 日目以内）。\n__STUCK_MIN_STREAK__ 日以上続く行は停滞した売られすぎ。警告であり掘り出し物ではない。行をクリックで RSI(2) / スコア / 損益の推移。`,
+    gridNote: () => `1 行 = 1 銘柄、1 セル = リスト入り 1 日、色 = その日の結果。中心の点 = ⭐ ポケット日（Score ≥ ${DATA.pocket.minScore} かつ ${DATA.pocket.maxStreak} 日目以内）。\n__STUCK_MIN_STREAK__ 日以上続く行は停滞した売られすぎ。警告であり掘り出し物ではない。行をクリックで RSI(2) / スコア / 損益の推移。\n行の順序 = リスト入り日数であり、推奨度ではない。行末の数字はその銘柄の期待値（平均 %/シグナル）で、上位の常連はほぼマイナス。`,
     gridFilterLabel: "リスト入り日数で絞り込み",
     geDays: n => `${n} 日以上`, all: "すべて",
     pkTitle: "⭐ ポケット vs その他",
@@ -703,7 +705,7 @@ const I18N = {
     brTitle: "신호 수 × 결과",
     brNote: (thin, wo) => `하루 1개 기둥: 그날의 모든 신호, 색 = 최종 결과.\n점선 2개: ${thin} 미만(thin)이면 산발적 하락이라 더 떨어지기 쉽고, ${wo} 초과(washout)면 시장 전체 패닉이라 오히려 반등하기 쉽습니다.`,
     gridTitle: "결과 그리드",
-    gridNote: () => `1행 = 1종목, 1셀 = 등재 1일, 색 = 그날의 결과. 중심의 점 = ⭐ 포켓일 (Score ≥ ${DATA.pocket.minScore}, 등재 ${DATA.pocket.maxStreak}일 이내).\n__STUCK_MIN_STREAK__일 이상 이어지는 행은 정체된 과매도, 경고이지 헐값이 아닙니다. 행을 클릭하면 RSI(2) / 점수 / 손익 추이.`,
+    gridNote: () => `1행 = 1종목, 1셀 = 등재 1일, 색 = 그날의 결과. 중심의 점 = ⭐ 포켓일 (Score ≥ ${DATA.pocket.minScore}, 등재 ${DATA.pocket.maxStreak}일 이내).\n__STUCK_MIN_STREAK__일 이상 이어지는 행은 정체된 과매도, 경고이지 헐값이 아닙니다. 행을 클릭하면 RSI(2) / 점수 / 손익 추이.\n행 순서 = 등재 일수이며 추천도가 아닙니다. 행 끝의 숫자는 그 종목의 기대값(평균 %/신호)으로, 상위 단골은 대부분 마이너스입니다.`,
     gridFilterLabel: "등재 일수로 필터",
     geDays: n => `${n}일 이상`, all: "전체",
     pkTitle: "⭐ 포켓 vs 나머지",
@@ -984,11 +986,12 @@ const highlightGridRow = () => {
   gridBox.querySelectorAll("text[data-t]").forEach(x =>
     x.style.fill = x.dataset.t === gridPinned ? "var(--ink)" : "");
 };
+const EXP = new Map(DATA.summary.map(s => [s.t, s.exp]));
 function renderGrid(minDays) {
   gridBox.textContent = "";
   const rows = DATA.series.filter(s => s.days >= minDays);
   const GL = 64, MT = 20, CW = 16, CH = 14;
-  const W = GL + DAYS * CW + 8, H = MT + rows.length * CH + 6;
+  const W = GL + DAYS * CW + 56, H = MT + rows.length * CH + 6;
   const svg = el("svg", { width: W, height: H, viewBox: `0 0 ${W} ${H}` }, gridBox);
   DATA.days.forEach((d, i) => {
     if (i === DAYS - 1 || (i % 5 === 0 && DAYS - 1 - i >= 3))
@@ -999,6 +1002,15 @@ function renderGrid(minDays) {
     const ra = el("a", { href: tickerUrl(s.t), target: "_blank", rel: "noopener" }, svg);
     const lt = el("text", { x: GL - 8, y: y + CH - 3, "text-anchor": "end", class: "tick" }, ra);
     lt.textContent = s.t; lt.dataset.t = s.t;
+    const ex = EXP.get(s.t);
+    if (ex != null) {
+      // The corrective number, placed where the seduction happens: dense
+      // green rows up top read as "always bounces" while mostly running
+      // a negative average. Inline style so it beats the muted svg-text rule.
+      const et = el("text", { x: GL + DAYS * CW + 6, y: y + CH - 3, class: "tick" }, svg);
+      et.style.fill = ex >= 0 ? "var(--tpos)" : "var(--tneg)";
+      et.textContent = (ex >= 0 ? "+" : "") + ex.toFixed(1) + "%";
+    }
     s.pts.forEach((p, pi) => {
       const r = el("rect", { x: GL + p.d * CW, y: y + 1, width: CW - 2, height: CH - 2, rx: 2,
         fill: `var(${OC_VAR[p.o]})` }, svg);
