@@ -1141,6 +1141,17 @@ function renderHeat(minApps) {
   }));
   renderHead(); renderRows();
 
+  // Grow the 540px viewport up to the boundary of the row it would cut,
+  // so the default view ends on a whole row (row height is font-derived,
+  // so measure the real layout instead of assuming a constant).
+  for (const r of tb.rows) {
+    const bottom = r.offsetTop + r.offsetHeight;
+    if (bottom >= 540) {
+      tbl.parentElement.style.maxHeight = bottom + "px";
+      break;
+    }
+  }
+
   // Entry-quality legend under the table — same pattern as the heatmap's,
   // strongest tier first to match the ramp's reading direction.
   const leg = document.getElementById("roster-legend");
