@@ -21,7 +21,7 @@ on:
       - mean-reversion-scan/state/outcomes.csv
       - mean-reversion-scan/state/sectors.json
       - mean-reversion-scan/scripts/render_history_html.py
-      - .github/workflows/deploy-dashboards-pages.yml
+      - .github/workflows/deploy-pages.yml
   workflow_dispatch:
 
 permissions:
