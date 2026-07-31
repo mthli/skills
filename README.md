@@ -35,6 +35,7 @@ Three layers, top to bottom: a **gate** (is the market healthy?), three **finder
 
 - `yfinance` - Fetch stock/ETF/index quotes and historical OHLCV data from Yahoo Finance.
 - [`edgartools`](https://github.com/dgunning/edgartools) - Access and analyze SEC Edgar filings, XBRL financial statements, 10-K, 10-Q, and 8-K reports.
+- [`IBKR`](https://www.interactivebrokers.com/en/trading/ai-integrations.php) - Analyze portfolios, research investments, monitor risk, and generate trade instructions using AI.
 
 ## Misc
 
