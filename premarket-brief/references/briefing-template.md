@@ -91,7 +91,11 @@ each moved if it's knowable. Don't relist names already covered above.
 **Analyst actions** (`rating_changes`): fresh upgrades/downgrades + price-target
 moves on your names or the watchlist — these gap singles pre-open. Call the
 direction and the PT delta (e.g. "ROKU PT 150→170, MS reit Overweight"); weight
-genuine up/down-grades over a routine "maintains + PT nudge".
+genuine up/down-grades over a routine "maintains + PT nudge". A **raise-wall
+into a gap** — multiple same-morning PT raises stacked on an already-large
+premarket gap — is a no-chase flag, not confirmation: three exhibits (TSM
+07-17, AMD 07-27, FTNT 07-30) all round-tripped the morning after
+vindication.
 
 ## 8. Watch-outs
 
@@ -144,6 +148,12 @@ This is the section that can do harm if written lazily, so frame it honestly:
 - **Respect the regime.** If the structural read (even if cautiously stale) plus
   the overnight tape say risk-off with stacking divergences, the plan is "what's
   holding up, sized small, defense" — not chasing. Thread the regime into sizing.
+- **Grade catalyst claims by % of gap kept at the close, per-name.** >70% kept
+  = catalyst-owned; <30% = traded like sympathy, whatever bucket the name was
+  put in premarket (07-20 SIMO inverted inside the catalyst bucket; 07-30 FTNT
+  kept 10% of its own-print gap while the demand corner kept >100%). Close-graded
+  tests also need an explicit middle branch — a finish within ~0.2% of the line
+  or green-but-below-gap is "unconfirmed, next session decides," not a verdict.
 
 The honest test for this section: would it still read as sound *after* the day
 plays out either direction? If it only looks smart in one outcome, it's a
