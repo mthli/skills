@@ -7,7 +7,9 @@ catalysts (econ calendar + earnings), the headline sentiment gauge — and folds
 in two things the sister scans already compute so we don't recompute them:
 
   - regime-scan's latest 🟢/🟡/🔴 state (the structural backdrop)  [read state/history.csv]
-  - cross-scan's consensus overlap names (the watchlist)          [shell out, JSON]
+  - the sister scans' validated pockets (the watchlist)           [read state/history.csv]
+    (momentum's leaderboard + mean-reversion's fresh score≥40 listings — this
+    replaced cross-scan's consensus overlaps when that skill was retired 2026-07)
 
 Everything price-related is best-effort and degrades to None cleanly (mirrors
 regime-scan's philosophy): one dead source must never sink the whole packet —
@@ -33,7 +35,6 @@ Usage:
 import argparse
 import json
 import re
-import subprocess
 import sys
 import urllib.request
 import warnings
@@ -56,7 +57,8 @@ STATE_DIR = SKILL_DIR / "state"
 PACKET_DIR = STATE_DIR / "packets"
 POSITIONS_FILE = SKILL_DIR / "positions.md"
 REGIME_HISTORY = SKILLS_ROOT / "regime-scan" / "state" / "history.csv"
-CROSS_SCAN = SKILLS_ROOT / "cross-scan" / "scripts" / "aggregate.py"
+MOMENTUM_STATE = SKILLS_ROOT / "momentum-scan" / "state"
+MR_STATE = SKILLS_ROOT / "mean-reversion-scan" / "state"
 MARKET_TZ = ZoneInfo("America/New_York")
 
 UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
@@ -675,32 +677,70 @@ def regime_state(today: date, errors: list) -> dict | None:
         return None
 
 
-def cross_scan_names(errors: list, top_n: int = 40) -> dict:
-    """Consensus overlap names from cross-scan (reads its caches; no refresh)."""
-    if not CROSS_SCAN.exists():
-        errors.append(f"names: {CROSS_SCAN} not found")
-        return {"source": "unavailable", "overlaps": []}
+def _sector_map() -> dict:
+    """ticker → sector, merged from the sister scans' sectors.json caches."""
+    out: dict = {}
+    for p in (MOMENTUM_STATE / "sectors.json", MR_STATE / "sectors.json"):
+        try:
+            for tk, meta in json.loads(p.read_text()).items():
+                if isinstance(meta, dict) and meta.get("sector"):
+                    out.setdefault(tk, meta["sector"])
+        except Exception:
+            pass
+    return out
+
+
+def scan_watchlist_names(errors: list, mom_top_n: int = 30,
+                         mr_min_score: float = 40.0) -> dict:
+    """Watchlist from the sister-scan caches (pure file reads; no refresh).
+
+    This used to shell out to cross-scan for a consensus-overlap list; the
+    overlap backtest inverted that premise (more overlap = worse outcomes) and
+    the skill was retired 2026-07. The watchlist is now the validated pockets
+    read directly: momentum's current leaderboard, plus mean-reversion names
+    passing its backtest-validated filter (score ≥ 40 on a 1st/2nd-day
+    listing — 3rd+ consecutive listings ran negative)."""
+    sectors = _sector_map()
+    watch: list = []
+    freshness: dict = {}
+
     try:
-        out = subprocess.run(
-            [sys.executable, str(CROSS_SCAN), "--format", "json", "--top-n", str(top_n)],
-            capture_output=True, text=True, timeout=120)
-        if out.returncode != 0:
-            errors.append(f"names/cross-scan rc={out.returncode}: {out.stderr[-300:]}")
-            return {"source": "error", "overlaps": []}
-        data = json.loads(out.stdout)
-        overlaps = [{
-            "ticker": o["ticker"],
-            "sector": o.get("sector"),
-            "overlap_count": o.get("overlap_count"),
-            "scans": o.get("scans"),
-            "read": o.get("composite_read"),
-        } for o in data.get("overlaps", [])]
-        return {"source": "cross-scan",
-                "scan_freshness": data.get("scans"),
-                "overlaps": overlaps}
+        df = pd.read_csv(MOMENTUM_STATE / "history.csv")
+        latest = df["run_id"].iloc[-1]
+        freshness["momentum"] = str(latest)
+        for _, r in df[df["run_id"] == latest].nsmallest(mom_top_n, "rank").iterrows():
+            watch.append({"ticker": r["ticker"], "sector": sectors.get(r["ticker"]),
+                          "sources": ["momentum"], "read": f"momentum #{int(r['rank'])}"})
     except Exception as e:
-        errors.append(f"names/cross-scan: {e}")
-        return {"source": "error", "overlaps": []}
+        errors.append(f"names/momentum: {e}")
+
+    try:
+        df = pd.read_csv(MR_STATE / "history.csv")
+        run_ids = list(dict.fromkeys(df["run_id"]))
+        latest = run_ids[-1]
+        freshness["mean-reversion"] = str(latest)
+        by_run = {rid: set(df.loc[df["run_id"] == rid, "ticker"]) for rid in run_ids}
+        idx = {w["ticker"]: w for w in watch}
+        for _, r in df[(df["run_id"] == latest) & (df["score"] >= mr_min_score)].iterrows():
+            day = 1
+            for rid in reversed(run_ids[:-1]):
+                if r["ticker"] not in by_run[rid]:
+                    break
+                day += 1
+            if day > 2:
+                continue
+            read = f"MR score {r['score']:.0f} day{day}"
+            if r["ticker"] in idx:
+                idx[r["ticker"]]["sources"].append("mean-reversion")
+                idx[r["ticker"]]["read"] += f" + {read}"
+            else:
+                watch.append({"ticker": r["ticker"], "sector": sectors.get(r["ticker"]),
+                              "sources": ["mean-reversion"], "read": read})
+    except Exception as e:
+        errors.append(f"names/mean-reversion: {e}")
+
+    return {"source": "sister-scans" if watch else "unavailable",
+            "freshness": freshness, "watchlist": watch}
 
 
 def load_positions(errors: list) -> list[dict]:
@@ -801,8 +841,8 @@ def build(today: date, now: datetime | None = None) -> dict:
 
     positions = load_positions(errors)
     pos_tickers = {p["ticker"] for p in positions}
-    names = cross_scan_names(errors)
-    watchlist = {o["ticker"] for o in names.get("overlaps", [])}
+    names = scan_watchlist_names(errors)
+    watchlist = {w["ticker"] for w in names.get("watchlist", [])}
 
     earn = earnings_today(today, watchlist, pos_tickers, errors)
 
@@ -811,13 +851,14 @@ def build(today: date, now: datetime | None = None) -> dict:
                  + earn.get("unknown_time", [])}
     for p in positions:
         p["reports_today"] = p["ticker"] in reporting
-        p["in_overlap"] = p["ticker"] in watchlist
+        p["on_watchlist"] = p["ticker"] in watchlist
 
-    # Analyst-action universe: every position + the strongest overlap names. Capped
-    # because rating_changes is one yfinance call per name (positions always
-    # included — those move YOU; watchlist trimmed to the top consensus handful).
-    overlap_order = [o["ticker"] for o in names.get("overlaps", [])]
-    ratings_universe = sorted(pos_tickers) + overlap_order[:15]
+    # Analyst-action universe: every position + the strongest watchlist names.
+    # Capped because rating_changes is one yfinance call per name (positions
+    # always included — those move YOU; watchlist trimmed to the top handful,
+    # which is the momentum leaderboard head since it lists first).
+    watch_order = [w["ticker"] for w in names.get("watchlist", [])]
+    ratings_universe = sorted(pos_tickers) + watch_order[:15]
 
     # Official prior-session closes for every gap computation below — ONE
     # batched daily download covering the index proxies, sector ETFs, the

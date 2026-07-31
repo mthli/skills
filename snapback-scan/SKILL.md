@@ -63,7 +63,6 @@ The packet saves to `state/runs/<date>.json`. Per-keg fields that matter:
 - `sparks[]` — dated, with reporter symbol and slot
 - `ignited` — already moved ≥ +7% since signal (chase-guard)
 - `quiet_warning` 😴 — no panic in the 5d tape (knife risk)
-- `uoa_flagged` ⚠️ — options-flow crowding (warning, never confirmation)
 - `signal_day_low` / `mr_stop` — invalidation candidates; `mr_target`
 - `next_own_earnings` — for unarmed kegs, the next known date beyond the window
 - `down_streak`, `down_gaps_5d`, `vol_ratio_5d_20d` — seller-mechanism reads
@@ -110,7 +109,6 @@ Rules that make this honest — apply every one:
   the retest level and what would invalidate the whole episode.
 - **😴 Quiet kegs are demoted** to the watch list, with the reason: the
   backtest says quiet-day oversold is a knife catch; the edge needs panic.
-- **⚠️ UOA co-occurrence is a crowding warning**, never confirmation.
 - **Own-earnings sparks are coin flips** — branch the brief BOTH ways
   (earnings-gap rule: zero directional trust in the print). A sector-verdict
   spark is the better structure: someone ELSE re-prices the narrative and
@@ -129,7 +127,6 @@ Rules that make this honest — apply every one:
 - `mean-reversion-scan` supplies the kegs — never rescan here; if its cache
   is stale, say so and suggest running it.
 - `regime-scan` supplies the sizing gate.
-- `unusual-options-scan` supplies the crowding flag.
 - `premarket-brief` is the morning-of companion: on a spark day its packet
   grades whether the verdict confirmed (gap-keep, hour-one survival) — the
   "add" trigger in these briefs is usually observable there.

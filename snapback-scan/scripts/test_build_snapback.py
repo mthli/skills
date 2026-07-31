@@ -81,21 +81,20 @@ VERDICTS = [
 
 def test_marketwide_never_arms():
     kegs = _kegs()
-    bp.join_sparks(kegs, {}, VERDICTS, [], uoa_set={"BBB"})
+    bp.join_sparks(kegs, {}, VERDICTS, [])
     armed = {k["ticker"]: k["armed"] for k in kegs}
     assert armed == {"AAA": True, "BBB": False, "CCC": False}
     aaa = next(k for k in kegs if k["ticker"] == "AAA")
     assert {s["type"] for s in aaa["sparks"]} == {"sector_verdict", "marketwide_verdict"}
     bbb = next(k for k in kegs if k["ticker"] == "BBB")
     assert all(s["type"] == "marketwide_verdict" for s in bbb["sparks"])
-    assert bbb["uoa_flagged"] and not aaa["uoa_flagged"]
 
 
 def test_own_earnings_and_macro_arm():
     kegs = _kegs()
     own = {"CCC": {"date": "2026-08-01", "slot": "AMC", "eps_forecast": "1.00"}}
     macro = [{"date": "2026-08-01", "time_et": "08:30", "title": "CPI y/y"}]
-    bp.join_sparks(kegs, own, [], macro, uoa_set=set())
+    bp.join_sparks(kegs, own, [], macro)
     assert all(k["armed"] for k in kegs)          # macro is a verdict for everyone
     ccc = next(k for k in kegs if k["ticker"] == "CCC")
     assert any(s["type"] == "own_earnings" for s in ccc["sparks"])

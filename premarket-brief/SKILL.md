@@ -1,6 +1,6 @@
 ---
 name: premarket-brief
-description: Pre-open US market briefing ~30 min before the bell — today's character, overnight tape, catalysts (econ calendar + earnings + headlines), sentiment, sectors, index levels, and an event-gated game plan tied to YOUR positions. Reuses regime-scan (structural backdrop) and cross-scan (consensus names), adding the overnight/event layer they miss; each run reconciles the prior briefing and archives it so the regime call calibrates over time. Triggers on "premarket", "morning brief", "daily game plan", "today's catalysts / economic calendar / earnings", "what to watch before the open", "premarket movers". Do NOT use for: a pure market-health read (use regime-scan), scanning for names to buy (momentum-scan / cross-scan), single-ticker price or fundamentals (yfinance), or a post-close recap.
+description: Pre-open US market briefing ~30 min before the bell — today's character, overnight tape, catalysts (econ calendar + earnings + headlines), sentiment, sectors, index levels, and an event-gated game plan tied to YOUR positions. Reuses regime-scan (structural backdrop) and the momentum / mean-reversion caches (watchlist), adding the overnight/event layer they miss; each run reconciles the prior briefing and archives it so the regime call calibrates over time. Triggers on "premarket", "morning brief", "daily game plan", "today's catalysts / economic calendar / earnings", "what to watch before the open", "premarket movers". Do NOT use for: a pure market-health read (use regime-scan), scanning for names to buy (momentum-scan / conviction-funnel), single-ticker price or fundamentals (yfinance), or a post-close recap.
 ---
 
 # premarket-brief
@@ -17,7 +17,10 @@ what the structural scans miss:
   sentiment gauge. None of that lives in any sister scan.
 
 So this skill **reuses, never recomputes**: it reads regime-scan's latest state
-as the structural backdrop and cross-scan's overlap names as the watchlist, then
+as the structural backdrop and the sister scans' validated pockets as the
+watchlist (momentum's leaderboard + mean-reversion's fresh score≥40 listings —
+this replaced cross-scan's consensus overlaps when that skill was retired
+2026-07 on its overlap backtest), then
 layers the overnight tape + catalysts + your positions on top. The output is a
 9-section briefing, archived daily, with a built-in expected-vs-actual feedback
 loop so the regime call gets calibrated instead of evaporating.
@@ -85,8 +88,9 @@ premarket movers, market-wide premarket gappers (`premarket_gappers` — top
 large-cap movers outside your book, via TradingView), today's econ calendar +
 earnings, recent analyst rating changes on your names + watchlist
 (`rating_changes`), overnight macro headlines (`headlines`, CNBC RSS), Fear &
-Greed, the regime-scan state row, the cross-scan overlap names, your parsed
-positions (with `reports_today` / `in_overlap` joins), special-day flags, an
+Greed, the regime-scan state row, the sister-scan watchlist (`names.watchlist` —
+momentum leaderboard + fresh high-score mean-reversion listings), your parsed
+positions (with `reports_today` / `on_watchlist` joins), special-day flags, an
 `errors` list, and a `data_quality` list (cross-source premarket disagreements
 + prev-close provenance — see step 3).
 
@@ -142,7 +146,7 @@ to not get fooled by them. Check these:
 ### 4. Enrich positions (only if positions.md is non-empty)
 
 For each position, the packet already flags earnings-today and watchlist
-overlap. If you can locate the user's investment-notes repo, read the relevant
+membership. If you can locate the user's investment-notes repo, read the relevant
 `distill-ticker` snapshot for thesis/conviction context (this skill's
 `positions.md` deliberately holds *facts only*). If you can't find it, proceed
 with packet facts — don't block on it.

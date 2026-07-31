@@ -76,9 +76,11 @@ matter today — gap fill, resistance above / support below.
 
 ## 7. Focus names
 
-cross-scan overlap names (overlap_count ≥ 2) ∩ premarket movers ∩ your positions.
-The handful worth attention today and *why* (consensus signal? gapping on news?
-reporting? in your book?). Keep it short — this is a focus list, not a re-scan.
+the sister-scan watchlist (`names.watchlist` — momentum leaderboard + fresh
+high-score mean-reversion listings) ∩ premarket movers ∩ your positions.
+The handful worth attention today and *why* (leader gapping on news? fresh
+oversold name reporting? in your book?). Keep it short — this is a focus list,
+not a re-scan.
 
 **Market-wide gappers** (`premarket_gappers`): the biggest premarket movers
 *outside* your book/watchlist — a name gapping on an FDA nod, M&A, or guidance
@@ -105,14 +107,14 @@ with explicit invalidation. NOT a directional call.
 
 *Sources: <one-line provenance + freshness footer>. e.g. "yfinance
 (tape/VIX/movers/ratings), ForexFactory (calendar — empty), Nasdaq (earnings),
-CNN F&G, TradingView (gappers), CNBC RSS (headlines), regime-scan + cross-scan
+CNN F&G, TradingView (gappers), CNBC RSS (headlines), regime + momentum + MR
 caches (Fri 6/05, 3d stale). `errors`: none."*
 ```
 
 The closing `*Sources: …*` footer is **required**: a single italic line after a
 `---` rule (keep the blank line between the rule and the footer). It names which
 sources actually fed this run, flags any that came back empty/unavailable, dates
-the regime/cross-scan caches with their staleness, and ends with the `errors`
+the regime/momentum/MR caches with their staleness, and ends with the `errors`
 count plus any `data_quality` flags. This is the at-a-glance provenance +
 freshness stamp — it complements the per-section honesty notes (§3/§7/§8), it
 doesn't replace them.

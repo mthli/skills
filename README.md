@@ -13,15 +13,26 @@ Personal skills used in Claude Code 🤖
 
 ## Finance
 
-- `base-breakout-scan` - Scan US large-cap equities for tight pre-breakout bases and track which setups persist across runs.
-- `mean-reversion-scan` - Scan US large-cap equities for short-term oversold reversals inside confirmed long-term uptrends (Connors-style RSI(2) setups), and track running win rates on past picks.
-- `momentum-scan` - Scan US large-cap equities for smooth uptrends and track which names persist across runs.
-- `unusual-options-scan` - Scan US large-cap equities for unusual options activity (Vol/OI spikes, far-OTM short-DTE accumulation, extreme call/put skew) and confirm yesterday's flags via overnight OI growth.
-- `cross-scan` - Cross-reference outputs from the four sister scans (momentum, base-breakout, mean-reversion, unusual-options) to surface tickers appearing in 2+ on the same day — the highest-conviction "agreement" picks.
+Three layers, top to bottom: a **gate** (is the market healthy?), three **finders** (which names?), and three **action layers** (what do I actually do?). The 2026-05→07 outcome backtests shaped this — two skills built on a refuted consensus premise (`cross-scan`, `unusual-options-scan`) were retired; each survivor's validated edge is noted on its line.
+
+**Gate**
+
 - `regime-scan` - Gauge whole-market health once a day — fold index trend, breadth, VIX term structure, credit spreads, and defensive rotation into one 🟢/🟡/🔴 state plus divergence flags, and log each reading so a sentiment turn shows up in the slope across runs.
-- `conviction-funnel` - Run the whole scan-to-picks pipeline end to end — chain regime-scan → momentum-scan → cross-scan to converge on consensus names, then deep-dive the top N (default 3) into actionable entry / stop / size / invalidation briefs with the market regime threaded through sizing — the orchestration layer above the four scans.
-- `premarket-brief` - The pre-open event + overnight overlay, ~30 min before the bell — reuse regime-scan (structural backdrop) and cross-scan (consensus names), then layer on the futures gap, Asia/Europe, the econ calendar + earnings + headlines, sentiment, and your positions into a 9-section briefing with an event-gated game plan, archived daily and reconciled against the tape so the regime call calibrates over time.
-- `snapback-scan` - Powder-keg × spark-calendar join for violent post-capitulation snapbacks — filter mean-reversion-scan's freshest high-score oversold names (the backtested 3× profile) against the next few days of scheduled catalysts (own earnings, same-sector megacap verdict prints, FOMC/CPI-class macro), then emit a pre-committed entry protocol per armed name (tranche / invalidation price / add-trigger) with chase-guard and crowding flags, graded against the prior run's full sample — buy when nobody dares, but with a date, a size, and an exit.
+
+**Finders**
+
+- `momentum-scan` - Scan US large-cap equities for smooth uptrends and track which names persist across runs. Backtested edges: sell-on-dropout beat holding by 7.3pt; volume-backed entries ran +9.0% episodes vs +3.1% for quiet ones.
+- `base-breakout-scan` - Scan US large-cap equities for tight pre-breakout bases and track which setups persist across runs. Backtested edge: BaseWks ≥ 20 ran 75% winners vs the 45% baseline (the composite score did not discriminate).
+- `mean-reversion-scan` - Scan US large-cap equities for short-term oversold reversals inside confirmed long-term uptrends (Connors-style RSI(2) setups), and track running win rates on past picks. Backtested edge: Score ≥ 40 on a fresh (1st–2nd day) listing ran +1.83%/signal, ~3× baseline.
+
+**Action layers**
+
+- `conviction-funnel` - Run the whole scan-to-picks pipeline end to end — regime gate, momentum names, the sister scans' validated pockets — then deep-dive the top N (default 3) into actionable entry / stop / size / invalidation briefs with the market regime threaded through sizing.
+- `snapback-scan` - Powder-keg × spark-calendar join for violent post-capitulation snapbacks — filter mean-reversion-scan's freshest high-score oversold names (the backtested 3× profile) against the next few days of scheduled catalysts (own earnings, same-sector megacap verdict prints, FOMC/CPI-class macro), then emit a pre-committed entry protocol per armed name (tranche / invalidation price / add-trigger) with chase-guard flags, graded against the prior run's full sample — buy when nobody dares, but with a date, a size, and an exit.
+- `premarket-brief` - The pre-open event + overnight overlay, ~30 min before the bell — reuse regime-scan (structural backdrop) and the finder caches (watchlist), then layer on the futures gap, Asia/Europe, the econ calendar + earnings + headlines, sentiment, and your positions into a 9-section briefing with an event-gated game plan, archived daily and reconciled against the tape so the regime call calibrates over time.
+
+**Journal & data**
+
 - `commit-invest` - Distill an investment discussion into structured Thesis / Observation / Macro / Lesson / Methodology blocks, append them to per-ticker or per-topic files, and commit — the journal layer of the investment knowledge loop.
 - `distill-ticker` - Roll up `positions/<TICKER>.md` (plus ticker-tagged lessons in `postmortems.md`) into a per-ticker current-consensus snapshot at `.claude/snapshots/positions/<TICKER>.md` — the view future discussions load before forming new opinions.
 - `distill-theme` - Aggregate Thesis/Observation blocks across all per-ticker journals and `RELATED_THEMES`-tagged Macro blocks into a per-theme snapshot at `.claude/snapshots/themes/<theme>.md` — the cross-ticker view (which names express the theme, what's driving it).

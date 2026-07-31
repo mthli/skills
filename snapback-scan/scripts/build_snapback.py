@@ -19,16 +19,12 @@ Reuses, never recomputes (sister-scan caches):
   mean-reversion-scan/state/history.csv   the keg list + score/stop/target
   mean-reversion-scan/state/sectors.json  ticker -> sector
   regime-scan/state/history.csv           regime state (sizing gate) + VIX
-  unusual-options-scan/state/history/     UOA-flagged set (crowding warning —
-                                          the UOA backtest says co-occurrence
-                                          is pollution, not confirmation)
 
 Backtest-informed rules encoded here (see SKILL.md for the receipts):
   - Score >= 40 AND listing age <= 2 runs  -> the 3x-baseline profile
   - deep RSI(2) gets NO extra weight       -> the backtest found it inverse
   - quiet-tape signals carry a warning     -> panic-day signals are the edge;
     quiet-day oversold is knife-catching
-  - UOA co-occurrence -> warning flag      -> crowding, not confirmation
   - already-ignited (> chase threshold since signal) -> chase-guard flag
 
 Everything degrades cleanly: one dead source never sinks the packet; the
@@ -44,7 +40,6 @@ Usage:
 """
 import argparse
 import json
-import re
 import sys
 import urllib.request
 import warnings
@@ -89,7 +84,6 @@ RUNS_DIR = STATE_DIR / "runs"
 MR_HISTORY = SKILLS_ROOT / "mean-reversion-scan" / "state" / "history.csv"
 MR_SECTORS = SKILLS_ROOT / "mean-reversion-scan" / "state" / "sectors.json"
 REGIME_HISTORY = SKILLS_ROOT / "regime-scan" / "state" / "history.csv"
-UOA_HISTORY_DIR = SKILLS_ROOT / "unusual-options-scan" / "state" / "history"
 MARKET_TZ = ZoneInfo("America/New_York")
 
 UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
@@ -329,24 +323,8 @@ def macro_sparks(window: list[date], errors: list) -> list[dict]:
     return sorted(dedup, key=lambda e: (e["date"], e["time_et"]))
 
 
-def uoa_flagged(errors: list) -> tuple[set, str | None]:
-    """Tickers in the latest UOA snapshot — a CROWDING warning on a keg, never
-    a confirmation (the UOA backtest: flagged names underperform, vol +26%)."""
-    try:
-        snaps = sorted(UOA_HISTORY_DIR.glob("*.md"))
-        if not snaps:
-            return set(), None
-        latest = snaps[-1]
-        tks = set(re.findall(r"^\| ([A-Z][A-Z.\-]{0,9}) \|", latest.read_text(),
-                             re.MULTILINE))
-        return tks, latest.stem
-    except Exception as e:
-        errors.append(f"uoa: {e}")
-        return set(), None
-
-
 def join_sparks(kegs: list[dict], by_symbol: dict, verdicts: list[dict],
-                macro: list[dict], uoa_set: set) -> None:
+                macro: list[dict]) -> None:
     """Attach sparks to each keg and decide `armed`. Pure logic, no I/O.
 
     A marketwide megacap print moves the tape, but it cannot flip a crashed
@@ -384,7 +362,6 @@ def join_sparks(kegs: list[dict], by_symbol: dict, verdicts: list[dict],
         k["sparks"] = sorted(sparks, key=lambda s: s["date"])
         k["armed"] = any(s["type"] in ("own_earnings", "sector_verdict", "macro")
                          for s in sparks)
-        k["uoa_flagged"] = k["ticker"] in uoa_set
 
 
 def regime_state(errors: list) -> dict | None:
@@ -565,7 +542,6 @@ def build(window_days: int, min_score: float, max_age: int, top_n: int) -> dict:
                   "beyond Sunday not visible"
                   if window and window[-1].isocalendar()[1] != today.isocalendar()[1]
                   else "")
-    uoa_set, uoa_date = uoa_flagged(errors)
     regime = regime_state(errors)
 
     by_symbol = {e["symbol"]: e for e in earnings}
@@ -578,7 +554,7 @@ def build(window_days: int, min_score: float, max_age: int, top_n: int) -> dict:
     for v in verdicts:
         v["sector"] = v_sectors.get(v["symbol"])
 
-    join_sparks(kegs, by_symbol, verdicts, macro, uoa_set)
+    join_sparks(kegs, by_symbol, verdicts, macro)
 
     sig_date = None
     if mr_meta.get("run_id"):
@@ -610,7 +586,6 @@ def build(window_days: int, min_score: float, max_age: int, top_n: int) -> dict:
         "macro_note": macro_note,
         "regime": regime,
         "mr_run": {k: v for k, v in mr_meta.items() if k != "prior_run"},
-        "uoa_snapshot": uoa_date,
         "params": {"min_score": min_score, "max_age_runs": max_age,
                    "chase_threshold_pct": CHASE_THRESHOLD_PCT,
                    "panic_ret5d_pct": PANIC_RET5D_PCT},
@@ -631,8 +606,7 @@ def as_table(p: dict) -> str:
         # Flags ride at the END of the line: emoji are double-width in most
         # terminals, so a fixed-width flags column skews every column after it.
         flags = ("🔥" if k.get("ignited") else "") + \
-                ("😴" if k.get("quiet_warning") else "") + \
-                ("⚠️UOA" if k.get("uoa_flagged") else "")
+                ("😴" if k.get("quiet_warning") else "")
         sparks = "; ".join(
             ("~" if s["type"] == "marketwide_verdict" else "")
             + f"{s.get('symbol') or 'macro'}@{s['date']}" for s in k["sparks"]) or "—"
