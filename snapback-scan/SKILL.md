@@ -50,6 +50,11 @@ uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' \
 ... --format table        # human-scannable table
 ... --window-days 5       # widen the spark window (default 3 trading days)
 ... --min-score 30        # loosen the keg gate when nothing qualifies (default 40)
+... --max-age 3           # widen the freshness gate (default 2 = the backtested
+                          #   "listed ≤ 2 runs" cutoff; widening dilutes the
+                          #   +1.83%/signal edge — say so in the brief if you do)
+... --top-n 30            # cap on kegs pulled from the MR list (default 20)
+... --no-save             # don't write state/runs/<date>.json (exploration)
 ```
 
 The spark window is the next N trading days PLUS tonight's AMC prints when
@@ -130,3 +135,16 @@ Rules that make this honest — apply every one:
 - `premarket-brief` is the morning-of companion: on a spark day its packet
   grades whether the verdict confirmed (gap-keep, hour-one survival) — the
   "add" trigger in these briefs is usually observable there.
+
+## Tests
+
+```bash
+cd <SKILL_DIR>/scripts && uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' \
+  --with pytest pytest -q
+```
+
+Pure-logic tests (no network; every network call site is stubbed) cover the
+keg age/score filters, arming rules (marketwide prints never arm; own
+earnings and macro do), signal-day slicing + the ignited chase-guard, the
+prior-run review's full-sample stats, and trading-day arithmetic across
+NYSE-observed holidays.
