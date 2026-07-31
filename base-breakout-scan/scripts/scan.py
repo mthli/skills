@@ -1814,41 +1814,58 @@ def _dedup_same_issuer(results: list[dict]) -> tuple[list[dict], list[dict]]:
 
 
 # ─── Rendering ───────────────────────────────────────────────────────────
-def render_table(picks: list[dict], top_n: int) -> str:
+def render_sig_strip(picks: list[dict], top_n: int) -> str | None:
+    """One-line cohort read: how the top-N splits across the four entry-
+    timing signals. Many 🔥/🚀 = the watchlist is loaded and time-sensitive;
+    all 📊 = nothing near a trigger, check back later."""
+    rows = picks[:top_n]
+    sigs = [p.get("signal") for p in rows if p.get("signal")]
+    if not sigs:
+        return None
+    counts = {s: sigs.count(s) for s in ("🚀", "🔥", "⏳", "📊")}
+    strip = " ".join(f"{s}{n}" for s, n in counts.items())
+    return f"**Sig**: {strip}"
+
+
+def render_table(picks: list[dict], top_n: int, verbose: bool = False) -> str:
+    """Top-N table. The slim default keeps the decision columns: BaseWks
+    (the backtest-validated ranker), Score, Width%, pivot geometry, Sig,
+    Stop@trigger, Streak. The diagnostic columns (RS, Smooth%, BB%ile,
+    Vol↓, RSslope%/wk, RankΔ, FirstSeen) print only with verbose=True —
+    they feed the Score rather than the entry decision. JSON carries every
+    field either way."""
     rows = picks[:top_n]
     if not rows:
         return "(no picks passed the filter)"
     show_sector = any(p.get("sector") for p in rows)
     show_stop = any(p.get("stop_trigger") is not None for p in rows)
-    show_smooth = any(p.get("smoothness_pct") is not None for p in rows)
+    show_smooth = verbose and any(p.get("smoothness_pct") is not None
+                                  for p in rows)
     headers = ["#", "Ticker"]
     if show_sector:
         headers.append("Sector")
     # BaseWks leads Score: the outcome backtest validated base length as
     # the ranker (≥20wk = the only big edge) while the composite score
     # showed no outcome discrimination — column order mirrors that.
-    headers += ["BaseWks", "Score", "RS", "Width%"]
+    headers += ["BaseWks", "Score"]
+    if verbose:
+        headers.append("RS")
+    headers.append("Width%")
     if show_smooth:
         headers.append("Smooth%")
-    headers += ["BB%ile", "Vol↓", "RSslope%/wk", "ToPivot%", "Pivot", "Sig"]
+    if verbose:
+        headers += ["BB%ile", "Vol↓", "RSslope%/wk"]
+    headers += ["ToPivot%", "Pivot", "Sig"]
     if show_stop:
         # Stop @ trigger (pivot-anchored) is the canonical stop for these
         # setups — that's where the user actually enters via a buy-stop.
         headers.append("Stop@trigger")
-    headers += ["Streak", "RankΔ", "FirstSeen"]
+    headers.append("Streak")
+    if verbose:
+        headers += ["RankΔ", "FirstSeen"]
     out = ["| " + " | ".join(headers) + " |",
            "|" + "|".join("---" for _ in headers) + "|"]
     for p in rows:
-        delta = p.get("rank_delta")
-        if delta is None:
-            delta_str = "🆕"
-        elif delta > 0:
-            delta_str = f"+{delta} ↗"
-        elif delta < 0:
-            delta_str = f"{delta} ↘"
-        else:
-            delta_str = "—"
-
         # Three-weeks-tight gets a 🔒 prefix on the ticker — quick visual
         # for "supply absorbed" without an extra column. ★ marks the
         # validated pocket (BaseWks ≥ 20, the backtest's one big edge).
@@ -1867,23 +1884,27 @@ def render_table(picks: list[dict], top_n: int) -> str:
         row = [str(p["rank"]), ticker_disp]
         if show_sector:
             row.append(abbreviate_sector(p.get("sector", "")))
-        rs = p.get("rs_rating")
-        bb = p.get("bb_pctile")
-        vol_dryup = p.get("vol_dryup_ratio")
-        rs_slope = p.get("rs_slope_pct_per_wk")
-        smooth = p.get("smoothness_pct")
         row += [
             f"{p['base_weeks']:.1f}",
             f"{p['base_score']:.0f}",
-            f"{rs:.0f}" if rs is not None else "—",
-            f"{p['width_pct']:.1f}",
         ]
+        if verbose:
+            rs = p.get("rs_rating")
+            row.append(f"{rs:.0f}" if rs is not None else "—")
+        row.append(f"{p['width_pct']:.1f}")
         if show_smooth:
+            smooth = p.get("smoothness_pct")
             row.append(f"{smooth:.0f}" if smooth is not None else "—")
+        if verbose:
+            bb = p.get("bb_pctile")
+            vol_dryup = p.get("vol_dryup_ratio")
+            rs_slope = p.get("rs_slope_pct_per_wk")
+            row += [
+                f"{bb:.0f}" if bb is not None else "—",
+                f"{vol_dryup:.2f}" if vol_dryup is not None else "—",
+                f"{rs_slope:+.2f}" if rs_slope is not None else "—",
+            ]
         row += [
-            f"{bb:.0f}" if bb is not None else "—",
-            f"{vol_dryup:.2f}" if vol_dryup is not None else "—",
-            f"{rs_slope:+.2f}" if rs_slope is not None else "—",
             f"{p['to_pivot_pct']:+.1f}",
             f"${p['pivot_price']:.2f}",
         ]
@@ -1903,11 +1924,18 @@ def render_table(picks: list[dict], top_n: int) -> str:
                 row.append(f"${st:.2f} ({stpct:+.1f}%)")
             else:
                 row.append("—")
-        row += [
-            str(p.get("streak", 1)),
-            delta_str,
-            p.get("first_seen", "—"),
-        ]
+        row.append(str(p.get("streak", 1)))
+        if verbose:
+            delta = p.get("rank_delta")
+            if delta is None:
+                delta_str = "🆕"
+            elif delta > 0:
+                delta_str = f"+{delta} ↗"
+            elif delta < 0:
+                delta_str = f"{delta} ↘"
+            else:
+                delta_str = "—"
+            row += [delta_str, p.get("first_seen", "—")]
         out.append("| " + " | ".join(row) + " |")
     return "\n".join(out)
 
@@ -2466,10 +2494,13 @@ def build_argparser() -> argparse.ArgumentParser:
                           "Default 4 ≈ 'survived one trading week as a setup' "
                           "for daily users, or 4 weeks for weekly runners."))
     ap.add_argument("--verbose", action="store_true",
-                    help=("Print pipeline funnel diagnostics (how many "
-                          "names passed each filter stage) to stderr. "
-                          "Useful when the screen returns few/no picks "
-                          "and you want to understand why."))
+                    help=("Full diagnostics: adds the diagnostic table "
+                          "columns (RS, Smooth%%, BB%%ile, Vol↓, "
+                          "RSslope%%/wk, RankΔ, FirstSeen; the slim default "
+                          "keeps the decision columns) and prints pipeline "
+                          "funnel detail (how many names passed each filter "
+                          "stage) to stderr. JSON always carries every "
+                          "field."))
     return ap
 
 
@@ -2743,6 +2774,10 @@ def main():
         sector_line = render_sector_breakdown(picks, args.top_n)
         if sector_line is not None:
             print(sector_line)
+    if not suppress_picks:
+        sig_strip = render_sig_strip(picks, args.top_n)
+        if sig_strip is not None:
+            print(sig_strip)
 
     # Excluded-by-vol-collapse section prints BEFORE suppress_picks so the
     # diagnostic is visible even in strict+RISK-OFF mode. The exclusions are
@@ -2752,8 +2787,8 @@ def main():
         ratio_pct_str = f"{args.vol_collapse_ratio * 100:g}%"
         print(f"\n## Excluded by vol-collapse filter "
               f"({len(excluded_vol_collapse)})")
-        print(f"_2nd-half realized vol < {ratio_pct_str} of 1st-half — "
-              f"likely acquisition / lock-in, not a tradable base._")
+        print(f"_2nd-half realized vol < {ratio_pct_str} of 1st-half: "
+              f"likely an acquisition or lock-in, not a tradable base._")
         for p in sorted(excluded_vol_collapse, key=lambda x: x["vol_ratio"]):
             print(f"- **{p['ticker']}** (base_score {p.get('base_score', 0):.0f}, "
                   f"width {p.get('width_pct', 0):.1f}%, "
@@ -2776,7 +2811,7 @@ def main():
             vol_ratio = p.get("today_vol_ratio")
             vol_str = (f"{vol_ratio:.1f}× avg" if vol_ratio is not None
                        else "vol unknown")
-            print(f"- **{p['ticker']}** — broke above ${p['pivot_price']:.2f} pivot "
+            print(f"- **{p['ticker']}**: broke above ${p['pivot_price']:.2f} pivot "
                   f"(base {p['base_weeks']:.0f}wks, width {p['width_pct']:.1f}%, "
                   f"today vol {vol_str})")
 
@@ -2792,21 +2827,24 @@ def main():
               f"{VALIDATED_BASE_WEEKS:.0f} ({len(pocket)})")
         print("_The one stratum the outcome backtest validated "
               "(+4.9%/trade, 75% win vs −0.8% baseline, in-sample). "
-              "Score does not rank outcomes — base length does._")
+              "Score does not rank outcomes; base length does._")
         if pocket:
             for p in pocket:
-                print(f"- **{p['ticker']}** (#{p['rank']}) — "
+                print(f"- **{p['ticker']}** (#{p['rank']}): "
                       f"base {p['base_weeks']:.0f}wks, "
                       f"width {p['width_pct']:.1f}%, "
                       f"{p['to_pivot_pct']:+.1f}% to "
                       f"${p['pivot_price']:.2f} pivot, "
                       f"{p.get('signal', '—')}")
         else:
-            print("- (none today — treat the rest of the list as "
+            print("- (none today: treat the rest of the list as "
                   "unvalidated candidates, not high-conviction setups)")
 
     print(f"\n## Top {args.top_n}\n")
-    print(render_table(picks, args.top_n))
+    print(render_table(picks, args.top_n, verbose=args.verbose))
+    if picks[: args.top_n] and not args.verbose:
+        print(f"\n_Diagnostic columns (RS, Smooth%, BB%ile, Vol↓, "
+              f"RSslope%/wk, RankΔ, FirstSeen): --verbose_")
     # Legend for the Sig `*` marker — printed only when at least one pick
     # is in breakout mode (so we don't add noise on quiet days). Pulls
     # the "N days" wording from the constant so the legend stays in sync
@@ -2873,7 +2911,7 @@ def main():
                 # Wording: "+pct above pivot ↗" reads as one phrase with
                 # the arrow at the end. The earlier "vs pivot ↗" had the
                 # arrow mid-phrase which broke the reading.
-                print(f"- **{rb['ticker']}** — broke ${rb['prior_pivot']:.2f} pivot "
+                print(f"- **{rb['ticker']}**: broke ${rb['prior_pivot']:.2f} pivot "
                       f"on {rb['breakout_date']} ({rb['days_since_breakout']}d ago, "
                       f"{rb['breakout_vol_ratio']:.1f}× vol). Now: ${rb['current_close']:.2f} "
                       f"(+{rb['follow_through_pct']:.1f}% above pivot ↗)")
@@ -2884,7 +2922,7 @@ def main():
             worst = sorted(failed, key=lambda r: r.get("follow_through_pct", 0))[:5]
             print(f"**Failed** (back below pivot, top {len(worst)} worst):")
             for rb in worst:
-                print(f"- **{rb['ticker']}** — broke ${rb['prior_pivot']:.2f} "
+                print(f"- **{rb['ticker']}**: broke ${rb['prior_pivot']:.2f} "
                       f"on {rb['breakout_date']} ({rb['days_since_breakout']}d ago), "
                       f"now ${rb['current_close']:.2f} "
                       f"({rb['follow_through_pct']:+.1f}% below pivot ↘)")
@@ -2902,7 +2940,7 @@ def main():
         if mature:
             print(f"\n## Maturing bases (streak ≥ {min_streak} runs)")
             for p in sorted(mature, key=lambda x: -x["streak"]):
-                print(f"- **{p['ticker']}** — streak {p['streak']}, "
+                print(f"- **{p['ticker']}**: streak {p['streak']}, "
                       f"first seen {p.get('first_seen', '—')}, "
                       f"now #{p['rank']}, score {p['base_score']:.0f}, "
                       f"{p['signal']}")

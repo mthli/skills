@@ -319,6 +319,11 @@
     "sector": "Utilities",
     "ts": 1783468950
   },
+  "ELAN": {
+    "industry": "Drug Manufacturers - Specialty & Generic",
+    "sector": "Healthcare",
+    "ts": 1785509849
+  },
   "ELV": {
     "industry": "Healthcare Plans",
     "sector": "Healthcare",
@@ -422,7 +427,7 @@
   "GSAT": {
     "industry": "Telecom Services",
     "sector": "Communication Services",
-    "ts": 1778771444
+    "ts": 1785509849
   },
   "GTX": {
     "industry": "Auto Parts",
@@ -737,7 +742,7 @@
   "RPRX": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1781747722
+    "ts": 1785509849
   },
   "RVMD": {
     "industry": "Biotechnology",
@@ -832,7 +837,7 @@
   "SYRE": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1780114396
+    "ts": 1785509849
   },
   "TD": {
     "industry": "Banks - Diversified",
