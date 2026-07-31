@@ -16,7 +16,6 @@ const path = require('path')
 const PINNED_PATH = [
   path.dirname(process.execPath),   // node bin dir of the pm2 process — tracks nvm, no version pinned; kept ahead of homebrew node.
   `${process.env.HOME}/.local/bin`, // claude (native).
-  '/opt/homebrew/bin',              // tmux, jq.
   process.env.PATH,                 // belt-and-suspenders: full PATH at start time.
 ].join(path.delimiter)
 
