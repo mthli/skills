@@ -3,8 +3,9 @@
 Covers the signal-breadth dial, the Sig classifier, the Reversion Score
 components, Wilder RSI, the lite trend filter, trigger-frequency counting,
 vol-collapse halves + the exclusion filter, the NYSE trading-day guard,
-persistence/streak enrichment, and outcome resolution (WON / LOST /
-EXPIRED / OPEN) with the win-rate aggregator.
+persistence/streak enrichment, outcome resolution (WON / LOST /
+EXPIRED / OPEN) with the win-rate aggregator, and the outcomes ledger
+(full-history resolve + keyed upsert into state/outcomes.csv).
 
 Run (from this directory):
   uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' \
@@ -361,6 +362,57 @@ def test_win_rate_all_expired_has_no_rate():
     s = scan.compute_win_rate_stats([{"outcome": "EXPIRED",
                                       "days_to_resolve": 5}])
     assert s["win_rate_pct"] is None and s["n_expired"] == 1
+
+
+# ------------------------------------------------------- outcomes ledger
+
+def test_resolve_carries_run_id():
+    row = _sig_row("AAA", days_ago=10)
+    bars = _bars({"AAA": ([101, 104], [99, 100], [100, 103.5])},
+                 _post_start(row))
+    o = scan.resolve_outcomes(pd.DataFrame([row]), bars, 5)[0]
+    assert o["run_id"] == row["run_id"]
+
+
+def test_resolve_full_reaches_beyond_cutoff():
+    row = _sig_row("AAA", days_ago=60)  # far outside the ~15-day lookback
+    bars = _bars({"AAA": ([101, 104, 105, 105, 105],
+                          [99, 100, 101, 101, 101],
+                          [100, 103.5, 104, 104, 104])}, _post_start(row))
+    assert scan.resolve_outcomes(pd.DataFrame([row]), bars, 5) == []
+    outs = scan.resolve_outcomes(pd.DataFrame([row]), bars, 5, full=True)
+    assert len(outs) == 1 and outs[0]["outcome"] == "WON"
+
+
+def _outcome(run_id, ticker, outcome="WON", days=2, pct=3.0):
+    return {"run_id": run_id, "ticker": ticker, "outcome": outcome,
+            "days_to_resolve": days, "result_pct": pct}
+
+
+def test_upsert_outcomes_empty_is_noop(tmp_path, monkeypatch):
+    monkeypatch.setattr(scan, "OUTCOMES_FILE", tmp_path / "outcomes.csv")
+    assert scan.upsert_outcomes([]) == 0
+    assert not scan.OUTCOMES_FILE.exists()
+
+
+def test_upsert_outcomes_creates_replaces_and_preserves(tmp_path, monkeypatch):
+    monkeypatch.setattr(scan, "OUTCOMES_FILE", tmp_path / "outcomes.csv")
+    assert scan.upsert_outcomes([_outcome("20260501", "AAA"),
+                                 _outcome("20260501", "BBB", "LOST",
+                                          3, -5.0)]) == 2
+    # Re-resolution of AAA replaces its row; BBB (outside this batch, e.g.
+    # older than the lookback) must survive untouched.
+    assert scan.upsert_outcomes([_outcome("20260501", "AAA", "EXPIRED",
+                                          5, -0.4),
+                                 _outcome("20260502", "AAA")]) == 3
+    df = pd.read_csv(scan.OUTCOMES_FILE, dtype={"run_id": str})
+    assert list(df.columns) == scan.OUTCOMES_COLS
+    assert len(df) == 3
+    aaa = df[(df["run_id"] == "20260501") & (df["ticker"] == "AAA")]
+    assert aaa["outcome"].iloc[0] == "EXPIRED"
+    assert df[df["ticker"] == "BBB"]["outcome"].iloc[0] == "LOST"
+    # Sorted by (run_id, ticker) for stable diffs.
+    assert list(df["run_id"]) == sorted(df["run_id"])
 
 
 # ── Slim/verbose table + ⭐️ pocket + Sig strip (2026-07-31 redesign) ──────

@@ -155,6 +155,10 @@ vite.config.ts.timestamp-*
 !**/state/history/
 !**/state/history/**
 !**/state/sectors.json
+# mean-reversion outcomes ledger: WON/LOST/EXPIRED per past signal. Only
+# regenerable while yfinance still serves the price window (~13 months) and
+# the ticker still trades — beyond that it's an accumulated measurement.
+!**/state/outcomes.csv
 # Run ledgers are accumulated samples (funnel picks, snapback protocols),
 # not regenerable caches — losing them on a fresh checkout deletes the
 # outcome-grading sample the quarterly scripts replay.

@@ -43,6 +43,7 @@ SKILL_DIR = Path(__file__).resolve().parent.parent
 STATE_DIR = SKILL_DIR / "state"
 UNIVERSE_FILE = STATE_DIR / "universe.txt"
 HISTORY_FILE = STATE_DIR / "history.csv"
+OUTCOMES_FILE = STATE_DIR / "outcomes.csv"
 SECTORS_FILE = STATE_DIR / "sectors.json"
 UNIVERSE_TTL_DAYS = 7
 SCREENER_PAGE_SIZE = 250
@@ -905,6 +906,55 @@ def append_history(picks: list[dict], run_id: str, run_date: datetime,
     tmp_path.replace(HISTORY_FILE)
 
 
+# Outcomes ledger schema. Deliberately minimal: (run_id, ticker) is the
+# join key back into history.csv, which already carries everything known
+# at signal time (score, rsi2, signal tier, target/stop, streak inputs);
+# the ledger adds only what resolution produces. Downstream consumers
+# (render_history_html.py, conviction-funnel, snapback-scan) join the two.
+OUTCOMES_COLS = ["run_id", "ticker", "outcome", "days_to_resolve",
+                 "result_pct"]
+
+
+def upsert_outcomes(outcomes: list[dict]) -> int:
+    """Merge resolved outcomes into state/outcomes.csv, keyed by
+    (run_id, ticker). Re-resolution replaces the stored row (resolution is
+    deterministic, so this is normally a no-op refresh; it also self-heals
+    after upstream price-data corrections). Rows for signals not in
+    `outcomes` — older than the resolver's lookback, or on tickers with no
+    price data today — are preserved untouched, so the ledger accumulates
+    the full outcome history that resolve_outcomes() alone (bounded
+    lookback) can't see. Empty input = no-op. Atomic write. Returns the
+    total row count of the ledger after the merge."""
+    if not outcomes:
+        return 0
+    new_rows = pd.DataFrame(
+        [{c: o[c] for c in OUTCOMES_COLS} for o in outcomes],
+        columns=OUTCOMES_COLS,
+    )
+    has_existing = OUTCOMES_FILE.exists() and OUTCOMES_FILE.stat().st_size > 0
+    if has_existing:
+        existing = pd.read_csv(OUTCOMES_FILE,
+                               dtype={"run_id": str, "ticker": str})
+        new_keys = set(zip(new_rows["run_id"].astype(str),
+                           new_rows["ticker"]))
+        keep = [
+            (str(r), t) not in new_keys
+            for r, t in zip(existing["run_id"], existing["ticker"])
+        ]
+        combined = pd.concat([existing.loc[keep], new_rows],
+                             ignore_index=True)
+    else:
+        combined = new_rows
+    combined = (combined
+                .sort_values(["run_id", "ticker"], kind="stable")
+                .reset_index(drop=True)
+                .reindex(columns=OUTCOMES_COLS))
+    tmp_path = OUTCOMES_FILE.with_suffix(".csv.tmp")
+    combined.to_csv(tmp_path, index=False)
+    tmp_path.replace(OUTCOMES_FILE)
+    return len(combined)
+
+
 # -----------------------------------------------------------------------
 # Persistence enrichment — streak / first_seen.
 # -----------------------------------------------------------------------
@@ -958,7 +1008,7 @@ def enrich_with_persistence(picks: list[dict], history: pd.DataFrame,
 # -----------------------------------------------------------------------
 
 def resolve_outcomes(history: pd.DataFrame, bars: pd.DataFrame,
-                     target_window_days: int) -> list[dict]:
+                     target_window_days: int, *, full: bool = False) -> list[dict]:
     """For each prior signal in history, classify outcome by checking the
     price action in the days SINCE the signal:
       - WON if intraday high >= target_price within target_window_days
@@ -982,8 +1032,11 @@ def resolve_outcomes(history: pd.DataFrame, bars: pd.DataFrame,
     # Take only signals from the last (target_window_days × 3) calendar days
     # to keep the work bounded — older signals are already resolved historically
     # and don't need re-checking unless the user asks for the full --show-history.
-    cutoff = today - pd.Timedelta(days=target_window_days * 3)
-    candidates = candidates[candidates["run_date"] >= cutoff]
+    # full=True (the --backfill-outcomes path) skips the cutoff and resolves
+    # every history row the bars can reach.
+    if not full:
+        cutoff = today - pd.Timedelta(days=target_window_days * 3)
+        candidates = candidates[candidates["run_date"] >= cutoff]
 
     outcomes = []
     for _, row in candidates.iterrows():
@@ -1056,6 +1109,7 @@ def resolve_outcomes(history: pd.DataFrame, bars: pd.DataFrame,
         result_pct = ((resolve_price / entry - 1) *
                       100) if resolve_price else None
         outcomes.append({
+            "run_id": str(row.get("run_id", "")),
             "ticker": ticker,
             "signal_date": pd.Timestamp(signal_date).strftime("%Y-%m-%d"),
             "entry_price": entry,
@@ -1557,6 +1611,12 @@ def build_argparser() -> argparse.ArgumentParser:
     ap.add_argument("--ticker", type=str, default=None,
                     help="Single-ticker diagnostic mode.")
     ap.add_argument("--show-history", action="store_true")
+    ap.add_argument("--backfill-outcomes", action="store_true",
+                    help="one-shot: resolve EVERY history signal the price "
+                         "data can reach and merge into state/outcomes.csv, "
+                         "then exit (no scan). Idempotent; run once to seed "
+                         "the ledger, or re-run after a scanning gap longer "
+                         "than the resolver's ~15-day lookback")
     ap.add_argument("--clear-history", action="store_true")
     ap.add_argument("--prune-non-trading-days", action="store_true")
     ap.add_argument("--no-save", action="store_true")
@@ -1611,6 +1671,26 @@ def main():
         show_history_summary(history, bars, args.target_window_days)
         return
 
+    if args.backfill_outcomes:
+        history = load_history()
+        if history.empty:
+            print("History is empty; nothing to backfill.")
+            return
+        tickers_in_history = sorted(history["ticker"].unique().tolist())
+        bars = fetch_bars(tickers_in_history)
+        outcomes = resolve_outcomes(history, bars, args.target_window_days,
+                                    full=True)
+        total = upsert_outcomes(outcomes)
+        # Signals older than the bars window, on delisted tickers, or still
+        # inside the target window resolve to nothing — count them so a
+        # partial backfill is visible instead of silently short.
+        n_signals = int(history["target_price"].notna().sum()) \
+            if "target_price" in history.columns else 0
+        print(f"Backfilled {len(outcomes)} resolved outcome(s) from "
+              f"{n_signals} history signal(s); {OUTCOMES_FILE.name} now "
+              f"holds {total} row(s).")
+        return
+
     if args.ticker:
         result = run_single_ticker(args)
         if args.format == "json":
@@ -1649,6 +1729,12 @@ def main():
     # Outcome resolution on prior signals (read-only against history + bars).
     outcomes = resolve_outcomes(history, bars, args.target_window_days)
     win_stats = compute_win_rate_stats(outcomes)
+    # Persist resolutions to the ledger. Deliberately NOT behind the
+    # trading-day guard: resolution is derived, keyed, idempotent data —
+    # a weekend run just re-confirms Friday's resolutions, and skipping it
+    # would delay ledger updates for signals that resolved on Friday.
+    if not args.no_save:
+        upsert_outcomes(outcomes)
 
     # Non-trading-day guard for history save.
     today_et = now.astimezone(MARKET_TZ).date()

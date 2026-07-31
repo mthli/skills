@@ -45,6 +45,11 @@ uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy>=1.24,<3' \
 # Inspect history (no new scan)
 ... python <SKILL_DIR>/scripts/scan.py --show-history
 
+# One-shot: resolve EVERY reachable history signal into state/outcomes.csv
+# (normal runs only look back ~15 days; run this once to seed the ledger,
+# or again after a scanning gap)
+... python <SKILL_DIR>/scripts/scan.py --backfill-outcomes
+
 # Single-ticker diagnostic: "is AAPL set up for a bounce right now?"
 ... python <SKILL_DIR>/scripts/scan.py --ticker AAPL
 
@@ -84,6 +89,7 @@ uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy>=1.24,<3' \
 | `--refresh-universe` / `--no-refresh-universe` | (TTL 7d) | Force refresh / use cache regardless of age. |
 | `--ticker` | — | Single-ticker diagnostic mode (e.g. `--ticker AAPL`). Bypasses universe scan; shows trend template pass/fail, RSI(2), 5DMA distance, signal classification, ATR stop, and historical reliability over the last ~60 trading days for this name. ~2-5s vs ~30-60s for full scan. Honors `--format json`. Writes no history. |
 | `--show-history` | — | Print history summary including running win rate; no new scan. |
+| `--backfill-outcomes` | — | One-shot: resolve every history signal the price data can reach (no ~15-day lookback cutoff) and merge into `state/outcomes.csv`, then exit without scanning. Idempotent. Needed once to seed the ledger, and again after any scanning gap longer than the lookback (an unresolved hole never self-heals otherwise). |
 | `--clear-history` | — | Wipe `state/history.csv`. |
 | `--prune-non-trading-days` | — | One-shot cleanup: drop history rows whose ET-date `run_date` is not an NYSE trading day. |
 | `--no-save` | — | Don't append this run to history. |
@@ -259,6 +265,7 @@ Relay the script's markdown output **in full — every row of the top-N table an
 ## State files
 
 - `state/history.csv`: one snapshot per US market day (America/New_York) × **every ticker that passed the filter that day** (all emitted signals, not only the displayed top-N; the row count doubles as the signal-breadth record, and Streak counts *any* filter-passing appearance by design, so it reads "consecutive days oversold", which is what Stuck oversold needs). Columns: `run_id, run_date, ticker, rank, score_rank, score, rsi2, dist_5dma_pct, dist_50dma_pct, dist_200dma_pct, last_close, target_price, stop_price, signal, freq_60d`. Re-running the same ET day overwrites that day's rows. Writes are atomic (.tmp + rename). The `target_price` and `stop_price` columns are the load-bearing fields for outcome resolution; without them the script can't compute win-rate stats.
+- `state/outcomes.csv`: the outcomes ledger — one row per **resolved** past signal (`run_id, ticker, outcome, days_to_resolve, result_pct`; OPEN signals stay out until they resolve). Written by every scan via keyed upsert of the resolver's ~15-day lookback window, so it accumulates the full outcome history that any single run can't see; `(run_id, ticker)` joins back into `history.csv` for everything known at signal time. Tracked in git: only regenerable (`--backfill-outcomes`) while yfinance still serves the price window (~13 months) and the ticker still trades.
 - `state/universe.txt`: cached universe list, auto-refreshed every 7 days via Yahoo's screener.
 - `state/sectors.json`: per-ticker `{sector, industry, ts}` cache. 30-day TTL per ticker.
 
