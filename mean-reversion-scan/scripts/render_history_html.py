@@ -358,6 +358,7 @@ h1 { font-size: 21px; margin: 0 0 2px; }
 .kpi .sub2 { color: var(--muted); font-size: 12px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .scroll { overflow-x: auto; }
 .vclip { max-height: 540px; overflow-y: auto; }
+.gridhead { position: sticky; top: 0; z-index: 1; background: var(--surface); width: max-content; }
 svg { display: block; }
 svg text { font: 11px system-ui, -apple-system, "Segoe UI", sans-serif; fill: var(--muted); }
 svg text.tick { font-variant-numeric: tabular-nums; }
@@ -931,15 +932,22 @@ const RES = new Map(DATA.summary.map(s => [s.t, s.w + s.l + s.e]));
 function renderGrid(minRes) {
   gridBox.textContent = "";
   const rows = DATA.series.filter(s => RES.get(s.t) >= minRes);
-  const GL = 64, MT = 20, CW = 16, CH = 14;
-  const W = GL + DAYS * CW + 56, H = MT + rows.length * CH + 6;
-  const svg = el("svg", { width: W, height: H, viewBox: `0 0 ${W} ${H}` }, gridBox);
+  const GL = 64, CW = 16, CH = 14;
+  const W = GL + DAYS * CW + 56;
+  // Date labels live in their own sticky layer (SVG can't sticky-position
+  // internal elements); opaque surface background masks rows scrolling by.
+  const head = document.createElement("div");
+  head.className = "gridhead";
+  gridBox.appendChild(head);
+  const hsvg = el("svg", { width: W, height: 18, viewBox: `0 0 ${W} 18` }, head);
   DATA.days.forEach((d, i) => {
     if (i === DAYS - 1 || (i % 5 === 0 && DAYS - 1 - i >= 3))
-      el("text", { x: GL + i * CW + CW / 2, y: 12, "text-anchor": "middle", class: "tick" }, svg).textContent = d;
+      el("text", { x: GL + i * CW + CW / 2, y: 13, "text-anchor": "middle", class: "tick" }, hsvg).textContent = d;
   });
+  const H = rows.length * CH + 4;
+  const svg = el("svg", { width: W, height: H, viewBox: `0 0 ${W} ${H}` }, gridBox);
   rows.forEach((s, ri) => {
-    const y = MT + ri * CH;
+    const y = ri * CH;
     const ra = el("a", { href: tickerUrl(s.t), target: "_blank", rel: "noopener" }, svg);
     const lt = el("text", { x: GL - 8, y: y + CH - 3, "text-anchor": "end", class: "tick" }, ra);
     lt.textContent = s.t;
