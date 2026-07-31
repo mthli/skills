@@ -62,6 +62,8 @@ uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy>=1.24,<3' \
 
 The breadth pool is the **live S&P 500 constituents**, pulled from Wikipedia — yfinance can't return index membership (`^GSPC` exposes no constituents attribute; an ETF's `funds_data.top_holdings` caps at the top 10). It's a **quarterly snapshot, not a per-run fetch**: breadth's whole signal is the *slope* of "% above 50DMA" across days, so churning the universe between runs would inject compositional noise into that slope. Freeze it within a quarter; regenerate only at quarter boundaries.
 
+**Fresh-clone bootstrap**: `state/breadth_universe.txt` is gitignored as a regenerable cache, so a fresh checkout doesn't have it — run the command below once before the first scan. Until then `scan.py` degrades gracefully (warns and skips the breadth signals rather than crashing), which quietly guts the early-warning layer.
+
 ```bash
 # Regenerate state/breadth_universe.txt  (+ a dated state/breadth_universe.<YYYY>-Q<N>.txt snapshot)
 uv run --with 'pandas>=2' --with lxml --with requests \
