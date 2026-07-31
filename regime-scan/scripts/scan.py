@@ -18,6 +18,7 @@ Self-contained — uses yfinance directly, no cross-skill dependencies.
 Usage:
   python scan.py                 # full run
   python scan.py --format json   # machine-readable
+  python scan.py --verbose       # add the full 10-signal table to the output
   python scan.py --show-history  # dump the daily state log (no new scan)
   python scan.py --lookback N    # change the slope/RS lookback (default 20d)
   python scan.py --no-save       # don't append today to history
@@ -621,15 +622,125 @@ LAYER_ORDER = ["Trend", "Breadth", "Vol", "Credit"]
 
 STATE_EMOJI = {"RISK-ON": "🟢", "CAUTION": "🟡", "RISK-OFF": "🔴"}
 
+SPARK_BLOCKS = "▁▂▃▄▅▆▇█"
+SPARK_GAP = "·"               # placeholder for a missing value inside a sparkline
+SPARK_WINDOW = 14             # run-days shown in the state strip / sparklines
+SPARK_ARROW_SESSIONS = 5      # the ↗/→/↘ arrow compares now vs this many run-days ago
+
+# The sparkline dashboard: one line per series that the turn detector watches.
+# (history col, display label, value format, arrow deadband, flag prefixes that
+# mark the line ⚠️ when one of them is firing)
+SPARK_SERIES = [
+    ("breadth_50_pct",  "%>50DMA",  "{:.0f}%",   3.0,  ("Breadth divergence",)),
+    ("breadth_200_pct", "%>200DMA", "{:.0f}%",   3.0,  ()),
+    ("rsp_spy_pct",     "RSP/SPY",  "{:+.1f}%",  0.5,  ("Narrowing rally",)),
+    ("vix",             "VIX",      "{:.1f}",    1.5,  ("VIX 5-day",)),
+    ("vix_term",        "VIX/3M",   "{:.2f}",    0.05, ("Vol-curve inversion",)),
+    ("credit_pct",      "HYG/LQD",  "{:+.1f}%",  0.25, ("Credit weakening",)),
+    ("def_off_pct",     "Def-Off",  "{:+.1f}pp", 0.5,  ("Defensive rotation",)),
+]
+
+
+def _spark(vals: list) -> str:
+    """Unicode sparkline; None/NaN renders as a gap dot so alignment holds."""
+    nums = [v for v in vals if v is not None and not pd.isna(v)]
+    if not nums:
+        return SPARK_GAP * len(vals)
+    lo, hi = min(nums), max(nums)
+    rng = hi - lo
+    out = []
+    for v in vals:
+        if v is None or pd.isna(v):
+            out.append(SPARK_GAP)
+        elif rng == 0:
+            out.append(SPARK_BLOCKS[3])
+        else:
+            out.append(SPARK_BLOCKS[int((v - lo) / rng * 7)])
+    return "".join(out)
+
+
+def _arrow(vals: list, deadband: float) -> str:
+    """Direction of the series: last value vs ~SPARK_ARROW_SESSIONS runs ago
+    (or the oldest available point). Purely directional — ⚠️ carries judgment."""
+    nums = [v for v in vals if v is not None and not pd.isna(v)]
+    if len(nums) < 2:
+        return "→"
+    ref = nums[-SPARK_ARROW_SESSIONS - 1] if len(nums) > SPARK_ARROW_SESSIONS else nums[0]
+    delta = nums[-1] - ref
+    if delta > deadband:
+        return "↗"
+    if delta < -deadband:
+        return "↘"
+    return "→"
+
+
+def _recent_rows(history: pd.DataFrame, current_run_id: str,
+                 today_row: dict | None) -> list[dict]:
+    """Last SPARK_WINDOW run-days as dicts, oldest→newest, with today's values
+    appended (render runs before append_history, so history alone lacks them)."""
+    rows: list[dict] = []
+    if history is not None and not history.empty:
+        prior = history[history["run_id"].astype(str) != str(current_run_id)]
+        n_prior = SPARK_WINDOW - (1 if today_row else 0)
+        rows = prior.sort_values("run_id").tail(n_prior).to_dict("records")
+    if today_row:
+        rows.append(today_row)
+    return rows
+
+
+def render_dashboard(rows: list[dict], flags: list[str]) -> list[str]:
+    """State strip + per-series sparklines over the recent run-days. The
+    readable core of the output: the slope IS the turn signal, so encode it
+    as a glyph trajectory instead of a numbers table."""
+    if not rows:
+        return []
+    out = []
+    strip = "".join(STATE_EMOJI.get(_base_state(r["state"]), "⚪") for r in rows)
+    out.append(f"**State, last {len(rows)} run-days (oldest→latest)**: {strip}")
+    out.append("")
+    out.append(f"### Trend lines (last {len(rows)} run-days → current · "
+               f"arrow vs ~{SPARK_ARROW_SESSIONS} runs ago)")
+    out.append("")
+    out.append("```")
+    for col, label, fmt, deadband, flag_prefixes in SPARK_SERIES:
+        vals = [r.get(col) for r in rows]
+        nums = [v for v in vals if v is not None and not pd.isna(v)]
+        cur = fmt.format(nums[-1]) if nums else "—"
+        line = (f"{label:<9} {_spark(vals)}  {cur:>7}  "
+                f"{_arrow(vals, deadband)}")
+        if any(f.startswith(p) for f in flags for p in flag_prefixes):
+            line += " ⚠️"
+        out.append(line)
+    out.append("```")
+    return out
+
+
+def render_signal_table(c: dict) -> list[str]:
+    """The full 10-signal table — verbose-only since 2026-07-31; the daily
+    read shows non-🟢 votes only."""
+    out = ["### Layered signals (full)", "",
+           "| Layer | Signal | Reading | Vote |", "|---|---|---|---|"]
+    layer_label = {"Trend": "Trend", "Breadth": "Breadth", "Vol": "Vol/Sentiment",
+                   "Credit": "Credit/Rotation"}
+    for layer in LAYER_ORDER:
+        for s in c["signals"]:
+            if s["layer"] == layer:
+                out.append(f"| {layer_label[layer]} | {s['label']} | "
+                           f"{s['reading']} | {VOTE_EMOJI[s['vote']]} |")
+    return out
+
 
 def render_markdown(m: dict, c: dict, history: pd.DataFrame, run_id: str,
-                    now: datetime, confirmed: tuple[str, bool]) -> str:
+                    now: datetime, confirmed: tuple[str, bool],
+                    today_row: dict | None = None,
+                    verbose: bool = False) -> str:
     out = []
     out.append(f"# Regime scan — {now.strftime('%Y-%m-%d %H:%M UTC')}")
     out.append("")
-    out.append(f"## {c['state']} **{c['state_label']}** "
-               f"(score {c['score']:+d} · {c['n_bull']}🟢/{c['n_bear']}🔴 · "
-               f"{_plural(c['n_flags'], 'divergence')})")
+    n_neutral = len(c["signals"]) - c["n_bull"] - c["n_bear"]
+    out.append(f"## {c['state']} **{c['state_label']}** · score {c['score']:+d} "
+               f"({c['n_bull']}🟢 {n_neutral}⚪ {c['n_bear']}🔴) · "
+               f"{_plural(c['n_flags'], 'divergence')}")
     out.append(f"_{c['reason']}_")
     out.append(f"> **Action**: {c['action']}")
     conf_label, flipped = confirmed
@@ -653,56 +764,31 @@ def render_markdown(m: dict, c: dict, history: pd.DataFrame, run_id: str,
         out.append("### ✅ No divergences — all layers agree with price")
     out.append("")
 
-    # Layered signal table.
-    out.append("### Layered signals")
+    # Exceptions only: a 🟢 vote needs no explanation, the other votes do.
+    exceptions = sorted((s for s in c["signals"] if s["vote"] != 1),
+                        key=lambda s: (s["vote"], LAYER_ORDER.index(s["layer"])))
+    if exceptions:
+        out.append(f"### Non-🟢 votes ({n_neutral}⚪ {c['n_bear']}🔴)")
+        for s in exceptions:
+            out.append(f"- {VOTE_EMOJI[s['vote']]} {s['label']}: {s['reading']}")
+    else:
+        out.append(f"### All {len(c['signals'])} votes 🟢")
     out.append("")
-    out.append("| Layer | Signal | Reading | Vote |")
-    out.append("|---|---|---|---|")
-    layer_label = {"Trend": "Trend", "Breadth": "Breadth", "Vol": "Vol/Sentiment",
-                   "Credit": "Credit/Rotation"}
-    for layer in LAYER_ORDER:
-        for s in c["signals"]:
-            if s["layer"] == layer:
-                out.append(f"| {layer_label[layer]} | {s['label']} | "
-                           f"{s['reading']} | {VOTE_EMOJI[s['vote']]} |")
-    out.append("")
-    out.append(f"_Breadth pool: {m['n_breadth']} cross-sector large caps · slope/RS lookback "
-               f"{m['lookback']}d_")
 
     # Trajectory — the real turn signal lives in the slope across days.
-    traj = render_trajectory(history, run_id)
-    if traj:
+    dash = render_dashboard(_recent_rows(history, run_id, today_row), c["flags"])
+    if dash:
+        out.extend(dash)
         out.append("")
-        out.append(traj)
+
+    if verbose:
+        out.extend(render_signal_table(c))
+        out.append("")
+
+    out.append(f"_Breadth pool: {m['n_breadth']} cross-sector large caps · "
+               f"slope/RS lookback {m['lookback']}d"
+               + ("" if verbose else " · full signal table: --verbose") + "_")
     return "\n".join(out)
-
-
-def render_trajectory(history: pd.DataFrame, current_run_id: str) -> str | None:
-    """Show how state / breadth / vix / credit moved over the last several runs
-    — a single day's snapshot doesn't tell you if sentiment is *turning*; the
-    slope does."""
-    if history is None or history.empty:
-        return None
-    prior = history[history["run_id"] != current_run_id]
-    if prior.empty:
-        return None
-    recent = prior.sort_values("run_date").tail(6)
-    lines = ["### Recent trajectory (read the slope, not the single point)", "",
-             "| Date | State | score | %>50DMA | %>200DMA | RSP/SPY | VIX | Credit | Flags |",
-             "|---|---|---|---|---|---|---|---|---|"]
-    for _, r in recent.iterrows():
-        d = pd.to_datetime(r["run_date"]).astimezone(MARKET_TZ).strftime("%m-%d")
-        def g(col, suf="", fmt="{:.0f}"):
-            v = r.get(col)
-            if pd.isna(v):
-                return "—"
-            return fmt.format(v) + suf
-        lines.append(
-            f"| {d} | {r['state']} | {int(r['score']):+d} | "
-            f"{g('breadth_50_pct')} | {g('breadth_200_pct')} | "
-            f"{g('rsp_spy_pct', '%', '{:+.1f}')} | {g('vix', '', '{:.1f}')} | "
-            f"{g('credit_pct', '%', '{:+.1f}')} | {int(r['n_flags'])} |")
-    return "\n".join(lines)
 
 
 def show_history_summary(history: pd.DataFrame):
@@ -723,8 +809,19 @@ def show_history_summary(history: pd.DataFrame):
               f"{g('vix', '', '{:.1f}')} | {g('vix_term', '', '{:.2f}')} | "
               f"{g('credit_pct', '%', '{:+.1f}')} | {int(r['n_flags'])} |")
 
-    # The Confirmed line prints here too: --show-history is the recommended
-    # no-refetch read (conviction-funnel step 1), and sizing reads this line.
+    # Same sparkline dashboard as the daily run — --show-history is the
+    # recommended no-refetch read (conviction-funnel step 1), so it should be
+    # as readable as the scan itself. History already contains the latest row.
+    rows = history.sort_values("run_id").tail(SPARK_WINDOW).to_dict("records")
+    raw_flags = rows[-1].get("flags")
+    raw_flags = "" if raw_flags is None or pd.isna(raw_flags) else str(raw_flags)
+    last_flags = [f.strip() for f in raw_flags.split(";") if f.strip()]
+    dash = render_dashboard(rows, last_flags)
+    if dash:
+        print()
+        print("\n".join(dash))
+
+    # The Confirmed line prints here too — sizing reads this line.
     last = history.sort_values("run_id").iloc[-1]
     conf, flipped = confirm_state(history, str(last["run_id"]), last["state"])
     emoji = STATE_EMOJI.get(conf, "⚪")
@@ -746,6 +843,9 @@ def build_argparser():
                     help=f"Sessions for slope / relative-strength windows "
                          f"(default {SLOPE_LOOKBACK_DEFAULT}, ~1 trading month).")
     ap.add_argument("--format", choices=["markdown", "json"], default="markdown")
+    ap.add_argument("--verbose", action="store_true",
+                    help="Include the full 10-signal table (the daily read "
+                         "shows non-🟢 votes only).")
     ap.add_argument("--show-history", action="store_true",
                     help="Print the daily state log and exit (no new scan).")
     ap.add_argument("--clear-history", action="store_true")
@@ -807,13 +907,14 @@ def main():
               f"partial, so MAs/breadth reflect an in-progress day. The "
               f"post-close run will overwrite this row.", file=sys.stderr)
 
+    today_row = history_row(run_id, now, m, c)
     if not args.no_save:
         if not today_is_trading and not args.save_stale:
             print(f"Skipping history save: {today_et} is not an NYSE trading "
                   f"day (the {data_date} row already reflects this data). "
                   f"Pass --save-stale to override.", file=sys.stderr)
         else:
-            append_history(history_row(run_id, now, m, c))
+            append_history(today_row)
 
     confirmed = confirm_state(history, run_id, c["state_label"])
 
@@ -826,7 +927,8 @@ def main():
         }, indent=2, default=str))
         return
 
-    print(render_markdown(m, c, history, run_id, now, confirmed))
+    print(render_markdown(m, c, history, run_id, now, confirmed,
+                          today_row=today_row, verbose=args.verbose))
 
 
 if __name__ == "__main__":

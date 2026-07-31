@@ -53,6 +53,7 @@ uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy>=1.24,<3' \
 |---|---|---|
 | `--lookback` | 20 | Sessions for the relative-strength windows (RSP/SPY, credit, defensive rotation). ~1 trading month. Raise for slower, less noisy reads. **The 200DMA trend-gate slope is NOT covered**: it stays fixed at 20d in code so tuning the RS window can't re-tune the trend gate (whose deadband is calibrated for 20d). |
 | `--format` | markdown | `markdown` or `json`. |
+| `--verbose` | — | Add the full 10-signal table. The daily read shows non-🟢 votes only. |
 | `--show-history` | — | Print the daily state log and exit. |
 | `--clear-history` | — | Wipe `history.csv` (no confirmation). |
 | `--no-save` | — | Don't append this run to history. |
@@ -85,7 +86,9 @@ The generator dash-normalizes class shares (`BRK.B`→`BRK-B`), prints a per-sec
 
 **Confirmed (2-day) line**: the state under a 2-run-day confirmation rule (`confirmed_state` in JSON). The raw daily label chatters at the score threshold (6 of the first 10 logged transitions were single-day whipsaws), so **conviction-funnel and premarket read this line for sizing; a first-day flip is "watch, don't act"**. The raw label above it remains the honest daily reading and is what history.csv logs; the confirmation costs one run-day of detection lag on genuine turns.
 
-**Score**: sum of 10 per-signal votes (🟢 +1 / ⚪ 0 / 🔴 −1) across the four layers. A blunt gauge; the **divergence flags and the trajectory matter more than the absolute score**.
+**Score**: sum of 10 per-signal votes (🟢 +1 / ⚪ 0 / 🔴 −1) across the four layers, with the 🟢/⚪/🔴 split in the banner. A blunt gauge; the **divergence flags and the trajectory matter more than the absolute score**.
+
+**Non-🟢 votes**: only the ⚪/🔴 votes print, one line each with the raw reading — a 🟢 vote needs no explanation. The full 10-signal table is behind `--verbose`.
 
 **⚠️ Turn warnings (divergence flags)**: the turn detector. Each fires *only while the uptrend is intact* (a broken internal under an already-broken tape is the bear, not a divergence):
 - Breadth divergence: SPY near its 52w high but < 50% of names above their 50DMA
@@ -97,7 +100,9 @@ The generator dash-normalizes class shares (`BRK.B`→`BRK-B`), prints a per-sec
 
 None alone is a sell; **2–3 stacking = de-risk**. This layer is the skill's founding requirement: catch sentiment *turning* before price confirms.
 
-**Recent trajectory**: last ~6 runs of state / breadth / RSP-SPY / VIX / credit. **Read the slope**: a one-day snapshot can't tell you if sentiment is turning; the multi-day drift can.
+**State strip + Trend lines**: the trajectory layer, as glyphs instead of a table (2026-07-31 redesign). The strip is the last ~14 run-days of state (🟢🟢🟡🟢…, today last); below it, one sparkline per watched series (breadth, RSP/SPY, VIX, VIX/VIX3M term, credit, defensive−offensive) with the current value, a ↗/→/↘ arrow vs ~5 runs ago, and ⚠️ on any series whose divergence flag is firing. **Read the slope**: a one-day snapshot can't tell you if sentiment is turning; the multi-day drift can. The full numeric log stays in `--show-history` (which now ends with the same dashboard).
+
+**Presenting the result**: the dashboard is already the readable form — relay it verbatim (keep the code block, or alignment breaks) rather than re-tabulating it, then add a 2–4 sentence interpretation in the conversation's language: what the state is, which flag/series is the live concern, and what would change the call. Don't re-list every number the dashboard already encodes.
 
 ## How it ties to the journal rules
 

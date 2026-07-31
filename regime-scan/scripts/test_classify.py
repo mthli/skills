@@ -261,3 +261,76 @@ def test_def_off_at_shift_and_short_data():
     # One whole side missing → None.
     assert scan.def_off_at({t: off for t in scan.SECTOR_OFFENSIVE},
                            20, 0) is None
+
+
+# --------------------------------------------------------------------------- #
+# Sparkline dashboard (2026-07-31 readability redesign)
+# --------------------------------------------------------------------------- #
+def test_spark_scales_and_marks_gaps():
+    assert scan._spark([1, 2, 3, 4]) == "▁▃▅█"
+    assert scan._spark([1, None, 3]) == "▁·█"
+    assert scan._spark([5, 5, 5]) == "▄▄▄"          # flat → mid block
+    assert scan._spark([None, None]) == "··"
+
+
+def test_arrow_direction_and_deadband():
+    assert scan._arrow([1, 1, 1, 1, 1, 1, 5], 0.5) == "↗"    # vs 5 runs ago
+    assert scan._arrow([5, 5, 5, 5, 5, 5, 1], 0.5) == "↘"
+    assert scan._arrow([1, 1, 1, 1, 1, 1, 1.2], 0.5) == "→"  # inside deadband
+    assert scan._arrow([3], 0.5) == "→"                      # too short
+    assert scan._arrow([1, 4], 0.5) == "↗"                   # short → vs oldest
+
+
+def test_dashboard_strip_flags_and_alignment():
+    rows = [{"state": "RISK-ON", "breadth_50_pct": 60 + i, "breadth_200_pct": 65,
+             "rsp_spy_pct": 0.5, "vix": 15.0, "credit_pct": 1.0,
+             "def_off_pct": 4.0} for i in range(6)]
+    rows[-1]["state"] = "RISK-OFF (internals)"
+    out = "\n".join(scan.render_dashboard(
+        rows, ["Defensive rotation: deepening — blah"]))
+    assert "🟢🟢🟢🟢🟢🔴" in out                    # base-state folding
+    assert "Def-Off" in out and "⚠️" in out         # flag marks its series
+    assert out.count("⚠️") == 1                     # only the flagged line
+    assert scan.render_dashboard([], []) == []      # empty history → no block
+
+
+def test_render_markdown_exceptions_only_and_verbose():
+    import pandas as pd
+    m = _metrics()
+    c = scan.classify(m)
+    from datetime import datetime, timezone
+    now = datetime(2026, 7, 31, tzinfo=timezone.utc)
+    kw = dict(history=pd.DataFrame(columns=scan.HISTORY_COLS), run_id="20260731",
+              now=now, confirmed=("RISK-ON", False))
+    md = scan.render_markdown(m, c, **kw)
+    assert "Layered signals (full)" not in md       # full table is verbose-only
+    assert "--verbose" in md
+    assert "Confirmed (2-day)" in md                # downstream anchor intact
+    v = scan.render_markdown(m, c, verbose=True, **kw)
+    assert "Layered signals (full)" in v
+    # Every non-🟢 vote (and only those) gets an exception line.
+    n_exc = sum(1 for s in c["signals"] if s["vote"] != 1)
+    assert md.count("\n- ⚪") + md.count("\n- 🔴") == n_exc
+
+
+def test_show_history_nan_flags_no_leak(capsys):
+    # A no-flag day round-trips through CSV as NaN, not "" — the dashboard's
+    # flag parsing must not turn that into a phantom "nan" flag.
+    import pandas as pd
+    h = pd.DataFrame({
+        "run_id": ["20260701", "20260702"],
+        "run_date": pd.to_datetime(["2026-07-01T20:00:00+00:00",
+                                    "2026-07-02T20:00:00+00:00"], utc=True),
+        "state": ["RISK-ON", "RISK-ON"],
+        "score": [6, 5],
+        "n_flags": [0, 0],
+        "breadth_50_pct": [60.0, 62.0],
+        "vix": [15.0, 14.5],
+        "flags": ["", float("nan")],           # latest row: NaN as read from CSV
+    })
+    scan.show_history_summary(h)
+    out = capsys.readouterr().out
+    assert "nan" not in out.lower()
+    assert "⚠️" not in out
+    assert "State, last 2 run-days" in out     # dashboard still renders
+    assert "Confirmed (2-day)" in out
