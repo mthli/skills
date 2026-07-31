@@ -1098,7 +1098,10 @@ function renderGrid(minDays) {
   const tbl = document.getElementById("tbl");
   // Column order follows the judgment path: identity, verdict (expectancy
   // + total), the evidence behind it (record + win rate), exposure, then
-  // recency/state. Default sort stays days-desc so rows track the grid.
+  // recency/state. Defaults pair the verdict sort with the ≥3-resolved
+  // filter — without the filter an expectancy sort tops out on
+  // single-lucky-win samples (the grid keeps the days view; two panels,
+  // two roles).
   const COLS = [
     { h: T.cols[0], v: s => s.t,      dir: 1 },
     { h: T.cols[1], v: s => s.sec,    dir: 1 },
@@ -1124,7 +1127,7 @@ function renderGrid(minDays) {
   const tb = document.createElement("tbody");
   tbl.appendChild(tb);
 
-  let sortCol = 7, sortDir = -1, minRes = 0;
+  let sortCol = 2, sortDir = -1, minRes = 3;
   const renderHead = () => ths.forEach((th, i) => {
     th.textContent = COLS[i].h + (i === sortCol ? (sortDir === 1 ? " ▲" : " ▼") : "");
     th.className = i === sortCol ? "on" : "";
@@ -1182,6 +1185,7 @@ function renderGrid(minDays) {
     o.textContent = lbl;
     sel.appendChild(o);
   });
+  sel.value = minRes;
   sel.addEventListener("change", () => { minRes = +sel.value; renderRows(); });
 
   const leg = document.getElementById("roster-legend");
