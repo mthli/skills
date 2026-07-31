@@ -162,3 +162,43 @@ def test_realized_moves_ohlc_and_gap(monkeypatch):
     assert spy["high"] == 103.0 and spy["low"] == 99.0
     # The ex-div trap: reconciliation grades official levels, never adjusted.
     assert seen["auto_adjust"] is False
+
+
+# --------------------------------------------------------------------------- #
+# redact_positions — the saved snapshot must not leak account numbers
+# --------------------------------------------------------------------------- #
+def test_redact_positions_strips_private_fields_keeps_flags():
+    packet = {"positions": [
+        {"ticker": "SOXX", "shares": 10.0, "avg_cost": 544.63, "stop": 500.0,
+         "opened": "2026-05-02", "tag": "semis", "reports_today": False,
+         "on_watchlist": True},
+        {"ticker": "NVDA", "shares": 5.0, "avg_cost": 208.76, "stop": None,
+         "opened": None, "tag": None, "reports_today": True,
+         "on_watchlist": False},
+    ]}
+    red = bp.redact_positions(packet)
+    for p in red["positions"]:
+        for k in bp.PRIVATE_POSITION_FIELDS:
+            assert k not in p
+        assert p["redacted"] is True
+    # Ticker-level exposure and the event-risk joins survive.
+    assert red["positions"][0] == {"ticker": "SOXX", "tag": "semis",
+                                   "reports_today": False, "on_watchlist": True,
+                                   "redacted": True}
+    assert red["positions"][1]["reports_today"] is True
+
+
+def test_redact_positions_leaves_original_untouched():
+    packet = {"positions": [{"ticker": "RY", "shares": 10.0, "avg_cost": 211.01,
+                             "stop": None, "opened": None, "tag": None}],
+              "errors": []}
+    bp.redact_positions(packet)
+    # stdout serializes the ORIGINAL packet after the disk copy is written —
+    # a shared-reference mutation here would redact the briefing's own input.
+    assert packet["positions"][0]["shares"] == 10.0
+    assert packet["positions"][0]["avg_cost"] == 211.01
+
+
+def test_redact_positions_empty_book_is_noop():
+    packet = {"positions": [], "errors": []}
+    assert bp.redact_positions(packet) == {"positions": [], "errors": []}

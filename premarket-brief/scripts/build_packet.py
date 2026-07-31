@@ -22,7 +22,9 @@ The output is ONE JSON object on stdout. It is saved to state/packets/ when the
 run is inside the pre-open window (session.valid) — or out-of-window only with
 --save-invalid; otherwise an out-of-window run prints to stdout but is NOT saved,
 so a void packet (live/AH/stale prices mislabeled as a pre-open gap) can't litter
-the snapshot dir or be mistaken for a real input. The
+the snapshot dir or be mistaken for a real input. The saved copy REDACTS the
+positions block (state/packets/ is git-tracked in a public repo; see
+redact_positions) — the full block exists only on stdout and in positions.md. The
 LLM half (SKILL.md) reads it, layers in positions + the regime/names caches,
 and writes the actual briefing.
 
@@ -33,6 +35,7 @@ Usage:
   ... python build_packet.py --save-invalid     # save even when out-of-window
 """
 import argparse
+import copy
 import json
 import re
 import sys
@@ -802,6 +805,28 @@ def load_positions(errors: list) -> list[dict]:
     return out
 
 
+PRIVATE_POSITION_FIELDS = ("shares", "avg_cost", "stop", "opened")
+
+
+def redact_positions(packet: dict) -> dict:
+    """Deep copy of `packet` with account numbers stripped from `positions`.
+
+    The saved snapshot lands in state/packets/, which is git-tracked in a
+    PUBLIC repo. The accepted exposure is ticker-level only (which names get
+    attention); anything cost-basis-derivable stays local: shares, avg_cost,
+    stop, opened. Each surviving entry is stamped `"redacted": true` so a
+    reader of the file knows fields were stripped, not absent. The stdout
+    packet keeps the full block — the briefing synthesizes from stdout plus
+    positions.md, never from the saved snapshot.
+    """
+    red = copy.deepcopy(packet)
+    for p in red.get("positions", []):
+        for k in PRIVATE_POSITION_FIELDS:
+            p.pop(k, None)
+        p["redacted"] = True
+    return red
+
+
 # --------------------------------------------------------------------------- #
 # Defensive guard — is this run inside the pre-open window?
 # --------------------------------------------------------------------------- #
@@ -1048,7 +1073,8 @@ def main(argv=None) -> int:
 
     if save:
         PACKET_DIR.mkdir(parents=True, exist_ok=True)
-        (PACKET_DIR / f"{today.isoformat()}.json").write_text(out)
+        disk = json.dumps(redact_positions(packet), indent=2, default=str)
+        (PACKET_DIR / f"{today.isoformat()}.json").write_text(disk)
 
     print(out)
     if packet["errors"]:

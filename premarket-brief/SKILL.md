@@ -85,7 +85,10 @@ It prints the packet JSON to stdout and, **only when the run is in-window**,
 saves a copy to `state/packets/<today>.json` (an out-of-window run prints but
 is not saved; see step 3). **First check `session.valid` in the stdout (step
 3).** If valid, **read the saved file**: it's the single source of facts for
-everything below. It contains: the overnight tape (incl. live VIX term
+everything below, with one exception — the saved copy strips position account
+numbers (shares / avg_cost / stop / opened; the snapshot dir is git-tracked in
+a public repo). Take those from the stdout packet or `positions.md` when
+writing the playbook. It contains: the overnight tape (incl. live VIX term
 structure: VIX9D/VIX/VIX3M levels plus the VIX/VIX3M ratio and `shape`),
 premarket movers, market-wide premarket gappers (`premarket_gappers`, the top
 large-cap movers outside your book, via TradingView), today's econ calendar +

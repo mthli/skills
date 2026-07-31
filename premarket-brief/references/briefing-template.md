@@ -120,9 +120,11 @@ This is the section that can do harm if written lazily, so frame it honestly:
   **watchlist name**. When `positions.md` is empty, the playbook is watchlist-
   and regime-level only; say so plainly rather than inventing position advice.
 - **P&L-aware when cost basis is available.** With `avg_cost` you can be
-  specific: "+35% into tonight's print: a partial trim caps event risk instead
-  of round-tripping the gain; void if …". Without it, stay at event-risk
-  flagging. Never fabricate a basis.
+  specific in the conversation delivery: "+35% into tonight's print: a partial
+  trim caps event risk instead of round-tripping the gain; void if …". In the
+  **archived** brief the same line goes qualitative ("well in profit into
+  tonight's print: trim case") — see the public-archive honesty rule. Without
+  a basis, stay at event-risk flagging. Never fabricate one.
 - **Respect the regime.** If the structural read plus the overnight tape say
   risk-off with stacking divergences, the plan is "what's holding up, sized
   small, defense", not chasing. Thread the regime into sizing.
@@ -160,6 +162,14 @@ This is the section that can do harm if written lazily, so frame it honestly:
 
 ## Output honesty rules
 
+- **The archive is public: tickers yes, account numbers never.** The archived
+  brief may name held tickers and their event risk, but must never carry
+  share counts, cost basis, stop levels, dollar P&L, or precise P&L
+  percentages — a percentage plus a public price back-solves the cost basis.
+  Qualitative only in the archive ("deep underwater", "modest gain"); precise
+  numbers live in positions.md, the stdout packet, and the conversation
+  delivery. The saved packet enforces its own half of this rule
+  (build_packet's `redact_positions`).
 - **Run window first (`session`).** If `session.valid` is false you should
   have stopped at SKILL.md step 3. The only time you reach this template
   out-of-window is on an **explicit user-requested** read; then lead with

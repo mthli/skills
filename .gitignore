@@ -163,9 +163,10 @@ vite.config.ts.timestamp-*
 # premarket-brief daily data packets: point-in-time pre-open snapshots
 # (premarket prints, that morning's headlines, F&G) that no API can
 # reconstruct after the fact — the raw layer behind each archived briefing,
-# and the sample for backtesting premkt-vs-close relationships. CAVEAT: the
-# packet embeds parsed positions; if positions.md ever gains real holdings,
-# revisit this exception before the next daily auto-commit.
+# and the sample for backtesting premkt-vs-close relationships. The saved
+# copy strips position account numbers (build_packet's redact_positions;
+# ticker-level exposure accepted 2026-08-01) — shares/cost/stops never land
+# in the snapshot, so tracking stays safe with a filled positions.md.
 !**/state/packets/
 !**/state/packets/**
 # premarket-brief personal positions (private account facts — keep the template
