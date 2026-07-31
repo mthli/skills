@@ -48,6 +48,12 @@ uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy>=1.24,<3' \
 
 # Disable the vol-collapse acquisition-target filter (keep buyouts in the table; see parameter table for range)
 ... python <SKILL_DIR>/scripts/scan.py --vol-collapse-ratio 0
+
+# Outcome backtest: replay history.csv's episodes (enter on listing, sell on dropout),
+# stratified by entry attributes (see "Backtested outcomes" section). Re-run quarterly.
+... python <SKILL_DIR>/scripts/backtest_outcomes.py
+# Realistic execution variant: both fills at the NEXT session's open
+... python <SKILL_DIR>/scripts/backtest_outcomes.py --fills next-open
 ```
 
 ## Parameters
@@ -113,7 +119,7 @@ _entry quality: 🟢 volume surge + clean · 🔵 volume surge · ⚪ neutral ·
 - 🟠 **DELL** at #3 (3m +107.8%, MaxDD -10.8%, re-entry, was #24) — vol 0.6×, 5 dist
 ...
 
-(The section lists **episode starts** — `Streak = 1` — covering both first-ever debuts (🆕 in the table) and re-entries after a dropout; re-entries carry a `re-entry, was #N` note. Entry-quality tags tier each entrant by its entry-day volume character — `vol` is `vol_ratio_20d` (latest volume over its 20-session average), `dist` is `dist_days_25d`. Thresholds: surge ≥ 1.5×, quiet < 0.8×, clean ≤ 1 dist day. Calibration: a 220-episode single-regime backtest (2026-05→07) where surge entries averaged +9.0% held-to-dropout vs +3.1% for quiet drift-ins, and ≤1-dist-day entries doubled both tenure and top-10 reach — read the tag as a sizing/priority hint for which entrants deserve attention, not a buy signal. Tags appear only when the volume fields are available for that name. JSON output carries the same tier on each episode-start pick as `entry_quality: {emoji, label}`.)
+(The section lists **episode starts** — `Streak = 1` — covering both first-ever debuts (🆕 in the table) and re-entries after a dropout; re-entries carry a `re-entry, was #N` note. Entry-quality tags tier each entrant by its entry-day volume character — `vol` is `vol_ratio_20d` (latest volume over its 20-session average), `dist` is `dist_days_25d`. Thresholds: surge ≥ 1.5×, quiet < 0.8×, clean ≤ 1 dist day. Calibration: originally a one-off 220-episode single-regime backtest (2026-05→07, surge +9.0% held-to-dropout vs quiet +3.1%) — the re-runnable `scripts/backtest_outcomes.py` later showed those magnitudes were convention-inflated (look-ahead exits + open winners marked at their highs); under the honest convention the surge>quiet ordering survives but the gap is small, while the ≤1-dist-day tenure/top-10 edge replicates cleanly (see **Backtested outcomes** #2–3). Read the tag as a priority hint for which entrants deserve attention — the `dist` half carries most of the signal. Tags appear only when the volume fields are available for that name. JSON output carries the same tier on each episode-start pick as `entry_quality: {emoji, label}`.)
 
 ## Persistent leaders (streak ≥ 3 runs)
 _rank trajectory vs top 30: █ = #1 · ▁ = #30 or worse; rising = climbing_
@@ -204,6 +210,18 @@ Tests for the history I/O live next to the script at `scripts/test_history.py`. 
 uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy>=1.24,<3' \
   --with 'pytest' pytest scripts/
 ```
+
+## Backtested outcomes (2026-05-14 → 2026-07-30 sample)
+
+`scripts/backtest_outcomes.py` replays `state/history.csv` with the skill's canonical convention — an episode enters at the close of its first top-30 day and sells at the close of the day its dropout is observed (the scan's only built-in exit) — then stratifies by everything recorded at entry. Measured on 228 episodes over 50 run-days (198 closed, 30 still listed), one regime. Re-run quarterly; findings, strongest first:
+
+1. **The dropout exit is a real stop, and its value is concentrated in former leaders.** Selling on dropout beat holding 10 more sessions by **+0.90pt** per episode overall, **+1.71pt** for episodes that had reached the top 10. Post-dropout drift is flat for 5 sessions, then rolls over: −0.90% by +10d and −1.77% by +20d, with former top-10 names worst (−1.91% / −4.01%) — dropped leaders keep falling for about two weeks, and SPY was flat over the same windows, so this isn't market beta. Sell the dropout; don't "give it a few days".
+2. **Entry-day distribution days are the durable entry edge.** Clean entrants (≤1 dist day in 25 sessions) ran 10.3-run tenures with 47% top-10 reach vs 4.7 runs and 18% for loaded entrants (4+), and were the only cohort pairing a positive held-to-dropout return with a >50% win rate and the only positive median (+0.11%). Caveat on means: the middling 2–3 bucket posted the highest *mean* held-to-dropout (+2.30%, n=53 — a few large winners), so clean's edge is persistence and consistency, not the biggest average exit. This replicates the original one-off analysis.
+3. **The volume-surge half of the entry-quality tag was convention-inflated.** The recorded +9.0% (surge) vs +3.1% (quiet) calibration reproduced exactly in episode counts (n=34/76/17) but only under the original convention's two flaws: exits at the last *listed* day's close (look-ahead — you can't know it's the last day until the next scan) and still-open winners marked at their then-current paper gains. Under the honest convention surge runs +0.43% vs quiet −0.08% — same ordering, but the gap shrinks ~12× (5.9pt → 0.5pt). The mid-July surge cohort's paper gains were later given back at their actual dropouts. The original convention stays reproducible via `--exit last-listed` (clearly labeled reconciliation mode — never use it to judge the strategy).
+4. **Entry Score buys persistence, not entry-point return.** Top-tercile scores at entry tripled tenure (9.5 vs 2.9 runs) and dominate top-10 reach (52% vs 3%) but ran the *worst* held-to-dropout return (−1.45% vs +1.24% for the bottom tercile) — high-score entrants arrive extended and give back more at the exit. Size by score, but enter on pullbacks (`Sig` column), not on the print.
+5. **Closed episodes are the losers by construction — judge the system on both halves.** Closed episodes averaged −0.31% (41% win) while the 30 still-listed episodes carried +6.42% unrealized on 10.2-run tenures: the strategy's carry is skew — cutting dropouts fast (finding #1) while the open winners ride. A closed-only read understates it; an open-inclusive read (the original's) overstates it.
+
+Conventions and caveats: fills at the close by default (`--fills next-open` for next-session-open execution); the day-1 cohort (30 episodes already listed when tracking began) is left-censored — its "entries" are artifacts of the tracking start — and is included in aggregates but broken out in its own stratum; H2 entrants ran notably worse than H1 (−2.73% vs −0.47% held-to-dropout), so expect these numbers to move with the tape until several regimes accumulate.
 
 ## Cadence
 

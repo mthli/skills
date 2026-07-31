@@ -992,11 +992,15 @@ def attach_volume_fields(picks: list[dict], bars: pd.DataFrame,
 
 
 # Entry-quality tiers, calibrated on the 2026-07 episode backtest (n=220
-# episodes over 49 runs): volume-surge entries (vol_ratio ≥ 1.5, n=34)
-# averaged +9.0% held-to-dropout vs +3.1% for quiet drift-ins (< 0.8, n=76),
-# and low-distribution entries (dist_days ≤ 1, n=17) roughly doubled both
-# tenure (10.5 runs vs ~6) and top-10 reach rate (53% vs ~25%). Small
-# samples from a single regime — treat as a sizing/priority hint, not a
+# episodes over 49 runs) and re-measured by scripts/backtest_outcomes.py
+# (re-run it quarterly). The dist_days half is the durable edge:
+# low-distribution entries (dist_days ≤ 1) roughly doubled both tenure and
+# top-10 reach rate under every convention tried. The vol_ratio half is
+# weak: the original +9.0% (surge) vs +3.1% (quiet) held-to-dropout gap
+# came from look-ahead exits plus open winners marked at unrealized highs;
+# the honest convention (closed episodes, exit at the observed-dropout
+# close) keeps the surge>quiet ordering but shrinks the gap to ~0.5pt.
+# Small samples from a single regime — treat as a priority hint, not a
 # signal. Exit-side rules built on the same fields all failed vs the
 # hold-to-dropout baseline; that's why this attaches to entrants only.
 ENTRY_VOL_SURGE_MIN = 1.5
