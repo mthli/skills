@@ -1,25 +1,25 @@
 # Deep-dive agent template (Step 5)
 
-Spawn one subagent per finalist, in parallel — or, if your harness can't spawn subagents, run the briefs yourself one name at a time (same template, just slower; don't drop a finalist for lack of parallelism). Copy the template below and fill in the `{{...}}` blanks from the scan output you already have. The goal is a tight, numeric, *standard-depth* brief — enough to decide entry/stop/size/invalidation, not an equity-research report.
+Spawn one subagent per finalist, in parallel; if your harness can't spawn subagents, run the briefs yourself one name at a time (same template, slower; don't drop a finalist for lack of parallelism). Copy the template below and fill in the `{{...}}` blanks from the scan output you already have. The goal is a tight, numeric, *standard-depth* brief: enough to decide entry/stop/size/invalidation, not an equity-research report.
 
 ## Filling in the blanks
 
-- `{{TICKER}}` / `{{NAME}}` / `{{SECTOR_DESC}}` — e.g. `ELV` / `Elevance Health` / `healthcare / managed care`.
-- `{{SCAN_CONTEXT}}` — the scan-signal line + momentum read you already have: which scans list it and which validated pockets it passes (BaseWks / fresh MR score), ranks/scores, 3-month return, max drawdown, RSI, MA20%, AnnVol, the ATR stop level and approx spot, the `Sig`. Hand this over so the agent anchors instead of re-deriving.
-- `{{REGIME_LINE}}` — one sentence: today's regime state + the narrow/broad read (e.g. "🟢 RISK-ON but mega-cap-led, breadth mid-50s% — size for a healthy-but-not-broad tape").
-- `{{WSB_CLAUSE}}` — see the conditional rule below; include the "run it" or the "skip it" variant per finalist.
-- For **foreign private issuers** (ADRs like RIO, BHP, ING): tell the agent there's no Form 4 / 10-Q — they file 6-K / 20-F, and US-style insider data likely won't exist. Point it at the production report / half-year results instead.
+- `{{TICKER}}` / `{{NAME}}` / `{{SECTOR_DESC}}`: e.g. `ELV` / `Elevance Health` / `healthcare / managed care`.
+- `{{SCAN_CONTEXT}}`: which scans list it and which validated pockets it passes (BaseWks / fresh MR score), ranks/scores, 3-month return, max drawdown, RSI, MA20%, AnnVol, the ATR stop level and approx spot, the `Sig`. Hand this over so the agent anchors instead of re-deriving.
+- `{{REGIME_LINE}}`: one sentence with today's regime state + the narrow/broad read (e.g. "🟢 RISK-ON but mega-cap-led, breadth mid-50s%, size for a healthy-but-not-broad tape").
+- `{{WSB_CLAUSE}}`: see the conditional rule below; include the "run it" or the "skip it" variant per finalist.
+- For **foreign private issuers** (ADRs like RIO, BHP, ING): tell the agent there's no Form 4 / 10-Q; they file 6-K / 20-F, and US-style insider data likely won't exist. Point it at the production report / half-year results instead.
 
 ## The conditional WSB rule
 
-Crowding is a *fragility* check, not a buy signal: a name being actively pumped on WSB is more prone to a sharp unwind, so low crowding is good for risk/reward and high crowding is a yellow flag. But it only has signal when the name *could* be crowded — and the risk/reward lens biases finalists toward sleepy institutional names where the answer is a foregone "low". So gate it:
+Crowding is a *fragility* check, not a buy signal: a name being pumped on WSB is more prone to a sharp unwind, so low crowding is good for risk/reward and high crowding is a yellow flag. But it only has signal when the name *could* be crowded, and the risk/reward lens biases finalists toward sleepy institutional names where the answer is a foregone "low". So gate it:
 
 **Run the WSB check for a finalist only if ANY of:**
-- it's in a hot retail theme — semis / AI / software, nuclear, space / defense, crypto-adjacent, EV, biotech-momentum;
+- it's in a hot retail theme (semis / AI / software, nuclear, space / defense, crypto-adjacent, EV, biotech-momentum);
 - AnnVol > ~70%;
 - a big recent run with hot RSI (high momentum score *and* RSI > 70).
 
-**Otherwise skip it** — default the Crowding section to "low / not a retail-crowded name (institutional profile)" without spending the call. When it does run, the lightweight "is this name on WSB's radar / in the WSB index at all" read suffices; only browse actual threads if the user later asks for sentiment detail.
+**Otherwise skip it**: default the Crowding section to "low / not a retail-crowded name (institutional profile)" without spending the call. When it does run, the lightweight "is this name on WSB's radar / in the WSB index at all" read suffices; only browse actual threads if the user later asks for sentiment detail.
 
 So `{{WSB_CLAUSE}}` is one of:
 - **Run variant:** "Crowding/sentiment: this name plausibly attracts retail ({{WHY}}), so check it — use the wallstreetbets skill (Skill tool, skill=\"wallstreetbets\") or a web search for recent WSB chatter / index membership on {{TICKER}}."
@@ -56,6 +56,6 @@ Be concrete and numeric. If a data point is unavailable, say so briefly rather t
 
 ## What the orchestrator does with the briefs
 
-Collect all N, then build the side-by-side comparison table and the per-name verdicts (see the main SKILL.md "Output" section). The most valuable synthesis move: call out where the deep-dive *changed the picture* relative to the raw scan signals — e.g. a validated-pocket name that's genuinely clean vs one whose reward is capped at the analyst target or whose fundamental backdrop is weakening. A scan listing earns a *look*, not a buy; the deep-dive is what separates the two.
+Collect all N, then build the side-by-side comparison table and the per-name verdicts (see the main SKILL.md "Output" section). The most valuable synthesis move: call out where the deep-dive *changed the picture* relative to the raw scan signals, e.g. a validated-pocket name that holds up clean vs one whose reward is capped at the analyst target or whose fundamental backdrop is weakening. A scan listing earns a *look*, not a buy; the deep-dive separates the two.
 
-Then close the run per SKILL.md **Step 6**: transcribe the table into `state/runs/<date>.json` (finalists with entry/stop/size, runner-ups, and every rejected name with its reason) and self-check with `grade_outcomes.py --validate`. The run isn't finished until the ledger is written.
+Then close the run per SKILL.md **Step 6**: transcribe the table into `state/runs/<date>.json` (finalists with entry/stop/size, runner-ups, and every rejected name with its reason) and self-check with `grade_outcomes.py --validate`. The run isn't finished until you've written the ledger.
