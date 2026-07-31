@@ -174,7 +174,6 @@ def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
             pts.append({
                 "d": d, "o": cat, "p": 1 if pocket else 0, "k": streak,
                 "sc": score, "rsi": _f(r.get("rsi2")),
-                "g": r.get("signal") or "—",
                 "dtr": dtr, "pct": pct,
             })
         win_pts = [{**p, "d": p["d"] - win_start}
@@ -373,8 +372,9 @@ select {
   box-shadow: 0 4px 14px rgba(0,0,0,0.14); padding: 8px 11px; font-size: 12.5px;
   color: var(--ink-2); max-width: 340px;
 }
+#tip .h { display: flex; align-items: center; gap: 6px; }
 #tip .v { color: var(--ink); font-weight: 600; font-size: 13.5px; }
-#tip .k { display: inline-block; width: 11px; height: 11px; border-radius: 3px; vertical-align: -1px; margin-right: 6px; }
+#tip .k { width: 11px; height: 11px; border-radius: 3px; flex: none; }
 table { border-collapse: collapse; width: 100%; font-size: 13px; }
 th, td { text-align: right; padding: 6px 10px; border-bottom: 1px solid var(--grid); white-space: nowrap; }
 th { color: var(--muted); font-weight: 500; font-size: 12px; cursor: pointer; user-select: none; }
@@ -812,7 +812,7 @@ function showTip(x, y, build) {
 }
 const hideTip = () => { tip.style.display = "none"; };
 function tipRows(t, rows, keyColor) {
-  const head = div(null, t);
+  const head = div("h", t);
   if (keyColor) { const k = document.createElement("span"); k.className = "k"; k.style.background = keyColor; head.appendChild(k); }
   const v = document.createElement("span"); v.className = "v"; v.textContent = rows[0]; head.appendChild(v);
   rows.slice(1).forEach(r => div(null, t, r));
@@ -950,7 +950,7 @@ function renderGrid(minDays) {
       showTip(ev.clientX, ev.clientY, tt => tipRows(tt,
         [s.t + (p.p ? " ⭐" : ""),
          `${DATA.days[p.d]} · ${T.spellDay(p.k)}${p.p ? ` · ${T.pocketDay}` : ""}`,
-         `RSI(2) ${p.rsi == null ? "—" : p.rsi.toFixed(1)} · ${T.score} ${p.sc == null ? "—" : p.sc.toFixed(0)} · ${p.g}`,
+         `RSI(2) ${p.rsi == null ? "—" : p.rsi.toFixed(1)} · ${T.score} ${p.sc == null ? "—" : p.sc.toFixed(0)}`,
          ocLine(p)],
         getComputedStyle(document.documentElement).getPropertyValue(OC_VAR[p.o])));
     } else hideTip();
