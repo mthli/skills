@@ -23,7 +23,9 @@ Five components, each with a backtest receipt:
    structure intact; its 200DMA gates enforce this). A crash above a rising
    200DMA is a coiled spring; below it, a falling knife.
 2. **Freshness**: Score ≥ 40 AND listed ≤ 2 runs = +1.83%/signal, 3× the
-   baseline. A name camped on the oversold list for a week is a downtrend,
+   baseline. This is exactly the stratum mean-reversion-scan surfaces as
+   its **⭐️ Validated pocket**, so the keg list and that section name the
+   same names. A name camped on the oversold list for a week is a downtrend,
    not a panic. Two backtested inversions to respect: deep RSI(2) earns NO
    bonus, and quiet-tape oversold is a knife catch; the edge needs panic.
 3. **Spark calendar**: the scheduled events that can flip the narrative.
@@ -79,21 +81,36 @@ The packet saves to `state/runs/<date>.json`. Per-keg fields that matter:
 
 ## Synthesize: the if-then brief
 
-Write in the user's language. One brief per **armed** keg; unarmed kegs get
-one line each in a **"no spark in window"** watch list. Phrase it that way
-verbatim, never "no catalyst": the window is 3 days, not the world, and
+Write for a reader with **no finance background**, in the conversation's
+language, translating each term in place: a "keg" is a stock that just got
+hammered but whose long-term structure is intact; a "spark" is a scheduled,
+dated event that can flip its story; "tranche 1: 1/4 size" is "first buy,
+a quarter of what you'd eventually hold"; the invalidation price is "the
+number that means you were wrong: exit, never average down past it".
+
+Open with the packet strip, readable in ten seconds:
+
+```
+**Packet**: ⭐️<n> armed · 👀<n> watch · 🔥<n> ignited · 😴<n> quiet · regime <🟢/🟡/🔴> → <sizing consequence>
+**Base rate**: most kegs don't explode upward on schedule; last cycle killed 5 of 6 bounces. The protocol makes the five cheap and the one caught.
+**Prior run**: <one line from prior_run_review: did the bell ring true or false last time?>
+```
+
+Then one brief per **armed** keg; unarmed kegs get one line each in a
+**"no spark in window"** watch list. Phrase it that way verbatim, never
+"no catalyst": the window is 3 days, not the world, and
 `next_own_earnings` gives the next known date beyond it (a real print two
 weeks out is information, not absence). Never a bare "buy X". Each brief:
 
 ```
-### <TICKER> — score <s>, day <age> on list  <flags: 🔥 ignited / 😴 quiet / ⚠️ crowded>
+### <TICKER> · score <s> · day <age> on list  <flags: 🔥 ignited / 😴 quiet / ⚠️ crowded>
 KEG    why it crashed + the seller-mechanism read (streak/gaps/volume: forced or drift?)
-SPARK  <date + event> — what verdict it delivers, branched BOTH ways
+SPARK  <date + event>: what verdict it delivers, branched BOTH ways
 PLAN   tranche 1: 1/4 size at ~<latest_close>, invalidation <signal_day_low>
        (hard exit, no averaging down below it)
        add: only AFTER the spark confirms (<specific observable>, e.g. "the
-       verdict name holds its gap into the close") — pay up for confirmation
-       target 1: <mr_target> (5DMA revert); beyond it, trail
+       verdict name holds its gap into the close"); pay up for confirmation
+       target 1: <mr_target> (the bounce-back level); beyond it, trail
        abort: spark fizzles or breaks against → flat, the thesis expires with its date
 ```
 
@@ -107,8 +124,9 @@ Rules that make this honest. Apply every one:
   binds the 5th name on the list as tightly as the 1st.
 - **The regime gate sizes everything.** RISK-ON → protocol as written.
   CAUTION → halve tranche 1 and gate every entry on spark confirmation.
-  RISK-OFF → watch-only briefs, no entries; say so outright. Thread the
-  regime into each brief rather than stating it once at the top.
+  RISK-OFF → watch-only briefs, no entries; say so outright. The strip
+  states the consequence once; each brief still carries its own sized
+  numbers, so no plan reads right without the regime baked in.
 - **🔥 Ignited kegs get a retest plan, never an entry.** Since-signal ≥ +7%
   means the snapback already fired; in the sample so far, the morning after
   ignition is the worst entry of the cycle (AMD 07-27, TSM 07-17). Write
@@ -119,11 +137,10 @@ Rules that make this honest. Apply every one:
   (earnings-gap rule: zero directional trust in the print). A sector-verdict
   spark is the better structure: someone ELSE re-prices the narrative and
   you act on the confirmed side.
-- **Lead with the base rate.** Open with it: most kegs don't explode upward
-  on schedule; the last cycle killed 5 of 6 bounces. The protocol's job is
-  to make the five cheap and the one caught.
-- **Grade the prior run out loud** (`prior_run_review`), one line: did the
-  bell ring true or false last time? Calibration compounds.
+- **Never cut the strip's base-rate line.** It is the sentence that keeps
+  the whole packet honest.
+- **Grade the prior run out loud**: the strip's third line comes from
+  `prior_run_review`. Calibration compounds.
 - **State what's missing.** Stale MR cache (`stale_days` > 1), empty spark
   calendar, `errors`: name them instead of papering over. No qualifying
   kegs is a valid, useful output: say so and stop; never pad.
