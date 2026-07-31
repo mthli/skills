@@ -479,7 +479,7 @@ const I18N = {
     pkTipN: n => `${n} resolved`,
     rosterTitle: "Roster",
     rosterNote: "One row per name that ever signaled. Click a header to sort; click again to reverse. Every hover value from the charts is readable here.\nExpectancy = avg %/signal, the column to judge by; the win rate runs hot by construction, and 100% can still lose money. Status = the latest signal's state.",
-    cols: ["Ticker", "Sector", "Days", "⭐ days", "W / L / Exp", "Win rate", "Expect %/sig", "Total %", "Last seen", "Status"],
+    cols: ["Ticker", "Sector", "Expect %/sig", "Total %", "W / L / Exp", "Win rate", "⭐ days", "Days", "Last seen", "Status"],
     oc: { W: "Won", L: "Lost", E: "Expired", O: "Open", U: "No data" },
     ocTip: {
       W: (p, d) => `Won +${p}% in ${d} day(s)`,
@@ -530,7 +530,7 @@ const I18N = {
     pkTipN: n => `已结算 ${n} 个`,
     rosterTitle: "信号名录",
     rosterNote: "每个发过信号的标的一行。点击表头排序；再次点击反向。图表中所有悬停数值在此均可查阅。\n期望 = 平均每单盈亏 %，挑票看这列；胜率天生虚高，100% 胜率也可能在亏钱。状态 = 最近一次信号的状态。",
-    cols: ["代码", "行业", "上榜天数", "⭐ 天数", "赢 / 输 / 过期", "胜率", "期望 %/信号", "累计 %", "最近上榜", "状态"],
+    cols: ["代码", "行业", "期望 %/信号", "累计 %", "赢 / 输 / 过期", "胜率", "⭐ 天数", "上榜天数", "最近上榜", "状态"],
     oc: { W: "赢", L: "输", E: "过期", O: "在途", U: "无数据" },
     ocTip: {
       W: (p, d) => `赢：+${p}%，${d} 天到目标`,
@@ -586,7 +586,7 @@ const I18N = {
     pkTipN: n => `已結算 ${n} 個`,
     rosterTitle: "訊號名錄",
     rosterNote: "每個發過訊號的標的一行。點擊表頭排序；再次點擊反向。圖表中所有懸停數值在此均可查閱。\n期望 = 平均每單盈虧 %，挑票看這欄；勝率天生虛高，100% 勝率也可能在虧錢。狀態 = 最近一次訊號的狀態。",
-    cols: ["代號", "產業", "上榜天數", "⭐ 天數", "贏 / 輸 / 過期", "勝率", "期望 %/訊號", "累計 %", "最近上榜", "狀態"],
+    cols: ["代號", "產業", "期望 %/訊號", "累計 %", "贏 / 輸 / 過期", "勝率", "⭐ 天數", "上榜天數", "最近上榜", "狀態"],
     oc: { W: "贏", L: "輸", E: "過期", O: "在途", U: "無數據" },
     ocTip: {
       W: (p, d) => `贏：+${p}%，${d} 天到目標`,
@@ -642,7 +642,7 @@ const I18N = {
     pkTipN: n => `確定 ${n} 件`,
     rosterTitle: "銘柄一覧",
     rosterNote: "シグナルが出たことのある銘柄を 1 行ずつ表示。ヘッダーをクリックでソート、もう一度クリックで逆順。チャートのホバー数値はすべてこの表で確認できます。\n期待値 = 平均損益 %/シグナル。銘柄選びはこの列で。勝率は構造的に高く出るため、100% でも損をしていることがある。ステータス = 直近シグナルの状態。",
-    cols: ["ティッカー", "セクター", "日数", "⭐ 日数", "勝 / 敗 / 期限切れ", "勝率", "期待値 %/シグナル", "累計 %", "直近登場", "ステータス"],
+    cols: ["ティッカー", "セクター", "期待値 %/シグナル", "累計 %", "勝 / 敗 / 期限切れ", "勝率", "⭐ 日数", "日数", "直近登場", "ステータス"],
     oc: { W: "勝ち", L: "負け", E: "期限切れ", O: "進行中", U: "データなし" },
     ocTip: {
       W: (p, d) => `勝ち：+${p}%、${d} 日で目標到達`,
@@ -698,7 +698,7 @@ const I18N = {
     pkTipN: n => `확정 ${n}건`,
     rosterTitle: "종목 목록",
     rosterNote: "신호가 나온 적 있는 종목을 한 행씩 표시. 헤더를 클릭해 정렬, 다시 클릭하면 역순. 차트의 모든 호버 값을 이 표에서 확인할 수 있습니다.\n기대값 = 평균 손익 %/신호. 종목은 이 열로 판단하세요. 승률은 구조적으로 높게 나와 100%여도 손해일 수 있습니다. 상태 = 최근 신호의 상태.",
-    cols: ["티커", "섹터", "일수", "⭐ 일수", "승 / 패 / 만료", "승률", "기대값 %/신호", "누적 %", "최근 등재", "상태"],
+    cols: ["티커", "섹터", "기대값 %/신호", "누적 %", "승 / 패 / 만료", "승률", "⭐ 일수", "일수", "최근 등재", "상태"],
     oc: { W: "승", L: "패", E: "만료", O: "진행 중", U: "데이터 없음" },
     ocTip: {
       W: (p, d) => `승: +${p}%, ${d}일 만에 목표 도달`,
@@ -1077,15 +1077,18 @@ function renderGrid(minDays) {
 // ---- roster table ----
 {
   const tbl = document.getElementById("tbl");
+  // Column order follows the judgment path: identity, verdict (expectancy
+  // + total), the evidence behind it (record + win rate), exposure, then
+  // recency/state. Default sort stays days-desc so rows track the grid.
   const COLS = [
     { h: T.cols[0], v: s => s.t,      dir: 1 },
     { h: T.cols[1], v: s => s.sec,    dir: 1 },
-    { h: T.cols[2], v: s => s.days,   dir: -1 },
-    { h: T.cols[3], v: s => s.pd || null, dir: -1 },
+    { h: T.cols[2], v: s => s.exp,    dir: -1 },
+    { h: T.cols[3], v: s => s.tot,    dir: -1 },
     { h: T.cols[4], v: s => s.w + s.l + s.e, dir: -1 },
     { h: T.cols[5], v: s => s.win,    dir: -1 },
-    { h: T.cols[6], v: s => s.exp,    dir: -1 },
-    { h: T.cols[7], v: s => s.tot,    dir: -1 },
+    { h: T.cols[6], v: s => s.pd || null, dir: -1 },
+    { h: T.cols[7], v: s => s.days,   dir: -1 },
     { h: T.cols[8], v: s => s.lastD,  dir: -1 },
     // Sort by the outcome slot order (won, lost, expired, open, no-data),
     // not the alphabet of the category codes.
@@ -1102,7 +1105,7 @@ function renderGrid(minDays) {
   const tb = document.createElement("tbody");
   tbl.appendChild(tb);
 
-  let sortCol = 2, sortDir = -1;
+  let sortCol = 7, sortDir = -1;
   const renderHead = () => ths.forEach((th, i) => {
     th.textContent = COLS[i].h + (i === sortCol ? (sortDir === 1 ? " ▲" : " ▼") : "");
     th.className = i === sortCol ? "on" : "";
@@ -1118,12 +1121,12 @@ function renderGrid(minDays) {
       return c || (b.days - a.days) || (b.lastD - a.lastD);
     }).forEach(s => {
       const tr = document.createElement("tr");
-      [s.t, secName(s.sec), s.days, s.pd || "—",
-       `${s.w} / ${s.l} / ${s.e}`,
-       s.win !== null ? s.win + "%" : "—",
+      [s.t, secName(s.sec),
        s.exp !== null ? pctTxt(s.exp) : "—",
        s.tot !== null ? (s.tot >= 0 ? "+" : "") + s.tot.toFixed(1) + "%" : "—",
-       s.last, s.st]
+       `${s.w} / ${s.l} / ${s.e}`,
+       s.win !== null ? s.win + "%" : "—",
+       s.pd || "—", s.days, s.last, s.st]
       .forEach((c, i) => {
         const td = document.createElement("td");
         if (i === 0) { td.className = "tk"; td.appendChild(tickerLink(c)); }
