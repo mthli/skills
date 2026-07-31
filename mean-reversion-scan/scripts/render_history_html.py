@@ -1186,6 +1186,17 @@ function renderGrid(minRes) {
   }));
   renderHead(); renderRows();
 
+  // Grow the 540px viewport up to the boundary of the row it would cut,
+  // so the default view ends on a whole row (row height is font-derived,
+  // so measure the real layout instead of assuming a constant).
+  for (const r of tb.rows) {
+    const bottom = r.offsetTop + r.offsetHeight;
+    if (bottom >= 540) {
+      tbl.parentElement.style.maxHeight = bottom + "px";
+      break;
+    }
+  }
+
   // Resolved-count filter: opt-in guard so an expectancy sort isn't
   // topped by single-lucky-win small samples. Default shows the full
   // archive.
