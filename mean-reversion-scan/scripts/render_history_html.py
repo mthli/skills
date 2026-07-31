@@ -472,7 +472,8 @@ const I18N = {
       washout: "market-wide panic — best regime in-sample",
     },
     kStuck: "Stuck oversold now",
-    kStuckSub: n => `streak ≥ ${n} on the latest run · all signals, wider than the CLI's top-N section`,
+    kStuckSub: n => `streak ≥ ${n} on the latest run`,
+    kStuckScope: "all emitted signals",
     none: "none",
     brTitle: "Signal breadth × outcome",
     brNote: (thin, wo) => `One column per day: every emitted signal, stacked by how it eventually resolved. Green = bounced to target, red = stopped out, gray = expired flat.\nDashed cutoffs from the backtest: below ${thin} signals ("thin", −1.39%/signal in-sample) the oversold is isolated and tends to keep falling; above ${wo} ("washout", +1.29%) the panic is market-wide and tends to snap back.`,
@@ -526,7 +527,8 @@ const I18N = {
       washout: "全市场恐慌——回测中的最佳环境",
     },
     kStuck: "当前卡死名单",
-    kStuckSub: n => `最新一期连续在榜 ≥ ${n} 天 · 全部信号口径，比 CLI 的 top-N 段更宽`,
+    kStuckSub: n => `最新一期连续在榜 ≥ ${n} 天`,
+    kStuckScope: "全部信号口径",
     none: "无",
     brTitle: "信号广度 × 结局",
     brNote: (thin, wo) => `每天一根柱：当天发出的全部信号，按最终结局分段着色。绿 = 弹回目标价，红 = 打到止损，灰 = 到期没动静。\n虚线是回测的档位线：低于 ${thin}（接刀线，样本内 −1.39%/信号）说明超卖是孤立的、往往继续跌；高于 ${wo}（洗盘线，+1.29%）说明恐慌是全市场的、往往弹回来。`,
@@ -585,7 +587,8 @@ const I18N = {
       washout: "全市場恐慌——回測中的最佳環境",
     },
     kStuck: "目前卡死名單",
-    kStuckSub: n => `最新一期連續在榜 ≥ ${n} 天 · 全部訊號口徑，比 CLI 的 top-N 段更寬`,
+    kStuckSub: n => `最新一期連續在榜 ≥ ${n} 天`,
+    kStuckScope: "全部訊號口徑",
     none: "無",
     brTitle: "訊號廣度 × 結局",
     brNote: (thin, wo) => `每天一根柱：當天發出的全部訊號，按最終結局分段著色。綠 = 彈回目標價，紅 = 打到止損，灰 = 到期沒動靜。\n虛線是回測的檔位線：低於 ${thin}（接刀線，樣本內 −1.39%/訊號）說明超賣是孤立的、往往繼續跌；高於 ${wo}（洗盤線，+1.29%）說明恐慌是全市場的、往往彈回來。`,
@@ -644,7 +647,8 @@ const I18N = {
       washout: "市場全体のパニック——イン・サンプルで最良の環境",
     },
     kStuck: "現在の停滞銘柄",
-    kStuckSub: n => `最新ランで連続 ${n} 日以上リスト入り · 全シグナル対象（CLI の top-N 節より広い）`,
+    kStuckSub: n => `最新ランで連続 ${n} 日以上リスト入り`,
+    kStuckScope: "全シグナル対象",
     none: "なし",
     brTitle: "シグナル数 × 結果",
     brNote: (thin, wo) => `1 日 1 本の柱：その日に発生した全シグナルを最終結果で積み上げ。緑 = 目標到達、赤 = ストップ到達、グレー = 期限切れ。\n破線はバックテストのカットオフ：${thin} 未満（「thin」、イン・サンプル −1.39%/シグナル）は孤立した売られすぎで下げ続きやすく、${wo} 超（「washout」、+1.29%）は市場全体のパニックで反発しやすい。`,
@@ -703,7 +707,8 @@ const I18N = {
       washout: "시장 전체 패닉 — 인샘플 최고 환경",
     },
     kStuck: "현재 정체 종목",
-    kStuckSub: n => `최신 런에서 연속 ${n}일 이상 등재 · 전체 신호 기준, CLI의 top-N 섹션보다 넓음`,
+    kStuckSub: n => `최신 런에서 연속 ${n}일 이상 등재`,
+    kStuckScope: "전체 신호 기준",
     none: "없음",
     brTitle: "신호 수 × 결과",
     brNote: (thin, wo) => `하루 1개 기둥: 그날 발생한 모든 신호를 최종 결과별로 적층. 초록 = 목표 도달, 빨강 = 손절 도달, 회색 = 만료.\n점선은 백테스트 컷오프: ${thin} 미만("thin", 인샘플 −1.39%/신호)은 고립된 과매도로 더 떨어지기 쉽고, ${wo} 초과("washout", +1.29%)는 시장 전체 패닉으로 반등하기 쉽습니다.`,
@@ -868,7 +873,7 @@ function tipRows(t, rows, keyColor) {
   const b = k.latestBreadth;
   tile(T.kBreadth, `${b.n} · ${T.tierName[b.tier]}`, T.tierSub[b.tier]);
   tile(T.kStuck, `${k.stuck.length}`, tickerList(k.stuck),
-       T.kStuckSub(__STUCK_MIN_STREAK__));
+       T.kStuckSub(__STUCK_MIN_STREAK__), T.kStuckScope);
 }
 
 // ---- breadth stacked columns ----
