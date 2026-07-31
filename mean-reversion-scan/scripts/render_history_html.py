@@ -473,7 +473,7 @@ const I18N = {
     gridFilterLabel: "Filter by days listed",
     geDays: n => `≥${n} days`, all: "All",
     pkTitle: "⭐ Pocket vs the rest",
-    pkNote: "One line each for ⭐ pocket signals and the rest: the running average %/signal across all resolved signals to date. Dashes mark the 2026-05→07 backtest's in-sample values. The pocket line holding above its dash means the validated edge keeps paying out-of-sample.",
+    pkNote: "Solid lines: the running expectancy (avg %/signal to date) of ⭐ pocket signals vs the rest.\nDashed lines: the backtest references. Pocket holding above its dash = the validated edge still pays.",
     pkPocket: "⭐ Pocket", pkBase: "The rest",
     pkRef: v => `backtest +${v}%`,
     pkTipN: n => `${n} resolved`,
@@ -524,7 +524,7 @@ const I18N = {
     gridFilterLabel: "按上榜天数筛选",
     geDays: n => `≥${n} 天`, all: "全部",
     pkTitle: "⭐ 口袋 vs 其余",
-    pkNote: "⭐ 口袋信号与其余信号各一条线，画滚动期望：截至当日全部已结算信号的平均盈亏 %/信号。虚线是 2026-05→07 回测的样本内数值。口袋线稳在自己的虚线上方，说明验证过的边际在样本外仍在兑现。",
+    pkNote: "实线：⭐ 口袋与其余信号各自的滚动期望（截至当日平均每单盈亏 %）。\n虚线：回测参考值。口袋线稳在自己虚线上方 = 验证过的边际还在兑现。",
     pkPocket: "⭐ 口袋", pkBase: "其余信号",
     pkRef: v => `回测 +${v}%`,
     pkTipN: n => `已结算 ${n} 个`,
@@ -580,7 +580,7 @@ const I18N = {
     gridFilterLabel: "按上榜天數篩選",
     geDays: n => `≥${n} 天`, all: "全部",
     pkTitle: "⭐ 口袋 vs 其餘",
-    pkNote: "⭐ 口袋訊號與其餘訊號各一條線，畫滾動期望：截至當日全部已結算訊號的平均盈虧 %/訊號。虛線是 2026-05→07 回測的樣本內數值。口袋線穩在自己的虛線上方，說明驗證過的邊際在樣本外仍在兌現。",
+    pkNote: "實線：⭐ 口袋與其餘訊號各自的滾動期望（截至當日平均每單盈虧 %）。\n虛線：回測參考值。口袋線穩在自己虛線上方 = 驗證過的邊際還在兌現。",
     pkPocket: "⭐ 口袋", pkBase: "其餘訊號",
     pkRef: v => `回測 +${v}%`,
     pkTipN: n => `已結算 ${n} 個`,
@@ -636,7 +636,7 @@ const I18N = {
     gridFilterLabel: "リスト入り日数で絞り込み",
     geDays: n => `${n} 日以上`, all: "すべて",
     pkTitle: "⭐ ポケット vs その他",
-    pkNote: "⭐ ポケットとその他で 1 本ずつ、ローリング期待値（その日までに確定した全シグナルの平均損益 %/シグナル）を描く。破線は 2026-05→07 バックテストのイン・サンプル値。ポケット線が自身の破線の上を維持していれば、検証済みのエッジがアウト・オブ・サンプルでも機能し続けている。",
+    pkNote: "実線：⭐ ポケットとその他それぞれのローリング期待値（当日までの平均損益 %/シグナル）。\n破線：バックテストの参考値。ポケット線が自身の破線の上にあれば、検証済みのエッジは健在。",
     pkPocket: "⭐ ポケット", pkBase: "その他",
     pkRef: v => `バックテスト +${v}%`,
     pkTipN: n => `確定 ${n} 件`,
@@ -692,7 +692,7 @@ const I18N = {
     gridFilterLabel: "등재 일수로 필터",
     geDays: n => `${n}일 이상`, all: "전체",
     pkTitle: "⭐ 포켓 vs 나머지",
-    pkNote: "⭐ 포켓과 나머지 각 1줄로 롤링 기대값(그날까지 확정된 모든 신호의 평균 손익 %/신호)을 그립니다. 점선은 2026-05→07 백테스트의 인샘플 값. 포켓 선이 자기 점선 위를 유지하면 검증된 엣지가 아웃오브샘플에서도 유효하다는 뜻입니다.",
+    pkNote: "실선: ⭐ 포켓과 나머지 각각의 롤링 기대값(현재까지 평균 손익 %/신호).\n점선: 백테스트 참고값. 포켓 선이 자기 점선 위에 있으면 검증된 엣지가 유효합니다.",
     pkPocket: "⭐ 포켓", pkBase: "나머지",
     pkRef: v => `백테스트 +${v}%`,
     pkTipN: n => `확정 ${n}건`,
@@ -1054,7 +1054,7 @@ function renderGrid(minDays) {
     const l = div("line", k);
     // Same color as that series' on-chart dash, dashed the same way.
     l.style.cssText = `background:repeating-linear-gradient(90deg,${col} 0 4px,transparent 4px 7px)`;
-    k.appendChild(document.createTextNode(`${lbl}: ${T.pkRef(v)}`));
+    k.appendChild(document.createTextNode(`${lbl} ${T.pkRef(v)}`));
   });
   const cross = el("line", { y1: MT - 4, y2: MT + PH, stroke: "var(--axis)", "stroke-width": 1, visibility: "hidden" }, svg);
   svg.addEventListener("pointermove", ev => {
