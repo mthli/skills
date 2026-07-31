@@ -50,6 +50,11 @@ uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy>=1.24,<3' \
 # or again after a scanning gap)
 ... python <SKILL_DIR>/scripts/scan.py --backfill-outcomes
 
+# Render history.csv + outcomes.csv into a self-contained HTML dashboard at
+# state/history.html (breadth × outcome columns, outcome grid, ⭐ pocket vs
+# rest expectancy, roster table). Stdlib-only, no network, no uv needed:
+python <SKILL_DIR>/scripts/render_history_html.py   # --days 60 --out <path>
+
 # Single-ticker diagnostic: "is AAPL set up for a bounce right now?"
 ... python <SKILL_DIR>/scripts/scan.py --ticker AAPL
 
@@ -266,6 +271,7 @@ Relay the script's markdown output **in full — every row of the top-N table an
 
 - `state/history.csv`: one snapshot per US market day (America/New_York) × **every ticker that passed the filter that day** (all emitted signals, not only the displayed top-N; the row count doubles as the signal-breadth record, and Streak counts *any* filter-passing appearance by design, so it reads "consecutive days oversold", which is what Stuck oversold needs). Columns: `run_id, run_date, ticker, rank, score_rank, score, rsi2, dist_5dma_pct, dist_50dma_pct, dist_200dma_pct, last_close, target_price, stop_price, signal, freq_60d`. Re-running the same ET day overwrites that day's rows. Writes are atomic (.tmp + rename). The `target_price` and `stop_price` columns are the load-bearing fields for outcome resolution; without them the script can't compute win-rate stats.
 - `state/outcomes.csv`: the outcomes ledger — one row per **resolved** past signal (`run_id, ticker, outcome, days_to_resolve, result_pct`; OPEN signals stay out until they resolve). Written by every scan via keyed upsert of the resolver's ~15-day lookback window, so it accumulates the full outcome history that any single run can't see; `(run_id, ticker)` joins back into `history.csv` for everything known at signal time. Tracked in git: only regenerable (`--backfill-outcomes`) while yfinance still serves the price window (~13 months) and the ticker still trades.
+- `state/history.html`: self-contained HTML dashboard rendered from `history.csv` + `outcomes.csv` + `sectors.json` by `scripts/render_history_html.py`: KPI row, a per-day signal-breadth column chart stacked by eventual outcome (with the thin/washout cutoffs drawn in), a date × ticker outcome grid (⭐ pocket days dotted; long unbroken rows = stuck oversold), a ⭐-pocket-vs-rest running-expectancy chart against the backtest's in-sample references, a sortable roster, and an EN/简中/繁中/日/한 language menu. **Deliberately not momentum-scan's chart set**: no rank trajectories (MR daily ranks are noise; outcomes are the story). No external assets or network; regenerable at any time, so it's gitignored. Re-render after a scan when the user wants the visual view of the outcome history.
 - `state/universe.txt`: cached universe list, auto-refreshed every 7 days via Yahoo's screener.
 - `state/sectors.json`: per-ticker `{sector, industry, ts}` cache. 30-day TTL per ticker.
 
@@ -297,4 +303,4 @@ cd <SKILL_DIR>/scripts && uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' \
   --with 'numpy>=1.24,<3' --with pytest pytest -q
 ```
 
-Pure-logic tests (no network) cover the signal-breadth dial, the Sig classifier, the Reversion Score components, Wilder RSI, the lite trend filter, trigger-frequency crossing counts, the vol-collapse halves + exclusion filter (low-vol floor, re-ranking), the NYSE trading-day guard, streak/persistence enrichment, and outcome resolution with WON / LOST / EXPIRED / OPEN plus the win-rate aggregator (`test_classify.py`), and the backtester's history/spell parsing and canonical / gap-aware / next-open fill conventions (`test_backtest_outcomes.py`).
+Pure-logic tests (no network) cover the signal-breadth dial, the Sig classifier, the Reversion Score components, Wilder RSI, the lite trend filter, trigger-frequency crossing counts, the vol-collapse halves + exclusion filter (low-vol floor, re-ranking), the NYSE trading-day guard, streak/persistence enrichment, outcome resolution with WON / LOST / EXPIRED / OPEN plus the win-rate aggregator, and the outcomes ledger (full-history resolve + keyed upsert) (`test_classify.py`), the backtester's history/spell parsing and canonical / gap-aware / next-open fill conventions (`test_backtest_outcomes.py`), and the HTML renderer's payload building (streak/pocket flags, outcome categories incl. OPEN-vs-UNRESOLVED, breadth stacks, cumulative expectancy lines, windowing) plus drift guards pinning its mirrored constants to scan.py (`test_render_html.py`).
