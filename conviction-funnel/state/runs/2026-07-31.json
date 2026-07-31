@@ -1,0 +1,51 @@
+{
+  "run_date": "2026-07-31",
+  "regime": {
+    "state": "RISK-ON",
+    "score": 4,
+    "flags": "confirmed 2-day; 0 divergences; breadth 63%>50DMA / 69%>200DMA; VIX 17.1; soft caution: defensives led offensives +1.0pp/20d; momentum board healthcare-crowded 16/30"
+  },
+  "picks": [
+    {
+      "ticker": "PNC",
+      "role": "finalist",
+      "tags": ["base-pocket"],
+      "spot": 250.63,
+      "verdict": "✅",
+      "entry": {"type": "pivot-stop", "level": 253.18},
+      "stop": 243.92,
+      "size": "normal",
+      "upside_ref": {"level": 305.0, "basis": "analyst high"},
+      "invalidation": "triggers but closes back below 248.70 within a few days, or 243.92 hit; skip entry on >3% gap past pivot (>260.8)"
+    },
+    {
+      "ticker": "ODFL",
+      "role": "finalist",
+      "tags": ["mr-pocket"],
+      "spot": 213.73,
+      "verdict": "✅",
+      "entry": {"type": "pullback-limit", "level": 213.0},
+      "stop": 201.5,
+      "size": "normal",
+      "upside_ref": {"level": 224.26, "basis": "5DMA revert target (scanner); stretch 226.3 = 20/50DMA cluster"},
+      "invalidation": "daily close < 201.50, or transports make fresh lows while ODFL fails to reclaim 220 within ~5 sessions"
+    },
+    {
+      "ticker": "DOC",
+      "role": "finalist",
+      "tags": ["momentum"],
+      "spot": 21.85,
+      "verdict": "⚠️",
+      "entry": {"type": "pullback-limit", "level": 21.85},
+      "stop": 20.69,
+      "size": "half",
+      "upside_ref": {"level": 29.0, "basis": "analyst high; nearest chart resistance 22.95 (52wk high) is only ~1.0R"},
+      "invalidation": "daily close < 20.69, or Q2 (Aug 4 AMC) FFO guidance cut; mean target 22.39 already at price"
+    },
+    {"ticker": "LYG", "role": "runner-up", "tags": ["base-pocket"], "spot": 6.25},
+    {"ticker": "USB", "role": "runner-up", "tags": ["base-pocket"], "spot": 62.9},
+    {"ticker": "HWM", "role": "runner-up", "tags": ["base-pocket"], "spot": 277.28},
+    {"ticker": "VTR", "role": "runner-up", "tags": ["mr-pocket"], "spot": 91.92},
+    {"ticker": "CROX", "role": "runner-up", "tags": ["mr-pocket"], "spot": 123.66}
+  ]
+}
