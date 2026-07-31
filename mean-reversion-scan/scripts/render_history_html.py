@@ -202,11 +202,15 @@ def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
         })
 
     summary.sort(key=lambda s: (-s["days"], -s["lastD"], s["t"]))
-    # Grid row order: total listed days desc, then most recently listed —
-    # same tiering as momentum's heatmap so the two pages read alike.
+    # Grid row order matches the roster's default: expectancy desc, so the
+    # two adjacent panels read in ONE direction (winners' timelines on top,
+    # bleeders clustered at the bottom); names with nothing resolved sink
+    # below, ordered by days listed.
+    exp_of = {r["t"]: r["exp"] for r in summary}
     series.sort(key=lambda s: (
+        exp_of[s["t"]] is None,
+        -(exp_of[s["t"]] or 0),
         -s["days"],
-        -max(p["d"] for p in s["pts"]),
         s["t"],
     ))
 
@@ -480,7 +484,7 @@ const I18N = {
     brTitle: "Signal breadth × outcome",
     brNote: (thin, wo) => `One column per day: all of that day's signals, colored by how they ended.\nTwo dashed lines: under ${thin} (thin) the selling is isolated and tends to keep falling; over ${wo} (washout) the panic is market-wide and tends to snap back.`,
     gridTitle: "Outcome grid",
-    gridNote: () => `One row per name, one cell per listed day, color = that day's outcome; a center dot = ⭐ pocket day (Score ≥ ${DATA.pocket.minScore}, day ≤ ${DATA.pocket.maxStreak}).\nSorted by days listed, not by merit; row-end = expectancy (%/signal), mostly negative up top.\nRows running ≥ __STUCK_MIN_STREAK__ days unbroken = stuck oversold, a warning, not a bargain.`,
+    gridNote: () => `One row per name, one cell per listed day, color = that day's outcome; a center dot = ⭐ pocket day (Score ≥ ${DATA.pocket.minScore}, day ≤ ${DATA.pocket.maxStreak}).\nRows sorted by expectancy, best first (matching the roster); nothing-resolved names sink. Row-end = expectancy (%/signal).\nRows running ≥ __STUCK_MIN_STREAK__ days unbroken = stuck oversold, a warning, not a bargain.`,
     gridFilterLabel: "Filter by days listed",
     geDays: n => `≥${n} days`, all: "All",
     pkTitle: "⭐ Pocket vs the rest",
@@ -533,7 +537,7 @@ const I18N = {
     brTitle: "信号广度 × 结局",
     brNote: (thin, wo) => `每天一根柱：当天的全部信号，颜色 = 最终结局。\n两条虚线：矮过 ${thin}（接刀线）= 零星下跌，往往继续跌，别接；高过 ${wo}（洗盘线）= 全场恐慌，反而最容易弹回来。`,
     gridTitle: "结局网格",
-    gridNote: () => `一行一只票，一格一个上榜日，颜色 = 那天的结局；带中心点 = ⭐ 口袋日（Score ≥ ${DATA.pocket.minScore} 且上榜 ≤ ${DATA.pocket.maxStreak} 天）。\n行序按上榜天数排，不是推荐度；行尾 = 期望（%/单），排前的常客大多为负。\n连续 ≥ __STUCK_MIN_STREAK__ 天的长行 = 卡死超卖，是警告不是便宜货。`,
+    gridNote: () => `一行一只票，一格一个上榜日，颜色 = 那天的结局；带中心点 = ⭐ 口袋日（Score ≥ ${DATA.pocket.minScore} 且上榜 ≤ ${DATA.pocket.maxStreak} 天）。\n行序按期望从高到低（与名录一致），无结算的沉底；行尾 = 该票期望（%/单）。\n连续 ≥ __STUCK_MIN_STREAK__ 天的长行 = 卡死超卖，是警告不是便宜货。`,
     gridFilterLabel: "按上榜天数筛选",
     geDays: n => `≥${n} 天`, all: "全部",
     pkTitle: "⭐ 口袋 vs 其余",
@@ -591,7 +595,7 @@ const I18N = {
     brTitle: "訊號廣度 × 結局",
     brNote: (thin, wo) => `每天一根柱：當天的全部訊號，顏色 = 最終結局。\n兩條虛線：矮過 ${thin}（接刀線）= 零星下跌，往往繼續跌，別接；高過 ${wo}（洗盤線）= 全場恐慌，反而最容易彈回來。`,
     gridTitle: "結局網格",
-    gridNote: () => `一行一檔票，一格一個上榜日，顏色 = 那天的結局；帶中心點 = ⭐ 口袋日（Score ≥ ${DATA.pocket.minScore} 且上榜 ≤ ${DATA.pocket.maxStreak} 天）。\n行序按上榜天數排，不是推薦度；行尾 = 期望（%/單），排前的常客大多為負。\n連續 ≥ __STUCK_MIN_STREAK__ 天的長行 = 卡死超賣，是警告不是便宜貨。`,
+    gridNote: () => `一行一檔票，一格一個上榜日，顏色 = 那天的結局；帶中心點 = ⭐ 口袋日（Score ≥ ${DATA.pocket.minScore} 且上榜 ≤ ${DATA.pocket.maxStreak} 天）。\n行序按期望從高到低（與名錄一致），無結算的沉底；行尾 = 該檔期望（%/單）。\n連續 ≥ __STUCK_MIN_STREAK__ 天的長行 = 卡死超賣，是警告不是便宜貨。`,
     gridFilterLabel: "按上榜天數篩選",
     geDays: n => `≥${n} 天`, all: "全部",
     pkTitle: "⭐ 口袋 vs 其餘",
@@ -649,7 +653,7 @@ const I18N = {
     brTitle: "シグナル数 × 結果",
     brNote: (thin, wo) => `1 日 1 本の柱：その日の全シグナル、色 = 最終結果。\n破線は 2 本：${thin} 未満（thin）なら散発的な下げでまだ下がりやすく、${wo} 超（washout）なら市場全体のパニックでかえって反発しやすい。`,
     gridTitle: "結果グリッド",
-    gridNote: () => `1 行 = 1 銘柄、1 セル = リスト入り 1 日、色 = その日の結果。中心の点 = ⭐ ポケット日（Score ≥ ${DATA.pocket.minScore} かつ ${DATA.pocket.maxStreak} 日目以内）。\n並び順 = リスト入り日数（推奨度ではない）。行末 = 期待値（%/シグナル）、上位の常連はほぼマイナス。\n__STUCK_MIN_STREAK__ 日以上続く行は停滞した売られすぎ。警告であり掘り出し物ではない。`,
+    gridNote: () => `1 行 = 1 銘柄、1 セル = リスト入り 1 日、色 = その日の結果。中心の点 = ⭐ ポケット日（Score ≥ ${DATA.pocket.minScore} かつ ${DATA.pocket.maxStreak} 日目以内）。\n行は期待値の高い順（一覧表と同じ）。確定なしは下へ。行末 = 期待値（%/シグナル）。\n__STUCK_MIN_STREAK__ 日以上続く行は停滞した売られすぎ。警告であり掘り出し物ではない。`,
     gridFilterLabel: "リスト入り日数で絞り込み",
     geDays: n => `${n} 日以上`, all: "すべて",
     pkTitle: "⭐ ポケット vs その他",
@@ -707,7 +711,7 @@ const I18N = {
     brTitle: "신호 수 × 결과",
     brNote: (thin, wo) => `하루 1개 기둥: 그날의 모든 신호, 색 = 최종 결과.\n점선 2개: ${thin} 미만(thin)이면 산발적 하락이라 더 떨어지기 쉽고, ${wo} 초과(washout)면 시장 전체 패닉이라 오히려 반등하기 쉽습니다.`,
     gridTitle: "결과 그리드",
-    gridNote: () => `1행 = 1종목, 1셀 = 등재 1일, 색 = 그날의 결과. 중심의 점 = ⭐ 포켓일 (Score ≥ ${DATA.pocket.minScore}, 등재 ${DATA.pocket.maxStreak}일 이내).\n정렬 = 등재 일수(추천도 아님). 행 끝 = 기대값(%/신호), 상위 단골은 대부분 마이너스.\n__STUCK_MIN_STREAK__일 이상 이어지는 행은 정체된 과매도, 경고이지 헐값이 아닙니다.`,
+    gridNote: () => `1행 = 1종목, 1셀 = 등재 1일, 색 = 그날의 결과. 중심의 점 = ⭐ 포켓일 (Score ≥ ${DATA.pocket.minScore}, 등재 ${DATA.pocket.maxStreak}일 이내).\n행은 기대값 높은 순(목록과 동일), 확정 없는 종목은 아래로. 행 끝 = 기대값(%/신호).\n__STUCK_MIN_STREAK__일 이상 이어지는 행은 정체된 과매도, 경고이지 헐값이 아닙니다.`,
     gridFilterLabel: "등재 일수로 필터",
     geDays: n => `${n}일 이상`, all: "전체",
     pkTitle: "⭐ 포켓 vs 나머지",
