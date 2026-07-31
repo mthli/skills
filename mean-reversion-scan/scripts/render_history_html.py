@@ -875,7 +875,8 @@ function tipRows(t, rows, keyColor) {
   // Keep both cutoff lines in frame even on a quiet stretch.
   const ymax = Math.max(DATA.breadth.washout + 10,
                         ...DATA.breadth.perDay.map(d => d.reduce((a, c) => a + c, 0)));
-  const W = ML + DAYS * DX + 46, H = MT + PH + MB;
+  // Right margin fits the widest cutoff label ("60 WASHOUT" ≈ 62px at 11px).
+  const W = ML + DAYS * DX + 88, H = MT + PH + MB;
   const yOf = v => MT + PH - v / ymax * PH;
   const svg = el("svg", { width: W, height: H, viewBox: `0 0 ${W} ${H}` }, document.getElementById("brchart"));
   const step = ymax > 120 ? 50 : ymax > 60 ? 25 : 10;
