@@ -4,6 +4,11 @@
     "sector": "Basic Materials",
     "ts": 1779460260
   },
+  "AAPL": {
+    "industry": "Consumer Electronics",
+    "sector": "Technology",
+    "ts": 1785558827
+  },
   "ABEV": {
     "industry": "Beverages - Brewers",
     "sector": "Consumer Defensive",
@@ -752,7 +757,7 @@
   "RVTY": {
     "industry": "Diagnostics & Research",
     "sector": "Healthcare",
-    "ts": 1782950545
+    "ts": 1785558751
   },
   "RY": {
     "industry": "Banks - Diversified",
@@ -922,7 +927,7 @@
   "VIK": {
     "industry": "Travel Services",
     "sector": "Consumer Cyclical",
-    "ts": 1782950545
+    "ts": 1785558751
   },
   "VIST": {
     "industry": "Oil & Gas E&P",
