@@ -2778,8 +2778,13 @@ def main():
         atrs = compute_atrs(bars, top_tickers)
         picks = attach_atr_stops(picks, args.top_n, atrs, args.atr_stop_mult)
     if not args.no_sectors:
-        top_tickers = [p["ticker"] for p in picks[: args.top_n]]
-        sectors = refresh_sectors(top_tickers, load_sectors())
+        # Tag EVERY pick, not just the top-N: append_history writes the whole
+        # list, and the HTML's sector panel reads the full roster. Tagging
+        # only the top-N left every name that never cracked rank 30
+        # permanently untagged — 65 of 266 across the first 45 days. The
+        # cache is monotonic with a 30-day TTL, so the wider net costs one
+        # fetch per never-seen name, not one per run.
+        sectors = refresh_sectors([p["ticker"] for p in picks], load_sectors())
         picks = attach_sectors(picks, args.top_n, sectors)
 
     current_set = {p["ticker"] for p in picks[: args.top_n]}

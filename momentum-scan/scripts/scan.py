@@ -1885,6 +1885,12 @@ def main():
         pullbacks = compute_pullback_indicators(bars, top_tickers)
         picks = attach_pullback(picks, args.top_n, pullbacks)
     if not args.no_sectors:
+        # Deliberately top-N only, unlike the sibling scans: append_history
+        # writes every pick, but this skill's renderer keeps only names that
+        # ever reached the displayed top-N (build_payload's `tracked`), so a
+        # name that never cracked rank 30 has no row and no bar to tag. The
+        # wider net would buy nothing and hand Yahoo ~3x the Ticker.info
+        # calls to throttle. Revisit if the page ever renders the full list.
         top_tickers = [p["ticker"] for p in picks[: args.top_n]]
         sectors = refresh_sectors(top_tickers, load_sectors())
         picks = attach_sectors(picks, args.top_n, sectors)

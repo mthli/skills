@@ -1729,8 +1729,13 @@ def main():
     attach_validated_pocket(picks)
 
     if not args.no_sectors:
-        top_tickers = [p["ticker"] for p in picks[:args.top_n]]
-        sectors = refresh_sectors(top_tickers, load_sectors())
+        # Tag EVERY pick, not just the top-N: append_history writes the whole
+        # list, and the HTML's sector panel reads the full roster. Tagging
+        # only the top-N left every name that never cracked rank 30
+        # permanently untagged — 132 of 563 across the first 41 days. The
+        # cache is monotonic with a 30-day TTL, so the wider net costs one
+        # fetch per never-seen name, not one per run.
+        sectors = refresh_sectors([p["ticker"] for p in picks], load_sectors())
         attach_sectors(picks, args.top_n, sectors)
 
     # Outcome resolution on prior signals (read-only against history + bars).
