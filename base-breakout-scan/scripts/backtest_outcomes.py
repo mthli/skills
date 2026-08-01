@@ -47,6 +47,14 @@ import pandas as pd
 
 SKILL_DIR = Path(__file__).resolve().parent.parent
 HISTORY_CSV = SKILL_DIR / "state" / "history.csv"
+OUTCOMES_CSV = SKILL_DIR / "state" / "outcomes.csv"
+
+# The resolution convention every published finding is quoted for. Named
+# constants rather than inline argparse defaults so render_history_html.py
+# can drift-guard its reference lines against them.
+DEFAULT_HORIZON = 20
+DEFAULT_STOP_PCT = 8.0
+DEFAULT_ENTRY = "touch"
 
 
 def ts_of(run_day: str) -> pd.Timestamp:
@@ -341,6 +349,114 @@ def resolve_episode(ep: Episode, bars: pd.DataFrame, spy: pd.DataFrame,
     return out
 
 
+# ---------------------------------------------------------------- ledger
+
+# Outcomes ledger schema. One row per resolved-or-triggered EPISODE, not
+# per run-day: the canonical trade is episode-scoped (a buy-stop that lives
+# from first listing to dropout), so (start_run_id, ticker) is the natural
+# key and the join back into history.csv, which already carries everything
+# known at signal time (score, base_weeks, signal tier, pivot). The ledger
+# adds only what resolution produces. The last three columns record the
+# resolution *convention* so a consumer can tell whether the numbers are
+# comparable to references/backtest-findings.md (horizon 20 / stop 8 /
+# touch) without having to guess.
+LEDGER_COLS = ["start_run_id", "ticker", "end_run_id", "outcome",
+               "days_to_trigger", "gap_pct", "ret5", "ret10", "ret_h",
+               "trade_ret_pct", "fellback5", "stop_hit", "censored",
+               "horizon", "stop_pct", "entry"]
+
+
+def ledger_rows(outcomes: list[Outcome], horizon: int, stop_pct: float,
+                entry: str) -> list[dict]:
+    """Episodes worth recording: everything that triggered, plus everything
+    whose watch window fully elapsed without triggering. The excluded case
+    is the still-undecided one (no trigger yet AND the window ran past the
+    data edge) — writing those would freeze an in-flight episode as a
+    failure. Consumers treat a missing row as "in flight", the same
+    contract mean-reversion-scan's ledger uses for OPEN signals."""
+    def r2(v, nd=2):
+        return None if v is None or (isinstance(v, float) and np.isnan(v)) \
+            else round(float(v), nd)
+
+    def b01(v):
+        return None if v is None else int(bool(v))
+
+    rows = []
+    for o in outcomes:
+        if not (o.triggered or not o.censored):
+            continue
+        if o.triggered:
+            outcome = "TRIGGERED"
+        elif o.broke_down:
+            outcome = "BROKE_DOWN"
+        else:
+            outcome = "FADED"
+        rows.append({
+            "start_run_id": o.ep.start_day,
+            "ticker": o.ep.ticker,
+            "end_run_id": o.ep.end_day,
+            "outcome": outcome,
+            "days_to_trigger": o.days_to_trigger,
+            "gap_pct": r2(o.gap_pct),
+            "ret5": r2(o.ret5),
+            "ret10": r2(o.ret10),
+            # A never-triggered episode has no fill, so its "result" is the
+            # drift over the watch window — recorded in the same column so
+            # the ledger has one outcome magnitude per row, with `outcome`
+            # saying which kind it is.
+            "ret_h": r2(o.ret_h if o.triggered else o.no_trigger_drift),
+            "trade_ret_pct": r2(o.trade_ret),
+            "fellback5": b01(o.fellback5),
+            "stop_hit": b01(o.stop_hit),
+            "censored": b01(o.censored),
+            "horizon": horizon,
+            "stop_pct": stop_pct,
+            "entry": entry,
+        })
+    return rows
+
+
+def write_ledger(rows: list[dict], path: Path) -> int:
+    """Upsert rows into the ledger, keyed by (start_run_id, ticker).
+
+    Re-resolution replaces the stored row — resolution is deterministic, so
+    a re-run is normally a no-op refresh that also self-heals after upstream
+    price corrections. Rows this run couldn't reach (a ticker Yahoo no
+    longer serves, e.g. after a delisting) are preserved rather than
+    dropped, so the ledger accumulates history the resolver alone can't
+    reconstruct. Atomic write. Returns the ledger's total row count.
+
+    Empty input is a no-op: nothing new resolved, so there is nothing to
+    merge, and rewriting would only risk churning a file that is fine as it
+    stands (pandas also warns on concat with an empty frame)."""
+    if not rows:
+        if not (path.exists() and path.stat().st_size > 0):
+            return 0
+        with open(path, newline="", encoding="utf-8") as f:
+            return sum(1 for _ in csv.reader(f)) - 1
+    new_rows = pd.DataFrame(rows, columns=LEDGER_COLS)
+    if path.exists() and path.stat().st_size > 0:
+        existing = pd.read_csv(path, dtype={"start_run_id": str,
+                                            "end_run_id": str,
+                                            "ticker": str})
+        new_keys = set(zip(new_rows["start_run_id"].astype(str),
+                           new_rows["ticker"]))
+        keep = [(str(s), t) not in new_keys
+                for s, t in zip(existing["start_run_id"], existing["ticker"])]
+        combined = pd.concat([existing.loc[keep], new_rows], ignore_index=True)
+    else:
+        combined = new_rows
+    combined = (combined
+                .sort_values(["start_run_id", "ticker"], kind="stable")
+                .reset_index(drop=True)
+                .reindex(columns=LEDGER_COLS))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(".csv.tmp")
+    combined.to_csv(tmp, index=False)
+    tmp.replace(path)
+    return len(combined)
+
+
 # ---------------------------------------------------------------- report
 
 def fmt(v, suffix="", nd=1):
@@ -405,9 +521,9 @@ def bucket(outs: list[Outcome], key, bounds: list[tuple[str, float, float]]):
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--history", type=Path, default=HISTORY_CSV)
-    ap.add_argument("--horizon", type=int, default=20,
+    ap.add_argument("--horizon", type=int, default=DEFAULT_HORIZON,
                     help="post-trigger horizon in sessions (default 20)")
-    ap.add_argument("--stop-pct", type=float, default=8.0,
+    ap.add_argument("--stop-pct", type=float, default=DEFAULT_STOP_PCT,
                     help="stop distance %% below fill for the trade sim")
     ap.add_argument("--cache", type=Path,
                     default=Path(tempfile.gettempdir()) / "bb_backtest_prices.pkl")
@@ -415,11 +531,19 @@ def main() -> None:
     ap.add_argument("--start", default="2026-04-01",
                     help="price download start date")
     ap.add_argument("--entry", choices=["touch", "close", "confirmed"],
-                    default="touch",
+                    default=DEFAULT_ENTRY,
                     help="trigger definition: touch = intraday High >= pivot "
                          "(buy-stop fill at max(pivot, open)); close = close "
                          ">= pivot, enter next open; confirmed = close >= "
                          "pivot on >=1.5x 20d volume, enter next open")
+    ap.add_argument("--write-ledger", nargs="?", type=Path,
+                    const=OUTCOMES_CSV, default=None, metavar="PATH",
+                    help="also upsert per-episode outcomes into a tracked "
+                         f"CSV (default {OUTCOMES_CSV.relative_to(SKILL_DIR)})."
+                         " render_history_html.py joins this against "
+                         "history.csv to draw realized outcomes; without it "
+                         "the dashboard can only show the setup up to its "
+                         "trigger. Re-run after each scan to keep it current.")
     args = ap.parse_args()
 
     episodes, run_days = load_episodes(args.history)
@@ -450,6 +574,12 @@ def main() -> None:
             skipped += 1
             continue
         outcomes.append(o)
+
+    if args.write_ledger:
+        rows = ledger_rows(outcomes, args.horizon, args.stop_pct, args.entry)
+        total = write_ledger(rows, args.write_ledger)
+        print(f"ledger: upserted {len(rows)} episodes into "
+              f"{args.write_ledger} ({total} rows total)", file=sys.stderr)
 
     trig = [o for o in outcomes if o.triggered]
     a = agg(outcomes, args.horizon)
