@@ -301,6 +301,7 @@ When base detection fails but the ticker broke out in the last 10 trading days, 
 6. **Volume confirmation did not rescue entries**: it costs next-open slippage and selected no better in this tape.
 7. **RS slope has a sweet spot, not a gradient**: 0-1%/wk is the good band; > 1%/wk while "ranging" is extended high-beta (−6.5%, 67% stop-hit).
 8. **First appearance far from pivot is a fade signal**: entering at −10..−3% from pivot brings a 28% trigger rate and −3.4%/trade; slow triggers (6-10 sessions) arrive exhausted.
+9. **Cutting on the first close back below the pivot saves the junk and destroys the pocket**: −3.6pt on ⭐️ pocket trades (+4.45% → +0.86%/trade), +2.0pt on everything else. Falling back is a good *descriptor* of a bad trade, not an exit rule for the validated stratum.
 
 ## How to interpret (Claude's job after running)
 

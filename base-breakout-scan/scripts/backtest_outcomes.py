@@ -258,6 +258,14 @@ class Outcome:
     fellback5: bool | None = None
     stop_hit: bool | None = None
     trade_ret: float | None = None  # stop-based trade: -stop% or +horizon close
+    # Same fill and same stop, but cut on the first close back below the
+    # pivot — the "the breakout didn't hold" exit. Two windows for the cut:
+    # the whole horizon, and sessions 1-5 only (after that, hold as usual).
+    # Reported as a paired comparison against trade_ret, never written to the
+    # ledger: the ledger scores ONE convention, the one the references quote.
+    trade_ret_cut: float | None = None
+    trade_ret_cut5: float | None = None
+    cut_day: int | None = None
     no_trigger_drift: float | None = None
     broke_down: bool | None = None
 
@@ -378,6 +386,18 @@ def resolve_episode(ep: Episode, bars: pd.DataFrame, spy: pd.DataFrame,
             # recording it is what lets the episode terminate instead of
             # pending forever.
             out.trade_ret = (win["Close"].iloc[-1] / fill - 1) * 100
+        # Alternative exits, same fill and same stop. Walk the window in
+        # order and take the first event; the stop is intraday, so on a day
+        # that both stops out and closes below the pivot the stop wins.
+        def cut_exit(max_cut: int) -> tuple[float, int]:
+            for k in range(len(win)):
+                if lows.iloc[k] <= stop_level:
+                    return -stop_pct, k
+                if 1 <= k <= max_cut and win["Close"].iloc[k] < pivot:
+                    return (win["Close"].iloc[k] / fill - 1) * 100, k
+            return (win["Close"].iloc[-1] / fill - 1) * 100, len(win) - 1
+        out.trade_ret_cut, out.cut_day = cut_exit(horizon)
+        out.trade_ret_cut5 = cut_exit(5)[0]
         spy_win = spy.loc[spy.index >= trigger_ts, "Close"]
         if len(spy_win) > horizon:
             out.spy_h = (spy_win.iloc[horizon] / spy_win.iloc[0] - 1) * 100
@@ -555,6 +575,62 @@ def strata_table(title: str, groups: list[tuple[str, list[Outcome]]],
     return "\n".join(lines)
 
 
+def exit_rule_table(outs: list[Outcome], horizon: int, stop_pct: float) -> str:
+    """Does cutting on the first close back below the pivot beat holding?
+
+    Paired: the same triggered episodes and the same fills price all three
+    rules, so the comparison is not a sample difference. Split by the one
+    stratum the backtest validated (base ≥ 20wk) because a rule that helps
+    the junk and hurts the pocket is worse than useless here.
+    """
+    def row(name: str, G: list[Outcome]) -> str:
+        base = [o.trade_ret for o in G]
+        cut = [o.trade_ret_cut for o in G]
+        cut5 = [o.trade_ret_cut5 for o in G]
+        if not base:
+            return ""
+        out = [f"| {name} | {len(base)} |"]
+        for vals in (base, cut, cut5):
+            wins = sum(1 for v in vals if v > 0) / len(vals) * 100
+            out.append(f" {float(np.mean(vals)):+.2f}% | "
+                       f"{float(np.median(vals)):+.2f}% | {wins:.0f}% |")
+        # Paired deltas: what the cut rule does to each trade, not to the mean
+        d = [c - b for c, b in zip(cut, base)]
+        better = sum(1 for x in d if x > 0.001)
+        worse = sum(1 for x in d if x < -0.001)
+        out.append(f" {float(np.mean(d)):+.2f}pt | {better}/{worse} |")
+        return "".join(out)
+
+    G = [o for o in outs if o.triggered and o.trade_ret is not None
+         and o.trade_ret_cut is not None]
+    pocket = [o for o in G if (o.ep.start.base_weeks or 0) >= 20]
+    rest = [o for o in G if (o.ep.start.base_weeks or 0) < 20]
+    lines = [
+        f"\n### Exit rule: cut on the first close back below the pivot\n",
+        f"| Group | n | Hold avg | Hold med | Hold win% | Cut avg | Cut med | "
+        f"Cut win% | Cut≤5d avg | Cut≤5d med | Cut≤5d win% | Cut−Hold | "
+        f"better/worse |",
+        "|---|---|---|---|---|---|---|---|---|---|---|---|---|",
+    ]
+    for name, grp in (("All triggered", G), ("⭐ pocket (≥20wk)", pocket),
+                      ("The rest", rest)):
+        r = row(name, grp)
+        if r:
+            lines.append(r)
+    cuts = [o.cut_day for o in G if o.cut_day is not None
+            and o.trade_ret_cut != o.trade_ret]
+    if cuts:
+        lines.append(f"\n_Cut fired on {len(cuts)} of {len(G)} trades, median "
+                     f"session {float(np.median(cuts)):.0f} after the fill. "
+                     f"All three rules share the fill and the "
+                     f"{stop_pct:.0f}% stop; Hold exits at the +{horizon}d "
+                     f"close, Cut exits at the first close below the pivot "
+                     f"(Cut≤5d only looks for that close in sessions 1–5). "
+                     f"better/worse counts trades the Cut rule improved vs "
+                     f"hurt._")
+    return "\n".join(lines)
+
+
 def bucket(outs: list[Outcome], key, bounds: list[tuple[str, float, float]]):
     groups = []
     for name, lo, hi in bounds:
@@ -664,6 +740,8 @@ def main() -> None:
               f"{fmt(float(np.mean(drifts)) if drifts else None, '%')} over the "
               f"watch window; {len(bd)} ({100 * len(bd) / len(nt):.0f}%) broke "
               f"down ≥{args.stop_pct:.0f}% without ever touching the pivot")
+
+    print(exit_rule_table(outcomes, args.horizon, args.stop_pct))
 
     print(strata_table("By Base Score at episode start", bucket(
         outcomes, lambda x: x.score,
