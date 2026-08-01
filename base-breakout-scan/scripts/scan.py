@@ -1489,14 +1489,22 @@ def pending_episodes(episodes: list, ledger: dict) -> list:
     Bounded by ledger STATE, not by a date window: an episode's trade only
     completes 20 sessions after its trigger, which can fall long after the
     name left the watchlist, so "recently ended" would miss exactly the rows
-    that are still ripening. The pending set is instead "no row yet, or a
-    row still flagged censored / still missing its trade result", and it
-    drains on its own as price history accumulates."""
+    that are still ripening. The pending set is instead "no row yet, a row
+    cut short by the data edge, or a TRIGGERED row whose trade hasn't
+    completed", and it drains on its own as price history accumulates.
+
+    The trade-result check is gated on the outcome: a FADED / BROKE_DOWN
+    row's watch window fully elapsed, so its empty trade result IS the
+    outcome, not a gap. Reading that emptiness as pending would re-resolve
+    every such episode on every run for the life of the history — and once
+    its ticker left the universe, name it on stderr daily as fixable by
+    --write-ledger, which cannot change it."""
     out = []
     for ep in episodes:
         row = ledger.get((ep.start_day, ep.ticker))
         if (row is None or row.get("censored") == "1"
-                or not row.get("trade_ret_pct")):
+                or (row.get("outcome") == "TRIGGERED"
+                    and not row.get("trade_ret_pct"))):
             out.append(ep)
     return out
 
@@ -1529,7 +1537,7 @@ def refresh_outcomes(bars: pd.DataFrame, spy_close: pd.Series) -> dict:
     import backtest_outcomes as bt
 
     stats = {"complete": 0, "new": 0, "rewritten": 0, "open": 0,
-             "mismatch": 0, "no_bars": []}
+             "mismatch": [], "no_bars": []}
     if not HISTORY_FILE.exists() or spy_close.empty:
         return stats
     episodes, _ = bt.load_episodes(HISTORY_FILE)
@@ -1554,10 +1562,11 @@ def refresh_outcomes(bars: pd.DataFrame, spy_close: pd.Series) -> dict:
             stats["no_bars"].append(ep.ticker)   # left the universe
             continue
         if not bt.units_consistent(ep, tb):
-            stats["mismatch"] += 1               # corporate action rescaled it
+            stats["mismatch"].append(ep.ticker)  # corporate action rescaled it
             continue
         o = bt.resolve_episode(ep, tb, spy, calendar, bt.DEFAULT_HORIZON,
-                               bt.DEFAULT_STOP_PCT, bt.DEFAULT_ENTRY)
+                               bt.DEFAULT_STOP_PCT, bt.DEFAULT_ENTRY,
+                               series_ended=bt.series_has_ended(tb, calendar))
         if o is None:
             stats["open"] += 1                   # watch window hasn't elapsed
             continue
@@ -1583,10 +1592,10 @@ def refresh_outcomes(bars: pd.DataFrame, spy_close: pd.Series) -> dict:
 
 
 def report_outcome_refresh(stats: dict) -> None:
-    """One stderr line when something moved, one when something is stuck.
+    """One stderr line when something moved, one per kind of stuck episode.
     Silence when a pass changed nothing is deliberate: a line that prints the
     same ~300-of-400 ratio every day is noise, and noise is what makes the
-    failure message below easy to miss."""
+    failure messages below easy to miss."""
     moved = []
     if stats["complete"]:
         moved.append(f"{stats['complete']} newly complete")
@@ -1596,14 +1605,22 @@ def report_outcome_refresh(stats: dict) -> None:
         print(f"outcomes: {', '.join(moved)} "
               f"({stats['rewritten']} re-resolved, {stats['open']} still "
               f"open) → outcomes.csv", file=sys.stderr)
-    if stats["no_bars"]:
-        names = sorted(set(stats["no_bars"]))
+    def stuck(tickers: list, why: str) -> None:
+        names = sorted(set(tickers))
         shown = ", ".join(names[:8]) + (", …" if len(names) > 8 else "")
-        print(f"outcomes: {len(stats['no_bars'])} episode(s) on "
-              f"{len(names)} ticker(s) no longer in the universe stay "
-              f"unresolved here ({shown}); backtest_outcomes.py "
-              f"--write-ledger fetches by ticker and reaches them.",
-              file=sys.stderr)
+        print(f"outcomes: {len(tickers)} episode(s) on {len(names)} "
+              f"ticker(s) {why} ({shown}).", file=sys.stderr)
+
+    if stats["no_bars"]:
+        stuck(stats["no_bars"],
+              "no longer in the universe stay unresolved here; "
+              "backtest_outcomes.py --write-ledger fetches by ticker and "
+              "reaches them")
+    if stats["mismatch"]:
+        stuck(stats["mismatch"],
+              "have pivots in different price units than today's bars "
+              "(split/spinoff re-adjustment since the scan) and can't be "
+              "scored by any path")
 
 
 def enrich_with_persistence(picks: list[dict], history: pd.DataFrame,

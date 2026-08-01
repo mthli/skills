@@ -207,6 +207,23 @@ def fetch_prices(tickers: list[str], start: str, cache: Path,
     return data
 
 
+# A live ticker's daily bars extend to the last session or two; allow a few
+# more for feed glitches. Beyond that the series has stopped printing.
+STALE_SESSIONS = 5
+
+
+def series_has_ended(bars: pd.DataFrame, calendar: pd.DatetimeIndex) -> bool:
+    """True when the ticker's last bar sits more than STALE_SESSIONS market
+    sessions behind the calendar's edge: the series has ended (delisting /
+    acquisition close), so no future bar will ever complete its episodes.
+    Resolution should then force-exit open trades at the final bar instead
+    of waiting forever — and instead of the scan naming the ticker on
+    stderr daily as fixable by --write-ledger, which could never fix it."""
+    if len(bars) == 0 or len(calendar) == 0:
+        return False
+    return len(calendar[calendar > bars.index.max()]) > STALE_SESSIONS
+
+
 def units_consistent(ep: Episode, bars: pd.DataFrame,
                      tol_pct: float = 15.0) -> bool:
     """history's to_pivot_pct implies the scan-day close; if that disagrees
@@ -247,7 +264,8 @@ class Outcome:
 
 def resolve_episode(ep: Episode, bars: pd.DataFrame, spy: pd.DataFrame,
                     calendar: pd.DatetimeIndex, horizon: int,
-                    stop_pct: float, entry: str = "touch") -> Outcome | None:
+                    stop_pct: float, entry: str = "touch",
+                    series_ended: bool = False) -> Outcome | None:
     start_ts = ts_of(ep.start_day)
     end_ts = ts_of(ep.end_day)
 
@@ -270,7 +288,12 @@ def resolve_episode(ep: Episode, bars: pd.DataFrame, spy: pd.DataFrame,
         return pivots[live[-1]] if live else pivots[pivot_days[0]]
 
     tbars = bars.loc[bars.index.isin(window)]
-    censored = window[-1] > bars.index.max() if len(bars) else True
+    # A watch window running past the last bar normally means "cut short by
+    # the data edge — more data will come". When the SERIES has ended
+    # (series_has_ended), no more data ever comes: the order dies with the
+    # ticker, so nothing here is censored — it is finished, by force.
+    censored = (window[-1] > bars.index.max() if len(bars) else True) \
+        and not series_ended
     out = Outcome(ep=ep, watch_days=len(window), triggered=False,
                   censored=bool(censored))
 
@@ -299,7 +322,13 @@ def resolve_episode(ep: Episode, bars: pd.DataFrame, spy: pd.DataFrame,
                 # session's open.
                 later = bars.index[bars.index > ts]
                 if len(later) == 0:
-                    out.censored = True
+                    # Confirmed on the ticker's final bar: the fill session
+                    # never happens. On a live ticker that's a data-edge
+                    # censoring; on an ended series the order dies unfilled.
+                    if series_ended:
+                        out.triggered = False
+                    else:
+                        out.censored = True
                     return out
                 trigger_ts = later[0]
                 out.fill = float(bars.loc[trigger_ts, "Open"])
@@ -329,7 +358,7 @@ def resolve_episode(ep: Episode, bars: pd.DataFrame, spy: pd.DataFrame,
         out.above_pivot10 = bool(post["Close"].iloc[10] >= pivot)
     if len(post) > 5:
         out.fellback5 = bool((post["Close"].iloc[1:6] < pivot).any())
-    if len(post) > horizon:
+    if len(post) > horizon or (series_ended and len(post)):
         win = post.iloc[:horizon + 1]
         stop_level = fill * (1 - stop_pct / 100)
         lows = win["Low"].copy()
@@ -341,8 +370,14 @@ def resolve_episode(ep: Episode, bars: pd.DataFrame, spy: pd.DataFrame,
         out.stop_hit = bool((lows <= stop_level).any())
         if out.stop_hit:
             out.trade_ret = -stop_pct
-        else:
+        elif len(post) > horizon:
             out.trade_ret = out.ret_h
+        else:
+            # The series ended before the horizon: the position is
+            # force-exited at the final bar. Real money, not a censoring —
+            # recording it is what lets the episode terminate instead of
+            # pending forever.
+            out.trade_ret = (win["Close"].iloc[-1] / fill - 1) * 100
         spy_win = spy.loc[spy.index >= trigger_ts, "Close"]
         if len(spy_win) > horizon:
             out.spy_h = (spy_win.iloc[horizon] / spy_win.iloc[0] - 1) * 100
@@ -364,6 +399,13 @@ LEDGER_COLS = ["start_run_id", "ticker", "end_run_id", "outcome",
                "days_to_trigger", "gap_pct", "ret5", "ret10", "ret_h",
                "trade_ret_pct", "fellback5", "stop_hit", "censored",
                "horizon", "stop_pct", "entry"]
+# Whole-number columns (flags / counts). write_ledger pins these to nullable
+# Int64 on write: once a None joins an int column pandas floats the whole
+# thing, and the on-disk vocabulary drifts ("1" → "1.0") between upserts —
+# consumers compare these strings literally (scan.py's pending_episodes
+# reads censored == "1").
+INT_LEDGER_COLS = ["days_to_trigger", "fellback5", "stop_hit", "censored",
+                   "horizon"]
 
 
 def ledger_rows(outcomes: list[Outcome], horizon: int, stop_pct: float,
@@ -450,6 +492,8 @@ def write_ledger(rows: list[dict], path: Path) -> int:
                 .sort_values(["start_run_id", "ticker"], kind="stable")
                 .reset_index(drop=True)
                 .reindex(columns=LEDGER_COLS))
+    for c in INT_LEDGER_COLS:
+        combined[c] = pd.to_numeric(combined[c]).astype("Int64")
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(".csv.tmp")
     combined.to_csv(tmp, index=False)
@@ -569,7 +613,8 @@ def main() -> None:
             unit_mismatch.append(f"{ep.ticker}@{ep.start_day}")
             continue
         o = resolve_episode(ep, bars, spy, calendar, args.horizon,
-                            args.stop_pct, args.entry)
+                            args.stop_pct, args.entry,
+                            series_ended=series_has_ended(bars, calendar))
         if o is None:
             skipped += 1
             continue

@@ -375,6 +375,29 @@ def test_pending_set_empties_once_everything_is_scored():
     assert scan.pending_episodes(eps, ledger) == []
 
 
+def test_terminal_rows_without_a_trade_are_final_not_pending():
+    """A FADED / BROKE_DOWN row's watch window fully elapsed, so its empty
+    trade_ret_pct IS the outcome, not a gap. Reading it as pending would
+    re-resolve every such episode on every run for the life of the history —
+    and once its ticker left the universe, name it on stderr daily as
+    fixable by --write-ledger, which cannot change it. The same empty
+    column on a TRIGGERED row means the horizon is still running; that one
+    must stay in."""
+    eps = [_Ep("FADE", "20260601", "20260603"),
+           _Ep("BRK", "20260601", "20260603"),
+           _Ep("TRIG", "20260601", "20260603")]
+    ledger = {
+        ("20260601", "FADE"): {"outcome": "FADED", "censored": "0",
+                               "trade_ret_pct": ""},
+        ("20260601", "BRK"): {"outcome": "BROKE_DOWN", "censored": "0",
+                              "trade_ret_pct": ""},
+        ("20260601", "TRIG"): {"outcome": "TRIGGERED", "censored": "0",
+                               "trade_ret_pct": ""},
+    }
+    got = [e.ticker for e in scan.pending_episodes(eps, ledger)]
+    assert got == ["TRIG"]
+
+
 # ------------------------------------------------- scan-side ledger refresh
 
 def _synthetic_bars(tickers, sessions, price=100.0):
@@ -470,7 +493,30 @@ def test_refresh_outcomes_no_ops_without_history(tmp_path, monkeypatch):
     monkeypatch.setattr(scan, "HISTORY_FILE", tmp_path / "missing.csv")
     stats = scan.refresh_outcomes(pd.DataFrame(), pd.Series(dtype=float))
     assert stats == {"complete": 0, "new": 0, "rewritten": 0, "open": 0,
-                     "mismatch": 0, "no_bars": []}
+                     "mismatch": [], "no_bars": []}
+
+
+def test_refresh_outcomes_names_unit_mismatches(tmp_path, monkeypatch,
+                                                capsys):
+    """An episode whose pivot is in pre-split units is unscoreable by EVERY
+    path (the by-ticker rebuild re-downloads the same re-adjusted bars);
+    silence would let the ledger quietly underreport while looking
+    complete."""
+    import pandas as pd
+    import scan
+    hist, ledger_path = tmp_path / "history.csv", tmp_path / "outcomes.csv"
+    _history_csv(hist, [_bar_row("20260701", "AAA", 100.0, -2.0)])
+    monkeypatch.setattr(scan, "HISTORY_FILE", hist)
+    monkeypatch.setattr(bt, "OUTCOMES_CSV", ledger_path)
+    # Bars at half the implied scan-day close = a 2:1 split re-adjustment.
+    bars = _synthetic_bars(["AAA"], 30, price=49.0)
+    spy = pd.Series(100.0, index=bars.index)
+
+    stats = scan.refresh_outcomes(bars, spy)
+    assert stats["mismatch"] == ["AAA"]
+    assert not ledger_path.exists()
+    err = capsys.readouterr().err
+    assert "units" in err and "AAA" in err
 
 
 def _out(**kw):
@@ -481,6 +527,83 @@ def _out(**kw):
     for k, v in kw.items():
         setattr(o, k, v)
     return o
+
+
+# ------------------------------------------------ dead-series resolution
+
+def _one_ticker_bars(closes, start="2026-07-01"):
+    import pandas as pd
+    idx = pd.bdate_range(start, periods=len(closes))
+    c = [float(v) for v in closes]
+    return pd.DataFrame({"Open": c, "High": c, "Low": c, "Close": c,
+                         "Volume": [1e6] * len(c)}, index=idx)
+
+
+def _episode(t, days, pivot=100.0):
+    return bt.Episode(ticker=t, appearances=[
+        bt.Appearance(run_day=d, pivot=pivot, score=50.0, signal="📊",
+                      bb_pctile=20.0, vol_dryup=0.8, rs_slope=0.5,
+                      to_pivot=-2.0, base_weeks=24.0, width_pct=12.0,
+                      rank=1)
+        for d in days])
+
+
+def test_series_has_ended_heuristic():
+    import pandas as pd
+    calendar = pd.bdate_range("2026-07-01", periods=40)
+    assert not bt.series_has_ended(_one_ticker_bars([100] * 40), calendar)
+    # A few sessions behind is feed lag, not death.
+    assert not bt.series_has_ended(_one_ticker_bars([100] * 35), calendar)
+    assert bt.series_has_ended(_one_ticker_bars([100] * 30), calendar)
+    assert not bt.series_has_ended(_one_ticker_bars([]), calendar)
+
+
+def test_series_end_forces_exit_instead_of_pending_forever():
+    """A ticker that stops trading mid-horizon (delisting / acquisition
+    close) will never grow the bars that complete its trade. The position
+    is force-exited at the final bar — real money, and a terminal ledger
+    row — rather than left pending forever, where the scan would name it on
+    stderr daily as fixable by --write-ledger, which could never fix it."""
+    import pandas as pd
+    calendar = pd.bdate_range("2026-07-01", periods=40)
+    spy = pd.DataFrame({"Close": [100.0] * 40}, index=calendar)
+    # Triggers on day 2 (close 103 >= pivot 100), then the series stops.
+    bars = _one_ticker_bars([98, 98, 103, 103, 104, 105, 105, 106, 106, 106])
+    ep = _episode("DEAD", ["20260701", "20260702"])
+    assert bt.series_has_ended(bars, calendar)
+
+    o = bt.resolve_episode(ep, bars, spy, calendar, 20, 8.0, "touch",
+                           series_ended=True)
+    assert o.triggered and not o.censored and not o.stop_hit
+    assert o.trade_ret == pytest.approx(106 / 103 * 100 - 100, abs=0.01)
+    row = bt.ledger_rows([o], 20, 8.0, "touch")[0]
+    assert row["outcome"] == "TRIGGERED"
+    assert row["trade_ret_pct"] is not None
+    led = {("20260701", "DEAD"): {k: "" if v is None else str(v)
+                                  for k, v in row.items()}}
+    assert scan.pending_episodes([_Ep("DEAD", "20260701", "20260702")],
+                                 led) == []
+    # Same bars WITHOUT the flag = data-edge semantics: still waiting.
+    o2 = bt.resolve_episode(ep, bars, spy, calendar, 20, 8.0, "touch")
+    assert o2.triggered and o2.trade_ret is None
+
+
+def test_series_end_fades_an_untriggered_watch():
+    """The buy-stop never filled and the series ended: the order dies
+    unfilled — a terminal FADED, not a censoring that waits forever."""
+    import pandas as pd
+    calendar = pd.bdate_range("2026-07-01", periods=40)
+    spy = pd.DataFrame({"Close": [100.0] * 40}, index=calendar)
+    bars = _one_ticker_bars([95, 95, 95])   # never reaches the pivot
+    ep = _episode("GONE", ["20260701", "20260702", "20260703"])
+
+    o = bt.resolve_episode(ep, bars, spy, calendar, 20, 8.0, "touch",
+                           series_ended=True)
+    assert not o.triggered and not o.censored
+    assert bt.ledger_rows([o], 20, 8.0, "touch")[0]["outcome"] == "FADED"
+    # Without the flag the same window reads as cut off by the data edge.
+    o2 = bt.resolve_episode(ep, bars, spy, calendar, 20, 8.0, "touch")
+    assert o2.censored
 
 
 def test_ledger_classifies_the_three_finished_states():
@@ -545,3 +668,27 @@ def test_ledger_upsert_replaces_and_preserves(tmp_path):
         got = {r["ticker"]: r for r in csv.DictReader(f)}
     assert got["AAA"]["trade_ret_pct"] == "2.0"   # replaced
     assert got["OLD"]["outcome"] == "FADED"       # preserved
+
+
+def test_ledger_int_columns_survive_upsert_as_ints(tmp_path):
+    """Once a None joins an int column pandas floats it, and the second
+    upsert writes "1.0" where the first wrote "1" — but consumers compare
+    these strings literally (scan.py's pending_episodes reads
+    censored == "1")."""
+    path = tmp_path / "outcomes.csv"
+    bt.write_ledger(bt.ledger_rows([
+        _out(t="AAA", triggered=True, trade_ret=1.0, days_to_trigger=2,
+             fellback5=True, stop_hit=False),
+        _out(t="FAD", no_trigger_drift=-1.0),   # None in every flag column
+    ], 20, 8.0, "touch"), path)
+    bt.write_ledger(bt.ledger_rows(
+        [_out(t="BBB", triggered=True, trade_ret=2.0, days_to_trigger=1,
+              fellback5=False, stop_hit=False)], 20, 8.0, "touch"), path)
+    with open(path, newline="") as f:
+        got = {r["ticker"]: r for r in csv.DictReader(f)}
+    assert got["AAA"]["fellback5"] == "1"
+    assert got["AAA"]["days_to_trigger"] == "2"
+    assert got["BBB"]["stop_hit"] == "0"
+    assert got["FAD"]["days_to_trigger"] == ""
+    assert all(r["censored"] == "0" for r in got.values())
+    assert all(r["horizon"] == "20" for r in got.values())

@@ -306,7 +306,7 @@ def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
             "t": t, "sec": sector_of(t), "days": len(ds), "eps": len(eps),
             "exp": exp,
             "trate": round(n_ep_trig / n_ep_res * 100) if n_ep_res else None,
-            "mbw": round(max_bw, 1) if max_bw else None,
+            "mbw": _n(max_bw) if max_bw else None,
             "pd": pocket_days,
             "wd": round(min_width, 1) if min_width is not None else None,
             "tp": round(best_tp, 1) if best_tp is not None else None,
@@ -617,6 +617,7 @@ const I18N = {
     apNote: () => `One line per episode (a name's unbroken run on the list). The height is how far the price sits below its pivot — the price that turns the setup into a buy.\nThe bold zero line IS the trigger: a line reaching it broke out. Lines are colored by how the episode ended.`,
     apFilter: { pocket: `⭐ Pocket only (base ≥ ${MINWK}wk)`, trig: "Triggered only", all: "All episodes" },
     apFilterLabel: "Filter episodes",
+    apEmpty: "No episodes match this filter in the charted window.",
     oc: { TRIGGERED: "Cleared the pivot", FADED: "Faded off the list", BROKE_DOWN: "Broke down", null: "Still in flight" },
     ocShort: { TRIGGERED: "Triggered", FADED: "Faded", BROKE_DOWN: "Broke down", null: "In flight" },
     pivotLine: "pivot (trigger price)",
@@ -679,6 +680,7 @@ const I18N = {
     apNote: () => `一条线 = 一段上榜（某只票连续留在名单上的那一段）。线的高度 = 现价还差多少才够到触发价。\n那条加粗的 0 线就是触发线：线碰到它 = 真的突破了。线的颜色 = 这段上榜最后的结局。`,
     apFilter: { pocket: `只看 ⭐ 口袋（基龄 ≥ ${MINWK} 周）`, trig: "只看已触发", all: "全部上榜段" },
     apFilterLabel: "筛选上榜段",
+    apEmpty: "当前窗口内没有符合此筛选的上榜段。",
     oc: { TRIGGERED: "冲过了触发线", FADED: "没冲上去，淡出名单", BROKE_DOWN: "直接跌穿了", null: "仍在进行中" },
     ocShort: { TRIGGERED: "已触发", FADED: "淡出", BROKE_DOWN: "跌穿", null: "进行中" },
     pivotLine: "触发价",
@@ -746,6 +748,7 @@ const I18N = {
     apNote: () => `一條線 = 一段上榜（某檔票連續留在名單上的那一段）。線的高度 = 現價還差多少才夠到觸發價。\n那條加粗的 0 線就是觸發線：線碰到它 = 真的突破了。線的顏色 = 這段上榜最後的結局。`,
     apFilter: { pocket: `只看 ⭐ 口袋（基齡 ≥ ${MINWK} 週）`, trig: "只看已觸發", all: "全部上榜段" },
     apFilterLabel: "篩選上榜段",
+    apEmpty: "目前窗口內沒有符合此篩選的上榜段。",
     oc: { TRIGGERED: "衝過了觸發線", FADED: "沒衝上去，淡出名單", BROKE_DOWN: "直接跌穿了", null: "仍在進行中" },
     ocShort: { TRIGGERED: "已觸發", FADED: "淡出", BROKE_DOWN: "跌穿", null: "進行中" },
     pivotLine: "觸發價",
@@ -813,6 +816,7 @@ const I18N = {
     apNote: () => `1 本の線 = 1 エピソード（銘柄がリストに連続して載っていた期間）。線の高さ = 現在値がピボットまであと何 % か。\n太い 0 の線がトリガーそのもの：線がそこに届けばブレイクアウト成立。線の色はそのエピソードの結末を表します。`,
     apFilter: { pocket: `⭐ ポケットのみ（ベース ${MINWK} 週以上）`, trig: "トリガー済みのみ", all: "全エピソード" },
     apFilterLabel: "エピソードを絞り込み",
+    apEmpty: "この期間に該当するエピソードはありません。",
     oc: { TRIGGERED: "ピボット突破", FADED: "届かずリスト落ち", BROKE_DOWN: "下方ブレイク", null: "進行中" },
     ocShort: { TRIGGERED: "トリガー済み", FADED: "フェード", BROKE_DOWN: "下方ブレイク", null: "進行中" },
     pivotLine: "ピボット（トリガー価格）",
@@ -880,6 +884,7 @@ const I18N = {
     apNote: () => `선 1개 = 에피소드 1개(종목이 목록에 연속으로 남아 있던 구간). 선의 높이 = 현재가가 피봇까지 몇 % 남았는지.\n굵은 0 선이 바로 발동선입니다. 선이 거기 닿으면 돌파 성공. 선 색깔은 그 에피소드의 결말을 뜻합니다.`,
     apFilter: { pocket: `⭐ 포켓만 (베이스 ${MINWK}주 이상)`, trig: "발동한 것만", all: "전체 에피소드" },
     apFilterLabel: "에피소드 필터",
+    apEmpty: "이 기간에 해당하는 에피소드가 없습니다.",
     oc: { TRIGGERED: "피봇 돌파", FADED: "못 넘고 목록에서 이탈", BROKE_DOWN: "하방 이탈", null: "진행 중" },
     ocShort: { TRIGGERED: "발동", FADED: "소멸", BROKE_DOWN: "하방 이탈", null: "진행 중" },
     pivotLine: "피봇(발동 가격)",
@@ -1089,6 +1094,13 @@ function renderApproach(mode) {
   apBox.textContent = "";
   const eps = DATA.approach.filter(a =>
     mode === "all" ? true : mode === "trig" ? a.oc === "TRIGGERED" : a.pk);
+  // The default ⭐-pocket filter can legitimately match nothing, and bare
+  // axes would claim "no edge" when the truth is "no data" — say so.
+  if (!eps.length) {
+    const d = div(null, apBox, T.apEmpty);
+    d.style.cssText = "color:var(--muted);font-size:12.5px;padding:26px 0;text-align:center";
+    return;
+  }
   const ML = 40, MT = 12, MB = 26, DX = 19, PH = 210;
   const W = ML + (DAYS - 1) * DX + 60, H = MT + PH + MB;
   const vals = eps.flatMap(a => a.tps);
@@ -1463,7 +1475,9 @@ function renderGrid(minDays) {
     }).forEach(s => {
       const tr = document.createElement("tr");
       [s.t, secName(s.sec),
-       s.mbw !== null ? s.mbw.toFixed(0) : "—",
+       // Keep the decimal: rounding 19.6 up to "20" would claim the ⭐
+       // threshold (≥ 20) for a base that never reached it.
+       s.mbw !== null ? String(s.mbw) : "—",
        s.exp !== null ? pctTxt(s.exp) : "—",
        s.trate !== null ? s.trate + "%" : "—",
        s.eps,
