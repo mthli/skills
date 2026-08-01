@@ -13,8 +13,8 @@ network) with:
     pivot, so the zero line IS the buy trigger and a line reaching it is a
     breakout (filterable: ⭐ pocket / triggered / all)
   - a date × ticker maturity grid, cell color = that day's Sig tier
-    (📊 → ⏳ → 🔥 → 🚀), dot = ⭐ pocket day, row end = that name's realized
-    trade expectancy, with a min-days filter
+    (forming → coiled → imminent → breakout), dot = ⭐ pocket day, row end =
+    that name's realized trade expectancy, with a min-days filter
   - a cohort chart: each day's watchlist stacked by Sig tier with the ⭐
     pocket count overlaid, answering "is the list loaded, and does it hold
     anything validated"
@@ -59,7 +59,9 @@ SKILL_DIR = Path(__file__).resolve().parent.parent
 VALIDATED_BASE_WEEKS = 20.0
 # Sig tiers in ascending order of "how close to firing" — the ordinal ramp
 # for the grid, the stack order for the cohort chart, and the sort order
-# for the roster's status column. Mirrors scan.py's classifier.
+# for the roster's status column. Mirrors scan.py's classifier. These glyphs
+# are the CSV's vocabulary only; the page names the tiers in words and
+# carries the ordinal in color, so it never prints them.
 SIG_ORDER = ["📊", "⏳", "🔥", "🚀"]
 # In-sample reference expectancies from the 2026-05→07 outcome backtest
 # (references/backtest-findings.md #1 and #4), both on the stop-based trade
@@ -347,7 +349,8 @@ def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
 
     latest = cohort[-1]
     latest_total = sum(latest)
-    # "Loaded" = the share of the list within striking distance (🔥 or 🚀).
+    # "Loaded" = the share of the list within striking distance (the top two
+    # Sig tiers: imminent + breakout).
     latest_hot = latest[2] + latest[3]
 
     # Ties broken by ticker so the tile is deterministic across renders.
@@ -603,10 +606,10 @@ const I18N = {
     subtitle: (a, b, runs) => `${a} → ${b} · ${runs} trading days · every base's path to its pivot, and what happened after`,
     winTag: (s, t) => ` Charts show the last ${s} of ${t} trading days.`,
     kList: "Today's watchlist",
-    kListSub: (hot, n) => `${hot} of ${n} within striking distance (🔥/🚀)`,
+    kListSub: (hot, n) => `${hot} near or past trigger`,
     kToday: "Today's ⭐ pocket",
     kTrig: "Trigger rate",
-    kTrigSub: (t, n) => `${t} of ${n} finished episodes cleared their pivot`,
+    kTrigSub: (t, n) => `${t} / ${n} resolved`,
     kPocket: "⭐ Pocket per trade",
     kPocketSub: (n, r) => `n=${n} · backtest ${r >= 0 ? "+" : ""}${r}%`,
     kBase: "Everything else",
@@ -614,30 +617,30 @@ const I18N = {
     kLongest: "Longest base now",
     none: "none",
     apTitle: "Approach to pivot",
-    apNote: () => `One line per episode (a name's unbroken run on the list). The height is how far the price sits below its pivot — the price that turns the setup into a buy.\nThe bold zero line IS the trigger: a line reaching it broke out. Lines are colored by how the episode ended.`,
+    apNote: () => `One line per episode (a name's unbroken run on the list). The height is how far the price sits below its pivot, the price that turns the setup into a buy.\nThe bold zero line is the trigger: a line that reaches it broke out. Line color shows how the episode ended.`,
     apFilter: { pocket: `⭐ Pocket only (base ≥ ${MINWK}wk)`, trig: "Triggered only", all: "All episodes" },
     apFilterLabel: "Filter episodes",
     apEmpty: "No episodes match this filter in the charted window.",
-    oc: { TRIGGERED: "Cleared the pivot", FADED: "Faded off the list", BROKE_DOWN: "Broke down", null: "Still in flight" },
+    oc: { TRIGGERED: "Cleared the pivot", FADED: "Faded off the list", BROKE_DOWN: "Broke down", null: "In flight" },
     ocShort: { TRIGGERED: "Triggered", FADED: "Faded", BROKE_DOWN: "Broke down", null: "In flight" },
     pivotLine: "pivot (trigger price)",
     coTitle: "Watchlist tension",
-    coNote: () => `One column per day: the whole watchlist stacked by how close each name is to firing.\nA tall dark stack means the list is loaded and time-sensitive; all pale means nothing is near a trigger — check back later.\nThe line is the ⭐ pocket count (bases ≥ ${MINWK} weeks). When it touches zero, the list holds nothing the backtest validated.`,
+    coNote: () => `One column per day: the whole watchlist stacked by how close each name is to firing.\nA tall dark stack means the list is loaded and time-sensitive. All pale means nothing is near a trigger, so check back later.\nThe line counts the ⭐ pocket (bases ≥ ${MINWK} weeks). At zero, the list holds nothing the backtest validated.`,
     coPocketLine: "⭐ pocket count",
     pkTitle: "⭐ Pocket vs the rest",
-    pkNote: "Solid lines: the running average result per trade (buy at the pivot, 8% stop, exit after 20 sessions), ⭐ pocket vs the rest. Base length is read off the episode's first day, as the backtest did.\nDashed lines: the same numbers from the backtest. Pocket holding above its dash = the one validated edge is still paying.",
+    pkNote: "Solid lines: the running average result per trade (buy at the pivot, 8% stop, exit after 20 sessions), ⭐ pocket vs the rest. Base length counts from the episode's first day, the way the backtest measured it.\nDashed lines: the same numbers from the backtest. A pocket line above its dash means the one validated edge still pays.",
     pkPocket: "⭐ Pocket", pkBase: "The rest",
     pkRef: v => `backtest ${v >= 0 ? "+" : ""}${v}%`,
     pkTipN: n => `${n} trades`,
     gridTitle: "Maturity grid",
-    gridNote: () => `One row per name, one cell per listed day, color = how close it was to firing that day; a center dot = ⭐ pocket day (base ≥ ${MINWK} weeks).\nRows sorted by longest base, so the validated names sit on top. Row-end = that name's realized result per trade.\nA row growing darker left-to-right is a base tightening toward its trigger; a break in the row is a dropout.`,
+    gridNote: () => `One row per name, one cell per listed day, color = how close it was to firing that day; a center dot = ⭐ pocket day (base ≥ ${MINWK} weeks).\nRows run longest-base first, so the validated names lead. Row-end = that name's realized result per trade.\nA row growing darker left to right is a base tightening toward its trigger; a break in the row is a dropout.`,
     all: "All",
     geDays: n => `≥${n} days listed`,
     daysFilterLabel: "Filter by days listed",
     rosterTitle: "Roster",
-    rosterNote: "One row per name that ever made the list. Click a header to sort; click again to reverse. Every hover value from the charts is readable here.\nBase weeks is the column to judge by — it is the one attribute the backtest validated. Score is a display floor, not a ranker.",
+    rosterNote: "One row per name that ever made the list. Click a header to sort; click again to reverse. This table carries every value the charts show on hover.\nJudge by base weeks: the backtest validated that attribute and no other. Score is a display floor, not a ranker.",
     cols: ["Ticker", "Sector", "Max base wks", "Result %/trade", "Trigger rate", "Episodes", "⭐ days", "Tightest %", "Closest to pivot", "Days", "Last seen", "Sig"],
-    sigName: { 0: "📊 forming", 1: "⏳ coiled", 2: "🔥 imminent", 3: "🚀 breakout" },
+    sigName: { 0: "forming", 1: "coiled", 2: "imminent", 3: "breakout" },
     sigTip: {
       0: "Valid base, not near the trigger yet",
       1: "Squeezing, a few % of work left",
@@ -666,10 +669,10 @@ const I18N = {
     subtitle: (a, b, runs) => `${a} → ${b} · 共 ${runs} 个交易日 · 每个平台基逼近触发线的全过程，以及之后发生了什么`,
     winTag: (s, t) => `图表仅显示最近 ${s} / ${t} 个交易日。`,
     kList: "今日名单",
-    kListSub: (hot, n) => `${n} 只里有 ${hot} 只已逼近触发（🔥/🚀）`,
+    kListSub: (hot, n) => `${hot} 只临门一脚或已突破`,
     kToday: "今日 ⭐ 口袋",
     kTrig: "触发率",
-    kTrigSub: (t, n) => `${n} 段已结束的上榜里，${t} 段真的冲过了触发线`,
+    kTrigSub: (t, n) => `${n} 段里 ${t} 段冲过`,
     kPocket: "⭐ 口袋每单结果",
     kPocketSub: (n, r) => `样本 ${n} · 回测 ${r >= 0 ? "+" : ""}${r}%`,
     kBase: "其余全部",
@@ -677,15 +680,15 @@ const I18N = {
     kLongest: "当前最长的基",
     none: "无",
     apTitle: "逼近触发线",
-    apNote: () => `一条线 = 一段上榜（某只票连续留在名单上的那一段）。线的高度 = 现价还差多少才够到触发价。\n那条加粗的 0 线就是触发线：线碰到它 = 真的突破了。线的颜色 = 这段上榜最后的结局。`,
+    apNote: () => `一条线 = 一段上榜（某只票连续留在名单上的那一段）。线的高度 = 现价还差多少才够到触发价。\n那条加粗的 0 线就是触发线：线碰到它 = 突破了。线的颜色 = 这段上榜的结局。`,
     apFilter: { pocket: `只看 ⭐ 口袋（基龄 ≥ ${MINWK} 周）`, trig: "只看已触发", all: "全部上榜段" },
     apFilterLabel: "筛选上榜段",
     apEmpty: "当前窗口内没有符合此筛选的上榜段。",
-    oc: { TRIGGERED: "冲过了触发线", FADED: "没冲上去，淡出名单", BROKE_DOWN: "直接跌穿了", null: "仍在进行中" },
+    oc: { TRIGGERED: "冲过了触发线", FADED: "没冲上去，淡出名单", BROKE_DOWN: "跌穿了", null: "进行中" },
     ocShort: { TRIGGERED: "已触发", FADED: "淡出", BROKE_DOWN: "跌穿", null: "进行中" },
     pivotLine: "触发价",
     coTitle: "名单上膛程度",
-    coNote: () => `每天一根柱：当天名单上的全部票，按"离触发还有多远"分层堆叠。\n柱子又高、深色又多 = 名单已上膛，时间敏感；全是浅色 = 没有一只临门，过几天再看。\n折线 = ⭐ 口袋只数（基龄 ≥ ${MINWK} 周）。折线落到 0，说明当天名单里没有任何一只是回测验证过的类型。`,
+    coNote: () => `每天一根柱：当天名单上的全部票，按「离触发还有多远」分层堆叠。\n柱子又高、深色又多 = 名单已上膛，时间敏感；全是浅色 = 没有一只临门，过几天再看。\n折线 = ⭐ 口袋只数（基龄 ≥ ${MINWK} 周）。折线落到 0，当天名单里没有一只是回测验证过的类型。`,
     coPocketLine: "⭐ 口袋只数",
     pkTitle: "⭐ 口袋 vs 其余",
     pkNote: "实线：同一套打法（触发价买入、8% 止损、20 天后卖出）的滚动平均每单盈亏，⭐ 口袋 vs 其余。基龄按每段上榜第一天算，与回测口径一致。\n虚线：回测里对应的两个数。口袋线稳在自己虚线上方 = 唯一验证过的那点边际还在兑现。",
@@ -693,14 +696,14 @@ const I18N = {
     pkRef: v => `回测 ${v >= 0 ? "+" : ""}${v}%`,
     pkTipN: n => `${n} 单`,
     gridTitle: "成熟度网格",
-    gridNote: () => `一行一只票，一格一个上榜日，颜色 = 那天离触发有多近；带中心点 = ⭐ 口袋日（基龄 ≥ ${MINWK} 周）。\n行序按最长基龄排，验证过的名字排在最上面；行尾 = 该票实际每单盈亏。\n一行从左到右越来越深 = 这个基在收紧、正在逼近触发；行中间断开 = 那天掉出名单了。`,
+    gridNote: () => `一行一只票，一格一个上榜日，颜色 = 那天离触发有多近；带中心点 = ⭐ 口袋日（基龄 ≥ ${MINWK} 周）。\n行序按最长基龄排，验证过的名字在最上面；行尾 = 该票实际每单盈亏。\n一行从左到右越来越深 = 这个基在收紧、逼近触发；行中间断开 = 那天掉出名单了。`,
     all: "全部",
     geDays: n => `上榜 ≥ ${n} 天`,
     daysFilterLabel: "按上榜天数筛选",
     rosterTitle: "名录",
-    rosterNote: "每只上过榜的票一行。点击表头排序；再次点击反向。图表中所有悬停数值在此均可查阅。\n挑票看「最长基龄」这列——它是回测里唯一验证过的属性。Score 只是显示门槛，不是排序依据。",
+    rosterNote: "每只上过榜的票一行。点击表头排序；再次点击反向。图表里悬停能看到的数值，这张表都有。\n挑票看「最长基龄」这列，它是回测里唯一验证过的属性。Score 是显示门槛，不是排序依据。",
     cols: ["代码", "行业", "最长基龄(周)", "每单盈亏 %", "触发率", "上榜段数", "⭐ 天数", "最紧宽度 %", "最接近触发", "上榜天数", "最近上榜", "状态"],
-    sigName: { 0: "📊 成形中", 1: "⏳ 收紧中", 2: "🔥 临门一脚", 3: "🚀 今日突破" },
+    sigName: { 0: "成形中", 1: "收紧中", 2: "临门一脚", 3: "今日突破" },
     sigTip: {
       0: "基有效，但还没靠近触发价",
       1: "在收紧，离触发还差几个点",
@@ -734,10 +737,10 @@ const I18N = {
     subtitle: (a, b, runs) => `${a} → ${b} · 共 ${runs} 個交易日 · 每個平台基逼近觸發線的全過程，以及之後發生了什麼`,
     winTag: (s, t) => `圖表僅顯示最近 ${s} / ${t} 個交易日。`,
     kList: "今日名單",
-    kListSub: (hot, n) => `${n} 檔裡有 ${hot} 檔已逼近觸發（🔥/🚀）`,
+    kListSub: (hot, n) => `${hot} 檔臨門一腳或已突破`,
     kToday: "今日 ⭐ 口袋",
     kTrig: "觸發率",
-    kTrigSub: (t, n) => `${n} 段已結束的上榜裡，${t} 段真的衝過了觸發線`,
+    kTrigSub: (t, n) => `${n} 段裡 ${t} 段衝過`,
     kPocket: "⭐ 口袋每筆結果",
     kPocketSub: (n, r) => `樣本 ${n} · 回測 ${r >= 0 ? "+" : ""}${r}%`,
     kBase: "其餘全部",
@@ -745,15 +748,15 @@ const I18N = {
     kLongest: "目前最長的基",
     none: "無",
     apTitle: "逼近觸發線",
-    apNote: () => `一條線 = 一段上榜（某檔票連續留在名單上的那一段）。線的高度 = 現價還差多少才夠到觸發價。\n那條加粗的 0 線就是觸發線：線碰到它 = 真的突破了。線的顏色 = 這段上榜最後的結局。`,
+    apNote: () => `一條線 = 一段上榜（某檔票連續留在名單上的那一段）。線的高度 = 現價還差多少才夠到觸發價。\n那條加粗的 0 線就是觸發線：線碰到它 = 突破了。線的顏色 = 這段上榜的結局。`,
     apFilter: { pocket: `只看 ⭐ 口袋（基齡 ≥ ${MINWK} 週）`, trig: "只看已觸發", all: "全部上榜段" },
     apFilterLabel: "篩選上榜段",
     apEmpty: "目前窗口內沒有符合此篩選的上榜段。",
-    oc: { TRIGGERED: "衝過了觸發線", FADED: "沒衝上去，淡出名單", BROKE_DOWN: "直接跌穿了", null: "仍在進行中" },
+    oc: { TRIGGERED: "衝過了觸發線", FADED: "沒衝上去，淡出名單", BROKE_DOWN: "跌穿了", null: "進行中" },
     ocShort: { TRIGGERED: "已觸發", FADED: "淡出", BROKE_DOWN: "跌穿", null: "進行中" },
     pivotLine: "觸發價",
     coTitle: "名單上膛程度",
-    coNote: () => `每天一根柱：當天名單上的全部票，按「離觸發還有多遠」分層堆疊。\n柱子又高、深色又多 = 名單已上膛，時間敏感；全是淺色 = 沒有一檔臨門，過幾天再看。\n折線 = ⭐ 口袋檔數（基齡 ≥ ${MINWK} 週）。折線落到 0，說明當天名單裡沒有任何一檔是回測驗證過的類型。`,
+    coNote: () => `每天一根柱：當天名單上的全部票，按「離觸發還有多遠」分層堆疊。\n柱子又高、深色又多 = 名單已上膛，時間敏感；全是淺色 = 沒有一檔臨門，過幾天再看。\n折線 = ⭐ 口袋檔數（基齡 ≥ ${MINWK} 週）。折線落到 0，當天名單裡沒有一檔是回測驗證過的類型。`,
     coPocketLine: "⭐ 口袋檔數",
     pkTitle: "⭐ 口袋 vs 其餘",
     pkNote: "實線：同一套打法（觸發價買入、8% 停損、20 天後賣出）的滾動平均每筆盈虧，⭐ 口袋 vs 其餘。基齡按每段上榜第一天算，與回測口徑一致。\n虛線：回測裡對應的兩個數。口袋線穩在自己虛線上方 = 唯一驗證過的那點邊際還在兌現。",
@@ -761,14 +764,14 @@ const I18N = {
     pkRef: v => `回測 ${v >= 0 ? "+" : ""}${v}%`,
     pkTipN: n => `${n} 筆`,
     gridTitle: "成熟度網格",
-    gridNote: () => `一行一檔票，一格一個上榜日，顏色 = 那天離觸發有多近；帶中心點 = ⭐ 口袋日（基齡 ≥ ${MINWK} 週）。\n行序按最長基齡排，驗證過的名字排在最上面；行尾 = 該檔實際每筆盈虧。\n一行從左到右越來越深 = 這個基在收緊、正在逼近觸發；行中間斷開 = 那天掉出名單了。`,
+    gridNote: () => `一行一檔票，一格一個上榜日，顏色 = 那天離觸發有多近；帶中心點 = ⭐ 口袋日（基齡 ≥ ${MINWK} 週）。\n行序按最長基齡排，驗證過的名字在最上面；行尾 = 該檔實際每筆盈虧。\n一行從左到右越來越深 = 這個基在收緊、逼近觸發；行中間斷開 = 那天掉出名單了。`,
     all: "全部",
     geDays: n => `上榜 ≥ ${n} 天`,
     daysFilterLabel: "按上榜天數篩選",
     rosterTitle: "名錄",
-    rosterNote: "每檔上過榜的票一行。點擊表頭排序；再次點擊反向。圖表中所有懸停數值在此均可查閱。\n挑票看「最長基齡」這欄——它是回測裡唯一驗證過的屬性。Score 只是顯示門檻，不是排序依據。",
+    rosterNote: "每檔上過榜的票一行。點擊表頭排序；再次點擊反向。圖表裡懸停看得到的數值，這張表都有。\n挑票看「最長基齡」這欄，它是回測裡唯一驗證過的屬性。Score 是顯示門檻，不是排序依據。",
     cols: ["代號", "產業", "最長基齡(週)", "每筆盈虧 %", "觸發率", "上榜段數", "⭐ 天數", "最緊寬度 %", "最接近觸發", "上榜天數", "最近上榜", "狀態"],
-    sigName: { 0: "📊 成形中", 1: "⏳ 收緊中", 2: "🔥 臨門一腳", 3: "🚀 今日突破" },
+    sigName: { 0: "成形中", 1: "收緊中", 2: "臨門一腳", 3: "今日突破" },
     sigTip: {
       0: "基有效，但還沒靠近觸發價",
       1: "在收緊，離觸發還差幾個點",
@@ -802,10 +805,10 @@ const I18N = {
     subtitle: (a, b, runs) => `${a} → ${b} · 全 ${runs} 営業日 · 各ベースがピボットに近づく過程と、その後の結果`,
     winTag: (s, t) => `チャートは直近 ${s} / ${t} 営業日のみ表示。`,
     kList: "本日のリスト",
-    kListSub: (hot, n) => `${n} 銘柄中 ${hot} 銘柄が発火寸前（🔥/🚀）`,
+    kListSub: (hot, n) => `${hot} 銘柄が目前か突破`,
     kToday: "本日の ⭐ ポケット",
     kTrig: "トリガー率",
-    kTrigSub: (t, n) => `終了した ${n} エピソード中 ${t} 件がピボットを突破`,
+    kTrigSub: (t, n) => `${n} 件中 ${t} 件が突破`,
     kPocket: "⭐ ポケットの 1 トレード損益",
     kPocketSub: (n, r) => `n=${n} · バックテスト ${r >= 0 ? "+" : ""}${r}%`,
     kBase: "それ以外すべて",
@@ -813,7 +816,7 @@ const I18N = {
     kLongest: "現在の最長ベース",
     none: "なし",
     apTitle: "ピボットへの接近",
-    apNote: () => `1 本の線 = 1 エピソード（銘柄がリストに連続して載っていた期間）。線の高さ = 現在値がピボットまであと何 % か。\n太い 0 の線がトリガーそのもの：線がそこに届けばブレイクアウト成立。線の色はそのエピソードの結末を表します。`,
+    apNote: () => `1 本の線 = 1 エピソード（銘柄がリストに連続して載っていた期間）。線の高さ = 現在値がピボットまであと何 % か。\n太い 0 の線がトリガー：線がそこに届けばブレイクアウト成立。線の色はエピソードの結末を表します。`,
     apFilter: { pocket: `⭐ ポケットのみ（ベース ${MINWK} 週以上）`, trig: "トリガー済みのみ", all: "全エピソード" },
     apFilterLabel: "エピソードを絞り込み",
     apEmpty: "この期間に該当するエピソードはありません。",
@@ -821,7 +824,7 @@ const I18N = {
     ocShort: { TRIGGERED: "トリガー済み", FADED: "フェード", BROKE_DOWN: "下方ブレイク", null: "進行中" },
     pivotLine: "ピボット（トリガー価格）",
     coTitle: "リストの張り詰め具合",
-    coNote: () => `1 日 1 本の柱：その日のリスト全体を「発火までの近さ」で積み上げたもの。\n柱が高く濃い色が多い = リストは装填済みで時間との勝負。すべて淡色 = 発火寸前の銘柄なし、日を改めて確認を。\n折れ線は ⭐ ポケット数（ベース ${MINWK} 週以上）。ゼロに触れた日は、検証済みタイプが 1 つも無いということです。`,
+    coNote: () => `1 日 1 本の柱：その日のリスト全体を「発火までの近さ」で積み上げたもの。\n柱が高く濃い色が多い = リストは装填済みで時間との勝負。すべて淡色 = 発火寸前の銘柄なし、日を改めて確認を。\n折れ線は ⭐ ポケット数（ベース ${MINWK} 週以上）。ゼロの日は検証済みタイプが 1 つもありません。`,
     coPocketLine: "⭐ ポケット数",
     pkTitle: "⭐ ポケット vs その他",
     pkNote: "実線：同一ルール（ピボット買い、8% ストップ、20 セッション後に手仕舞い）の 1 トレード平均損益。⭐ ポケット vs その他。ベース週数はエピソード初日で判定（バックテストと同じ）。\n破線：バックテストの対応値。ポケット線が自身の破線の上にあれば、唯一検証済みのエッジは健在。",
@@ -836,7 +839,7 @@ const I18N = {
     rosterTitle: "銘柄一覧",
     rosterNote: "リストに載ったことのある銘柄を 1 行ずつ表示。ヘッダーをクリックでソート、もう一度クリックで逆順。チャートのホバー数値はすべてこの表で確認できます。\n判断はベース週数の列で。バックテストで検証された唯一の属性です。スコアは表示の足切りであり、ランキング指標ではありません。",
     cols: ["ティッカー", "セクター", "最長ベース(週)", "1 トレード損益 %", "トリガー率", "エピソード", "⭐ 日数", "最小幅 %", "ピボット最接近", "日数", "直近登場", "シグナル"],
-    sigName: { 0: "📊 形成中", 1: "⏳ 収縮中", 2: "🔥 目前", 3: "🚀 ブレイク" },
+    sigName: { 0: "形成中", 1: "収縮中", 2: "目前", 3: "ブレイク" },
     sigTip: {
       0: "有効なベース、まだトリガーには遠い",
       1: "収縮中、トリガーまであと数 %",
@@ -870,10 +873,10 @@ const I18N = {
     subtitle: (a, b, runs) => `${a} → ${b} · 총 ${runs}거래일 · 각 베이스가 피봇에 다가가는 과정과 그 이후 결과`,
     winTag: (s, t) => `차트는 최근 ${s} / ${t}거래일만 표시합니다.`,
     kList: "오늘의 목록",
-    kListSub: (hot, n) => `${n}종목 중 ${hot}종목이 발동 직전 (🔥/🚀)`,
+    kListSub: (hot, n) => `${hot}종목 임박 또는 돌파`,
     kToday: "오늘의 ⭐ 포켓",
     kTrig: "발동률",
-    kTrigSub: (t, n) => `종료된 ${n}개 에피소드 중 ${t}개가 피봇 돌파`,
+    kTrigSub: (t, n) => `${n}건 중 ${t}건 돌파`,
     kPocket: "⭐ 포켓 거래당 손익",
     kPocketSub: (n, r) => `n=${n} · 백테스트 ${r >= 0 ? "+" : ""}${r}%`,
     kBase: "나머지 전체",
@@ -881,7 +884,7 @@ const I18N = {
     kLongest: "현재 가장 긴 베이스",
     none: "없음",
     apTitle: "피봇 접근",
-    apNote: () => `선 1개 = 에피소드 1개(종목이 목록에 연속으로 남아 있던 구간). 선의 높이 = 현재가가 피봇까지 몇 % 남았는지.\n굵은 0 선이 바로 발동선입니다. 선이 거기 닿으면 돌파 성공. 선 색깔은 그 에피소드의 결말을 뜻합니다.`,
+    apNote: () => `선 1개 = 에피소드 1개(종목이 목록에 연속으로 남아 있던 구간). 선의 높이 = 현재가가 피봇까지 몇 % 남았는지.\n굵은 0 선이 발동선입니다. 선이 거기 닿으면 돌파 성공. 선 색깔은 에피소드의 결말을 뜻합니다.`,
     apFilter: { pocket: `⭐ 포켓만 (베이스 ${MINWK}주 이상)`, trig: "발동한 것만", all: "전체 에피소드" },
     apFilterLabel: "에피소드 필터",
     apEmpty: "이 기간에 해당하는 에피소드가 없습니다.",
@@ -889,7 +892,7 @@ const I18N = {
     ocShort: { TRIGGERED: "발동", FADED: "소멸", BROKE_DOWN: "하방 이탈", null: "진행 중" },
     pivotLine: "피봇(발동 가격)",
     coTitle: "목록의 긴장도",
-    coNote: () => `하루 1개 기둥: 그날 목록 전체를 '발동까지의 거리'로 쌓은 것.\n기둥이 높고 진한 색이 많으면 목록이 장전된 상태이고 시간이 중요합니다. 전부 옅으면 임박한 종목이 없다는 뜻이니 나중에 다시 보세요.\n선은 ⭐ 포켓 개수(베이스 ${MINWK}주 이상)입니다. 0에 닿은 날은 백테스트로 검증된 유형이 하나도 없다는 뜻입니다.`,
+    coNote: () => `하루 1개 기둥: 그날 목록 전체를 '발동까지의 거리'로 쌓은 것.\n기둥이 높고 진한 색이 많으면 목록이 장전된 상태이고 시간이 중요합니다. 전부 옅으면 임박한 종목이 없다는 뜻이니 나중에 다시 보세요.\n선은 ⭐ 포켓 개수(베이스 ${MINWK}주 이상)입니다. 0인 날은 백테스트로 검증된 유형이 하나도 없습니다.`,
     coPocketLine: "⭐ 포켓 개수",
     pkTitle: "⭐ 포켓 vs 나머지",
     pkNote: "실선: 같은 규칙(피봇 매수, 8% 손절, 20세션 후 청산)의 거래당 롤링 평균 손익. ⭐ 포켓 vs 나머지. 베이스 주수는 에피소드 첫날 기준(백테스트와 동일).\n점선: 백테스트의 해당 수치. 포켓 선이 자기 점선 위에 있으면 유일하게 검증된 엣지가 유효합니다.",
@@ -904,7 +907,7 @@ const I18N = {
     rosterTitle: "종목 목록",
     rosterNote: "목록에 오른 적 있는 종목을 한 행씩 표시. 헤더를 클릭해 정렬, 다시 클릭하면 역순. 차트의 모든 호버 값을 이 표에서 확인할 수 있습니다.\n판단은 베이스 주수 열로 하세요. 백테스트가 검증한 유일한 속성입니다. 점수는 표시 기준일 뿐 순위 지표가 아닙니다.",
     cols: ["티커", "섹터", "최장 베이스(주)", "거래당 손익 %", "발동률", "에피소드", "⭐ 일수", "최소 폭 %", "피봇 최근접", "일수", "최근 등재", "신호"],
-    sigName: { 0: "📊 형성 중", 1: "⏳ 수축 중", 2: "🔥 임박", 3: "🚀 돌파" },
+    sigName: { 0: "형성 중", 1: "수축 중", 2: "임박", 3: "돌파" },
     sigTip: {
       0: "유효한 베이스, 아직 발동선과 거리 있음",
       1: "수축 중, 발동까지 몇 % 남음",
@@ -1230,8 +1233,8 @@ function renderApproach(mode) {
   el("text", { x: ML + (DAYS - 1) * DX + BW / 2 + 10, y: yOf(lastP) + 4, class: "dlabel" }, svg)
     .textContent = `⭐ ${lastP}`;
   const leg = document.getElementById("co-legend");
-  // Legend descends (🚀 first) so the reading order matches the stack's
-  // visual top-down order.
+  // Legend descends (breakout first) so the reading order matches the
+  // stack's visual top-down order.
   SIGS.slice().reverse().forEach(i => {
     const k = div("key", leg); const r = div("rect", k);
     r.style.background = `var(${SIG_VAR[i]})`;
