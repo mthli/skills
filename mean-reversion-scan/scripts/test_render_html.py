@@ -156,6 +156,63 @@ def test_windowing_keeps_summary_full():
     assert p["pocket"]["pkt"][-1] == -0.5
 
 
+# ------------------------------------------------------------ sector panel
+
+def test_sector_edge_mean_interval_and_order():
+    # Two sectors, both over the cutoff. Tech's values average +2.0.
+    buckets = {"Technology": [1.0, 2.0, 3.0] * 4,
+               "Energy": [-1.0, 0.0, -2.0] * 4}
+    tallies = {"Technology": [8, 2, 2], "Energy": [3, 6, 3]}
+    out = rh.sector_edge(buckets, tallies, 10)
+    assert [r["s"] for r in out["rows"]] == ["Technology", "Energy"]
+    tech = out["rows"][0]
+    assert tech["exp"] == 2.0 and tech["n"] == 12
+    assert (tech["w"], tech["l"], tech["e"]) == (8, 2, 2)
+    # Interval brackets the mean and is symmetric about it.
+    assert tech["lo"] < 2.0 < tech["hi"]
+    assert round(tech["hi"] - 2.0, 6) == round(2.0 - tech["lo"], 6)
+    # All-signals average pools both sectors: (2.0 * 12 + -1.0 * 12) / 24.
+    assert out["all"] == 0.5 and out["allN"] == 24
+    assert out["folded"] == {"secs": 0, "n": 0, "names": []}
+
+
+def test_sector_edge_folds_thin_sectors_without_dropping_them():
+    buckets = {"Technology": [1.0] * 10, "Utilities": [5.0, 6.0],
+               "Real Estate": [9.0]}
+    out = rh.sector_edge(buckets, {}, 10)
+    assert [r["s"] for r in out["rows"]] == ["Technology"]
+    # Folded sectors stay countable — never silently dropped.
+    assert out["folded"] == {"secs": 2, "n": 3,
+                             "names": ["Real Estate", "Utilities"]}
+    # ...and still count toward the all-signals average.
+    assert out["allN"] == 13
+
+
+def test_sector_edge_single_sample_has_no_interval():
+    out = rh.sector_edge({"Energy": [4.0]}, {}, 1)
+    assert out["rows"][0]["exp"] == 4.0
+    assert out["rows"][0]["lo"] is None and out["rows"][0]["hi"] is None
+
+
+def test_sector_edge_empty():
+    out = rh.sector_edge({}, {}, 10)
+    assert out["rows"] == [] and out["all"] is None and out["allN"] == 0
+
+
+def test_payload_sector_panel_excludes_untagged():
+    rows, outcomes = _fixture()
+    # AAA tagged, BBB left out of the cache → its resolved signal is
+    # untagged, not a sector called "Unknown".
+    p = rh.build_payload(rows, outcomes, {"AAA": {"sector": "Technology"}})
+    se = p["sectorEdge"]
+    assert se["untagged"] == 1                     # BBB's expired signal
+    assert all(r["s"] != "Unknown" for r in se["rows"])
+    # AAA has 2 resolved, under the cutoff → folded, and no bar is drawn.
+    assert se["rows"] == []
+    assert se["folded"]["names"] == ["Technology"]
+    assert se["minN"] == rh.MIN_SECTOR_N
+
+
 def test_missing_ledger_renders_open_or_unresolved():
     rows, _ = _fixture()
     p = rh.build_payload(rows, {}, {})

@@ -15,6 +15,10 @@ cache and writes a single HTML file (no external assets, no network) with:
     day, long unbroken rows = stuck oversold) with a min-days filter
   - a ⭐-pocket-vs-rest running-expectancy chart against the backtest's
     in-sample reference values
+  - a per-sector realized-result panel: one bar per sector (avg %/resolved
+    signal) with its 95% interval drawn above it, read against a dashed
+    all-signals average — a sector whose interval reaches that line is not
+    distinguishable from the board and is drawn back to 42% opacity
   - a per-ticker summary table (the no-hover fallback for every value)
   - an English / 简体中文 / 繁體中文 / 日本語 / 한국어 language menu (top-right;
     choice kept in localStorage, first visit follows the browser language)
@@ -35,6 +39,7 @@ Usage:
 import argparse
 import csv
 import json
+import statistics
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -63,6 +68,11 @@ TARGET_WINDOW_DAYS = 5
 # out-of-sample". Re-validate quarterly alongside the backtest re-run.
 BACKTEST_POCKET_EXPECT = 1.83
 BACKTEST_BASELINE_EXPECT = 0.68
+# Sector panel: a sector needs this many resolved signals to get its own bar;
+# thinner ones fold into "Other" (counted in the note, never dropped
+# silently). Not a validated threshold — it is the point below which a 95%
+# interval is wider than any difference the bar could show.
+MIN_SECTOR_N = 10
 
 
 def load_history(path: Path) -> list[dict]:
@@ -98,6 +108,47 @@ def _f(v, default=None):
         return float(v)
     except (TypeError, ValueError):
         return default
+
+
+def sector_edge(buckets: dict[str, list[float]],
+                tallies: dict[str, list[int]], min_n: int) -> dict:
+    """Per-sector realized result: mean, 95% interval, best first.
+
+    The interval is the point of the panel, not decoration. Over ~40 trading
+    days most sectors straddle zero, and that IS the finding — a bare bar
+    invites reading a 3-point gap between two n=20 buckets as an edge when
+    the sampling noise alone is wider than the gap. Sectors under min_n fold
+    into a counted "Other" instead of showing a mean nobody should act on.
+    """
+    rows, folded_vals, folded_secs = [], [], []
+    for s, vals in buckets.items():
+        if len(vals) < min_n:
+            folded_vals.extend(vals)
+            folded_secs.append(s)
+            continue
+        m = statistics.mean(vals)
+        # 1.96 SE, normal approximation. Trade returns are fat-tailed and
+        # same-day signals are correlated, so the width is a "how much of
+        # this could be noise" cue, not a coverage guarantee.
+        half = (1.96 * statistics.stdev(vals) / len(vals) ** 0.5
+                if len(vals) > 1 else None)
+        w, l, e = tallies.get(s, [0, 0, 0])
+        rows.append({
+            "s": s, "n": len(vals), "exp": round(m, 2),
+            "lo": round(m - half, 2) if half is not None else None,
+            "hi": round(m + half, 2) if half is not None else None,
+            "w": w, "l": l, "e": e,
+        })
+    rows.sort(key=lambda r: (-r["exp"], r["s"]))
+    all_vals = [v for vals in buckets.values() for v in vals]
+    return {
+        "rows": rows,
+        "folded": {"secs": len(folded_secs), "n": len(folded_vals),
+                   "names": sorted(folded_secs)},
+        "all": round(statistics.mean(all_vals), 2) if all_vals else None,
+        "allN": len(all_vals),
+        "minN": min_n,
+    }
 
 
 def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
@@ -136,6 +187,9 @@ def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
                     for _ in run_ids]
     pocket_by_day: list[list[float]] = [[] for _ in run_ids]
     base_by_day: list[list[float]] = [[] for _ in run_ids]
+    # Resolved results bucketed by the signal's sector, plus its W/L/E tally.
+    sec_results: dict[str, list[float]] = {}
+    sec_tally: dict[str, list[int]] = {}
 
     today_pocket: list[str] = []
     for t, runs in by_ticker.items():
@@ -170,6 +224,9 @@ def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
             if pct is not None and cat in "WLE":
                 results.append(pct)
                 (pocket_by_day if pocket else base_by_day)[d].append(pct)
+                sec = sector_of(t)
+                sec_results.setdefault(sec, []).append(pct)
+                sec_tally.setdefault(sec, [0, 0, 0])["WLE".index(cat)] += 1
             if pocket:
                 pocket_days += 1
                 if d == n_days - 1:
@@ -245,6 +302,13 @@ def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
     all_results = [p for day in (pocket_by_day + base_by_day)
                    for p in day]
 
+    # "Unknown" is a cache miss, not a sector — it can't be acted on, so it
+    # leaves the panel and is reported as a coverage count instead.
+    untagged = len(sec_results.pop("Unknown", []))
+    sec_tally.pop("Unknown", None)
+    sec_panel = sector_edge(sec_results, sec_tally, MIN_SECTOR_N)
+    sec_panel["untagged"] = untagged
+
     return {
         "days": day_labels[win_start:],
         "window": {"total": n_days, "shown": n_days - win_start},
@@ -263,6 +327,7 @@ def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
             "minScore": VALIDATED_MIN_SCORE,
             "maxStreak": VALIDATED_MAX_STREAK,
         },
+        "sectorEdge": sec_panel,
         "kpi": {
             "runs": n_days,
             "span": [f"{rid[:4]}-{rid[4:6]}-{rid[6:8]}"
@@ -363,6 +428,12 @@ svg { display: block; }
 svg text { font: 11px system-ui, -apple-system, "Segoe UI", sans-serif; fill: var(--muted); }
 svg text.tick { font-variant-numeric: tabular-nums; }
 svg text.dlabel { font-size: 11.5px; font-weight: 600; fill: var(--ink-2); }
+/* A tick riding INSIDE a label — the sample size that flows off the end of
+   the sector panel's value. The rules above are `svg text.*`, which a tspan
+   never matches, so without this it inherits the label's ink and weight and
+   the sample size reads as loud as the number it qualifies. */
+svg tspan.tick { font-size: 11px; font-weight: 400; fill: var(--muted);
+                 font-variant-numeric: tabular-nums; }
 .legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 10px 0 0; font-size: 12.5px; color: var(--ink-2); align-items: center; }
 .legend .key { display: inline-flex; align-items: center; gap: 6px; }
 .legend .line { width: 14px; height: 2px; border-radius: 1px; }
@@ -435,6 +506,13 @@ svg a:hover text { text-decoration: underline; }
     <div class="legend" id="pk-legend"></div>
   </div>
 
+  <div class="card" id="se-card">
+    <h2 id="se-title">Which sectors paid</h2>
+    <p class="note" id="se-note"></p>
+    <div class="scroll" id="sechart"></div>
+    <div class="legend" id="se-legend"></div>
+  </div>
+
   <div class="card">
     <div class="head">
       <div>
@@ -502,6 +580,19 @@ const I18N = {
     pkPocket: "⭐ Pocket", pkBase: "The rest",
     pkRef: v => `backtest +${v}%`,
     pkTipN: n => `${n} resolved`,
+    seTitle: "Which sectors paid",
+    seNote: minN => `Average result per resolved signal, grouped by the name's sector — the ledger's answer to "does it matter what kind of stock this is".\nThe capped line above each bar is its 95% interval. Where that line reaches the dashed all-signals average, this sector is NOT distinguishable from the board as a whole — most of them still aren't. Sectors under ${minN} resolved signals fold away.\nA sector's edge here can just as easily be the last two months of sector beta as a durable property of its names — treat it as an observation to re-check each quarter, not a filter.`,
+    sePos: "Sector made money", seNeg: "Sector lost money",
+    seCI: "95% interval",
+    seAll: v => `All signals ${v >= 0 ? "+" : ""}${v}%`,
+    seTipN: n => `${n} resolved signals`,
+    seTipCI: (lo, hi) => `95% interval ${lo >= 0 ? "+" : ""}${lo}% to ${hi >= 0 ? "+" : ""}${hi}%`,
+    seTipWLE: (w, l, e) => `${w} won / ${l} lost / ${e} expired`,
+    seTipSame: "Overlaps the all-signals average — no readable difference",
+    seTipBetter: "Clears the all-signals average",
+    seTipWorse: "Below the all-signals average",
+    seFolded: (secs, n) => `\n${secs} sector(s) below the cutoff folded away (${n} signals).`,
+    seUntagged: n => `\n${n} resolved signals have no sector tag and sit outside this panel.`,
     rosterTitle: "Roster",
     rosterNote: "One row per name that ever signaled. Click a header to sort; click again to reverse. Every hover value from the charts is readable here.\nExpectancy = avg %/signal, the column to judge by; the win rate runs hot by construction, and 100% can still lose money. Status = the latest signal's state.",
     cols: ["Ticker", "Sector", "Expect %/sig", "Total %", "W / L / Exp", "Win rate", "⭐ days", "Days", "Last seen", "Status"],
@@ -554,6 +645,19 @@ const I18N = {
     pkPocket: "⭐ 口袋", pkBase: "其余信号",
     pkRef: v => `回测 +${v}%`,
     pkTipN: n => `已结算 ${n} 个`,
+    seTitle: "哪类股票真的赚到钱",
+    seNote: minN => `按股票所属板块，算它每个已结算信号的平均结果 —— 账本对"买什么类型的股票要不要紧"的回答。\n每根条上方那条带端点的横线是 95% 误差范围。横线只要够到"全体平均"那条虚线，就说明这个板块跟整体比不出差别 —— 目前大多数都还比不出。已结算信号少于 ${minN} 个的板块不单独画。\n这里的板块差距，同样可能只是最近两个月的板块行情，而不是这类股票更容易反弹 —— 当成每季度要复查的观察，别当成筛选条件。`,
+    sePos: "该板块赚钱", seNeg: "该板块亏钱",
+    seCI: "95% 误差范围",
+    seAll: v => `全体平均 ${v >= 0 ? "+" : ""}${v}%`,
+    seTipN: n => `已结算 ${n} 个信号`,
+    seTipCI: (lo, hi) => `95% 误差范围 ${lo >= 0 ? "+" : ""}${lo}% 到 ${hi >= 0 ? "+" : ""}${hi}%`,
+    seTipWLE: (w, l, e) => `${w} 赢 / ${l} 输 / ${e} 过期`,
+    seTipSame: "与全体平均重叠 —— 看不出差别",
+    seTipBetter: "确实高于全体平均",
+    seTipWorse: "确实低于全体平均",
+    seFolded: (secs, n) => `\n另有 ${secs} 个板块样本不足，已折叠（共 ${n} 个信号）。`,
+    seUntagged: n => `\n另有 ${n} 个已结算信号没有板块标签，不计入本图。`,
     rosterTitle: "信号名录",
     rosterNote: "每个发过信号的标的一行。点击表头排序；再次点击反向。图表中所有悬停数值在此均可查阅。\n期望 = 平均每单盈亏 %，挑票看这列；胜率天生虚高，100% 胜率也可能在亏钱。状态 = 最近一次信号的状态。",
     cols: ["代码", "行业", "期望 %/信号", "累计 %", "赢 / 输 / 过期", "胜率", "⭐ 天数", "上榜天数", "最近上榜", "状态"],
@@ -611,6 +715,19 @@ const I18N = {
     pkPocket: "⭐ 口袋", pkBase: "其餘訊號",
     pkRef: v => `回測 +${v}%`,
     pkTipN: n => `已結算 ${n} 個`,
+    seTitle: "哪類股票真的賺到錢",
+    seNote: minN => `按股票所屬板塊，算它每個已結算訊號的平均結果 —— 帳本對「買什麼類型的股票要不要緊」的回答。\n每根條上方那條帶端點的橫線是 95% 誤差範圍。橫線只要搆到「全體平均」那條虛線，就代表這個板塊跟整體比不出差別 —— 目前大多數都還比不出。已結算訊號少於 ${minN} 個的板塊不單獨畫。\n這裡的板塊差距，同樣可能只是最近兩個月的板塊行情，而不是這類股票更容易反彈 —— 當成每季要複查的觀察，別當成篩選條件。`,
+    sePos: "該板塊賺錢", seNeg: "該板塊虧錢",
+    seCI: "95% 誤差範圍",
+    seAll: v => `全體平均 ${v >= 0 ? "+" : ""}${v}%`,
+    seTipN: n => `已結算 ${n} 個訊號`,
+    seTipCI: (lo, hi) => `95% 誤差範圍 ${lo >= 0 ? "+" : ""}${lo}% 到 ${hi >= 0 ? "+" : ""}${hi}%`,
+    seTipWLE: (w, l, e) => `${w} 贏 / ${l} 輸 / ${e} 過期`,
+    seTipSame: "與全體平均重疊 —— 看不出差別",
+    seTipBetter: "確實高於全體平均",
+    seTipWorse: "確實低於全體平均",
+    seFolded: (secs, n) => `\n另有 ${secs} 個板塊樣本不足，已摺疊（共 ${n} 個訊號）。`,
+    seUntagged: n => `\n另有 ${n} 個已結算訊號沒有板塊標籤，不計入本圖。`,
     rosterTitle: "訊號名錄",
     rosterNote: "每個發過訊號的標的一行。點擊表頭排序；再次點擊反向。圖表中所有懸停數值在此均可查閱。\n期望 = 平均每單盈虧 %，挑票看這欄；勝率天生虛高，100% 勝率也可能在虧錢。狀態 = 最近一次訊號的狀態。",
     cols: ["代號", "產業", "期望 %/訊號", "累計 %", "贏 / 輸 / 過期", "勝率", "⭐ 天數", "上榜天數", "最近上榜", "狀態"],
@@ -668,6 +785,19 @@ const I18N = {
     pkPocket: "⭐ ポケット", pkBase: "その他",
     pkRef: v => `バックテスト +${v}%`,
     pkTipN: n => `確定 ${n} 件`,
+    seTitle: "どのセクターが実際に稼いだか",
+    seNote: minN => `銘柄のセクター別に、確定シグナル1件あたりの平均結果。「どんな種類の株かが効くのか」への台帳からの回答です。\n各バーの上にある端点付きの線は95%誤差範囲。この線が「全体平均」の破線に届くセクターは、全体との差が読み取れません — 今のところ大半がそうです。確定シグナルが${minN}件未満のセクターは折り畳まれます。\nここでの差は、銘柄の性質ではなく直近2か月のセクター物色である可能性も同じくらいあります — 四半期ごとに見直す観察であって、絞り込み条件ではありません。`,
+    sePos: "このセクターは利益", seNeg: "このセクターは損失",
+    seCI: "95%誤差範囲",
+    seAll: v => `全体平均 ${v >= 0 ? "+" : ""}${v}%`,
+    seTipN: n => `確定シグナル ${n} 件`,
+    seTipCI: (lo, hi) => `95%誤差範囲 ${lo >= 0 ? "+" : ""}${lo}% 〜 ${hi >= 0 ? "+" : ""}${hi}%`,
+    seTipWLE: (w, l, e) => `勝ち ${w} / 負け ${l} / 期限切れ ${e}`,
+    seTipSame: "全体平均と重なる — 差は読み取れない",
+    seTipBetter: "全体平均を明確に上回る",
+    seTipWorse: "全体平均を明確に下回る",
+    seFolded: (secs, n) => `\nサンプル不足の${secs}セクター（計${n}件）は折り畳み。`,
+    seUntagged: n => `\nセクター未設定の確定シグナル${n}件は本図の対象外。`,
     rosterTitle: "銘柄一覧",
     rosterNote: "シグナルが出たことのある銘柄を 1 行ずつ表示。ヘッダーをクリックでソート、もう一度クリックで逆順。チャートのホバー数値はすべてこの表で確認できます。\n期待値 = 平均損益 %/シグナル。銘柄選びはこの列で。勝率は構造的に高く出るため、100% でも損をしていることがある。ステータス = 直近シグナルの状態。",
     cols: ["ティッカー", "セクター", "期待値 %/シグナル", "累計 %", "勝 / 敗 / 期限切れ", "勝率", "⭐ 日数", "日数", "直近登場", "ステータス"],
@@ -725,6 +855,19 @@ const I18N = {
     pkPocket: "⭐ 포켓", pkBase: "나머지",
     pkRef: v => `백테스트 +${v}%`,
     pkTipN: n => `확정 ${n}건`,
+    seTitle: "어떤 섹터가 실제로 벌었나",
+    seNote: minN => `종목의 섹터별로 확정 신호 1건당 평균 결과 — "어떤 종류의 주식인지가 중요한가"에 대한 장부의 답입니다.\n각 막대 위에 있는 끝점 달린 선은 95% 오차 범위입니다. 이 선이 "전체 평균" 점선에 닿으면 그 섹터는 전체와 구분되지 않습니다 — 현재로선 대부분이 그렇습니다. 확정 신호가 ${minN}건 미만인 섹터는 접힙니다.\n여기서 보이는 차이는 종목의 성질이 아니라 최근 두 달의 섹터 장세일 가능성도 그만큼 큽니다 — 분기마다 다시 확인할 관찰이지, 필터가 아닙니다.`,
+    sePos: "이 섹터는 수익", seNeg: "이 섹터는 손실",
+    seCI: "95% 오차 범위",
+    seAll: v => `전체 평균 ${v >= 0 ? "+" : ""}${v}%`,
+    seTipN: n => `확정 신호 ${n}건`,
+    seTipCI: (lo, hi) => `95% 오차 범위 ${lo >= 0 ? "+" : ""}${lo}% ~ ${hi >= 0 ? "+" : ""}${hi}%`,
+    seTipWLE: (w, l, e) => `승 ${w} / 패 ${l} / 만료 ${e}`,
+    seTipSame: "전체 평균과 겹침 — 차이를 읽을 수 없음",
+    seTipBetter: "전체 평균을 확실히 상회",
+    seTipWorse: "전체 평균을 확실히 하회",
+    seFolded: (secs, n) => `\n표본이 부족한 ${secs}개 섹터(총 ${n}건)는 접었습니다.`,
+    seUntagged: n => `\n섹터 태그가 없는 확정 신호 ${n}건은 이 패널에서 제외됩니다.`,
     rosterTitle: "종목 목록",
     rosterNote: "신호가 나온 적 있는 종목을 한 행씩 표시. 헤더를 클릭해 정렬, 다시 클릭하면 역순. 차트의 모든 호버 값을 이 표에서 확인할 수 있습니다.\n기대값 = 평균 손익 %/신호. 종목은 이 열로 판단하세요. 승률은 구조적으로 높게 나와 100%여도 손해일 수 있습니다. 상태 = 최근 신호의 상태.",
     cols: ["티커", "섹터", "기대값 %/신호", "누적 %", "승 / 패 / 만료", "승률", "⭐ 일수", "일수", "최근 등재", "상태"],
@@ -782,6 +925,7 @@ document.title = T.title;
   document.getElementById("br-title").textContent = T.brTitle;
   document.getElementById("grid-title").textContent = T.gridTitle;
   document.getElementById("pk-title").textContent = T.pkTitle;
+  document.getElementById("se-title").textContent = T.seTitle;
   document.getElementById("roster-title").textContent = T.rosterTitle;
   document.getElementById("roster-note").textContent = T.rosterNote;
 }
@@ -1111,6 +1255,134 @@ function renderGrid(minRes) {
     else hideTip();
   });
   svg.addEventListener("pointerleave", () => { cross.setAttribute("visibility", "hidden"); hideTip(); });
+}
+
+// ---- sector edge: realized result per sector, with 95% intervals ----
+if (!DATA.sectorEdge.rows.length) {
+  // Nothing has cleared the cutoff yet — there is no panel to draw.
+  document.getElementById("se-card").style.display = "none";
+} else {
+  const SE = DATA.sectorEdge;
+  let note = T.seNote(SE.minN);
+  if (SE.folded.secs) note += T.seFolded(SE.folded.secs, SE.folded.n);
+  if (SE.untagged) note += T.seUntagged(SE.untagged);
+  document.getElementById("se-note").textContent = note;
+
+  const R = SE.rows;
+  // ML holds the longest sector name, measured rather than guessed: English
+  // "Communication Services" is the widest across all five locales at 141px
+  // (11.5px system-ui), so 150 clipped it by a pixel. MR holds the value
+  // column, parked at a fixed x rather than floating off each bar's end —
+  // bars point both ways here, and alternating label sides makes the
+  // numbers unscannable.
+  // The interval rides ABOVE its bar rather than through it. Both are
+  // horizontal marks on the same row, so drawn co-linearly the interval
+  // reads as a slot cut through the bar — and the surface halo it needs to
+  // stay legible off-bar is exactly what cuts it. BY is the bar's offset
+  // from the row center, CY the interval's.
+  const ML = 162, MR = 112, MT = 10, MB = 26, RH = 30, BH = 9, PW = 440;
+  const BY = 2, CY = -7, CAP = 3.5;
+  const W = ML + PW + MR, H = MT + R.length * RH + MB;
+  const ends = [0, SE.all];
+  R.forEach(r => {
+    ends.push(r.exp);
+    if (r.lo !== null) ends.push(r.lo, r.hi);
+  });
+  let lo = Math.min(...ends), hi = Math.max(...ends);
+  const pad = (hi - lo) * 0.08 || 1;
+  lo -= pad; hi += pad;
+  const xOf = v => ML + (v - lo) / (hi - lo) * PW;
+  const yOf = i => MT + i * RH + RH / 2;
+  const svg = el("svg", { width: W, height: H, viewBox: `0 0 ${W} ${H}` },
+    document.getElementById("sechart"));
+
+  // Gridlines on whole percents, solid hairlines; zero carries the axis tone
+  // because it is where every bar starts, not just another gridline.
+  const span = hi - lo;
+  const step = span > 24 ? 10 : span > 12 ? 5 : span > 6 ? 2 : 1;
+  for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) {
+    const zero = Math.abs(v) < 1e-9;
+    el("line", { x1: xOf(v), x2: xOf(v), y1: MT, y2: MT + R.length * RH,
+      stroke: zero ? "var(--axis)" : "var(--grid)" }, svg);
+    el("text", { x: xOf(v), y: H - 8, "text-anchor": "middle", class: "tick" },
+      svg).textContent = (v > 0 ? "+" : "") + v.toFixed(0) + "%";
+  }
+  // The all-signals average: the line an interval has to clear before a
+  // sector is saying anything the board isn't already saying.
+  const xAll = xOf(SE.all);
+  el("line", { x1: xAll, x2: xAll, y1: MT, y2: MT + R.length * RH,
+    stroke: "var(--ink-2)", "stroke-dasharray": "4 3", opacity: 0.75 }, svg);
+
+  // Bar with 4px rounded ends on the DATA end only — the zero end stays
+  // square against the axis it is anchored to.
+  const barPath = (x0, x1, y, h) => {
+    const r = Math.min(4, Math.abs(x1 - x0), h / 2), t = y - h / 2, b = y + h / 2;
+    const s = x1 >= x0 ? 1 : 0, d = x1 >= x0 ? -r : r;
+    return `M${x0} ${t}H${x1 + d}A${r} ${r} 0 0 ${s} ${x1} ${t + r}`
+      + `V${b - r}A${r} ${r} 0 0 ${s} ${x1 + d} ${b}H${x0}Z`;
+  };
+  // A missing interval (a lone sample) is not evidence of a difference, so
+  // it reads exactly like an overlapping one: not distinguishable. Without
+  // the null arm, a one-trade sector would be drawn solid and told the
+  // reader it "clears the average" on the strength of that single trade.
+  const straddles = r =>
+    r.lo === null || (r.lo <= SE.all && r.hi >= SE.all);
+
+  R.forEach((r, i) => {
+    const y = yOf(i), by = y + BY;
+    // The won/lost fills, not the table's +/− text tones: these are marks on
+    // a surface, they are the pair this page already validated for fills,
+    // and "green = made money" is the language every other panel here uses.
+    const col = r.exp >= 0 ? "var(--oW)" : "var(--oL)";
+    el("text", { x: ML - 10, y: by + 4, "text-anchor": "end", class: "dlabel" },
+      svg).textContent = secName(r.s);
+    el("path", { d: barPath(xOf(0), xOf(r.exp), by, BH), fill: col,
+      // A sector that overlaps the board average is drawn back, not hidden:
+      // the bar still reports its sign, at the weight the evidence supports.
+      opacity: straddles(r) ? 0.42 : 1 }, svg);
+    if (r.lo !== null) {
+      const cy = y + CY;
+      el("line", { x1: xOf(r.lo), x2: xOf(r.hi), y1: cy, y2: cy,
+        stroke: "var(--ink-2)", "stroke-width": 1.5 }, svg);
+      [r.lo, r.hi].forEach(v => el("line", { x1: xOf(v), x2: xOf(v),
+        y1: cy - CAP, y2: cy + CAP, stroke: "var(--ink-2)",
+        "stroke-width": 1.5 }, svg));
+    }
+    // Value then sample size in ONE text element: the n rides on a tspan
+    // whose dx flows it off the end of the percentage, so a two-digit
+    // sector return pushes it right instead of colliding with it. A second
+    // text at a fixed x would need the widest label measured first.
+    const vt = el("text", { x: ML + PW + 10, y: by + 4, class: "dlabel" }, svg);
+    vt.textContent = pctTxt(r.exp);
+    el("tspan", { dx: 8, class: "tick" }, vt).textContent = "n=" + r.n;
+    // Full-row hit target (30px tall, well past the 24px floor).
+    const hit = el("rect", { x: 0, y: y - RH / 2, width: W, height: RH,
+      fill: "transparent" }, svg);
+    hit.addEventListener("pointermove", ev => showTip(ev.clientX, ev.clientY,
+      tt => tipRows(tt, [
+        `${secName(r.s)} ${pctTxt(r.exp)}`,
+        T.seTipN(r.n),
+        r.lo === null ? "" : T.seTipCI(r.lo, r.hi),
+        straddles(r) ? T.seTipSame
+          : (r.exp > SE.all ? T.seTipBetter : T.seTipWorse),
+        T.seTipWLE(r.w, r.l, r.e),
+      ].filter(Boolean), col)));
+    hit.addEventListener("pointerleave", hideTip);
+  });
+
+  const leg = document.getElementById("se-legend");
+  [[T.sePos, "var(--oW)"], [T.seNeg, "var(--oL)"]].forEach(([lbl, c]) => {
+    const k = div("key", leg);
+    div("rect", k).style.background = c;
+    k.appendChild(document.createTextNode(lbl));
+  });
+  const ci = div("key", leg);
+  div("line", ci).style.background = "var(--ink-2)";
+  ci.appendChild(document.createTextNode(T.seCI));
+  const av = div("key", leg);
+  div("line", av).style.cssText =
+    "background:repeating-linear-gradient(90deg,var(--ink-2) 0 4px,transparent 4px 7px)";
+  av.appendChild(document.createTextNode(T.seAll(SE.all)));
 }
 
 // ---- roster table ----
