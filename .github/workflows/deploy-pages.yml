@@ -1,9 +1,9 @@
 name: Deploy scan dashboards to Pages
 
-# One workflow for BOTH dashboards on purpose: a Pages deployment replaces
+# One workflow for ALL dashboards on purpose: a Pages deployment replaces
 # the whole site with its artifact, so a per-skill workflow that staged only
-# its own page would wipe the other skill's page on every run. Any trigger
-# below re-renders and re-stages both.
+# its own page would wipe the other skills' pages on every run. Any trigger
+# below re-renders and re-stages all of them.
 #
 # develop only: the daily scan job commits data on develop, so master's
 # state files always lag — a master-triggered deploy would overwrite the
@@ -21,6 +21,10 @@ on:
       - mean-reversion-scan/state/outcomes.csv
       - mean-reversion-scan/state/sectors.json
       - mean-reversion-scan/scripts/render_history_html.py
+      - base-breakout-scan/state/history.csv
+      - base-breakout-scan/state/outcomes.csv
+      - base-breakout-scan/state/sectors.json
+      - base-breakout-scan/scripts/render_history_html.py
       - .github/workflows/deploy-pages.yml
   workflow_dispatch:
 
@@ -48,22 +52,24 @@ jobs:
         with:
           python-version: '3.14'
 
-      # Both renderers are stdlib-only (no pip install needed) and read
-      # their tracked state files (history.csv + sectors.json; the
-      # mean-reversion one additionally joins outcomes.csv).
+      # Every renderer is stdlib-only (no pip install needed) and reads its
+      # tracked state files (history.csv + sectors.json; mean-reversion and
+      # base-breakout additionally join their outcomes.csv ledger).
       - name: Render dashboards
         run: |
           python3 momentum-scan/scripts/render_history_html.py
           python3 mean-reversion-scan/scripts/render_history_html.py
+          python3 base-breakout-scan/scripts/render_history_html.py
 
       # The staged directory layout IS the URL layout: each page is served
       # at <pages-root>/<skill>/state/history.html, mirroring the repo
       # path. Deliberately no index.html at the root.
       - name: Stage site
         run: |
-          mkdir -p _site/momentum-scan/state _site/mean-reversion-scan/state
-          cp momentum-scan/state/history.html _site/momentum-scan/state/
-          cp mean-reversion-scan/state/history.html _site/mean-reversion-scan/state/
+          for skill in momentum-scan mean-reversion-scan base-breakout-scan; do
+            mkdir -p "_site/$skill/state"
+            cp "$skill/state/history.html" "_site/$skill/state/"
+          done
 
       - uses: actions/configure-pages@v5
 
