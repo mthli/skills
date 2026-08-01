@@ -316,6 +316,14 @@ svg text.dlabel { font-size: 11.5px; font-weight: 600; fill: var(--ink-2); }
 .legend .key { display: inline-flex; align-items: center; gap: 6px; }
 .legend .line { width: 14px; height: 2px; border-radius: 1px; }
 .legend .rect { width: 11px; height: 11px; border-radius: 3px; }
+/* Flexbox centers each key against the text's LINE box, which reserves a
+   descender's worth of space the mark should not be centered against. Align
+   to the letters instead: at 12.5px system-ui the cap band's center sits
+   0.78px above the line box's, the CJK ideographic square's 0.58px above,
+   so one pixel puts both within half a pixel. Measure against cap height,
+   never against a word's own ink — a label without a descender and one with
+   it would each want a different offset. */
+.legend .line, .legend .rect { position: relative; top: -1px; }
 .detail { position: relative; display: none; grid-template-columns: auto 1fr; gap: 8px 20px; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--grid); }
 /* top = .detail padding-top (12) + half the .mlbl line (8) - half the button (11): centers on the label row */
 .detail .dt-close { position: absolute; top: 9px; right: 0; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; padding: 0; border: none; background: none; border-radius: 6px; color: var(--muted); font-size: 15px; line-height: 1; cursor: pointer; }
