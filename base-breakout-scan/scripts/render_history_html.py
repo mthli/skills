@@ -311,10 +311,13 @@ def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
                 if tr is not None:
                     (pocket_by_day if pocket else base_by_day)[d].append(tr)
 
-            cur["pts"].append({"d": d, "tp": tp})
+            # The pivot moves as the base rebases, so it is a per-DAY value:
+            # the buy-stop price that was live that day, not the episode's.
+            pv = _n(_f(r.get("pivot_price")), 2)
+            cur["pts"].append({"d": d, "tp": tp, "pv": pv, "bw": _n(bw)})
             pts.append({
                 "d": d, "s": si, "p": 1 if pocket else 0, "k": streak,
-                "bw": _n(bw), "tp": _n(tp, 2),
+                "bw": _n(bw), "tp": _n(tp, 2), "pv": pv,
                 "sc": _n(_f(r.get("base_score"))), "wd": _n(wd),
                 "e": len(eps) - 1,
             })
@@ -350,6 +353,12 @@ def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
                     "od": e["od"], "fb": e["fb"],
                     "gap": e["gap"], "d0": seg[0]["d"] - win_start,
                     "tps": [_n(p["tp"], 2) for p in seg],
+                    # State on the segment's last day — the day the end dot
+                    # sits on, and the day its to-pivot % is measured
+                    # against. Base weeks rides along because it is the
+                    # ranker the backtest validated; the tooltip would
+                    # otherwise send the reader to the roster for it.
+                    "pv": seg[-1]["pv"], "bw": seg[-1]["bw"],
                 })
 
         last = pts[-1]
@@ -573,11 +582,27 @@ select {
   position: fixed; pointer-events: none; z-index: 10; display: none;
   background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
   box-shadow: 0 4px 14px rgba(0,0,0,0.14); padding: 8px 11px; font-size: 12.5px;
-  color: var(--ink-2); max-width: 340px;
+  /* 360 fits the widest identity line — "Communication Services · To pivot
+     +0.4% · Pivot $144.43" measures 336px, the Japanese equivalent 322 —
+     so the sector, the distance and the buy-stop price stay on one line. */
+  color: var(--ink-2); max-width: 360px;
 }
 #tip .h { display: flex; align-items: center; gap: 6px; }
 #tip .v { color: var(--ink); font-weight: 600; font-size: 13.5px; }
 #tip .k { width: 11px; height: 11px; border-radius: 3px; flex: none; }
+/* Tooltip keys are a stroke, not a box: at this density a filled swatch is
+   data-weight ink doing a label's job. Legends keep the box, since there it
+   mirrors the mark. */
+#tip .kline { width: 14px; height: 2px; border-radius: 1px; flex: none; }
+#tip .aux { margin-left: auto; color: var(--muted); font-size: 12px; padding-left: 10px; }
+#tip .sub { margin-top: 2px; }
+#tip .rule { border-top: 1px solid var(--border); margin: 7px 0; }
+/* The setup's numbers, aligned. Value wears the ink and the label the muted
+   step — in a tooltip the reader already knows which line they hovered and
+   came for the number. */
+#tip .kv { display: grid; grid-template-columns: auto 1fr; gap: 3px 14px; }
+#tip .kv .val { color: var(--ink); font-variant-numeric: tabular-nums; }
+#tip .oc { color: var(--ink); margin-top: 7px; }
 table { border-collapse: collapse; width: 100%; font-size: 13px; }
 th, td { text-align: right; padding: 6px 10px; border-bottom: 1px solid var(--grid); white-space: nowrap; }
 th { color: var(--muted); font-weight: 500; font-size: 12px; cursor: pointer; user-select: none;
@@ -719,6 +744,7 @@ const I18N = {
     baseWks: "Base",
     wks: n => `${n} wks`,
     toPivot: "To pivot",
+    pivotPx: "Pivot",
     score: "Score",
     width: "Width",
     trigIn: d => `Triggered after ${d} session(s)`,
@@ -784,6 +810,7 @@ const I18N = {
     baseWks: "基龄",
     wks: n => `${n} 周`,
     toPivot: "距触发",
+    pivotPx: "触发价",
     score: "评分",
     width: "宽度",
     trigIn: d => `第 ${d} 个交易日触发`,
@@ -854,6 +881,7 @@ const I18N = {
     baseWks: "基齡",
     wks: n => `${n} 週`,
     toPivot: "距觸發",
+    pivotPx: "觸發價",
     score: "評分",
     width: "寬度",
     trigIn: d => `第 ${d} 個交易日觸發`,
@@ -924,6 +952,7 @@ const I18N = {
     baseWks: "ベース",
     wks: n => `${n} 週`,
     toPivot: "ピボットまで",
+    pivotPx: "ピボット",
     score: "スコア",
     width: "幅",
     trigIn: d => `${d} セッション目にトリガー`,
@@ -994,6 +1023,7 @@ const I18N = {
     baseWks: "베이스",
     wks: n => `${n}주`,
     toPivot: "피봇까지",
+    pivotPx: "피봇",
     score: "점수",
     width: "폭",
     trigIn: d => `${d}번째 세션에 발동`,
@@ -1109,6 +1139,9 @@ function tickerList(arr) {
   return sp;
 }
 const pctTxt = (v, nd) => (v >= 0 ? "+" : "") + v.toFixed(nd === undefined ? 2 : nd) + "%";
+// The pivot is the one number on this page you could act on — it is the
+// buy-stop price. US large caps only, so the $ is not a currency guess.
+const pxTxt = v => "$" + v.toFixed(2);
 const cssVar = v => getComputedStyle(document.documentElement).getPropertyValue(v);
 const tip = document.getElementById("tip");
 function showTip(x, y, build) {
@@ -1125,6 +1158,30 @@ function tipRows(t, rows, keyColor) {
   if (keyColor) { const k = document.createElement("span"); k.className = "k"; k.style.background = keyColor; head.appendChild(k); }
   const v = document.createElement("span"); v.className = "v"; v.textContent = rows[0]; head.appendChild(v);
   rows.slice(1).filter(Boolean).forEach(r => div(null, t, r));
+}
+// The two rich tooltips (a trajectory, a grid cell) carry three different
+// kinds of fact, and as one flat list of sentences they read as a wall.
+// Split them: who this is, what the setup measured, what the trade did.
+function tipCard(t, { title, aux, color, line, sub, kv, notes }) {
+  const head = div("h", t);
+  if (color) {
+    const k = document.createElement("span");
+    k.className = line ? "kline" : "k";
+    k.style.background = color;
+    head.appendChild(k);
+  }
+  const v = document.createElement("span");
+  v.className = "v"; v.textContent = title;
+  head.appendChild(v);
+  if (aux) div("aux", head, aux);
+  if (sub) div("sub", t, sub);
+  const pairs = (kv || []).filter(Boolean);
+  if (pairs.length) {
+    div("rule", t);
+    const g = div("kv", t);
+    pairs.forEach(([k, val]) => { div(null, g, k); div("val", g, val); });
+  }
+  (notes || []).filter(Boolean).forEach((n, i) => div(i ? null : "oc", t, n));
 }
 // Episode lines for a tooltip: what happened, and the numbers behind it.
 function epLines(e) {
@@ -1299,11 +1356,18 @@ function renderApproach(mode) {
     focus(pinned !== null ? pinned : i);
     if (i === null) { hideTip(); return; }
     const a = eps[i];
-    showTip(ev.clientX, ev.clientY, tt => tipRows(tt, [
-      a.t + (a.pk ? " ⭐" : ""),
-      `${secName(a.sec)} · ${T.toPivot} ${pctTxt(a.tps[a.tps.length - 1], 1)}`,
-      ...epLines(a),
-    ], cssVar(OC_VAR[a.oc === null || a.oc === undefined ? null : a.oc])));
+    showTip(ev.clientX, ev.clientY, tt => tipCard(tt, {
+      title: a.t + (a.pk ? " ⭐" : ""),
+      aux: secName(a.sec),
+      color: cssVar(OC_VAR[a.oc === null || a.oc === undefined ? null : a.oc]),
+      line: true,
+      kv: [
+        a.pv == null ? null : [T.pivotPx, pxTxt(a.pv)],
+        [T.toPivot, pctTxt(a.tps[a.tps.length - 1], 1)],
+        a.bw == null ? null : [T.baseWks, T.wks(a.bw)],
+      ],
+      notes: epLines(a),
+    }));
   });
   svg.addEventListener("pointerleave", () => { focus(pinned); hideTip(); });
   svg.addEventListener("click", ev => {
@@ -1550,13 +1614,23 @@ function renderGrid(minDays) {
       const s = DATA.series.find(x => x.t === t.dataset.t);
       const p = s.pts[+t.dataset.i];
       const e = s.eps[p.e] || {};
-      showTip(ev.clientX, ev.clientY, tt => tipRows(tt, [
-        s.t + (p.p ? " ⭐" : ""),
-        `${DATA.days[p.d]} · ${T.spellDay(p.k)}${p.p ? ` · ${T.pocketDay}` : ""}`,
-        `${T.sigName[p.s]} · ${T.toPivot} ${p.tp == null ? "—" : pctTxt(p.tp, 1)}`,
-        `${T.baseWks} ${p.bw == null ? "—" : T.wks(p.bw)} · ${T.width} ${p.wd == null ? "—" : p.wd.toFixed(1) + "%"} · ${T.score} ${p.sc == null ? "—" : p.sc.toFixed(0)}`,
-        ...epLines(e),
-      ], cssVar(SIG_VAR[p.s])));
+      showTip(ev.clientX, ev.clientY, tt => tipCard(tt, {
+        title: s.t + (p.p ? " ⭐" : ""),
+        aux: DATA.days[p.d],
+        color: cssVar(SIG_VAR[p.s]),
+        // The tier name belongs with the day it describes, not in a row of
+        // its own: the cell's color already said it, this only names it.
+        sub: `${T.sigName[p.s]} · ${T.spellDay(p.k)}`
+          + (p.p ? ` · ${T.pocketDay}` : ""),
+        kv: [
+          p.pv == null ? null : [T.pivotPx, pxTxt(p.pv)],
+          [T.toPivot, p.tp == null ? "—" : pctTxt(p.tp, 1)],
+          [T.baseWks, p.bw == null ? "—" : T.wks(p.bw)],
+          [T.width, p.wd == null ? "—" : p.wd.toFixed(1) + "%"],
+          [T.score, p.sc == null ? "—" : p.sc.toFixed(0)],
+        ],
+        notes: epLines(e),
+      }));
     } else hideTip();
   });
   svg.addEventListener("pointerleave", hideTip);
