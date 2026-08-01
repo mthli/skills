@@ -1190,13 +1190,18 @@ function epLines(e) {
   if (e.gap != null) out.push(T.gapOver(e.gap));
   // A triggered episode with no result is a trade still running, not a hole
   // in the data: the ledger only scores it once the full horizon prints.
+  const open = e.tr == null && e.od != null;
   if (e.tr != null) out.push(T.tradeRet(e.tr));
-  else if (e.od != null) out.push(T.tradeOpen(e.od, DATA.horizon));
-  // Both sides of the fell-back flag, since holding the pivot through the
-  // first week is the stronger half of the split (+5.3%/trade, 13% stop-hit
-  // vs -4.3% and 72%). A null means the 5 sessions have not printed yet, so
-  // neither line is true — that case says nothing.
-  if (e.fb != null) out.push(e.fb ? T.fellBack : T.heldPivot);
+  else if (open) out.push(T.tradeOpen(e.od, DATA.horizon));
+  // How the first week went, but only while the trade is still running: it
+  // is the one forward-looking fact there (+5.3%/trade and 13% stop-hit for
+  // the ones that hold the pivot, -4.3% and 72% for the ones that don't).
+  // On a finished trade the result line above already answers it, and
+  // repeating it on all 154 of those pushes a signal the exit-rule backtest
+  // says NOT to act on — cutting at that first close below the pivot costs
+  // the ⭐ pocket 3.6pt per trade. A null fb means those 5 sessions have not
+  // printed yet, so neither line is true.
+  if (open && e.fb != null) out.push(e.fb ? T.fellBack : T.heldPivot);
   return out;
 }
 
