@@ -420,6 +420,13 @@ h1 { font-size: 21px; margin: 0 0 2px; }
 }
 .kpi .lbl { color: var(--ink-2); font-size: 12.5px; }
 .kpi .val { font-size: 22px; font-weight: 600; margin-top: 2px; }
+/* A qualifier riding INSIDE a value — the breadth tier that follows the count.
+   At the value's own 22px semibold, "48 · WASHOUT" is wider than the tile
+   (~138px of inner width once six tiles share the row) and folds onto a
+   second line, which then pushes every neighbouring tile taller. Dropping it
+   to label size both fits and reads right: the count is the number, the tier
+   only qualifies it, and the sub-line underneath already spells the tier out. */
+.kpi .val .qual { font-size: 12.5px; font-weight: 400; color: var(--muted); }
 .kpi .sub2 { color: var(--muted); font-size: 12px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .scroll { overflow-x: auto; }
 .vclip { max-height: 540px; overflow-y: auto; }
@@ -1028,7 +1035,13 @@ function tipRows(t, rows, keyColor) {
     tile(T.kPocket, pctTxt(k.pexp.v),
          T.kPocketSub(k.pexp.n, DATA.pocket.refPkt));
   const b = k.latestBreadth;
-  tile(T.kBreadth, `${b.n} · ${T.tierName[b.tier]}`, T.tierSub[b.tier]);
+  const bv = document.createElement("span");
+  bv.appendChild(document.createTextNode(`${b.n}`));
+  const qual = document.createElement("span");
+  qual.className = "qual";
+  qual.textContent = ` · ${T.tierName[b.tier]}`;
+  bv.appendChild(qual);
+  tile(T.kBreadth, bv, T.tierSub[b.tier]);
   tile(T.kToday, `${k.todayPocket.length}`, tickerList(k.todayPocket));
   tile(T.kStuck, `${k.stuck.length}`, tickerList(k.stuck));
 }
