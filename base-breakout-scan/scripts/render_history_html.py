@@ -595,7 +595,10 @@ select {
    mirrors the mark. */
 #tip .kline { width: 14px; height: 2px; border-radius: 1px; flex: none; }
 #tip .aux { margin-left: auto; color: var(--muted); font-size: 12px; padding-left: 10px; }
-#tip .sub { margin-top: 2px; }
+/* Shorthand, not margin-top: the page-level .sub (the h1's subtitle) ships
+   a 20px bottom margin, and this line would inherit it and float the rule
+   away from the header. */
+#tip .sub { margin: 2px 0 0; }
 #tip .rule { border-top: 1px solid var(--border); margin: 7px 0; }
 /* The setup's numbers, aligned. Value wears the ink and the label the muted
    step — in a tooltip the reader already knows which line they hovered and
