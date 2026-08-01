@@ -69,6 +69,16 @@ uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy>=1.24,<3' \
 uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy>=1.24,<3' \
   python <SKILL_DIR>/scripts/backtest_outcomes.py            # touch entry (buy-stop)
 ... python <SKILL_DIR>/scripts/backtest_outcomes.py --entry confirmed  # close>pivot on 1.5x vol
+
+# Rebuild state/outcomes.csv from scratch (normal scans keep it current on
+# their own; this is the seed / repair path, and the only one that works
+# when the scan can't run). Idempotent.
+... python <SKILL_DIR>/scripts/backtest_outcomes.py --write-ledger
+
+# Render history.csv + outcomes.csv into a self-contained HTML dashboard at
+# state/history.html (approach-to-pivot trajectories, watchlist tension,
+# ⭐ pocket vs rest, maturity grid, roster). Stdlib-only, no network, no uv:
+python <SKILL_DIR>/scripts/render_history_html.py   # --days 60 --out <path>
 ```
 
 ## Parameters
@@ -91,7 +101,8 @@ uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy>=1.24,<3' \
 | `--show-history` | — | Print history summary, no new scan. |
 | `--clear-history` | — | Wipe `state/history.csv`. |
 | `--prune-non-trading-days` | — | One-shot cleanup: drop history rows whose ET-date `run_date` is not an NYSE trading day. |
-| `--no-save` | — | Don't append this run to history (one-off exploration). |
+| `--no-save` | — | Don't append this run to history (one-off exploration). Also skips the outcomes-ledger refresh, since both are state writes. |
+| `--no-outcomes` | — | Skip the outcomes-ledger refresh. Every normal run resolves any episode whose trade has finished — reusing the bars already in memory, so no extra network — and upserts `state/outcomes.csv`, the file the HTML dashboard reads for realized results. Use this only to isolate the scan itself. |
 | `--save-stale` | — | Override the non-trading-day guard. By default the script skips `append_history` on weekends / NYSE holidays so streak counts don't inflate from duplicate-data days. Pre-market runs on a real trading day still save. |
 | `--allow-same-day` | — | **[advanced/debug]** Append even if a row exists for today's ET date. Default overwrites today's snapshot, the right behavior for normal use since intra-day re-runs should refresh, not duplicate. Enable only for debugging or forced multi-snapshot workflows. |
 | `--format` | markdown | `markdown` or `json`. |
@@ -280,7 +291,7 @@ When base detection fails but the ticker broke out in the last 10 trading days, 
 
 ## Backtested outcomes (2026-05-14 → 2026-07-29 sample)
 
-`scripts/backtest_outcomes.py` replays `state/history.csv` as the canonical trade: while a name stays on the watchlist, a buy-stop sits at the most recent pivot (gaps pay real slippage); dropout cancels the order. 426 testable episodes over a flat tape; re-run quarterly. Findings, strongest first; full evidence, magnitudes, and caveats in `references/backtest-findings.md` (sections throughout this file reference the numbering below):
+`scripts/backtest_outcomes.py` replays `state/history.csv` as the canonical trade: while a name stays on the watchlist, a buy-stop sits at the most recent pivot (gaps pay real slippage); dropout cancels the order. 426 testable episodes over a flat tape; re-run quarterly. The same replay with `--write-ledger` persists each finished episode to `state/outcomes.csv`, which is how the dashboard shows whether the pockets below still pay **out of sample** rather than only quoting these in-sample numbers. Findings, strongest first; full evidence, magnitudes, and caveats in `references/backtest-findings.md` (sections throughout this file reference the numbering below):
 
 1. **Base length ≥ 20 weeks is the one big validated edge**: +4.9%/trade, 75% win vs −0.8% baseline; sub-10-week bases are where the failures live. The ⭐️ validated pocket.
 2. **Volume dry-up is INVERTED vs doctrine in this sample**: deep dry-up (< 0.70) ran −8.8% with 61% stop-hit; no-dry-up was the only profitable band. Re-validate before hard-coding.
@@ -331,6 +342,8 @@ Relay the script's markdown output **in full — every row of the top-N table an
 - `state/history.csv`: one snapshot per US market day (America/New_York) × **every ticker that passed the funnel that day** (all kept picks, not only the displayed top-N; below-cutoff rows preserve near-miss context, same design as momentum-scan, and persistence stats filter to rank ≤ top-N at read time, so Streak / RankΔ only count appearances you saw). Columns: `run_id, run_date, ticker, rank, score_rank, base_score, base_weeks, width_pct, bb_pctile, vol_dryup_ratio, rs_slope_pct_per_wk, to_pivot_pct, pivot_price, signal`. (The script computes `anchor_mode` but doesn't persist it to history; it only matters for the current scan's Sig column markers.) Re-running the same ET day overwrites that day's rows. Writes are atomic (.tmp + rename) so a crash mid-write can't truncate. **The skill gets more useful with each subsequent run**: the first run is only the picks; later runs add streak, RankΔ, breakout/breakdown tracking, and base-maturation signal.
 - `state/universe.txt`: cached universe list, auto-refreshed every 7 days via Yahoo's screener.
 - `state/sectors.json`: per-ticker `{sector, industry, ts}` cache. 30-day TTL per ticker. Fetched on demand for top-N picks only.
+- `state/outcomes.csv`: the outcomes ledger — one row per **finished episode**, keyed `(start_run_id, ticker)`, which is the unit the canonical trade actually operates on (a buy-stop living from first listing to dropout), not the run-day. Columns: `start_run_id, ticker, end_run_id, outcome, days_to_trigger, gap_pct, ret5, ret10, ret_h, trade_ret_pct, fellback5, stop_hit, censored, horizon, stop_pct, entry`. `outcome` is `TRIGGERED` / `FADED` / `BROKE_DOWN`; episodes still in flight (no trigger yet *and* the watch window runs past the data edge) are deliberately left out, so a missing row means "undecided", never "failed". The last three columns record the resolution convention so a consumer can tell whether the numbers are comparable to the published findings (horizon 20 / stop 8% / touch). Written by **every scan**, which resolves the pending episodes off the 14 months of adjusted OHLCV it already downloaded — the same units the recorded pivots were computed in, so this path and the backtest's own fetch score an episode identically. Work is bounded by ledger *state*, not by a date window: a trade completes 20 sessions after its trigger, which can fall long after the name left the list, so the pending set is "no row yet, or a row still censored / missing its trade result" and drains on its own. Most of that set is re-resolved every run and writes back identical rows; the scan reports only what actually moved. **One structural blind spot**: the scan holds bars for the *current* universe, so an episode whose ticker has since dropped out (market-cap / volume drift, or an acquisition) freezes at whatever completeness it had — and those names did not leave at random, so letting the gap grow biases the expectancies the dashboard reports. The scan names the stuck tickers on stderr; `backtest_outcomes.py --write-ledger` fetches **by ticker** rather than by universe and reaches them, which is one more reason to run it on the quarterly cadence. Both writers use a keyed upsert that preserves rows the run couldn't reach, and a failed refresh never costs the run its watchlist. Tracked in git: only regenerable while yfinance still serves the price window (~13 months) and the ticker still trades.
+- `state/history.html`: self-contained HTML dashboard rendered from `history.csv` + `outcomes.csv` + `sectors.json` by `scripts/render_history_html.py`: KPI row, an approach-to-pivot chart (one line per episode, y = distance to the pivot, so the zero line *is* the trigger and a line reaching it is a breakout; filterable to ⭐ pocket / triggered / all), a watchlist-tension chart (each day's list stacked by Sig tier with the ⭐ pocket count overlaid), a ⭐-pocket-vs-rest running trade-expectancy chart against the backtest's in-sample references, a date × ticker maturity grid (cell = that day's Sig tier, dot = ⭐ pocket day, row end = realized result), a sortable roster, and an EN/简中/繁中/日/한 language menu. **Deliberately not the sibling scans' chart sets**: momentum-scan draws rank trajectories (persistence story) and mean-reversion-scan draws outcome grids (event story); this one's spine is distance-to-pivot over time, the one axis in the family with an absolute meaning. No external assets or network; regenerable at any time, so it's gitignored. Re-render after a scan when the user wants the visual view.
 
 Storage growth: each run adds one row per funnel-passing name: ~50-90 rows × ~150 bytes ≈ 8-14 KB in practice. A year of daily runs ≈ 2-3.5 MB; weekly ≈ 400-700 KB. Negligible for years of typical use.
 
@@ -369,4 +382,4 @@ cd <SKILL_DIR>/scripts && uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' \
   --with 'numpy>=1.24,<3' --with pytest pytest -q
 ```
 
-Pure-logic tests (no network) cover the base-detection geometry, scoring components, signal classification, and history/persistence logic (`test_scan.py`), the vol-collapse filter's split-half math, thresholds, and exclusion behavior (`test_vol_collapse.py`), and the paginated universe refresh with its fallback heuristics (`test_refresh_universe.py`).
+Pure-logic tests (no network) cover the base-detection geometry, scoring components, signal classification, and history/persistence logic (`test_scan.py`), the vol-collapse filter's split-half math, thresholds, and exclusion behavior (`test_vol_collapse.py`), the paginated universe refresh with its fallback heuristics (`test_refresh_universe.py`), and the dashboard payload plus the ledger's episode classification and upsert (`test_render_html.py`). The last file also carries the drift guards that pin the stdlib-only renderer to `scan.py`'s `VALIDATED_BASE_WEEKS` and Sig vocabulary, and its reference lines to `backtest_outcomes.py`'s resolution defaults — the renderer duplicates those numerically because it must not import yfinance.
