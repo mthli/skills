@@ -38,6 +38,7 @@ import json
 import sys
 import time
 import warnings
+import csv
 from datetime import date, datetime, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -1478,6 +1479,133 @@ def append_history(picks: list[dict], run_id: str, run_date: datetime,
     tmp_path.replace(HISTORY_FILE)
 
 
+# -----------------------------------------------------------------------
+# Outcomes ledger — resolve finished episodes off this run's own bars.
+# -----------------------------------------------------------------------
+
+def pending_episodes(episodes: list, ledger: dict) -> list:
+    """Episodes the ledger can't yet score.
+
+    Bounded by ledger STATE, not by a date window: an episode's trade only
+    completes 20 sessions after its trigger, which can fall long after the
+    name left the watchlist, so "recently ended" would miss exactly the rows
+    that are still ripening. The pending set is instead "no row yet, or a
+    row still flagged censored / still missing its trade result", and it
+    drains on its own as price history accumulates."""
+    out = []
+    for ep in episodes:
+        row = ledger.get((ep.start_day, ep.ticker))
+        if (row is None or row.get("censored") == "1"
+                or not row.get("trade_ret_pct")):
+            out.append(ep)
+    return out
+
+
+def refresh_outcomes(bars: pd.DataFrame, spy_close: pd.Series) -> dict:
+    """Resolve pending episodes against the bars this run already holds and
+    upsert them into the outcomes ledger. Returns a breakdown of the pass.
+
+    The scan downloads 14 months of adjusted OHLCV for the whole universe —
+    precisely the input episode resolution needs, in the same units the
+    recorded pivots were computed in — so the ledger rides along for free.
+    The alternative (a separate job re-downloading the same prices on its
+    own schedule) has to keep its own cache fresh, and a per-ticker cache
+    that never extends existing bars silently stops resolving anything.
+
+    Reports PROGRESS, not work: most of the pending set is re-resolved on
+    every run and writes back identical rows, because a trade stays pending
+    until its horizon completes. `complete` / `new` are the numbers that
+    actually move, and the coverage line names what this path structurally
+    cannot reach — episodes whose ticker has left the universe, which only
+    the by-ticker rebuild in backtest_outcomes.py can score.
+
+    Never raises into the scan: a broken ledger refresh must not cost the
+    user their watchlist, which is the run's actual product."""
+    # Imported here, not at module scope: resolution must stay a single
+    # implementation shared with the backtest (the ledger has to mean what
+    # references/backtest-findings.md quotes), but it is an optional side
+    # task — a failure inside it should cost the ledger, not the scan's
+    # ability to start.
+    import backtest_outcomes as bt
+
+    stats = {"complete": 0, "new": 0, "rewritten": 0, "open": 0,
+             "mismatch": 0, "no_bars": []}
+    if not HISTORY_FILE.exists() or spy_close.empty:
+        return stats
+    episodes, _ = bt.load_episodes(HISTORY_FILE)
+    ledger: dict = {}
+    if bt.OUTCOMES_CSV.exists():
+        with open(bt.OUTCOMES_CSV, newline="", encoding="utf-8") as f:
+            ledger = {(r["start_run_id"], r["ticker"]): r
+                      for r in csv.DictReader(f)}
+    todo = pending_episodes(episodes, ledger)
+    if not todo:
+        return stats
+
+    spy = pd.DataFrame({"Close": spy_close})
+    calendar = spy.index
+    resolved = []
+    for ep in todo:
+        try:
+            tb = bars[ep.ticker].dropna(subset=["Close"])
+        except (KeyError, TypeError, ValueError):
+            tb = None
+        if tb is None or tb.empty:
+            stats["no_bars"].append(ep.ticker)   # left the universe
+            continue
+        if not bt.units_consistent(ep, tb):
+            stats["mismatch"] += 1               # corporate action rescaled it
+            continue
+        o = bt.resolve_episode(ep, tb, spy, calendar, bt.DEFAULT_HORIZON,
+                               bt.DEFAULT_STOP_PCT, bt.DEFAULT_ENTRY)
+        if o is None:
+            stats["open"] += 1                   # watch window hasn't elapsed
+            continue
+        resolved.append(o)
+
+    rows = bt.ledger_rows(resolved, bt.DEFAULT_HORIZON, bt.DEFAULT_STOP_PCT,
+                          bt.DEFAULT_ENTRY)
+    # ledger_rows drops episodes that are still undecided (no trigger yet and
+    # the watch window ran past the data edge) — count them as open too.
+    stats["open"] += len(resolved) - len(rows)
+    stats["rewritten"] = len(rows)
+    for r in rows:
+        old = ledger.get((r["start_run_id"], r["ticker"]))
+        if old is None:
+            stats["new"] += 1
+        if r["trade_ret_pct"] is not None and not (old or {}).get(
+                "trade_ret_pct"):
+            stats["complete"] += 1
+    if rows:
+        bt.write_ledger(rows, bt.OUTCOMES_CSV)
+    report_outcome_refresh(stats)
+    return stats
+
+
+def report_outcome_refresh(stats: dict) -> None:
+    """One stderr line when something moved, one when something is stuck.
+    Silence when a pass changed nothing is deliberate: a line that prints the
+    same ~300-of-400 ratio every day is noise, and noise is what makes the
+    failure message below easy to miss."""
+    moved = []
+    if stats["complete"]:
+        moved.append(f"{stats['complete']} newly complete")
+    if stats["new"]:
+        moved.append(f"{stats['new']} newly scored")
+    if moved:
+        print(f"outcomes: {', '.join(moved)} "
+              f"({stats['rewritten']} re-resolved, {stats['open']} still "
+              f"open) → outcomes.csv", file=sys.stderr)
+    if stats["no_bars"]:
+        names = sorted(set(stats["no_bars"]))
+        shown = ", ".join(names[:8]) + (", …" if len(names) > 8 else "")
+        print(f"outcomes: {len(stats['no_bars'])} episode(s) on "
+              f"{len(names)} ticker(s) no longer in the universe stay "
+              f"unresolved here ({shown}); backtest_outcomes.py "
+              f"--write-ledger fetches by ticker and reaches them.",
+              file=sys.stderr)
+
+
 def enrich_with_persistence(picks: list[dict], history: pd.DataFrame,
                             current_run_id: str) -> list[dict]:
     """Add streak / first_seen / rank_delta from prior runs.
@@ -2469,6 +2597,13 @@ def build_argparser() -> argparse.ArgumentParser:
                           "NYSE trading day."))
     ap.add_argument("--no-save", action="store_true",
                     help="Don't append this run to history.")
+    ap.add_argument("--no-outcomes", action="store_true",
+                    help=("Skip the outcomes-ledger refresh. Each run "
+                          "normally resolves any episode whose trade has "
+                          "finished, reusing the bars already downloaded, "
+                          "and upserts state/outcomes.csv (what the HTML "
+                          "dashboard reads for realized results). Costs no "
+                          "extra network; use this only to isolate the scan."))
     ap.add_argument("--save-stale", action="store_true",
                     help=("Save to history even when today's ET date is a "
                           "weekend / NYSE holiday. Default skips so streak "
@@ -2718,6 +2853,15 @@ def main():
         else:
             append_history(picks, run_id, now,
                            allow_same_day=args.allow_same_day)
+        # After the save, so today's rows close out any episode that ended.
+        # Same gate as history: --no-save means this run writes no state.
+        if not args.no_outcomes:
+            try:
+                refresh_outcomes(bars, spy_close)
+            except Exception as e:      # never cost the user their watchlist
+                print(f"outcomes: ledger refresh failed ({e}); the watchlist "
+                      f"below is unaffected. Rebuild with "
+                      f"backtest_outcomes.py --write-ledger.", file=sys.stderr)
 
     suppress_picks = (args.regime_gate == "strict"
                       and regime is not None
