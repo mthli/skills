@@ -313,17 +313,25 @@ svg text { font: 11px system-ui, -apple-system, "Segoe UI", sans-serif; fill: va
 svg text.tick { font-variant-numeric: tabular-nums; }
 svg text.dlabel { font-size: 11.5px; font-weight: 600; fill: var(--ink-2); }
 .legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 10px 0 0; font-size: 12.5px; color: var(--ink-2); align-items: center; }
-.legend .key { display: inline-flex; align-items: center; gap: 6px; }
-.legend .line { width: 14px; height: 2px; border-radius: 1px; }
+/* Keys align on the BASELINE, not on centre, and every offset below is a whole
+   number. Both facts are load-bearing.
+   Centring leaves the mark's top edge and the text baseline at unrelated
+   fractional offsets, and Chrome snaps each to a whole device pixel on its own.
+   Rows land wherever the 18.75px line-height and the cards above put them, so
+   on a row whose fraction falls in a narrow window the two round OPPOSITE ways
+   and the mark jumps a full pixel — one legend visibly off while its identical
+   siblings are fine. Layout numbers can't see it; only the painted pixels can.
+   Baseline alignment sits the mark's bottom edge ON the baseline, so mark-top
+   to baseline is exactly the mark's height. Integer height + integer nudge =
+   integer distance, and the pair always snaps together wherever the row lands.
+   Heights must share a parity: an odd box centres on a half-pixel and an even
+   one on a whole pixel, so 11px and 2px can never agree. Hence the 3px line. */
+.legend .key { display: inline-flex; align-items: baseline; gap: 6px; }
+.legend .line { width: 14px; height: 3px; border-radius: 1.5px; }
 .legend .rect { width: 11px; height: 11px; border-radius: 3px; }
-/* Flexbox centers each key against the text's LINE box, which reserves a
-   descender's worth of space the mark should not be centered against. Align
-   to the letters instead: at 12.5px system-ui the cap band's center sits
-   0.78px above the line box's, the CJK ideographic square's 0.58px above,
-   so one pixel puts both within half a pixel. Measure against cap height,
-   never against a word's own ink — a label without a descender and one with
-   it would each want a different offset. */
-.legend .line, .legend .rect { position: relative; top: -1px; }
+.legend .line, .legend .rect { position: relative; }
+.legend .rect { top: 1px; }    /* 11px box, centre 4.5px up from the baseline */
+.legend .line { top: -3px; }   /* 3px box, same 4.5px centre */
 .detail { position: relative; display: none; grid-template-columns: auto 1fr; gap: 8px 20px; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--grid); }
 /* top = .detail padding-top (12) + half the .mlbl line (8) - half the button (11): centers on the label row */
 .detail .dt-close { position: absolute; top: 9px; right: 0; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; padding: 0; border: none; background: none; border-radius: 6px; color: var(--muted); font-size: 15px; line-height: 1; cursor: pointer; }

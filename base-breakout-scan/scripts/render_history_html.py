@@ -651,18 +651,33 @@ svg text.dlabel { font-size: 11.5px; font-weight: 600; fill: var(--ink-2); }
 svg tspan.tick { font-size: 11px; font-weight: 400; fill: var(--muted);
                  font-variant-numeric: tabular-nums; }
 .legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 10px 0 0; font-size: 12.5px; color: var(--ink-2); align-items: center; }
-.legend .key { display: inline-flex; align-items: center; gap: 6px; }
-.legend .line { width: 14px; height: 2px; border-radius: 1px; }
+/* Keys align on the BASELINE, not on centre, and every offset below is a whole
+   number. Both facts are load-bearing.
+   Centring leaves the mark's top edge and the text baseline at unrelated
+   fractional offsets, and Chrome snaps each to a whole device pixel on its own.
+   Rows land wherever the 18.75px line-height and the cards above put them, so
+   on a row whose fraction falls in a narrow window the two round OPPOSITE ways
+   and the mark jumps a full pixel — one legend visibly off while its identical
+   siblings are fine. Layout numbers can't see it; only the painted pixels can.
+   Baseline alignment sits the mark's bottom edge ON the baseline, so mark-top
+   to baseline is exactly the mark's height. Integer height + integer nudge =
+   integer distance, and the pair always snaps together wherever the row lands.
+   Heights must share a parity: an odd box centres on a half-pixel and an even
+   one on a whole pixel, so 11px and 2px can never agree. Hence the 3px line.
+   #tip keys keep centring and are left alone: a tooltip is placed at the
+   cursor, so it lands on a fresh sub-pixel phase every hover and no fixed
+   offset can hold across them. */
+.legend .key { display: inline-flex; align-items: baseline; gap: 6px; }
+.legend .line { width: 14px; height: 3px; border-radius: 1.5px; }
 .legend .rect { width: 11px; height: 11px; border-radius: 3px; }
-/* Flexbox centers each key against the text's LINE box, which reserves a
-   descender's worth of space the mark should not be centered against. Align
-   to the letters instead: at 12.5px system-ui the cap band's center sits
-   0.78px above the line box's, the CJK ideographic square's 0.58px above,
-   so one pixel puts both within half a pixel. Measure against cap height,
-   never against a word's own ink — "Breakout" has no descender and
-   "Triggered" does, and chasing that gives every label a different answer.
-   Tooltip keys are exempt: their 13.5px/600 title already lands at 0.12px. */
-.legend .line, .legend .rect { position: relative; top: -1px; }
+.legend .line, .legend .rect, .legend .ocdot { position: relative; }
+.legend .rect, .legend .ocdot { top: 1px; }   /* 11px box, centre 4.5px up */
+.legend .line { top: -3px; }                  /* 3px box, same 4.5px centre */
+/* .ocdot is dressed for the roster cell it was built for: an inline box, so it
+   carries a vertical-align and its own trailing margin. As a flex item in the
+   legend the vertical-align is inert and the margin stacks on the row's 6px
+   gap, leaving that one key 12px off its label. Strip it here only. */
+.legend .ocdot { margin-right: 0; }
 .topbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin: 0 0 20px; }
 .topbar .sub { margin-bottom: 0; }
 .head { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin: 0 0 12px; }
