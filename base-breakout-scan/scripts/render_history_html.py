@@ -47,7 +47,7 @@ import argparse
 import csv
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 SKILL_DIR = Path(__file__).resolve().parent.parent
@@ -147,6 +147,52 @@ def _n(v, nd=1):
     return int(v) if v == int(v) else v
 
 
+def ledger_horizon(outcomes: dict) -> int:
+    """Sessions the ledger holds a trade for. Read from the rows rather than
+    assumed, so a ledger built with --horizon still labels itself honestly
+    (check_ledger_convention already warns that its numbers are then not
+    comparable to the backtest references)."""
+    seen = {r.get("horizon") for r in outcomes.values() if r.get("horizon")}
+    if len(seen) == 1:
+        h = _i(next(iter(seen)))
+        if h:
+            return h
+    return int(LEDGER_CONVENTION["horizon"])
+
+
+def _weekdays_after(a: str, b: str) -> int:
+    """Weekdays strictly after run day a, through run day b."""
+    da, db = (datetime.strptime(s, "%Y%m%d").date() for s in (a, b))
+    n, cur = 0, da
+    while cur < db:
+        cur += timedelta(days=1)
+        if cur.weekday() < 5:
+            n += 1
+    return n
+
+
+def open_trade_day(led: dict, start_rid: str, latest_rid: str,
+                   horizon: int) -> int | None:
+    """How many sessions a triggered-but-unresolved trade has been running.
+
+    A TRIGGERED episode carries no trade_ret_pct until its full horizon has
+    printed, so the tooltip would otherwise show nothing and read the same
+    as missing data. The scan's run days are not a market calendar (it skips
+    one now and then), so the count starts as a weekday count and is then
+    clamped to the band the ledger itself proves: ret5 and ret10 only exist
+    once 5 and 10 bars have printed after the fill. Without that clamp a
+    market holiday inside the window reads a day long.
+    """
+    if led.get("outcome") != "TRIGGERED" or led.get("trade_ret_pct"):
+        return None
+    dtt = _i(led.get("days_to_trigger"))
+    if dtt is None:
+        return None
+    lo, hi = (10, horizon - 1) if led.get("ret10") \
+        else (5, 9) if led.get("ret5") else (1, 4)
+    return max(lo, min(max(lo, hi), _weekdays_after(start_rid, latest_rid) - dtt))
+
+
 def _day_runs(pts: list[dict]):
     """Split points into runs of consecutive days. The approach chart stores
     a line as (first day, values) and rebuilds x from the index, which is
@@ -166,6 +212,7 @@ def _day_runs(pts: list[dict]):
 def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
                   days_window: int = 0) -> dict:
     run_ids = sorted({r["run_id"] for r in rows})
+    horizon = ledger_horizon(outcomes)
     day_idx = {rid: i for i, rid in enumerate(run_ids)}
     day_labels = [f"{rid[4:6]}-{rid[6:8]}" for rid in run_ids]
     n_days = len(run_ids)
@@ -248,6 +295,7 @@ def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
                 cur = {
                     "start": rid, "sd": d, "oc": led.get("outcome"),
                     "tr": tr, "dtt": _i(led.get("days_to_trigger")),
+                    "od": open_trade_day(led, rid, run_ids[-1], horizon),
                     "gap": _f(led.get("gap_pct")),
                     "res": _f(led.get("ret_h")),
                     "fb": _i(led.get("fellback5")),
@@ -284,7 +332,7 @@ def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
                 "t": t, "pts": win_pts, "days": len(ds),
                 "exp": exp, "eps": [{"oc": e["oc"], "tr": e["tr"],
                                      "dtt": e["dtt"], "gap": e["gap"],
-                                     "fb": e["fb"]}
+                                     "fb": e["fb"], "od": e["od"]}
                                     for e in eps],
             })
         for e in eps:
@@ -299,6 +347,7 @@ def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
                 approach.append({
                     "t": t, "sec": sector_of(t), "pk": 1 if e["pk"] else 0,
                     "oc": e["oc"], "tr": e["tr"], "dtt": e["dtt"],
+                    "od": e["od"], "fb": e["fb"],
                     "gap": e["gap"], "d0": seg[0]["d"] - win_start,
                     "tps": [_n(p["tp"], 2) for p in seg],
                 })
@@ -362,6 +411,7 @@ def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
 
     return {
         "days": day_labels[win_start:],
+        "horizon": horizon,
         "window": {"total": n_days, "shown": n_days - win_start},
         "series": series,
         "approach": approach,
@@ -434,15 +484,26 @@ HTML_TEMPLATE = r"""<!doctype html>
   --g0: #cde2fb; --g1: #86b6ef; --g2: #3987e5; --g3: #0d366b;
   --gx: #eceae4;
   /* Episode outcome — the trajectory lines and row-end verdicts. Triggered
-     is the accent (the thing the setup exists to do); broke-down is the
+     carries the emphasis (the thing the setup exists to do); broke-down is the
      alarm; faded is the deliberate neutral ("nothing happened"), leaning on
-     the legend + roster per the relief rule. */
+     the legend + roster per the relief rule.
+     In-flight shares that same neutral rather than taking a fourth hue: the
+     palette's remaining slots all collide on one surface (violet sits ΔE 10
+     from the triggered blue in dark, 2 under simulated deuteranopia; magenta
+     12 from the broke-down red; yellow reaches only 2.1:1 on white, too thin
+     for a 1.2px line). Two gray STEPS were the first attempt and read as one
+     color at 6.3 ΔE. So the state rides on line type instead — see the dash
+     + hollow end dot in renderApproach. */
   --oT: #2a78d6; --oB: #a02525; --oF: #b5b4ad;
-  --accent: #2a78d6;
-  /* ⭐ pocket count rides over the blue Sig stack, so it needs a hue off
-     that ramp — and deliberately NOT the loss red, since a rising pocket
-     count is the good news on this page. */
-  --pkt: #eb6834;
+  /* ⭐ pocket, in BOTH panels that draw it (the count line over the Sig
+     stack, the expectancy line and its dashed reference). One stratum, one
+     hue. Aqua = dataviz slot 3: off the blue ramp it overlays (ΔE 20.9
+     light / 19.2 dark, deutan 18.4 / 15.7) and out of the warm family,
+     which on this page means loss (--oB, --tneg). It was slot-2 orange,
+     which sat 10.4 from the broke-down red on the dark surface and 1.4
+     under simulated deuteranopia. Light takes the darker step to clear
+     3:1 on white (3.32:1), dark the lighter one (6.19:1). */
+  --pkt: #199e70;
   --tpos: #006300; --tneg: #a02525;
 }
 @media (prefers-color-scheme: dark) {
@@ -455,8 +516,7 @@ HTML_TEMPLATE = r"""<!doctype html>
     --g0: #184f95; --g1: #2a78d6; --g2: #6da7ec; --g3: #cde2fb;
     --gx: #262624;
     --oT: #3987e5; --oB: #b83636; --oF: #55544d;
-    --accent: #3987e5;
-    --pkt: #d95926;
+    --pkt: #1baf7a;
     --tpos: #0ca30c; --tneg: #e66767;
   }
 }
@@ -483,6 +543,13 @@ h1 { font-size: 21px; margin: 0 0 2px; }
 .kpi .val { font-size: 22px; font-weight: 600; margin-top: 2px; }
 .kpi .sub2 { color: var(--muted); font-size: 12px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .scroll { overflow-x: auto; }
+/* Approach chart focus: the pointer picks the episode nearest to it and the
+   rest recede, since landing on a 1.2px line among 500+ of them is not a
+   thing a hand can do. Class on the root so one toggle restyles the lot —
+   inline-styling ~1100 nodes per pointermove drops frames. */
+#apchart svg.focus [data-a] { opacity: 0.12; }
+#apchart svg.focus [data-a].lit { opacity: 1; }
+#apchart svg.focus path[data-a].lit { stroke-width: 2.5; }
 .vclip { max-height: 540px; overflow-y: auto; }
 .gridhead { position: sticky; top: 0; z-index: 1; background: var(--surface); width: max-content; }
 svg { display: block; }
@@ -615,18 +682,18 @@ const I18N = {
     kBase: "Everything else",
     kBaseSub: (n, r) => `n=${n} · backtest ${r >= 0 ? "+" : ""}${r}%`,
     kLongest: "Longest base now",
-    none: "none",
+    none: "None",
     apTitle: "Approach to pivot",
-    apNote: () => `One line per episode (a name's unbroken run on the list). The height is how far the price sits below its pivot, the price that turns the setup into a buy.\nThe bold zero line is the trigger: a line that reaches it broke out. Line color shows how the episode ended.`,
+    apNote: () => `One line per episode (a name's unbroken run on the list). Height = how far the price sits below its pivot.\nThe 0 line is the pivot, the price that makes the setup a buy. A line reaching it broke out; color = how the episode ended.`,
     apFilter: { pocket: `⭐ Pocket only (base ≥ ${MINWK}wk)`, trig: "Triggered only", all: "All episodes" },
     apFilterLabel: "Filter episodes",
     apEmpty: "No episodes match this filter in the charted window.",
     oc: { TRIGGERED: "Cleared the pivot", FADED: "Faded off the list", BROKE_DOWN: "Broke down", null: "In flight" },
     ocShort: { TRIGGERED: "Triggered", FADED: "Faded", BROKE_DOWN: "Broke down", null: "In flight" },
-    pivotLine: "pivot (trigger price)",
+    pivotLine: "Pivot (trigger price)",
     coTitle: "Watchlist tension",
     coNote: () => `One column per day: the whole watchlist stacked by how close each name is to firing.\nA tall dark stack means the list is loaded and time-sensitive. All pale means nothing is near a trigger, so check back later.\nThe line counts the ⭐ pocket (bases ≥ ${MINWK} weeks). At zero, the list holds nothing the backtest validated.`,
-    coPocketLine: "⭐ pocket count",
+    coPocketLine: "⭐ Pocket count",
     pkTitle: "⭐ Pocket vs the rest",
     pkNote: "Solid lines: the running average result per trade (buy at the pivot, 8% stop, exit after 20 sessions), ⭐ pocket vs the rest. Base length counts from the episode's first day, the way the backtest measured it.\nDashed lines: the same numbers from the backtest. A pocket line above its dash means the one validated edge still pays.",
     pkPocket: "⭐ Pocket", pkBase: "The rest",
@@ -640,24 +707,26 @@ const I18N = {
     rosterTitle: "Roster",
     rosterNote: "One row per name that ever made the list. Click a header to sort; click again to reverse. This table carries every value the charts show on hover.\nJudge by base weeks: the backtest validated that attribute and no other. Score is a display floor, not a ranker.",
     cols: ["Ticker", "Sector", "Max base wks", "Result %/trade", "Trigger rate", "Episodes", "⭐ days", "Tightest %", "Closest to pivot", "Days", "Last seen", "Sig"],
-    sigName: { 0: "forming", 1: "coiled", 2: "imminent", 3: "breakout" },
+    sigName: { 0: "Forming", 1: "Coiled", 2: "Imminent", 3: "Breakout" },
     sigTip: {
       0: "Valid base, not near the trigger yet",
       1: "Squeezing, a few % of work left",
       2: "Loaded: within 3% of the trigger",
       3: "Broke out today on volume",
     },
-    spellDay: k => `day ${k} on the list`,
-    pocketDay: "⭐ pocket day",
+    spellDay: k => `Day ${k} on the list`,
+    pocketDay: "⭐ Pocket day",
     baseWks: "Base",
     wks: n => `${n} wks`,
     toPivot: "To pivot",
     score: "Score",
     width: "Width",
-    trigIn: d => `triggered after ${d} session(s)`,
-    gapOver: g => `filled ${g >= 0 ? "+" : ""}${g}% vs pivot`,
-    tradeRet: v => `trade result ${v >= 0 ? "+" : ""}${v}%`,
-    fellBack: "fell back below the pivot within 5 sessions",
+    trigIn: d => `Triggered after ${d} session(s)`,
+    gapOver: g => `Filled ${g >= 0 ? "+" : ""}${g}% vs pivot`,
+    tradeRet: v => `Trade result ${v >= 0 ? "+" : ""}${v}%`,
+    tradeOpen: (k, h) => `Trade open (day ${k} of ${h})`,
+    fellBack: "Fell back below the pivot within 5 sessions",
+    heldPivot: "Held above the pivot for 5 sessions",
     dayLine: n => `${n} names listed`,
     genBy: "Generated by ", genAt: t => ` at ${t} · Source: `,
     sectorNames: {},
@@ -680,7 +749,7 @@ const I18N = {
     kLongest: "当前最长的基",
     none: "无",
     apTitle: "逼近触发线",
-    apNote: () => `一条线 = 一段上榜（某只票连续留在名单上的那一段）。线的高度 = 现价还差多少才够到触发价。\n那条加粗的 0 线就是触发线：线碰到它 = 突破了。线的颜色 = 这段上榜的结局。`,
+    apNote: () => `一条线 = 一段上榜（某只票连续留在名单上的那一段）。线的高度 = 现价还差多少才够到触发价。\n0 线是触发线：线碰到它 = 突破了。线的颜色 = 这段上榜的结局。`,
     apFilter: { pocket: `只看 ⭐ 口袋（基龄 ≥ ${MINWK} 周）`, trig: "只看已触发", all: "全部上榜段" },
     apFilterLabel: "筛选上榜段",
     apEmpty: "当前窗口内没有符合此筛选的上榜段。",
@@ -720,7 +789,9 @@ const I18N = {
     trigIn: d => `第 ${d} 个交易日触发`,
     gapOver: g => `成交价比触发价高 ${g >= 0 ? "+" : ""}${g}%`,
     tradeRet: v => `这单结果 ${v >= 0 ? "+" : ""}${v}%`,
+    tradeOpen: (k, h) => `这单还在跑（第 ${k} / ${h} 天）`,
     fellBack: "触发后 5 天内又跌回触发价下方",
+    heldPivot: "触发后 5 天都收在触发价上方",
     dayLine: n => `当天共 ${n} 只上榜`,
     genBy: "由 ", genAt: t => ` 于 ${t} 生成 · 数据源：`,
     sectorNames: {
@@ -748,7 +819,7 @@ const I18N = {
     kLongest: "目前最長的基",
     none: "無",
     apTitle: "逼近觸發線",
-    apNote: () => `一條線 = 一段上榜（某檔票連續留在名單上的那一段）。線的高度 = 現價還差多少才夠到觸發價。\n那條加粗的 0 線就是觸發線：線碰到它 = 突破了。線的顏色 = 這段上榜的結局。`,
+    apNote: () => `一條線 = 一段上榜（某檔票連續留在名單上的那一段）。線的高度 = 現價還差多少才夠到觸發價。\n0 線是觸發線：線碰到它 = 突破了。線的顏色 = 這段上榜的結局。`,
     apFilter: { pocket: `只看 ⭐ 口袋（基齡 ≥ ${MINWK} 週）`, trig: "只看已觸發", all: "全部上榜段" },
     apFilterLabel: "篩選上榜段",
     apEmpty: "目前窗口內沒有符合此篩選的上榜段。",
@@ -788,7 +859,9 @@ const I18N = {
     trigIn: d => `第 ${d} 個交易日觸發`,
     gapOver: g => `成交價比觸發價高 ${g >= 0 ? "+" : ""}${g}%`,
     tradeRet: v => `這筆結果 ${v >= 0 ? "+" : ""}${v}%`,
+    tradeOpen: (k, h) => `這筆還在跑（第 ${k} / ${h} 天）`,
     fellBack: "觸發後 5 天內又跌回觸發價下方",
+    heldPivot: "觸發後 5 天都收在觸發價上方",
     dayLine: n => `當天共 ${n} 檔上榜`,
     genBy: "由 ", genAt: t => ` 於 ${t} 生成 · 資料來源：`,
     sectorNames: {
@@ -809,14 +882,14 @@ const I18N = {
     kToday: "本日の ⭐ ポケット",
     kTrig: "トリガー率",
     kTrigSub: (t, n) => `${n} 件中 ${t} 件が突破`,
-    kPocket: "⭐ ポケットの 1 トレード損益",
-    kPocketSub: (n, r) => `n=${n} · バックテスト ${r >= 0 ? "+" : ""}${r}%`,
+    kPocket: "⭐ ポケット 1 回の損益",
+    kPocketSub: (n, r) => `n=${n} · 検証値 ${r >= 0 ? "+" : ""}${r}%`,
     kBase: "それ以外すべて",
-    kBaseSub: (n, r) => `n=${n} · バックテスト ${r >= 0 ? "+" : ""}${r}%`,
+    kBaseSub: (n, r) => `n=${n} · 検証値 ${r >= 0 ? "+" : ""}${r}%`,
     kLongest: "現在の最長ベース",
     none: "なし",
     apTitle: "ピボットへの接近",
-    apNote: () => `1 本の線 = 1 エピソード（銘柄がリストに連続して載っていた期間）。線の高さ = 現在値がピボットまであと何 % か。\n太い 0 の線がトリガー：線がそこに届けばブレイクアウト成立。線の色はエピソードの結末を表します。`,
+    apNote: () => `1 本の線 = 1 エピソード（銘柄がリストに連続して載っていた期間）。線の高さ = 現在値がピボットまであと何 % か。\n0 の線がトリガー：線がそこに届けばブレイクアウト成立。線の色はエピソードの結末を表します。`,
     apFilter: { pocket: `⭐ ポケットのみ（ベース ${MINWK} 週以上）`, trig: "トリガー済みのみ", all: "全エピソード" },
     apFilterLabel: "エピソードを絞り込み",
     apEmpty: "この期間に該当するエピソードはありません。",
@@ -856,7 +929,9 @@ const I18N = {
     trigIn: d => `${d} セッション目にトリガー`,
     gapOver: g => `約定はピボット比 ${g >= 0 ? "+" : ""}${g}%`,
     tradeRet: v => `トレード結果 ${v >= 0 ? "+" : ""}${v}%`,
+    tradeOpen: (k, h) => `トレード継続中（${h} 日中 ${k} 日目）`,
     fellBack: "トリガー後 5 セッション以内にピボット下へ戻った",
+    heldPivot: "トリガー後 5 セッション、ピボットの上を維持",
     dayLine: n => `その日 ${n} 銘柄がリスト入り`,
     genBy: "", genAt: t => ` により ${t} に生成 · データソース：`,
     sectorNames: {
@@ -884,7 +959,7 @@ const I18N = {
     kLongest: "현재 가장 긴 베이스",
     none: "없음",
     apTitle: "피봇 접근",
-    apNote: () => `선 1개 = 에피소드 1개(종목이 목록에 연속으로 남아 있던 구간). 선의 높이 = 현재가가 피봇까지 몇 % 남았는지.\n굵은 0 선이 발동선입니다. 선이 거기 닿으면 돌파 성공. 선 색깔은 에피소드의 결말을 뜻합니다.`,
+    apNote: () => `선 1개 = 에피소드 1개(종목이 목록에 연속으로 남아 있던 구간). 선의 높이 = 현재가가 피봇까지 몇 % 남았는지.\n0 선이 발동선입니다. 선이 거기 닿으면 돌파 성공. 선 색깔은 에피소드의 결말을 뜻합니다.`,
     apFilter: { pocket: `⭐ 포켓만 (베이스 ${MINWK}주 이상)`, trig: "발동한 것만", all: "전체 에피소드" },
     apFilterLabel: "에피소드 필터",
     apEmpty: "이 기간에 해당하는 에피소드가 없습니다.",
@@ -924,7 +999,9 @@ const I18N = {
     trigIn: d => `${d}번째 세션에 발동`,
     gapOver: g => `체결가는 피봇 대비 ${g >= 0 ? "+" : ""}${g}%`,
     tradeRet: v => `거래 결과 ${v >= 0 ? "+" : ""}${v}%`,
+    tradeOpen: (k, h) => `거래 진행 중 (${h}일 중 ${k}일째)`,
     fellBack: "발동 후 5세션 내에 피봇 아래로 되밀림",
+    heldPivot: "발동 후 5세션 동안 피봇 위 유지",
     dayLine: n => `그날 ${n}종목 등재`,
     genBy: "", genAt: t => `로 ${t}에 생성 · 데이터 출처: `,
     sectorNames: {
@@ -998,7 +1075,8 @@ function buildDayFilter(sel, onChange) {
 const SIGS = [0, 1, 2, 3];
 const SIG_VAR = { 0: "--g0", 1: "--g1", 2: "--g2", 3: "--g3" };
 // Episode outcomes. `null` (no ledger row) means in flight, not unknown.
-const OC_VAR = { TRIGGERED: "--oT", FADED: "--oF", BROKE_DOWN: "--oB", null: "--ctx-line" };
+// In-flight borrows the faded gray; the dash + hollow dot carry the state.
+const OC_VAR = { TRIGGERED: "--oT", FADED: "--oF", BROKE_DOWN: "--oB", null: "--oF" };
 const OCS = ["TRIGGERED", "FADED", "BROKE_DOWN", null];
 const NS = "http://www.w3.org/2000/svg";
 function el(tag, attrs, parent) {
@@ -1053,8 +1131,15 @@ function epLines(e) {
   const out = [T.oc[e.oc === null || e.oc === undefined ? null : e.oc]];
   if (e.dtt != null) out.push(T.trigIn(e.dtt));
   if (e.gap != null) out.push(T.gapOver(e.gap));
+  // A triggered episode with no result is a trade still running, not a hole
+  // in the data: the ledger only scores it once the full horizon prints.
   if (e.tr != null) out.push(T.tradeRet(e.tr));
-  if (e.fb) out.push(T.fellBack);
+  else if (e.od != null) out.push(T.tradeOpen(e.od, DATA.horizon));
+  // Both sides of the fell-back flag, since holding the pivot through the
+  // first week is the stronger half of the split (+5.3%/trade, 13% stop-hit
+  // vs -4.3% and 72%). A null means the 5 sessions have not printed yet, so
+  // neither line is true — that case says nothing.
+  if (e.fb != null) out.push(e.fb ? T.fellBack : T.heldPivot);
   return out;
 }
 
@@ -1127,42 +1212,105 @@ function renderApproach(mode) {
     if (i === DAYS - 1 || (i % 5 === 0 && DAYS - 1 - i >= 3))
       el("text", { x: xOf(i), y: H - 8, "text-anchor": "middle", class: "tick" }, svg).textContent = d;
   });
+  const marks = [];   // episode index → the elements that draw it
   eps.forEach((a, ai) => {
-    const col = `var(${OC_VAR[a.oc === null || a.oc === undefined ? null : a.oc]})`;
+    const oc = a.oc === null || a.oc === undefined ? null : a.oc;
+    const col = `var(${OC_VAR[oc]})`;
+    // Unresolved episodes share the faded gray: both are the absence of a
+    // verdict, and the three hues left in the palette all collide with the
+    // triggered blue or the broke-down red on one surface or the other. The
+    // distinction rides on line type instead — dashes plus a hollow end dot,
+    // which survives CVD and black-and-white printing.
+    const live = oc === null;
     const op = a.pk ? 0.95 : 0.45, lastD = a.d0 + a.tps.length - 1;
     if (a.tps.length > 1) {
       let dstr = "";
       a.tps.forEach((tp, i) => {
         dstr += (i ? "L" : "M") + xOf(a.d0 + i) + " " + yOf(tp).toFixed(1);
       });
-      const path = el("path", { d: dstr, fill: "none", stroke: col,
+      const attrs = { d: dstr, fill: "none", stroke: col,
         "stroke-width": a.pk ? 2 : 1.2, opacity: op,
-        "stroke-linecap": "round", "stroke-linejoin": "round" }, svg);
-      path.dataset.a = ai;
-    }
-    // End dot: the episode's last known distance to the pivot. On a
-    // one-day episode it is the whole mark.
-    const e = el("circle", { cx: xOf(lastD), cy: yOf(a.tps[a.tps.length - 1]).toFixed(1),
-      r: a.pk ? 3 : 2, fill: col, opacity: op }, svg);
+        "stroke-linecap": "round", "stroke-linejoin": "round" };
+      if (live) {
+        attrs["stroke-dasharray"] = "5 3";
+        attrs["stroke-linecap"] = "butt";   // round caps close the gaps up
+      }
+      marks[ai] = [el("path", attrs, svg)];
+      marks[ai][0].dataset.a = ai;
+    } else marks[ai] = [];
+    // End dot: the episode's last known distance to the pivot. On a one-day
+    // episode it is the whole mark, which is why in-flight has to read here
+    // too — 40 of the 96 ⭐ pocket episodes are a single day.
+    const cy = yOf(a.tps[a.tps.length - 1]).toFixed(1);
+    const dot = live
+      ? { r: a.pk ? 3.5 : 2.5, fill: "var(--surface)", stroke: col,
+          "stroke-width": 1.2 }
+      : { r: a.pk ? 3 : 2, fill: col };
+    const e = el("circle", { cx: xOf(lastD), cy, opacity: op, ...dot }, svg);
     e.dataset.a = ai;
+    marks[ai].push(e);
   });
-  // The trigger line last so it sits above every trajectory.
+  // The trigger line last so it sits above every trajectory. Hairline like
+  // every other gridline; the ink step (grid → secondary) is what marks it
+  // as the one line with a meaning.
   el("line", { x1: ML - 4, x2: ML + (DAYS - 1) * DX, y1: yOf(0), y2: yOf(0),
-    stroke: "var(--ink-2)", "stroke-width": 1.5 }, svg);
+    stroke: "var(--ink-2)" }, svg);
   el("text", { x: ML - 8, y: yOf(0) + 4, "text-anchor": "end", class: "tick" }, svg)
     .textContent = "0%";
+  // Focus follows the pointer; a click pins so the line survives a trip to
+  // the tooltip or another window. Restyle only when the focused episode
+  // CHANGES — the class toggle is cheap, doing it 60×/second is not.
+  let lit = null, pinned = null;
+  const focus = i => {
+    if (i === lit) return;
+    if (lit !== null && marks[lit]) marks[lit].forEach(m => m.classList.remove("lit"));
+    lit = i;
+    if (i === null) { svg.classList.remove("focus"); return; }
+    marks[i].forEach(m => m.classList.add("lit"));
+    svg.classList.add("focus");
+  };
+  // Nearest episode to the pointer, within 24px vertically, in one pass.
+  // The comparison walks the drawn SEGMENT (y interpolated at the pointer's
+  // fractional day) rather than the nearest day's value: on a line dropping
+  // 4% in a session, snapping to the day column hands the focus to whatever
+  // flat line happens to pass nearby, which is not the line under the hand.
+  const nearest = (mx, my) => {
+    const fd = (mx - ML) / DX;
+    if (fd < -0.6 || fd > DAYS - 0.4) return null;
+    let best = null, bd = 24;
+    eps.forEach((a, i) => {
+      const k = fd - a.d0, last = a.tps.length - 1;
+      if (k < -0.6 || k > last + 0.6) return;
+      const j = Math.max(0, Math.min(last - 1, Math.floor(k)));
+      const y = last === 0 ? yOf(a.tps[0])
+        : yOf(a.tps[j]) + (yOf(a.tps[j + 1]) - yOf(a.tps[j]))
+          * Math.max(0, Math.min(1, k - j));
+      const dy = Math.abs(y - my);
+      if (dy < bd) { bd = dy; best = i; }
+    });
+    return best;
+  };
+  const at = ev => {
+    const box = svg.getBoundingClientRect();
+    return nearest(ev.clientX - box.left, ev.clientY - box.top);
+  };
   svg.addEventListener("pointermove", ev => {
-    const t = ev.target;
-    if (t.dataset && t.dataset.a !== undefined) {
-      const a = eps[+t.dataset.a];
-      showTip(ev.clientX, ev.clientY, tt => tipRows(tt, [
-        a.t + (a.pk ? " ⭐" : ""),
-        `${secName(a.sec)} · ${T.toPivot} ${pctTxt(a.tps[a.tps.length - 1], 1)}`,
-        ...epLines(a),
-      ], cssVar(OC_VAR[a.oc === null || a.oc === undefined ? null : a.oc])));
-    } else hideTip();
+    const i = at(ev);
+    focus(pinned !== null ? pinned : i);
+    if (i === null) { hideTip(); return; }
+    const a = eps[i];
+    showTip(ev.clientX, ev.clientY, tt => tipRows(tt, [
+      a.t + (a.pk ? " ⭐" : ""),
+      `${secName(a.sec)} · ${T.toPivot} ${pctTxt(a.tps[a.tps.length - 1], 1)}`,
+      ...epLines(a),
+    ], cssVar(OC_VAR[a.oc === null || a.oc === undefined ? null : a.oc])));
   });
-  svg.addEventListener("pointerleave", hideTip);
+  svg.addEventListener("pointerleave", () => { focus(pinned); hideTip(); });
+  svg.addEventListener("click", ev => {
+    const i = at(ev);
+    pinned = pinned !== null && pinned === i ? null : i;
+    focus(pinned !== null ? pinned : i);
+  });
 }
 {
   document.getElementById("ap-note").textContent = T.apNote() + WIN_TAG;
@@ -1182,11 +1330,15 @@ function renderApproach(mode) {
   const leg = document.getElementById("ap-legend");
   OCS.forEach(o => {
     const k = div("key", leg); const l = div("line", k);
-    l.style.background = `var(${OC_VAR[o]})`;
+    const c = `var(${OC_VAR[o]})`;
+    // In-flight wears its dash in the legend too, or the key would show two
+    // identical gray bars.
+    l.style.background = o === null
+      ? `repeating-linear-gradient(90deg,${c} 0 4px,transparent 4px 7px)` : c;
     k.appendChild(document.createTextNode(T.ocShort[o]));
   });
   const k = div("key", leg); const l = div("line", k);
-  l.style.cssText = "background:var(--ink-2);height:1.5px";
+  l.style.background = "var(--ink-2)";
   k.appendChild(document.createTextNode(T.pivotLine));
 }
 
@@ -1289,12 +1441,12 @@ function renderApproach(mode) {
     if (i === DAYS - 1 || (i % 5 === 0 && DAYS - 1 - i >= 3))
       el("text", { x: xOf(i), y: H - 8, "text-anchor": "middle", class: "tick" }, svg).textContent = d;
   });
-  [[P.refPkt, "var(--accent)"], [P.refBase, "var(--ctx-line)"]].forEach(([v, col]) => {
+  [[P.refPkt, "var(--pkt)"], [P.refBase, "var(--ctx-line)"]].forEach(([v, col]) => {
     el("line", { x1: ML, x2: ML + (DAYS - 1) * DX, y1: yOf(v), y2: yOf(v),
       stroke: col, "stroke-dasharray": "4 3", opacity: 0.7 }, svg);
   });
   const lines = [
-    { vals: P.pkt, ns: P.pktN, col: "var(--accent)", w: 2, lbl: T.pkPocket },
+    { vals: P.pkt, ns: P.pktN, col: "var(--pkt)", w: 2, lbl: T.pkPocket },
     { vals: P.base, ns: P.baseN, col: "var(--ctx-line)", w: 2, lbl: T.pkBase },
   ];
   lines.forEach(L => {
@@ -1320,7 +1472,7 @@ function renderApproach(mode) {
     const k = div("key", leg); const l = div("line", k); l.style.background = L.col;
     k.appendChild(document.createTextNode(L.lbl));
   });
-  [[P.refPkt, T.pkPocket, "var(--accent)"],
+  [[P.refPkt, T.pkPocket, "var(--pkt)"],
    [P.refBase, T.pkBase, "var(--ctx-line)"]].forEach(([v, lbl, col]) => {
     const k = div("key", leg);
     const l = div("line", k);

@@ -94,12 +94,15 @@ def _row(rid, t, bw="8", tp="-4.0", sig="📊", score="50", width="12.0"):
             "rs_slope_pct_per_wk": "0.5", "pivot_price": "100", "rank": "1"}
 
 
-def _led(outcome, tr=None, dtt=None, ret_h=None, gap=None, fb=None):
+def _led(outcome, tr=None, dtt=None, ret_h=None, gap=None, fb=None,
+         ret5=None, ret10=None):
     return {"outcome": outcome, "trade_ret_pct": "" if tr is None else str(tr),
             "days_to_trigger": "" if dtt is None else str(dtt),
             "ret_h": "" if ret_h is None else str(ret_h),
             "gap_pct": "" if gap is None else str(gap),
             "fellback5": "" if fb is None else str(fb),
+            "ret5": "" if ret5 is None else str(ret5),
+            "ret10": "" if ret10 is None else str(ret10),
             "horizon": "20", "stop_pct": "8.0", "entry": "touch"}
 
 
@@ -196,7 +199,37 @@ def test_payload_carries_no_fields_the_page_never_reads():
         "t", "sec", "days", "eps", "exp", "trate", "mbw", "pd", "wd", "tp",
         "last", "lastD", "st"}
     assert set(p["series"][0]) == {"t", "pts", "days", "exp", "eps"}
-    assert set(p["series"][0]["eps"][0]) == {"oc", "tr", "dtt", "gap", "fb"}
+    assert set(p["series"][0]["eps"][0]) == {"oc", "tr", "dtt", "gap", "fb",
+                                             "od"}
+
+
+def test_open_trade_day_is_clamped_to_what_the_ledger_proves():
+    """A triggered episode with no trade result is a trade still running, and
+    the tooltip counts its sessions. The count is a weekday count (the scan's
+    run days are not a market calendar), so ret5 / ret10 — written only once
+    those bars print — pin it to the right band."""
+    # 20260701 → 20260731 is 23 weekdays; minus 1 for days_to_trigger = 22,
+    # well past every band, so each case lands on its band's ceiling.
+    latest = "20260731"
+    assert rh.open_trade_day(_led("TRIGGERED", dtt=1), "20260701", latest, 20) == 4
+    assert rh.open_trade_day(_led("TRIGGERED", dtt=1, ret5=1.0),
+                             "20260701", latest, 20) == 9
+    assert rh.open_trade_day(_led("TRIGGERED", dtt=1, ret5=1.0, ret10=2.0),
+                             "20260701", latest, 20) == 19
+    # A fresh trigger sits inside the first band on its own count.
+    assert rh.open_trade_day(_led("TRIGGERED", dtt=1), "20260727", latest, 20) == 3
+    # Resolved trades and non-triggers have nothing to count.
+    assert rh.open_trade_day(_led("TRIGGERED", tr=6.0, dtt=1),
+                             "20260701", latest, 20) is None
+    assert rh.open_trade_day(_led("FADED"), "20260701", latest, 20) is None
+    assert rh.open_trade_day({}, "20260701", latest, 20) is None
+
+
+def test_ledger_horizon_reads_the_rows_not_the_constant():
+    assert rh.ledger_horizon({("a", "T"): _led("FADED")}) == 20
+    off = _led("FADED") | {"horizon": "40"}
+    assert rh.ledger_horizon({("a", "T"): off}) == 40
+    assert rh.ledger_horizon({}) == int(rh.LEDGER_CONVENTION["horizon"])
 
 
 def test_approach_lines_are_run_length_encoded():
