@@ -439,6 +439,11 @@
     "sector": "Healthcare",
     "ts": 1785456162
   },
+  "CNP": {
+    "industry": "Utilities - Regulated Electric",
+    "sector": "Utilities",
+    "ts": 1785542581
+  },
   "CNQ": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
@@ -498,6 +503,11 @@
     "industry": "Semiconductors",
     "sector": "Technology",
     "ts": 1782518609
+  },
+  "CRNX": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1785542581
   },
   "CROX": {
     "industry": "Footwear & Accessories",
@@ -713,6 +723,11 @@
     "industry": "Communication Equipment",
     "sector": "Technology",
     "ts": 1781049862
+  },
+  "ES": {
+    "industry": "Utilities - Regulated Electric",
+    "sector": "Utilities",
+    "ts": 1785542581
   },
   "ESI": {
     "industry": "Specialty Chemicals",

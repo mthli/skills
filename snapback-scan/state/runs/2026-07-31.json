@@ -1,27 +1,26 @@
 {
-  "as_of": "2026-07-31T09:21:13.745583-04:00",
+  "as_of": "2026-07-31T20:03:12.740527-04:00",
   "today": "2026-07-31",
   "spark_window": [
-    "2026-07-31 (AMC only)",
     "2026-08-03",
     "2026-08-04",
     "2026-08-05"
   ],
   "macro_note": "ForexFactory covers the current week only \u2014 macro sparks beyond Sunday not visible",
   "regime": {
-    "snapshot": "20260730",
+    "snapshot": "20260731",
     "state": "RISK-ON",
-    "score": 4,
-    "vix": 17.1,
-    "spy_vs_200_pct": 6.4,
-    "flags": "Defensive rotation: defensives outran offensives over 20d by +6.0pp"
+    "score": 6,
+    "vix": 16.0,
+    "spy_vs_200_pct": 7.1,
+    "flags": ""
   },
   "mr_run": {
-    "run_id": "20260730",
-    "run_date": "2026-07-30",
-    "stale_days": 1,
-    "rows_in_run": 47,
-    "kegs_after_filter": 7
+    "run_id": "20260731",
+    "run_date": "2026-07-31",
+    "stale_days": 0,
+    "rows_in_run": 48,
+    "kegs_after_filter": 4
   },
   "params": {
     "min_score": 40.0,
@@ -31,72 +30,25 @@
   },
   "kegs": [
     {
-      "ticker": "ODFL",
+      "ticker": "LIN",
       "rank": 3,
-      "score": 57.6,
-      "rsi2": 1.35,
-      "dist_200dma_pct": 13.34,
-      "signal_close": 212.47,
-      "mr_target": 224.26,
-      "mr_stop": 191.59,
+      "score": 45.6,
+      "rsi2": 2.26,
+      "dist_200dma_pct": 1.37,
+      "signal_close": 478.38,
+      "mr_target": 503.28,
+      "mr_stop": 447.8,
       "signal": "\ud83d\udd35",
-      "listing_age_runs": 2,
-      "freq_60d": 2,
-      "sector": "Industrials",
-      "sparks": [
-        {
-          "type": "sector_verdict",
-          "symbol": "SPCX",
-          "date": "2026-08-04",
-          "slot": "AMC",
-          "detail": "SPCX (Industrials, $1473B) reports 2026-08-04 AMC"
-        },
-        {
-          "type": "sector_verdict",
-          "symbol": "CAT",
-          "date": "2026-08-04",
-          "slot": "BMO",
-          "detail": "CAT (Industrials, $361B) reports 2026-08-04 BMO"
-        },
-        {
-          "type": "marketwide_verdict",
-          "symbol": "LLY",
-          "date": "2026-08-05",
-          "slot": "BMO",
-          "detail": "LLY ($1088B) reports 2026-08-05 BMO"
-        }
-      ],
-      "armed": true,
-      "latest_close": 212.47,
-      "since_signal_pct": 0.0,
-      "ignited": false,
-      "down_streak": 4,
-      "ret_5d_pct": -7.91,
-      "down_gaps_5d": 1,
-      "vol_ratio_5d_20d": 1.41,
-      "signal_day_low": 205.16,
-      "quiet_warning": false
-    },
-    {
-      "ticker": "FTI",
-      "rank": 6,
-      "score": 50.1,
-      "rsi2": 2.49,
-      "dist_200dma_pct": 15.33,
-      "signal_close": 68.92,
-      "mr_target": 72.97,
-      "mr_stop": 62.73,
-      "signal": "\ud83d\udd35",
-      "listing_age_runs": 2,
-      "freq_60d": 2,
-      "sector": "Energy",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "sector": "Basic Materials",
       "sparks": [
         {
           "type": "marketwide_verdict",
           "symbol": "SPCX",
           "date": "2026-08-04",
           "slot": "AMC",
-          "detail": "SPCX ($1473B) reports 2026-08-04 AMC"
+          "detail": "SPCX ($1469B) reports 2026-08-04 AMC"
         },
         {
           "type": "marketwide_verdict",
@@ -107,28 +59,28 @@
         }
       ],
       "armed": false,
-      "latest_close": 68.92,
-      "since_signal_pct": -0.0,
+      "latest_close": 478.38,
+      "since_signal_pct": 0.0,
       "ignited": false,
-      "down_streak": 4,
-      "ret_5d_pct": -9.34,
-      "down_gaps_5d": 2,
-      "vol_ratio_5d_20d": 1.06,
-      "signal_day_low": 67.46,
+      "down_streak": 3,
+      "ret_5d_pct": -6.62,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.31,
+      "signal_day_low": 466.88,
       "quiet_warning": false,
-      "next_own_earnings": "2026-10-22"
+      "next_own_earnings": "2026-07-31"
     },
     {
-      "ticker": "VTR",
-      "rank": 7,
-      "score": 47.1,
-      "rsi2": 2.99,
-      "dist_200dma_pct": 12.27,
-      "signal_close": 91.92,
-      "mr_target": 97.68,
-      "mr_stop": 85.95,
-      "signal": "\ud83d\udfe2",
-      "listing_age_runs": 1,
+      "ticker": "NNN",
+      "rank": 5,
+      "score": 43.3,
+      "rsi2": 2.46,
+      "dist_200dma_pct": 10.94,
+      "signal_close": 47.52,
+      "mr_target": 48.59,
+      "mr_stop": 45.26,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
       "freq_60d": 1,
       "sector": "Real Estate",
       "sparks": [
@@ -137,7 +89,54 @@
           "symbol": "SPCX",
           "date": "2026-08-04",
           "slot": "AMC",
-          "detail": "SPCX ($1473B) reports 2026-08-04 AMC"
+          "detail": "SPCX ($1469B) reports 2026-08-04 AMC"
+        },
+        {
+          "type": "own_earnings",
+          "symbol": "NNN",
+          "date": "2026-08-05",
+          "slot": "BMO",
+          "detail": "NNN reports 2026-08-05 BMO (eps est $0.87) \u2014 a coin flip, NOT a verdict: earnings-gap rule says zero directional trust"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "LLY",
+          "date": "2026-08-05",
+          "slot": "BMO",
+          "detail": "LLY ($1088B) reports 2026-08-05 BMO"
+        }
+      ],
+      "armed": true,
+      "latest_close": 47.52,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -3.77,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.92,
+      "signal_day_low": 46.96,
+      "quiet_warning": true
+    },
+    {
+      "ticker": "EIX",
+      "rank": 6,
+      "score": 42.9,
+      "rsi2": 3.68,
+      "dist_200dma_pct": 11.7,
+      "signal_close": 73.37,
+      "mr_target": 77.83,
+      "mr_stop": 67.64,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 0,
+      "sector": "Utilities",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "SPCX",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "SPCX ($1469B) reports 2026-08-04 AMC"
         },
         {
           "type": "marketwide_verdict",
@@ -148,51 +147,58 @@
         }
       ],
       "armed": false,
-      "latest_close": 91.92,
-      "since_signal_pct": -0.0,
+      "latest_close": 73.37,
+      "since_signal_pct": 0.0,
       "ignited": false,
-      "down_streak": 4,
-      "ret_5d_pct": -6.13,
-      "down_gaps_5d": 1,
-      "vol_ratio_5d_20d": 1.3,
-      "signal_day_low": 90.86,
+      "down_streak": 1,
+      "ret_5d_pct": -8.0,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 1.25,
+      "signal_day_low": 73.16,
       "quiet_warning": false,
-      "next_own_earnings": "2026-10-29"
+      "next_own_earnings": "2026-10-28"
     },
     {
-      "ticker": "CROX",
-      "rank": 8,
-      "score": 43.2,
-      "rsi2": 4.37,
-      "dist_200dma_pct": 27.13,
-      "signal_close": 123.66,
-      "mr_target": 132.48,
-      "mr_stop": 110.19,
+      "ticker": "AAPL",
+      "rank": 7,
+      "score": 42.3,
+      "rsi2": 3.53,
+      "dist_200dma_pct": 11.25,
+      "signal_close": 308.91,
+      "mr_target": 331.5,
+      "mr_stop": 284.15,
       "signal": "\ud83d\udfe2",
       "listing_age_runs": 1,
       "freq_60d": 2,
-      "sector": "Consumer Cyclical",
+      "sector": "Technology",
       "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "PLTR",
+          "date": "2026-08-03",
+          "slot": "AMC",
+          "detail": "PLTR (Technology, $293B) reports 2026-08-03 AMC"
+        },
         {
           "type": "marketwide_verdict",
           "symbol": "SPCX",
           "date": "2026-08-04",
           "slot": "AMC",
-          "detail": "SPCX ($1473B) reports 2026-08-04 AMC"
+          "detail": "SPCX ($1469B) reports 2026-08-04 AMC"
         },
         {
           "type": "sector_verdict",
-          "symbol": "MCD",
-          "date": "2026-08-04",
-          "slot": "BMO",
-          "detail": "MCD (Consumer Cyclical, $193B) reports 2026-08-04 BMO"
-        },
-        {
-          "type": "sector_verdict",
-          "symbol": "BKNG",
+          "symbol": "AMD",
           "date": "2026-08-04",
           "slot": "AMC",
-          "detail": "BKNG (Consumer Cyclical, $156B) reports 2026-08-04 AMC"
+          "detail": "AMD (Technology, $791B) reports 2026-08-04 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "ANET",
+          "date": "2026-08-04",
+          "slot": "AMC",
+          "detail": "ANET (Technology, $215B) reports 2026-08-04 AMC"
         },
         {
           "type": "marketwide_verdict",
@@ -200,179 +206,38 @@
           "date": "2026-08-05",
           "slot": "BMO",
           "detail": "LLY ($1088B) reports 2026-08-05 BMO"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "SNDK",
+          "date": "2026-08-05",
+          "slot": "AMC",
+          "detail": "SNDK (Technology, $190B) reports 2026-08-05 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "WDC",
+          "date": "2026-08-05",
+          "slot": "AMC",
+          "detail": "WDC (Technology, $184B) reports 2026-08-05 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "SHOP",
+          "date": "2026-08-05",
+          "slot": "BMO",
+          "detail": "SHOP (Technology, $158B) reports 2026-08-05 BMO"
         }
       ],
       "armed": true,
-      "latest_close": 123.66,
-      "since_signal_pct": 0.0,
-      "ignited": false,
-      "down_streak": 2,
-      "ret_5d_pct": -6.65,
-      "down_gaps_5d": 2,
-      "vol_ratio_5d_20d": 1.38,
-      "signal_day_low": 113.0,
-      "quiet_warning": false
-    },
-    {
-      "ticker": "PNW",
-      "rank": 10,
-      "score": 41.7,
-      "rsi2": 1.94,
-      "dist_200dma_pct": 5.13,
-      "signal_close": 101.32,
-      "mr_target": 104.07,
-      "mr_stop": 95.77,
-      "signal": "\ud83d\udd35",
-      "listing_age_runs": 2,
-      "freq_60d": 3,
-      "sector": "Utilities",
-      "sparks": [
-        {
-          "type": "own_earnings",
-          "symbol": "PNW",
-          "date": "2026-08-04",
-          "slot": "BMO",
-          "detail": "PNW reports 2026-08-04 BMO (eps est $1.49) \u2014 a coin flip, NOT a verdict: earnings-gap rule says zero directional trust"
-        },
-        {
-          "type": "marketwide_verdict",
-          "symbol": "SPCX",
-          "date": "2026-08-04",
-          "slot": "AMC",
-          "detail": "SPCX ($1473B) reports 2026-08-04 AMC"
-        },
-        {
-          "type": "marketwide_verdict",
-          "symbol": "LLY",
-          "date": "2026-08-05",
-          "slot": "BMO",
-          "detail": "LLY ($1088B) reports 2026-08-05 BMO"
-        }
-      ],
-      "armed": true,
-      "latest_close": 101.32,
-      "since_signal_pct": -0.0,
-      "ignited": false,
-      "down_streak": 4,
-      "ret_5d_pct": -3.9,
-      "down_gaps_5d": 1,
-      "vol_ratio_5d_20d": 1.16,
-      "signal_day_low": 100.44,
-      "quiet_warning": true
-    },
-    {
-      "ticker": "TT",
-      "rank": 11,
-      "score": 40.6,
-      "rsi2": 2.88,
-      "dist_200dma_pct": 0.43,
-      "signal_close": 440.28,
-      "mr_target": 464.29,
-      "mr_stop": 400.77,
-      "signal": "\ud83d\udfe2",
-      "listing_age_runs": 2,
-      "freq_60d": 1,
-      "sector": "Industrials",
-      "sparks": [
-        {
-          "type": "sector_verdict",
-          "symbol": "SPCX",
-          "date": "2026-08-04",
-          "slot": "AMC",
-          "detail": "SPCX (Industrials, $1473B) reports 2026-08-04 AMC"
-        },
-        {
-          "type": "sector_verdict",
-          "symbol": "CAT",
-          "date": "2026-08-04",
-          "slot": "BMO",
-          "detail": "CAT (Industrials, $361B) reports 2026-08-04 BMO"
-        },
-        {
-          "type": "marketwide_verdict",
-          "symbol": "LLY",
-          "date": "2026-08-05",
-          "slot": "BMO",
-          "detail": "LLY ($1088B) reports 2026-08-05 BMO"
-        }
-      ],
-      "armed": true,
-      "latest_close": 440.28,
-      "since_signal_pct": -0.0,
-      "ignited": false,
-      "down_streak": 3,
-      "ret_5d_pct": -8.22,
-      "down_gaps_5d": 0,
-      "vol_ratio_5d_20d": 1.42,
-      "signal_day_low": 439.82,
-      "quiet_warning": false
-    },
-    {
-      "ticker": "CNC",
-      "rank": 12,
-      "score": 40.4,
-      "rsi2": 4.48,
-      "dist_200dma_pct": 30.93,
-      "signal_close": 60.84,
-      "mr_target": 62.81,
-      "mr_stop": 53.33,
-      "signal": "\ud83d\udfe2",
-      "listing_age_runs": 2,
-      "freq_60d": 0,
-      "sector": "Healthcare",
-      "sparks": [
-        {
-          "type": "marketwide_verdict",
-          "symbol": "SPCX",
-          "date": "2026-08-04",
-          "slot": "AMC",
-          "detail": "SPCX ($1473B) reports 2026-08-04 AMC"
-        },
-        {
-          "type": "sector_verdict",
-          "symbol": "MRK",
-          "date": "2026-08-04",
-          "slot": "BMO",
-          "detail": "MRK (Healthcare, $322B) reports 2026-08-04 BMO"
-        },
-        {
-          "type": "sector_verdict",
-          "symbol": "AMGN",
-          "date": "2026-08-04",
-          "slot": "AMC",
-          "detail": "AMGN (Healthcare, $209B) reports 2026-08-04 AMC"
-        },
-        {
-          "type": "sector_verdict",
-          "symbol": "GILD",
-          "date": "2026-08-04",
-          "slot": "AMC",
-          "detail": "GILD (Healthcare, $165B) reports 2026-08-04 AMC"
-        },
-        {
-          "type": "sector_verdict",
-          "symbol": "LLY",
-          "date": "2026-08-05",
-          "slot": "BMO",
-          "detail": "LLY (Healthcare, $1088B) reports 2026-08-05 BMO"
-        },
-        {
-          "type": "sector_verdict",
-          "symbol": "NVO",
-          "date": "2026-08-05",
-          "slot": "?",
-          "detail": "NVO (Healthcare, $229B) reports 2026-08-05 ?"
-        }
-      ],
-      "armed": true,
-      "latest_close": 60.84,
+      "latest_close": 308.91,
       "since_signal_pct": 0.0,
       "ignited": false,
       "down_streak": 3,
-      "ret_5d_pct": -4.55,
+      "ret_5d_pct": -7.24,
       "down_gaps_5d": 2,
-      "vol_ratio_5d_20d": 1.54,
-      "signal_day_low": 59.83,
+      "vol_ratio_5d_20d": 1.35,
+      "signal_day_low": 300.0,
       "quiet_warning": false
     }
   ],
@@ -381,41 +246,41 @@
     "source": "snapback:2026-07-30",
     "n": 20,
     "pct_positive": 60.0,
-    "avg_pct": 0.15,
-    "median_pct": 0.42,
+    "avg_pct": 0.32,
+    "median_pct": 0.49,
     "best": [
       {
-        "ticker": "MU",
-        "since_pct": 1.82
-      },
-      {
-        "ticker": "ROIV",
-        "since_pct": 1.71
-      },
-      {
         "ticker": "ANET",
-        "since_pct": 1.65
+        "since_pct": 7.2
+      },
+      {
+        "ticker": "TSEM",
+        "since_pct": 4.85
+      },
+      {
+        "ticker": "RRX",
+        "since_pct": 2.53
       }
     ],
     "worst": [
       {
         "ticker": "NXPI",
-        "since_pct": -2.09
+        "since_pct": -8.48
       },
       {
-        "ticker": "KLAC",
-        "since_pct": -1.65
+        "ticker": "MU",
+        "since_pct": -4.19
       },
       {
-        "ticker": "VSH",
-        "since_pct": -1.63
+        "ticker": "ERAS",
+        "since_pct": -1.36
       }
     ],
     "armed_subset": {
       "n": 16,
-      "pct_positive": 68.8,
-      "avg_pct": 0.39,
-      "median_pct": 0.78
+      "pct_positive": 56.2,
+      "avg_pct": 0.79,
+      "median_pct": 0.28
     }
   },
   "errors": []
