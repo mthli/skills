@@ -20,6 +20,10 @@ network) with:
     anything validated"
   - a ⭐-pocket-vs-rest running trade-expectancy chart against the
     backtest's in-sample reference values
+  - a per-sector realized-result panel: one bar per sector (avg %/completed
+    trade) with its 95% interval drawn above it, read against a dashed
+    all-trades average — a sector whose interval reaches that line is not
+    distinguishable from the board and is drawn back to 42% opacity
   - a per-ticker summary table (the no-hover fallback for every value)
   - an English / 简体中文 / 繁體中文 / 日本語 / 한국어 language menu (top-right;
     choice kept in localStorage, first visit follows the browser language)
@@ -46,6 +50,7 @@ Usage:
 import argparse
 import csv
 import json
+import statistics
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -76,6 +81,12 @@ LEDGER_CONVENTION = {"horizon": "20", "stop_pct": "8.0", "entry": "touch"}
 # Roster/grid rows need a floor before "trade expectancy" means anything;
 # one lucky episode is not a track record.
 DEFAULT_MIN_DAYS = 3
+# Sector panel: a sector needs this many completed trades to get its own
+# bar; thinner ones fold into a counted "Other" rather than vanishing. Not a
+# validated threshold — it is the point below which the 95% interval is
+# wider than any difference the bar could show. Base breakouts resolve into
+# far fewer trades than MR signals do, so this floor bites here.
+MIN_SECTOR_N = 10
 
 
 def load_history(path: Path) -> list[dict]:
@@ -209,6 +220,48 @@ def _day_runs(pts: list[dict]):
         yield seg
 
 
+def sector_edge(buckets: dict[str, list[float]],
+                tallies: dict[str, list[int]], min_n: int) -> dict:
+    """Per-sector realized trade result: mean, 95% interval, best first.
+
+    The interval is the point of the panel, not decoration. Across ~45
+    trading days most sectors resolve only a couple dozen trades, so the
+    sampling noise alone is wider than the gaps between them — a bare bar
+    would invite reading a 5-point spread as an edge. Sectors under min_n
+    fold into a counted "Other" instead of showing a mean nobody should act
+    on.
+    """
+    rows, folded_vals, folded_secs = [], [], []
+    for s, vals in buckets.items():
+        if len(vals) < min_n:
+            folded_vals.extend(vals)
+            folded_secs.append(s)
+            continue
+        m = statistics.mean(vals)
+        # 1.96 SE, normal approximation. Stopped-out trades are fat-tailed
+        # and same-week breakouts are correlated, so treat the width as a
+        # "how much of this could be noise" cue, not a coverage guarantee.
+        half = (1.96 * statistics.stdev(vals) / len(vals) ** 0.5
+                if len(vals) > 1 else None)
+        trig, fade, broke = tallies.get(s, [0, 0, 0])
+        rows.append({
+            "s": s, "n": len(vals), "exp": round(m, 2),
+            "lo": round(m - half, 2) if half is not None else None,
+            "hi": round(m + half, 2) if half is not None else None,
+            "trig": trig, "fade": fade, "broke": broke,
+        })
+    rows.sort(key=lambda r: (-r["exp"], r["s"]))
+    all_vals = [v for vals in buckets.values() for v in vals]
+    return {
+        "rows": rows,
+        "folded": {"secs": len(folded_secs), "n": len(folded_vals),
+                   "names": sorted(folded_secs)},
+        "all": round(statistics.mean(all_vals), 2) if all_vals else None,
+        "allN": len(all_vals),
+        "minN": min_n,
+    }
+
+
 def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
                   days_window: int = 0) -> dict:
     run_ids = sorted({r["run_id"] for r in rows})
@@ -241,6 +294,12 @@ def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
     # running expectancy advances when the bet was placed, not when it paid.
     pocket_by_day: list[list[float]] = [[] for _ in run_ids]
     base_by_day: list[list[float]] = [[] for _ in run_ids]
+    # Realized trade returns bucketed by the name's sector, plus that
+    # sector's triggered/faded/broke-down episode tally. Only TRIGGERED
+    # episodes carry a trade return, so the bar is "what the ones that
+    # fired paid" and the tally is how often they fired at all.
+    sec_results: dict[str, list[float]] = {}
+    sec_tally: dict[str, list[int]] = {}
 
     today_pocket: list[str] = []
     # (base weeks TODAY, ticker) for names on the latest run. Bases reset —
@@ -302,6 +361,11 @@ def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
                     "pk": pocket, "pts": [],
                 }
                 eps.append(cur)
+                sec = sector_of(t)
+                slot = {"TRIGGERED": 0, "FADED": 1, "BROKE_DOWN": 2}.get(
+                    cur["oc"])
+                if slot is not None:
+                    sec_tally.setdefault(sec, [0, 0, 0])[slot] += 1
                 if cur["oc"] == "TRIGGERED":
                     n_trig += 1
                 elif cur["oc"] == "BROKE_DOWN":
@@ -310,6 +374,7 @@ def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
                     n_faded += 1
                 if tr is not None:
                     (pocket_by_day if pocket else base_by_day)[d].append(tr)
+                    sec_results.setdefault(sec, []).append(tr)
 
             # The pivot moves as the base rebases, so it is a per-DAY value:
             # the buy-stop price that was live that day, not the episode's.
@@ -418,6 +483,19 @@ def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
     n_resolved = n_trig + n_faded + n_broke
     all_trs = [v for day in (pocket_by_day + base_by_day) for v in day]
 
+    # A sector whose bases all faded has episodes but no completed trades,
+    # and would otherwise vanish from the panel entirely — not even counted
+    # as folded. Seed it with an empty bucket so it lands in the folded
+    # tally like any other sector too thin to draw.
+    for s in sec_tally:
+        sec_results.setdefault(s, [])
+    # "Unknown" is a cache miss, not a sector — it can't be acted on, so it
+    # leaves the panel and is reported as a coverage count instead.
+    untagged = len(sec_results.pop("Unknown", []))
+    sec_tally.pop("Unknown", None)
+    sec_panel = sector_edge(sec_results, sec_tally, MIN_SECTOR_N)
+    sec_panel["untagged"] = untagged
+
     return {
         "days": day_labels[win_start:],
         "horizon": horizon,
@@ -436,6 +514,7 @@ def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
             "refBase": BACKTEST_BASELINE_TRADE,
             "minWeeks": VALIDATED_BASE_WEEKS,
         },
+        "sectorEdge": sec_panel,
         "kpi": {
             "runs": n_days,
             "span": [f"{rid[:4]}-{rid[4:6]}-{rid[6:8]}"
@@ -565,6 +644,12 @@ svg { display: block; }
 svg text { font: 11px system-ui, -apple-system, "Segoe UI", sans-serif; fill: var(--muted); }
 svg text.tick { font-variant-numeric: tabular-nums; }
 svg text.dlabel { font-size: 11.5px; font-weight: 600; fill: var(--ink-2); }
+/* A tick riding INSIDE a label — the sample size that flows off the end of
+   the sector panel's value. The rules above are `svg text.*`, which a tspan
+   never matches, so without this it inherits the label's ink and weight and
+   the sample size reads as loud as the number it qualifies. */
+svg tspan.tick { font-size: 11px; font-weight: 400; fill: var(--muted);
+                 font-variant-numeric: tabular-nums; }
 .legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 10px 0 0; font-size: 12.5px; color: var(--ink-2); align-items: center; }
 .legend .key { display: inline-flex; align-items: center; gap: 6px; }
 .legend .line { width: 14px; height: 2px; border-radius: 1px; }
@@ -669,6 +754,13 @@ svg a:hover text { text-decoration: underline; }
     <div class="legend" id="pk-legend"></div>
   </div>
 
+  <div class="card" id="se-card">
+    <h2 id="se-title">Which sectors paid</h2>
+    <p class="note" id="se-note"></p>
+    <div class="scroll" id="sechart"></div>
+    <div class="legend" id="se-legend"></div>
+  </div>
+
   <div class="card">
     <div class="head">
       <div>
@@ -736,6 +828,19 @@ const I18N = {
     pkPocket: "⭐ Pocket", pkBase: "The rest",
     pkRef: v => `backtest ${v >= 0 ? "+" : ""}${v}%`,
     pkTipN: n => `${n} trades`,
+    seTitle: "Which sectors paid",
+    seNote: minN => `Average result per completed trade, grouped by the name's sector — the ledger's answer to "does it matter what kind of stock the base is in".\nThe capped line above each bar is its 95% interval. Where that line reaches the dashed all-trades average, this sector is NOT distinguishable from the board as a whole. Sectors under ${minN} completed trades fold away.\nA sector's edge here can just as easily be the last two months of sector beta as a durable property of its bases — treat it as an observation to re-check each quarter, not a filter.`,
+    sePos: "Sector made money", seNeg: "Sector lost money",
+    seCI: "95% interval",
+    seAll: v => `All trades ${v >= 0 ? "+" : ""}${v}%`,
+    seTipN: n => `${n} completed trades`,
+    seTipCI: (lo, hi) => `95% interval ${lo >= 0 ? "+" : ""}${lo}% to ${hi >= 0 ? "+" : ""}${hi}%`,
+    seTipTrig: (rate, trig, tot) => `Trigger rate ${rate}% — ${trig} of ${tot} bases fired`,
+    seTipSame: "Overlaps the all-trades average — no readable difference",
+    seTipBetter: "Clears the all-trades average",
+    seTipWorse: "Below the all-trades average",
+    seFolded: (secs, n) => `\n${secs} sector(s) below the cutoff folded away (${n} trades).`,
+    seUntagged: n => `\n${n} completed trades have no sector tag and sit outside this panel.`,
     gridTitle: "Maturity grid",
     gridNote: () => `One row per name, one cell per listed day, color = how close it was to firing that day; a center dot = ⭐ pocket day (base ≥ ${MINWK} weeks).\nRows run longest-base first, so the validated names lead. Row-end = that name's realized result per trade.\nA row whose color grows more vivid left to right is a base tightening toward its trigger; a break in the row is a dropout.`,
     all: "All",
@@ -803,6 +908,19 @@ const I18N = {
     pkPocket: "⭐ 口袋", pkBase: "其余全部",
     pkRef: v => `回测 ${v >= 0 ? "+" : ""}${v}%`,
     pkTipN: n => `${n} 单`,
+    seTitle: "哪类股票的底部真的兑现了",
+    seNote: minN => `按股票所属板块，算它每笔了结交易的平均结果 —— 账本对"底部形态出现在什么类型的股票上要不要紧"的回答。\n每根条上方那条带端点的横线是 95% 误差范围。横线只要够到"全体平均"那条虚线，就说明这个板块跟整体比不出差别。已了结交易少于 ${minN} 笔的板块不单独画。\n这里的板块差距，同样可能只是最近两个月的板块行情，而不是这类股票的底部更靠谱 —— 当成每季度要复查的观察，别当成筛选条件。`,
+    sePos: "该板块赚钱", seNeg: "该板块亏钱",
+    seCI: "95% 误差范围",
+    seAll: v => `全体平均 ${v >= 0 ? "+" : ""}${v}%`,
+    seTipN: n => `已了结 ${n} 笔交易`,
+    seTipCI: (lo, hi) => `95% 误差范围 ${lo >= 0 ? "+" : ""}${lo}% 到 ${hi >= 0 ? "+" : ""}${hi}%`,
+    seTipTrig: (rate, trig, tot) => `触发率 ${rate}% —— ${tot} 个底部里 ${trig} 个真的突破了`,
+    seTipSame: "与全体平均重叠 —— 看不出差别",
+    seTipBetter: "确实高于全体平均",
+    seTipWorse: "确实低于全体平均",
+    seFolded: (secs, n) => `\n另有 ${secs} 个板块样本不足，已折叠（共 ${n} 笔交易）。`,
+    seUntagged: n => `\n另有 ${n} 笔已了结交易没有板块标签，不计入本图。`,
     gridTitle: "成熟度网格",
     gridNote: () => `一行一只票，一格一个上榜日，颜色 = 那天离触发有多近；带中心点 = ⭐ 口袋日（基龄 ≥ ${MINWK} 周）。\n行序按最长基龄排，验证过的名字在最上面；行尾 = 该票实际每单盈亏。\n一行从左到右越来越醒目 = 这个基在收紧、逼近触发；行中间断开 = 那天掉出名单了。`,
     all: "全部",
@@ -875,6 +993,19 @@ const I18N = {
     pkPocket: "⭐ 口袋", pkBase: "其餘全部",
     pkRef: v => `回測 ${v >= 0 ? "+" : ""}${v}%`,
     pkTipN: n => `${n} 筆`,
+    seTitle: "哪類股票的底部真的兌現了",
+    seNote: minN => `按股票所屬板塊，算它每筆了結交易的平均結果 —— 帳本對「底部型態出現在什麼類型的股票上要不要緊」的回答。\n每根條上方那條帶端點的橫線是 95% 誤差範圍。橫線只要搆到「全體平均」那條虛線，就代表這個板塊跟整體比不出差別。已了結交易少於 ${minN} 筆的板塊不單獨畫。\n這裡的板塊差距，同樣可能只是最近兩個月的板塊行情，而不是這類股票的底部更可靠 —— 當成每季要複查的觀察，別當成篩選條件。`,
+    sePos: "該板塊賺錢", seNeg: "該板塊虧錢",
+    seCI: "95% 誤差範圍",
+    seAll: v => `全體平均 ${v >= 0 ? "+" : ""}${v}%`,
+    seTipN: n => `已了結 ${n} 筆交易`,
+    seTipCI: (lo, hi) => `95% 誤差範圍 ${lo >= 0 ? "+" : ""}${lo}% 到 ${hi >= 0 ? "+" : ""}${hi}%`,
+    seTipTrig: (rate, trig, tot) => `觸發率 ${rate}% —— ${tot} 個底部裡 ${trig} 個真的突破了`,
+    seTipSame: "與全體平均重疊 —— 看不出差別",
+    seTipBetter: "確實高於全體平均",
+    seTipWorse: "確實低於全體平均",
+    seFolded: (secs, n) => `\n另有 ${secs} 個板塊樣本不足，已摺疊（共 ${n} 筆交易）。`,
+    seUntagged: n => `\n另有 ${n} 筆已了結交易沒有板塊標籤，不計入本圖。`,
     gridTitle: "成熟度網格",
     gridNote: () => `一行一檔票，一格一個上榜日，顏色 = 那天離觸發有多近；帶中心點 = ⭐ 口袋日（基齡 ≥ ${MINWK} 週）。\n行序按最長基齡排，驗證過的名字在最上面；行尾 = 該檔實際每筆盈虧。\n一行從左到右越來越醒目 = 這個基在收緊、逼近觸發；行中間斷開 = 那天掉出名單了。`,
     all: "全部",
@@ -947,6 +1078,19 @@ const I18N = {
     pkPocket: "⭐ ポケット", pkBase: "その他",
     pkRef: v => `バックテスト ${v >= 0 ? "+" : ""}${v}%`,
     pkTipN: n => `${n} トレード`,
+    seTitle: "どのセクターのベースが実際に報われたか",
+    seNote: minN => `銘柄のセクター別に、決済済みトレード1件あたりの平均結果。「ベースがどんな種類の株にできているかが効くのか」への台帳からの回答です。\n各バーの上にある端点付きの線は95%誤差範囲。この線が「全体平均」の破線に届くセクターは、全体との差が読み取れません。決済済みトレードが${minN}件未満のセクターは折り畳まれます。\nここでの差は、ベースの質ではなく直近2か月のセクター物色である可能性も同じくらいあります — 四半期ごとに見直す観察であって、絞り込み条件ではありません。`,
+    sePos: "このセクターは利益", seNeg: "このセクターは損失",
+    seCI: "95%誤差範囲",
+    seAll: v => `全体平均 ${v >= 0 ? "+" : ""}${v}%`,
+    seTipN: n => `決済済み ${n} トレード`,
+    seTipCI: (lo, hi) => `95%誤差範囲 ${lo >= 0 ? "+" : ""}${lo}% 〜 ${hi >= 0 ? "+" : ""}${hi}%`,
+    seTipTrig: (rate, trig, tot) => `トリガー率 ${rate}% — ${tot}件のベースのうち${trig}件が発動`,
+    seTipSame: "全体平均と重なる — 差は読み取れない",
+    seTipBetter: "全体平均を明確に上回る",
+    seTipWorse: "全体平均を明確に下回る",
+    seFolded: (secs, n) => `\nサンプル不足の${secs}セクター（計${n}トレード）は折り畳み。`,
+    seUntagged: n => `\nセクター未設定の決済済み${n}トレードは本図の対象外。`,
     gridTitle: "成熟度グリッド",
     gridNote: () => `1 行 = 1 銘柄、1 セル = リスト入り 1 日、色 = その日の発火までの近さ。中心の点 = ⭐ ポケット日（ベース ${MINWK} 週以上）。\n行は最長ベース順、検証済みの銘柄が上に来ます。行末 = その銘柄の実際の 1 トレード損益。\n左から右へ色が鮮やかになる行はベースが締まりトリガーへ近づいた証。行の途切れはリスト落ちです。`,
     all: "すべて",
@@ -1019,6 +1163,19 @@ const I18N = {
     pkPocket: "⭐ 포켓", pkBase: "나머지",
     pkRef: v => `백테스트 ${v >= 0 ? "+" : ""}${v}%`,
     pkTipN: n => `${n}건`,
+    seTitle: "어떤 섹터의 베이스가 실제로 결실을 맺었나",
+    seNote: minN => `종목의 섹터별로 청산된 거래 1건당 평균 결과 — "베이스가 어떤 종류의 주식에 생겼는지가 중요한가"에 대한 장부의 답입니다.\n각 막대 위에 있는 끝점 달린 선은 95% 오차 범위입니다. 이 선이 "전체 평균" 점선에 닿으면 그 섹터는 전체와 구분되지 않습니다. 청산된 거래가 ${minN}건 미만인 섹터는 접힙니다.\n여기서 보이는 차이는 베이스의 질이 아니라 최근 두 달의 섹터 장세일 가능성도 그만큼 큽니다 — 분기마다 다시 확인할 관찰이지, 필터가 아닙니다.`,
+    sePos: "이 섹터는 수익", seNeg: "이 섹터는 손실",
+    seCI: "95% 오차 범위",
+    seAll: v => `전체 평균 ${v >= 0 ? "+" : ""}${v}%`,
+    seTipN: n => `청산된 거래 ${n}건`,
+    seTipCI: (lo, hi) => `95% 오차 범위 ${lo >= 0 ? "+" : ""}${lo}% ~ ${hi >= 0 ? "+" : ""}${hi}%`,
+    seTipTrig: (rate, trig, tot) => `발동률 ${rate}% — 베이스 ${tot}개 중 ${trig}개가 돌파`,
+    seTipSame: "전체 평균과 겹침 — 차이를 읽을 수 없음",
+    seTipBetter: "전체 평균을 확실히 상회",
+    seTipWorse: "전체 평균을 확실히 하회",
+    seFolded: (secs, n) => `\n표본이 부족한 ${secs}개 섹터(총 ${n}건)는 접었습니다.`,
+    seUntagged: n => `\n섹터 태그가 없는 청산된 거래 ${n}건은 이 패널에서 제외됩니다.`,
     gridTitle: "성숙도 그리드",
     gridNote: () => `1행 = 1종목, 1셀 = 등재 1일, 색 = 그날 발동까지의 거리. 중심의 점 = ⭐ 포켓일(베이스 ${MINWK}주 이상).\n행은 최장 베이스 순이라 검증된 종목이 위에 옵니다. 행 끝 = 그 종목의 실제 거래당 손익.\n왼쪽에서 오른쪽으로 색이 선명해지는 행은 베이스가 조여지며 발동에 다가간 것이고, 행이 끊기면 목록에서 빠진 것입니다.`,
     all: "전체",
@@ -1092,6 +1249,7 @@ document.title = T.title;
   document.getElementById("ap-title").textContent = T.apTitle;
   document.getElementById("co-title").textContent = T.coTitle;
   document.getElementById("pk-title").textContent = T.pkTitle;
+  document.getElementById("se-title").textContent = T.seTitle;
   document.getElementById("grid-title").textContent = T.gridTitle;
   document.getElementById("roster-title").textContent = T.rosterTitle;
   document.getElementById("roster-note").textContent = T.rosterNote;
@@ -1689,6 +1847,140 @@ function renderGrid(minDays) {
   dot.style.cssText = "position:absolute;left:3px;top:3px;width:3px;height:3px;border-radius:50%;background:var(--surface)";
   d.appendChild(dot); k.appendChild(d);
   k.appendChild(document.createTextNode(T.pocketDay));
+}
+
+// ---- sector edge: realized trade result per sector, with 95% intervals ----
+if (!DATA.sectorEdge.rows.length) {
+  // Nothing has cleared the cutoff yet — there is no panel to draw.
+  document.getElementById("se-card").style.display = "none";
+} else {
+  const SE = DATA.sectorEdge;
+  let note = T.seNote(SE.minN);
+  if (SE.folded.secs) note += T.seFolded(SE.folded.secs, SE.folded.n);
+  if (SE.untagged) note += T.seUntagged(SE.untagged);
+  document.getElementById("se-note").textContent = note;
+
+  const R = SE.rows;
+  // ML holds the longest sector name, measured rather than guessed: English
+  // "Communication Services" is the widest across all five locales at 141px
+  // (11.5px system-ui), so 150 clipped it by a pixel. MR holds the value
+  // column, parked at a fixed x rather than floating off each bar's end —
+  // bars point both ways here, and alternating label sides makes the
+  // numbers unscannable.
+  //
+  // The interval rides ABOVE its bar rather than through it: both are
+  // horizontal marks on the same row, so drawn co-linearly the interval
+  // reads as a slot cut through the bar — and the surface halo it would
+  // need to stay legible off-bar is exactly what cuts it. BY is the bar's
+  // offset from the row center, CY the interval's.
+  const ML = 162, MR = 112, MT = 10, MB = 26, RH = 30, BH = 9, PW = 440;
+  const BY = 2, CY = -7, CAP = 3.5;
+  const W = ML + PW + MR, H = MT + R.length * RH + MB;
+  const ends = [0, SE.all];
+  R.forEach(r => {
+    ends.push(r.exp);
+    if (r.lo !== null) ends.push(r.lo, r.hi);
+  });
+  let lo = Math.min(...ends), hi = Math.max(...ends);
+  const pad = (hi - lo) * 0.08 || 1;
+  lo -= pad; hi += pad;
+  const xOf = v => ML + (v - lo) / (hi - lo) * PW;
+  const yOf = i => MT + i * RH + RH / 2;
+  const svg = el("svg", { width: W, height: H, viewBox: `0 0 ${W} ${H}` },
+    document.getElementById("sechart"));
+
+  // Gridlines on whole percents, solid hairlines; zero carries the axis tone
+  // because it is where every bar starts, not just another gridline.
+  const span = hi - lo;
+  const step = span > 24 ? 10 : span > 12 ? 5 : span > 6 ? 2 : 1;
+  for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) {
+    const zero = Math.abs(v) < 1e-9;
+    el("line", { x1: xOf(v), x2: xOf(v), y1: MT, y2: MT + R.length * RH,
+      stroke: zero ? "var(--axis)" : "var(--grid)" }, svg);
+    el("text", { x: xOf(v), y: H - 8, "text-anchor": "middle", class: "tick" },
+      svg).textContent = (v > 0 ? "+" : "") + v.toFixed(0) + "%";
+  }
+  // The all-trades average: the line an interval has to clear before a
+  // sector is saying anything the board isn't already saying.
+  const xAll = xOf(SE.all);
+  el("line", { x1: xAll, x2: xAll, y1: MT, y2: MT + R.length * RH,
+    stroke: "var(--ink-2)", "stroke-dasharray": "4 3", opacity: 0.75 }, svg);
+
+  // Bar with 4px rounded ends on the DATA end only — the zero end stays
+  // square against the axis it is anchored to.
+  const barPath = (x0, x1, y, h) => {
+    const r = Math.min(4, Math.abs(x1 - x0), h / 2), t = y - h / 2, b = y + h / 2;
+    const s = x1 >= x0 ? 1 : 0, d = x1 >= x0 ? -r : r;
+    return `M${x0} ${t}H${x1 + d}A${r} ${r} 0 0 ${s} ${x1} ${t + r}`
+      + `V${b - r}A${r} ${r} 0 0 ${s} ${x1 + d} ${b}H${x0}Z`;
+  };
+  // A missing interval (a lone sample) is not evidence of a difference, so
+  // it reads exactly like an overlapping one: not distinguishable. Without
+  // the null arm, a one-trade sector would be drawn solid and told the
+  // reader it "clears the average" on the strength of that single trade.
+  const straddles = r =>
+    r.lo === null || (r.lo <= SE.all && r.hi >= SE.all);
+
+  R.forEach((r, i) => {
+    const y = yOf(i), by = y + BY;
+    // The roster's own +/− tones. This page's outcome hues mean triggered /
+    // faded / broke-down, not profit — borrowing the triggered blue for
+    // "made money" would collide with the meaning it already carries here.
+    const col = r.exp >= 0 ? "var(--tpos)" : "var(--tneg)";
+    el("text", { x: ML - 10, y: by + 4, "text-anchor": "end", class: "dlabel" },
+      svg).textContent = secName(r.s);
+    el("path", { d: barPath(xOf(0), xOf(r.exp), by, BH), fill: col,
+      // A sector that overlaps the board average is drawn back, not hidden:
+      // the bar still reports its sign, at the weight the evidence supports.
+      opacity: straddles(r) ? 0.42 : 1 }, svg);
+    if (r.lo !== null) {
+      const cy = y + CY;
+      el("line", { x1: xOf(r.lo), x2: xOf(r.hi), y1: cy, y2: cy,
+        stroke: "var(--ink-2)", "stroke-width": 1.5 }, svg);
+      [r.lo, r.hi].forEach(v => el("line", { x1: xOf(v), x2: xOf(v),
+        y1: cy - CAP, y2: cy + CAP, stroke: "var(--ink-2)",
+        "stroke-width": 1.5 }, svg));
+    }
+    // Value then sample size in ONE text element: the n rides on a tspan
+    // whose dx flows it off the end of the percentage, so a two-digit
+    // sector return pushes it right instead of colliding with it. A second
+    // text at a fixed x would need the widest label measured first.
+    const vt = el("text", { x: ML + PW + 10, y: by + 4, class: "dlabel" }, svg);
+    vt.textContent = pctTxt(r.exp);
+    el("tspan", { dx: 8, class: "tick" }, vt).textContent = "n=" + r.n;
+    // Episodes that reached a verdict. Trades (r.n) can be FEWER than the
+    // triggered count — a fired base whose 20 sessions are still running
+    // has no realized return yet — so the two numbers are reported as what
+    // they are rather than folded together.
+    const decided = r.trig + r.fade + r.broke;
+    const hit = el("rect", { x: 0, y: y - RH / 2, width: W, height: RH,
+      fill: "transparent" }, svg);
+    hit.addEventListener("pointermove", ev => showTip(ev.clientX, ev.clientY,
+      tt => tipRows(tt, [
+        `${secName(r.s)} ${pctTxt(r.exp)}`,
+        T.seTipN(r.n),
+        r.lo === null ? "" : T.seTipCI(r.lo, r.hi),
+        straddles(r) ? T.seTipSame
+          : (r.exp > SE.all ? T.seTipBetter : T.seTipWorse),
+        decided ? T.seTipTrig(Math.round(r.trig / decided * 100), r.trig,
+          decided) : "",
+      ].filter(Boolean), col)));
+    hit.addEventListener("pointerleave", hideTip);
+  });
+
+  const leg = document.getElementById("se-legend");
+  [[T.sePos, "var(--tpos)"], [T.seNeg, "var(--tneg)"]].forEach(([lbl, c]) => {
+    const k = div("key", leg);
+    div("rect", k).style.background = c;
+    k.appendChild(document.createTextNode(lbl));
+  });
+  const ci = div("key", leg);
+  div("line", ci).style.background = "var(--ink-2)";
+  ci.appendChild(document.createTextNode(T.seCI));
+  const av = div("key", leg);
+  div("line", av).style.cssText =
+    "background:repeating-linear-gradient(90deg,var(--ink-2) 0 4px,transparent 4px 7px)";
+  av.appendChild(document.createTextNode(T.seAll(SE.all)));
 }
 
 // ---- roster table ----

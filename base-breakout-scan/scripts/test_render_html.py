@@ -203,6 +203,77 @@ def test_payload_carries_no_fields_the_page_never_reads():
                                              "od"}
 
 
+# ------------------------------------------------------------ sector panel
+
+def test_sector_edge_mean_interval_and_order():
+    buckets = {"Financial Services": [2.0, 3.0, 4.0] * 4,
+               "Energy": [-3.0, -5.0, -4.0] * 4}
+    tallies = {"Financial Services": [12, 6, 0], "Energy": [12, 8, 4]}
+    out = rh.sector_edge(buckets, tallies, 10)
+    assert [r["s"] for r in out["rows"]] == ["Financial Services", "Energy"]
+    fs = out["rows"][0]
+    assert fs["exp"] == 3.0 and fs["n"] == 12
+    assert (fs["trig"], fs["fade"], fs["broke"]) == (12, 6, 0)
+    assert fs["lo"] < 3.0 < fs["hi"]
+    assert round(fs["hi"] - 3.0, 6) == round(3.0 - fs["lo"], 6)
+    assert out["all"] == -0.5 and out["allN"] == 24
+    assert out["folded"] == {"secs": 0, "n": 0, "names": []}
+
+
+def test_sector_edge_folds_thin_sectors_without_dropping_them():
+    buckets = {"Technology": [1.0] * 10, "Utilities": [5.0, 6.0],
+               "Real Estate": [9.0]}
+    out = rh.sector_edge(buckets, {}, 10)
+    assert [r["s"] for r in out["rows"]] == ["Technology"]
+    # Folded sectors stay countable — never silently dropped...
+    assert out["folded"] == {"secs": 2, "n": 3,
+                             "names": ["Real Estate", "Utilities"]}
+    # ...and still count toward the all-trades average.
+    assert out["allN"] == 13
+
+
+def test_sector_edge_single_sample_has_no_interval():
+    out = rh.sector_edge({"Energy": [4.0]}, {}, 1)
+    assert out["rows"][0]["exp"] == 4.0
+    assert out["rows"][0]["lo"] is None and out["rows"][0]["hi"] is None
+
+
+def test_sector_edge_empty():
+    out = rh.sector_edge({}, {}, 10)
+    assert out["rows"] == [] and out["all"] is None and out["allN"] == 0
+
+
+def test_sector_panel_counts_episodes_and_excludes_untagged():
+    rows, outcomes = _fixture()
+    # AAA/BBB tagged; DDD left out of the cache → its trade is untagged.
+    p = rh.build_payload(rows, outcomes, {
+        "AAA": {"sector": "Technology"}, "BBB": {"sector": "Energy"}})
+    se = p["sectorEdge"]
+    assert se["untagged"] == 1                  # DDD's −8% trade
+    assert all(r["s"] != "Unknown" for r in se["rows"])
+    # Everything is under the cutoff, so nothing draws — but the trades are
+    # still pooled into the average and counted as folded.
+    assert se["rows"] == []
+    assert se["folded"]["names"] == ["Energy", "Technology"]
+    assert se["all"] == 6.0 and se["allN"] == 1     # only AAA has a trade
+    assert se["minN"] == rh.MIN_SECTOR_N
+
+
+def test_all_faded_sector_is_still_counted_as_folded():
+    """A sector whose bases never fired has no trade return, so it has no
+    bar — but it must not disappear from the folded count as if it had
+    never been scanned."""
+    rows, outcomes = _fixture()
+    p = rh.build_payload(rows, outcomes, {
+        "AAA": {"sector": "Technology"}, "BBB": {"sector": "Energy"}})
+    folded = p["sectorEdge"]["folded"]
+    # BBB's two episodes both ended without a trade (FADED, BROKE_DOWN).
+    assert folded["names"] == ["Energy", "Technology"]
+    assert folded["secs"] == 2
+    # Energy contributes no trades, so only AAA's +6% is in the pool.
+    assert folded["n"] == 1
+
+
 def test_open_trade_day_is_clamped_to_what_the_ledger_proves():
     """A triggered episode with no trade result is a trade still running, and
     the tooltip counts its sessions. The count is a weekday count (the scan's
