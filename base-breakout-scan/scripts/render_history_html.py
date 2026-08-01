@@ -1378,9 +1378,12 @@ function renderApproach(mode) {
         // last one, since that is where the end dot sits.
         [T.listedOn, DATA.days[a.d0] + (a.tps.length > 1
           ? ` → ${DATA.days[a.d0 + a.tps.length - 1]}` : "")],
+        a.bw == null ? null : [T.baseWks, T.wks(a.bw)],
+        // Then the two price rows. Spans and base length are both
+        // durations; the pivot and the distance to it are both prices, and
+        // the pivot sits next to the outcome lines that measure against it.
         a.pv == null ? null : [T.pivotPx, pxTxt(a.pv)],
         [T.toPivot, pctTxt(a.tps[a.tps.length - 1], 1)],
-        a.bw == null ? null : [T.baseWks, T.wks(a.bw)],
       ],
       notes: epLines(a),
     }));
@@ -1638,11 +1641,14 @@ function renderGrid(minDays) {
         // its own: the cell's color already said it, this only names it.
         sub: `${T.sigName[p.s]} · ${T.spellDay(p.k)}`
           + (p.p ? ` · ${T.pocketDay}` : ""),
+        // Same grouping as the trajectory card: what the base is, then the
+        // two prices. Score last, since the backtest found it does not
+        // discriminate outcomes (findings #3) — it is a display floor.
         kv: [
-          p.pv == null ? null : [T.pivotPx, pxTxt(p.pv)],
-          [T.toPivot, p.tp == null ? "—" : pctTxt(p.tp, 1)],
           [T.baseWks, p.bw == null ? "—" : T.wks(p.bw)],
           [T.width, p.wd == null ? "—" : p.wd.toFixed(1) + "%"],
+          p.pv == null ? null : [T.pivotPx, pxTxt(p.pv)],
+          [T.toPivot, p.tp == null ? "—" : pctTxt(p.tp, 1)],
           [T.score, p.sc == null ? "—" : p.sc.toFixed(0)],
         ],
         notes: epLines(e),
