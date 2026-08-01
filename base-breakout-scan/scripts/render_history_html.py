@@ -799,7 +799,7 @@ const I18N = {
     all: "全部",
     geDays: n => `上榜 ≥ ${n} 天`,
     daysFilterLabel: "按上榜天数筛选",
-    rosterTitle: "名录",
+    rosterTitle: "上榜名录",
     rosterNote: "每只上过榜的票一行。点击表头排序；再次点击反向。图表里悬停能看到的数值，这张表都有。\n挑票看「最长基龄」这列，它是回测里唯一验证过的属性。Score 是显示门槛，不是排序依据。",
     cols: ["代码", "行业", "最长基龄(周)", "每单盈亏 %", "触发率", "上榜段数", "⭐ 天数", "最紧宽度 %", "最接近触发", "上榜天数", "最近上榜", "状态"],
     sigName: { 0: "成形中", 1: "收紧中", 2: "临门一脚", 3: "今日突破" },
@@ -871,7 +871,7 @@ const I18N = {
     all: "全部",
     geDays: n => `上榜 ≥ ${n} 天`,
     daysFilterLabel: "按上榜天數篩選",
-    rosterTitle: "名錄",
+    rosterTitle: "上榜名錄",
     rosterNote: "每檔上過榜的票一行。點擊表頭排序；再次點擊反向。圖表裡懸停看得到的數值，這張表都有。\n挑票看「最長基齡」這欄，它是回測裡唯一驗證過的屬性。Score 是顯示門檻，不是排序依據。",
     cols: ["代號", "產業", "最長基齡(週)", "每筆盈虧 %", "觸發率", "上榜段數", "⭐ 天數", "最緊寬度 %", "最接近觸發", "上榜天數", "最近上榜", "狀態"],
     sigName: { 0: "成形中", 1: "收緊中", 2: "臨門一腳", 3: "今日突破" },
@@ -1471,8 +1471,9 @@ function renderApproach(mode) {
   el("text", { x: ML + (DAYS - 1) * DX + BW / 2 + 10, y: yOf(lastP) + 4, class: "dlabel" }, svg)
     .textContent = `⭐ ${lastP}`;
   const leg = document.getElementById("co-legend");
-  // Legend descends (breakout first) so the reading order matches the
-  // stack's visual top-down order.
+  // Every Sig legend on this page descends (breakout first): here it
+  // matches the stack's own top-down order, and the grid and the roster
+  // follow so the reader learns the scale once.
   SIGS.slice().reverse().forEach(i => {
     const k = div("key", leg); const r = div("rect", k);
     r.style.background = `var(${SIG_VAR[i]})`;
@@ -1667,7 +1668,7 @@ function renderGrid(minDays) {
   buildDayFilter(document.getElementById("grid-filter"), renderGrid);
   renderGrid(MIN_DAYS);
   const leg = document.getElementById("grid-legend");
-  SIGS.forEach(i => {
+  SIGS.slice().reverse().forEach(i => {
     const k = div("key", leg); const r = div("rect", k);
     r.style.background = `var(${SIG_VAR[i]})`;
     k.appendChild(document.createTextNode(T.sigName[i]));
@@ -1785,7 +1786,7 @@ function renderGrid(minDays) {
   });
 
   const leg = document.getElementById("roster-legend");
-  SIGS.forEach(i => {
+  SIGS.slice().reverse().forEach(i => {
     const k = div("key", leg); const r = div("rect", k);
     r.style.background = `var(${SIG_VAR[i]})`;
     k.appendChild(document.createTextNode(T.sigName[i]));
