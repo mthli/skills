@@ -5,6 +5,8 @@ Reads the momentum-scan run history plus the sector cache and writes a single
 HTML file (no external assets, no network) with:
 
   - a KPI row (span, current #1, longest live streak, new entrants, names tracked)
+  - a board-vs-SPY/QQQ benchmark panel, when state/benchmark.json exists
+    (written by compute_benchmark.py, which owns every price fetch)
   - a rank bump chart over every recorded run (current top-8 emphasized)
   - a sector-composition stacked column per run day
   - a date x ticker rank heatmap with a min-appearances filter
@@ -45,6 +47,90 @@ ENTRY_CLEAN_DIST_MAX = 1
 ENTRY_LOADED_DIST_MIN = 4
 
 
+BENCH_KEYS = ("board", "spy", "qqq")
+
+
+def load_benchmark(path: Path) -> dict | None:
+    """The precomputed board-vs-index curves, or None when they don't exist.
+
+    Optional by design: benchmark.json needs network prices, so it is a
+    separate step (compute_benchmark.py) and the page must still render
+    without it. Silence here would hide a typo'd --benchmark path, so a
+    missing file says how to make one."""
+    if not path.exists():
+        print(f"note: no benchmark at {path}; the board-vs-index panel will "
+              f"be omitted. Generate it with scripts/compute_benchmark.py.",
+              file=sys.stderr)
+        return None
+    bench = json.loads(path.read_text())
+    if any(k not in bench for k in ("days",) + BENCH_KEYS):
+        print(f"WARNING: {path} is missing curve keys "
+              f"{sorted(set(('days',) + BENCH_KEYS) - set(bench))}; omitting "
+              f"the panel. Re-run scripts/compute_benchmark.py.",
+              file=sys.stderr)
+        return None
+    if any(len(bench[k]) != len(bench["days"]) for k in BENCH_KEYS):
+        # Indexing a short curve by day would either crash or, worse,
+        # silently pair a value with the wrong date.
+        print(f"WARNING: {path} has curves out of step with its days "
+              f"({ {k: len(bench[k]) for k in ('days',) + BENCH_KEYS} }); "
+              f"omitting the panel. Re-run scripts/compute_benchmark.py.",
+              file=sys.stderr)
+        return None
+    return bench
+
+
+def window_benchmark(bench: dict | None, run_ids: list[str],
+                     win_start: int, top_n: int) -> dict | None:
+    """Align the benchmark curves to the displayed run-days and re-base them.
+
+    The curves are computed over every run-day but the charts show only a
+    trailing window, so each line is re-based to 100 on the first day all
+    three cover — value − 100 is then the cumulative % over exactly the
+    span the reader is looking at."""
+    if not bench:
+        return None
+    if bench.get("top_n") != top_n:
+        # A top-10 page drawn against a top-30 board curve is a wrong
+        # answer that looks right, so refuse instead of rendering it.
+        print(f"WARNING: benchmark.json holds a top-{bench.get('top_n')} "
+              f"board but this page renders top-{top_n}; omitting the panel. "
+              f"Re-run compute_benchmark.py --top-n {top_n}.", file=sys.stderr)
+        return None
+    at = {d: i for i, d in enumerate(bench["days"])}
+    cov_in = bench.get("coverage") or []
+    win = run_ids[win_start:]
+    cols = {k: [] for k in BENCH_KEYS}
+    cov = []
+    for rid in win:
+        i = at.get(rid)
+        for k in BENCH_KEYS:
+            cols[k].append(bench[k][i] if i is not None else None)
+        cov.append(cov_in[i] if i is not None and i < len(cov_in) else None)
+    base = next((i for i in range(len(win))
+                 if all(cols[k][i] is not None for k in BENCH_KEYS)), None)
+    if base is None:
+        print(f"WARNING: benchmark.json covers none of the displayed "
+              f"run-days ({win[0]}-{win[-1]}); omitting the panel. Re-run "
+              f"compute_benchmark.py.", file=sys.stderr)
+        return None
+    out = {k: [None if v is None else round(v / cols[k][base] * 100, 3)
+               for v in cols[k]] for k in BENCH_KEYS}
+    # A stale file is the quiet failure here: the curves just stop early
+    # and the panel reads as "flat since", so name the last day it covers
+    # — on the page for the reader, and on stderr for whoever ran this
+    # and would otherwise never open the page.
+    last = bench["days"][-1]
+    out["asOf"] = f"{last[4:6]}-{last[6:8]}" if last != run_ids[-1] else None
+    if out["asOf"]:
+        print(f"note: benchmark.json stops at {last} while history runs to "
+              f"{run_ids[-1]}; the panel will draw up to {last} and say so. "
+              f"Re-run scripts/compute_benchmark.py to extend it.",
+              file=sys.stderr)
+    out["cov"] = cov
+    return out
+
+
 def load_sectors(path: Path) -> dict:
     if not path.exists():
         # A missing cache is almost always a checkout/path problem, and the
@@ -59,7 +145,8 @@ def load_sectors(path: Path) -> dict:
     return json.loads(path.read_text())
 
 
-def build_payload(rows: list[dict], sectors: dict, top_n: int, days_window: int = 0) -> dict:
+def build_payload(rows: list[dict], sectors: dict, top_n: int,
+                  days_window: int = 0, bench: dict | None = None) -> dict:
     run_ids = sorted({r["run_id"] for r in rows})
     day_idx = {rid: i for i, rid in enumerate(run_ids)}
     day_labels = [f"{rid[4:6]}-{rid[6:8]}" for rid in run_ids]
@@ -218,6 +305,7 @@ def build_payload(rows: list[dict], sectors: dict, top_n: int, days_window: int 
         "topN": top_n,
         "days": day_labels[win_start:],
         "window": {"total": len(run_ids), "shown": len(win_ids)},
+        "bench": window_benchmark(bench, run_ids, win_start, top_n),
         "series": series,
         "summary": summary,
         "sectors": {"names": top_secs + ["Others"], "perDay": sector_series},
@@ -420,6 +508,13 @@ svg a:hover text { text-decoration: underline; }
   </div>
   <div class="kpis" id="kpis"></div>
 
+  <div class="card" id="bench-card">
+    <h2 id="bench-title">Board vs holding the index</h2>
+    <p class="note" id="bench-note"></p>
+    <div class="scroll" id="benchchart"></div>
+    <div class="legend" id="bench-legend"></div>
+  </div>
+
   <div class="card">
     <h2 id="bump-title">Rank trajectories</h2>
     <p class="note" id="bump-note"></p>
@@ -475,6 +570,13 @@ const I18N = {
     kStreak: "Longest streak",
     kNew: "New entrants", kDrop: "Dropouts",
     kTracked: "Names tracked", kTrackedSub: "Tickers with ≥1 day on the board",
+    benchTitle: "Board vs holding the index",
+    benchNote: n => `Same money, three ways: follow the top-${n} board, hold SPY, hold QQQ.\nYou pay nothing to trade here, and only the board trades, so shave the lead it shows.`,
+    benchBoard: n => `Top-${n} board`,
+    benchGap: n => `vs ${n}`,
+    benchCov: (p, t) => `${t - p} of ${t} holdings had no price`,
+    benchCovNote: d => ` Prices were missing on ${d} day${d > 1 ? "s" : ""}; those names sit out that day.`,
+    benchStale: d => ` The comparison stops at ${d}. Re-run compute_benchmark.py to extend it.`,
     bumpTitle: "Rank trajectories",
     bumpNote: (m, min, n) => `${m} trajectories (≥${min} days on board + today's top ${n}; #1 at the top; ranks below #${n} clamp to the dashed floor). Top 8 in color; the right edge labels today's full board.\nHover to inspect; click a line to pin it and open its Score / Return / Drawdown strip.`,
     heatTitle: "Board heatmap",
@@ -514,6 +616,13 @@ const I18N = {
     kStreak: "最长连续在榜",
     kNew: "新进榜", kDrop: "掉出榜",
     kTracked: "追踪标的数", kTrackedSub: "至少上榜 1 天的标的",
+    benchTitle: "榜单 vs 直接持有指数",
+    benchNote: n => `同一笔钱的三种走法：跟着 top-${n} 榜单换股、一直拿 SPY、一直拿 QQQ。\n这里买卖不要钱，而且只有榜单在换股，所以看到的领先要打个折。`,
+    benchBoard: n => `Top-${n} 榜单`,
+    benchGap: n => `较 ${n}`,
+    benchCov: (p, t) => `当日 ${t} 只里有 ${t - p} 只拿不到价格`,
+    benchCovNote: d => ` 有 ${d} 天缺价格，这些标的当天不参与计算。`,
+    benchStale: d => ` 对比只到 ${d}，重跑 compute_benchmark.py 续上。`,
     bumpTitle: "排名轨迹",
     bumpNote: (m, min, n) => `共 ${m} 条轨迹（在榜 ≥${min} 天 + 今日 top ${n}；第 1 名在顶部；低于第 ${n} 名的排名压到虚线底线）。前 8 名着色；右缘标注今日完整榜单。\n悬停查看数值；点击一条线可固定并展开其评分 / 收益 / 回撤走势。`,
     heatTitle: "榜单热力图",
@@ -558,6 +667,13 @@ const I18N = {
     kStreak: "最長連續在榜",
     kNew: "新進榜", kDrop: "掉出榜",
     kTracked: "追蹤標的數", kTrackedSub: "至少上榜 1 天的標的",
+    benchTitle: "榜單 vs 直接持有指數",
+    benchNote: n => `同一筆錢的三種走法：跟著 top-${n} 榜單換股、一直抱 SPY、一直抱 QQQ。\n這裡買賣不用成本，而且只有榜單在換股，所以看到的領先要打個折。`,
+    benchBoard: n => `Top-${n} 榜單`,
+    benchGap: n => `較 ${n}`,
+    benchCov: (p, t) => `當日 ${t} 檔裡有 ${t - p} 檔拿不到價格`,
+    benchCovNote: d => ` 有 ${d} 天缺價格，這些標的當天不參與計算。`,
+    benchStale: d => ` 對比只到 ${d}，重跑 compute_benchmark.py 續上。`,
     bumpTitle: "排名軌跡",
     bumpNote: (m, min, n) => `共 ${m} 條軌跡（在榜 ≥${min} 天 + 今日 top ${n}；第 1 名在頂部；低於第 ${n} 名的排名壓到虛線底線）。前 8 名著色；右緣標註今日完整榜單。\n懸停查看數值；點擊一條線可固定並展開其評分 / 報酬 / 回撤走勢。`,
     heatTitle: "榜單熱力圖",
@@ -602,6 +718,13 @@ const I18N = {
     kStreak: "最長連続ランクイン",
     kNew: "新規ランクイン", kDrop: "圏外へ",
     kTracked: "追跡銘柄数", kTrackedSub: "1 日以上ランクインした銘柄",
+    benchTitle: "ランキング vs 指数を持ち続けた場合",
+    benchNote: n => `同じ資金の 3 通り：top-${n} ランキングに乗り換える、SPY を持ち続ける、QQQ を持ち続ける。\n売買コストはゼロ扱いで、乗り換えるのはランキングだけ。見えている差は割り引いて読む。`,
+    benchBoard: n => `Top-${n} ランキング`,
+    benchGap: n => `${n} との差`,
+    benchCov: (p, t) => `保有 ${t} 銘柄中 ${t - p} 銘柄が価格なし`,
+    benchCovNote: d => ` ${d} 日は価格が取れず、その銘柄はその日の計算から外しています。`,
+    benchStale: d => ` 比較は ${d} まで。compute_benchmark.py を再実行すると延びます。`,
     bumpTitle: "順位推移",
     bumpNote: (m, min, n) => `全 ${m} 本の推移線（ランクイン ${min} 日以上 + 本日の top ${n}；第 1 位が最上部；第 ${n} 位より下は破線の底辺に固定）。上位 8 銘柄を着色；右端は本日の全ランキング。\nホバーで数値を確認；線をクリックすると固定され、スコア / リターン / ドローダウンの推移が開きます。`,
     heatTitle: "ランキングヒートマップ",
@@ -646,6 +769,13 @@ const I18N = {
     kStreak: "최장 연속 진입",
     kNew: "신규 진입", kDrop: "이탈",
     kTracked: "추적 종목 수", kTrackedSub: "1일 이상 순위에 오른 종목",
+    benchTitle: "보드 vs 지수 보유",
+    benchNote: n => `같은 돈의 세 가지: top-${n} 보드를 따라 갈아타기, SPY 보유, QQQ 보유.\n여기서는 매매 비용이 0이고 갈아타는 건 보드뿐이라, 보이는 격차는 깎아서 보세요.`,
+    benchBoard: n => `Top-${n} 보드`,
+    benchGap: n => `${n} 대비`,
+    benchCov: (p, t) => `보유 ${t}종목 중 ${t - p}종목은 가격 없음`,
+    benchCovNote: d => ` ${d}일은 가격이 없어 해당 종목을 그날 계산에서 뺐습니다.`,
+    benchStale: d => ` 비교는 ${d}까지입니다. compute_benchmark.py를 다시 실행하면 이어집니다.`,
     bumpTitle: "순위 궤적",
     bumpNote: (m, min, n) => `총 ${m}개 궤적(순위 진입 ${min}일 이상 + 오늘의 top ${n}; 1위가 맨 위; ${n}위 아래 순위는 점선 바닥에 고정). 상위 8개 종목은 색상 표시; 오른쪽 끝은 오늘의 전체 보드.\n마우스를 올려 값 확인; 선을 클릭하면 고정되고 점수 / 수익률 / 낙폭 추이가 열립니다.`,
     heatTitle: "보드 히트맵",
@@ -755,11 +885,14 @@ function tickerList(arr) {
   });
   return sp;
 }
-const dlt = (v, n) => {
+// A signed number with negative zero folded onto plus: -0.04 rounds to
+// "-0.0", which reads as a decline that isn't there.
+const sgnNum = (v, n) => {
   let s = v.toFixed(n);
   if (+s === 0) s = (0).toFixed(n);
-  return ` (${+s >= 0 ? "+" : ""}${s})`;
+  return (+s >= 0 ? "+" : "") + s;
 };
+const dlt = (v, n) => ` (${sgnNum(v, n)})`;
 // Only when the previous board appearance was NOT the previous session:
 // the deltas in the card compare against that appearance, not yesterday,
 // and on a name that keeps dropping off the board the two differ a lot.
@@ -885,6 +1018,136 @@ function tipCard(t, { title, aux, color, line, sub, kv, notes }) {
   tile(T.kNew, `${k.newEntrants.length}`, tickerList(k.newEntrants));
   tile(T.kDrop, `${k.dropouts.length}`, tickerList(k.dropouts));
   tile(T.kTracked, `${k.tracked}`, T.kTrackedSub);
+}
+
+// ---- board vs index benchmark ----
+{
+  const B = DATA.bench;
+  // The curves need prices, so they come from a separate script and may
+  // simply not exist yet; the page drops the card rather than showing an
+  // empty frame.
+  if (!B) document.getElementById("bench-card").style.display = "none";
+  else {
+    document.getElementById("bench-title").textContent = T.benchTitle;
+    // Fixed identity slots, board first — legend, right-edge labels and
+    // tooltip rows all read in this one order.
+    const SER = [
+      {k: "board", lbl: T.benchBoard(N), col: "var(--s1)", w: 2},
+      {k: "spy",   lbl: "SPY",           col: "var(--s2)", w: 1.5},
+      {k: "qqq",   lbl: "QQQ",           col: "var(--s3)", w: 1.5},
+    ];
+    const short = B.cov.filter(c => c && c[0] < c[1]).length;
+    document.getElementById("bench-note").textContent =
+      T.benchNote(N) + WIN_TAG + (B.asOf ? T.benchStale(B.asOf) : "")
+      + (short ? T.benchCovNote(short) : "");
+    // 100 = the first shown day, so value − 100 IS the cumulative %.
+    const pct = v => v - 100;
+    const sgn = (v, n, u) => sgnNum(v, n) + u;
+    // MR fits a "+12.3%" label and no more: at the default 60-day window
+    // the whole panel is then exactly as wide as the card, so the one
+    // number the panel exists to deliver never hides behind a scroll.
+    const ML = 40, MT = 12, MB = 26, DX = 19, PH = 180, MR = 48;
+    const W = ML + (DAYS-1)*DX + MR, H = MT + PH + MB;
+    const vals = SER.flatMap(s => B[s.k]).filter(v => v !== null);
+    let lo = Math.min(100, ...vals), hi = Math.max(100, ...vals);
+    const pad = (hi - lo) * 0.06 + 0.5;
+    lo -= pad; hi += pad;
+    const xOf = d => ML + d*DX, yOf = v => MT + (hi - v) / (hi - lo) * PH;
+    const svg = el("svg", {width: W, height: H, viewBox: `0 0 ${W} ${H}`},
+      document.getElementById("benchchart"));
+    // Gridlines on round percentage steps; the 0% line — where the money
+    // started — wears the axis color so the losing side reads at a glance.
+    const step = [1,2,5,10,20,50].find(s => (hi-lo)/s <= 6) || 50;
+    for (let v = Math.ceil((lo-100)/step)*step; v+100 <= hi; v += step) {
+      const y = yOf(v+100);
+      el("line", {x1: ML-4, x2: W-MR+30, y1: y, y2: y,
+        stroke: v === 0 ? "var(--axis)" : "var(--grid)"}, svg);
+      el("text", {x: ML-8, y: y+4, "text-anchor":"end", class:"tick"}, svg)
+        .textContent = (v > 0 ? "+" : "") + v + "%";
+    }
+    DATA.days.forEach((d,i) => {
+      if (i === DAYS-1 || (i % 5 === 0 && DAYS-1-i >= 3))
+        el("text", {x: xOf(i), y: H-8, "text-anchor":"middle", class:"tick"}, svg).textContent = d;
+    });
+    const cross = el("line", {y1: MT-4, y2: MT+PH, stroke: "var(--axis)",
+      "stroke-width":1, visibility:"hidden"}, svg);
+    // Right-edge labels carry each line's cumulative %, so the panel's
+    // answer survives without a hover; the endpoint dot beside each one
+    // and the legend below carry which line it belongs to (a name here
+    // would push the labels off the card). Overlapping labels push down
+    // in reading order rather than stacking on top of each other.
+    const ends = [];
+    SER.forEach(s => {
+      let dstr = "", prev = null, lastD = null;
+      B[s.k].forEach((v, d) => {
+        if (v === null) return;
+        dstr += (prev !== null && d === prev + 1 ? "L" : "M")
+          + xOf(d) + " " + yOf(v).toFixed(1);
+        prev = d; lastD = d;
+      });
+      if (lastD === null) return;
+      el("path", {d: dstr, fill: "none", stroke: s.col, "stroke-width": s.w,
+        "stroke-linecap": "round", "stroke-linejoin": "round"}, svg);
+      const lv = B[s.k][lastD];
+      el("circle", {cx: xOf(lastD), cy: yOf(lv).toFixed(1),
+        r: s.k === "board" ? 4.5 : 3, fill: s.col,
+        stroke: "var(--surface)", "stroke-width": 2}, svg);
+      ends.push({s, x: xOf(lastD), y: yOf(lv), txt: sgn(pct(lv), 1, "%")});
+    });
+    ends.sort((a,b) => a.y - b.y);
+    ends.forEach((e,i) => { if (i) e.y = Math.max(e.y, ends[i-1].y + 14); });
+    ends.forEach(e => el("text", {x: e.x+10, y: e.y+4,
+      class: e.s.k === "board" ? "dlabel" : "tick"}, svg).textContent = e.txt);
+    const leg = document.getElementById("bench-legend");
+    SER.forEach(s => {
+      const k = div("key", leg); const l = div("line", k);
+      l.style.background = s.col;
+      k.appendChild(document.createTextNode(s.lbl));
+    });
+    svg.addEventListener("pointermove", ev => {
+      const box = svg.getBoundingClientRect();
+      const d = Math.max(0, Math.min(DAYS-1,
+        Math.round((ev.clientX - box.left - ML) / DX)));
+      cross.setAttribute("x1", xOf(d)); cross.setAttribute("x2", xOf(d));
+      cross.setAttribute("visibility", "visible");
+      // All three lines at the hovered day, not just the nearest one: the
+      // panel's question is a comparison, and one line's level answers it
+      // only against the other two. Levels first, then the board's lead
+      // over each index in percentage points — the subtraction the reader
+      // would otherwise do in their head, one row per index so both land
+      // in the same number column as the levels they came from.
+      const bv = B[SER[0].k][d];  // the board is identity slot 0
+      const rows = [
+        ...SER.map(s => {
+          const v = B[s.k][d];
+          if (v === null) return null;
+          const pv = d > 0 ? B[s.k][d-1] : null;
+          return [s.lbl, sgn(pct(v), 1, "%")
+            + (pv === null ? "" : dlt((v/pv - 1) * 100, 1))];
+        }),
+        ...(bv === null ? [] : SER.slice(1).map(s => {
+          const v = B[s.k][d];
+          return v === null ? null
+            : [T.benchGap(s.lbl), sgn(pct(bv) - pct(v), 1, "pt")];
+        })),
+      ].filter(Boolean);
+      // Past the end of a stale benchmark every line is a hole; a card
+      // holding nothing but a date is worse than no card at all, and a
+      // crosshair standing there promises a reading it can't give.
+      if (!rows.length) {
+        cross.setAttribute("visibility", "hidden"); hideTip(); return;
+      }
+      const c = B.cov[d];
+      showTip(ev.clientX, ev.clientY, tt => tipCard(tt, {
+        title: DATA.days[d],
+        kv: rows,
+        notes: [c && c[0] < c[1] ? T.benchCov(c[0], c[1]) : null],
+      }));
+    });
+    svg.addEventListener("pointerleave", () => {
+      cross.setAttribute("visibility","hidden"); hideTip();
+    });
+  }
 }
 
 // ---- bump chart ----
@@ -1312,21 +1575,28 @@ def main() -> None:
         "--history", default=str(SKILL_DIR / "state" / "history.csv"))
     ap.add_argument(
         "--sectors", default=str(SKILL_DIR / "state" / "sectors.json"))
+    ap.add_argument(
+        "--benchmark", default=str(SKILL_DIR / "state" / "benchmark.json"),
+        help="board-vs-index curves from compute_benchmark.py; "
+             "the panel is omitted when the file is absent")
     ap.add_argument("--out", default=str(SKILL_DIR / "state" / "history.html"))
     args = ap.parse_args()
 
     rows = load_history(Path(args.history))
     if not rows:
         raise SystemExit("history.csv is empty; run a scan first")
-    payload = build_payload(rows, load_sectors(
-        Path(args.sectors)), args.top_n, args.days)
+    payload = build_payload(rows, load_sectors(Path(args.sectors)),
+                            args.top_n, args.days,
+                            load_benchmark(Path(args.benchmark)))
     generated = datetime.now(
         timezone.utc).astimezone().strftime("%Y-%m-%d %H:%M %Z")
     k = payload["kpi"]
     meta_desc = (
         f"Daily top-{args.top_n} US large-cap momentum board, "
         f"{k['span'][0]} to {k['span'][1]} ({k['runs']} trading days, "
-        f"{k['tracked']} tickers tracked): rank trajectories, board heatmap, "
+        f"{k['tracked']} tickers tracked): "
+        + ("board-vs-SPY/QQQ benchmark curves, " if payload["bench"] else "")
+        + "rank trajectories, board heatmap, "
         "sector mix and a sortable roster of every name that made the board."
     )
     data_json = json.dumps(payload, separators=(

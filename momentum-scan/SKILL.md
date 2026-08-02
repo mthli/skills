@@ -49,9 +49,14 @@ uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy>=1.24,<3' \
 # Disable the vol-collapse acquisition-target filter (keep buyouts in the table; see parameter table for range)
 ... python <SKILL_DIR>/scripts/scan.py --vol-collapse-ratio 0
 
-# Render history.csv + sectors.json into a self-contained HTML dashboard at
-# state/history.html (rank bump chart, sector stacks, heatmap, per-ticker table).
-# Stdlib-only; plain python, no uv --with needed.
+# Board-vs-index curves for the dashboard's benchmark panel (equal-weight top-N
+# rebalanced daily vs holding SPY / QQQ). Needs prices, so run it BEFORE rendering;
+# the panel is omitted if state/benchmark.json is missing.
+... python <SKILL_DIR>/scripts/compute_benchmark.py   # --top-n 30 --refresh-prices
+
+# Render history.csv + sectors.json (+ benchmark.json) into a self-contained HTML
+# dashboard at state/history.html (benchmark panel, rank bump chart, sector stacks,
+# heatmap, per-ticker table). Stdlib-only; plain python, no uv --with needed.
 python <SKILL_DIR>/scripts/render_history_html.py   # --top-n 30 --days 60 --out <path>
 
 # Outcome backtest: replay history.csv's episodes (enter on listing, sell on dropout),
@@ -198,7 +203,8 @@ Write the interpretation for a reader with **no finance background**, in the con
 - `state/history.csv`: one snapshot per US market day (America/New_York) × every ticker that passed the filter that day (all kept picks, not only the displayed top-N; the below-cutoff rows preserve near-miss context, and persistence stats filter to rank ≤ top-N at read time). Columns: `run_id, run_date, ticker, rank, score_rank, score, return_pct, max_dd_pct, ann_vol_pct, from_high_pct, close, vol_ratio_20d, dollar_vol_20d_m, dist_days_25d`. The last four (added 2026-07-30) exist for exit-rule research: `close` is the adjusted close the scan saw at run time (empty for rows before the upgrade and left unfilled by design, since later corporate actions rewrite the adjusted series and delistings erase it); `vol_ratio_20d` is the latest session's volume over its trailing 20-session average (latest session excluded from the base, so a climax day doesn't dilute its own signal); `dollar_vol_20d_m` is the 20-session average dollar volume in $M; `dist_days_25d` is the O'Neil distribution-day count (down ≥0.2% on higher volume than the prior session) over 25 sessions. For pre-upgrade rows, the volume trio comes from a one-time yfinance backfill keyed to each run's last *completed* session; live mid-session runs likewise compute the trio on completed bars only (`close` still records the partial bar). Re-running the same ET day overwrites that day's rows (newer prices replace older), so streak counts scan-days rather than scan invocations. Writes are atomic (tmp file + rename) so a crash mid-write can't truncate the file. The skill's value builds up in this file over time: the first run carries little persistence signal, and each subsequent run adds more.
 - `state/universe.txt`: cached universe list, auto-refreshed every 7 days via Yahoo's screener.
 - `state/sectors.json`: per-ticker `{sector, industry, ts}` cache. 30-day TTL per ticker. The script fetches sectors on demand for the top-N picks (not the full universe), so the cache grows as different names cycle through leadership. Deleting the file forces a clean refresh on next run.
-- `state/history.html`: self-contained HTML dashboard rendered from `history.csv` + `sectors.json` by `scripts/render_history_html.py`: KPI row, a rank bump chart over every recorded run, sector-composition stacks, a date × ticker rank heatmap, a per-ticker summary table, and an EN/简中/繁中/日/한 language menu. No external assets or network; regenerable at any time, so it's gitignored. Re-render after a scan when the user wants the visual view of the leaderboard history.
+- `state/benchmark.json`: board-vs-index equity curves written by `scripts/compute_benchmark.py` — an equal-weight top-N portfolio rebalanced each run-day (day *t* applies day *t−1*'s published board to close(t−1) → close(t), so no lookahead) alongside SPY and QQQ over the same dates, plus per-day price coverage. All three lines are idealized close fills, but not equally: the board swaps ~4 of its 30 names a day and resets weights on the rest, while SPY / QQQ are bought once and held, so zero-cost trading subsidizes the board alone (~0.6pp over 51 run-days at 10bp round-trip, against a 2.4pp measured gap) — read the gap, then discount it. Feeds the dashboard's benchmark panel only; it needs network prices, so it's a separate step from rendering and the panel is simply omitted when the file is absent. Regenerable, so it's gitignored. Re-run it before re-rendering if the comparison should include the latest scan days.
+- `state/history.html`: self-contained HTML dashboard rendered from `history.csv` + `sectors.json` (+ `benchmark.json` when present) by `scripts/render_history_html.py`: KPI row, a board-vs-SPY/QQQ benchmark panel, a rank bump chart over every recorded run, sector-composition stacks, a date × ticker rank heatmap, a per-ticker summary table, and an EN/简中/繁中/日/한 language menu. No external assets or network; regenerable at any time, so it's gitignored. Re-render after a scan when the user wants the visual view of the leaderboard history.
 
 If the user wants to start fresh, `--clear-history` wipes only `history.csv` (no confirmation prompt; pair with `git` if irreversibility matters). The universe cache regenerates automatically.
 
