@@ -842,14 +842,13 @@ const I18N = {
     pkNote: "Solid: the running average result per trade (pivot buy, 8% stop, 20 sessions), ⭐ pocket vs the rest. Base length counts from day one.\nDashed: the backtest's own numbers. A pocket line above its dash means the validated edge still pays.",
     pkPocket: "⭐ Pocket", pkBase: "The rest",
     pkRef: v => `backtest ${v >= 0 ? "+" : ""}${v}%`,
-    pkTipN: n => `${n} trades`,
+    pkTipNs: (a, b) => `${a} pocket / ${b} rest trades`,
     seTitle: "Which sectors paid",
     seNote: minN => `Average result per completed trade, grouped by sector; sectors under ${minN} trades fold away.\nAn interval reaching the dashed all-trades average means no readable difference from the board.\nA gap here can be recent sector beta rather than a property of these bases: re-check each quarter, not a filter.`,
     sePos: "Sector made money", seNeg: "Sector lost money",
     seCI: "95% interval",
     seAll: v => `All trades ${v >= 0 ? "+" : ""}${v}%`,
-    seTipN: n => `${n} completed trades`,
-    seTipCI: (lo, hi) => `95% interval ${lo >= 0 ? "+" : ""}${lo}% to ${hi >= 0 ? "+" : ""}${hi}%`,
+    seAvg: "All trades",
     seTipTrig: (rate, trig, tot) => `Trigger rate ${rate}%: ${trig} of ${tot} bases fired`,
     seTipSame: "Overlaps the all-trades average: no readable difference",
     seTipBetter: "Clears the all-trades average",
@@ -878,6 +877,7 @@ const I18N = {
     toPivot: "To pivot",
     pivotPx: "Pivot",
     listedOn: "Listed",
+    gap: "Gap",
     score: "Score",
     width: "Width",
     trigIn: d => `Triggered after ${d} session(s)`,
@@ -922,14 +922,13 @@ const I18N = {
     pkNote: "实线：每单滚动平均盈亏（触发价买入、8% 止损、20 天卖出），⭐ 口袋 vs 其余。基龄按上榜第一天算。\n虚线：回测里的对应数。口袋线在虚线上方 = 那点验证过的边际还在兑现。",
     pkPocket: "⭐ 口袋", pkBase: "其余全部",
     pkRef: v => `回测 ${v >= 0 ? "+" : ""}${v}%`,
-    pkTipN: n => `${n} 单`,
+    pkTipNs: (a, b) => `⭐ 口袋 ${a} 单 · 其余 ${b} 单`,
     seTitle: "哪类股票的底部真的兑现了",
     seNote: minN => `按板块看每笔了结交易的平均结果；不足 ${minN} 笔的板块不画。\n误差范围够到「全体平均」虚线，就是跟整体比不出差别。\n差距也可能只是最近的板块行情，而不是这类底部更靠谱：当成每季复查的观察，别当筛选条件。`,
     sePos: "该板块赚钱", seNeg: "该板块亏钱",
     seCI: "95% 误差范围",
     seAll: v => `全体平均 ${v >= 0 ? "+" : ""}${v}%`,
-    seTipN: n => `已了结 ${n} 笔交易`,
-    seTipCI: (lo, hi) => `95% 误差范围 ${lo >= 0 ? "+" : ""}${lo}% 到 ${hi >= 0 ? "+" : ""}${hi}%`,
+    seAvg: "全体平均",
     seTipTrig: (rate, trig, tot) => `触发率 ${rate}%：${tot} 个底部里 ${trig} 个真的突破了`,
     seTipSame: "与全体平均重叠：看不出差别",
     seTipBetter: "确实高于全体平均",
@@ -958,6 +957,7 @@ const I18N = {
     toPivot: "距触发",
     pivotPx: "触发价",
     listedOn: "上榜",
+    gap: "差距",
     score: "评分",
     width: "宽度",
     trigIn: d => `第 ${d} 个交易日触发`,
@@ -1007,14 +1007,13 @@ const I18N = {
     pkNote: "實線：每筆滾動平均盈虧（觸發價買入、8% 停損、20 天賣出），⭐ 口袋 vs 其餘。基齡按上榜第一天算。\n虛線：回測裡的對應數。口袋線在虛線上方 = 那點驗證過的邊際還在兌現。",
     pkPocket: "⭐ 口袋", pkBase: "其餘全部",
     pkRef: v => `回測 ${v >= 0 ? "+" : ""}${v}%`,
-    pkTipN: n => `${n} 筆`,
+    pkTipNs: (a, b) => `⭐ 口袋 ${a} 筆 · 其餘 ${b} 筆`,
     seTitle: "哪類股票的底部真的兌現了",
     seNote: minN => `按板塊看每筆了結交易的平均結果；不足 ${minN} 筆的板塊不畫。\n誤差範圍搆到「全體平均」虛線，就是跟整體比不出差別。\n差距也可能只是最近的板塊行情，而不是這類底部更可靠：當成每季複查的觀察，別當篩選條件。`,
     sePos: "該板塊賺錢", seNeg: "該板塊虧錢",
     seCI: "95% 誤差範圍",
     seAll: v => `全體平均 ${v >= 0 ? "+" : ""}${v}%`,
-    seTipN: n => `已了結 ${n} 筆交易`,
-    seTipCI: (lo, hi) => `95% 誤差範圍 ${lo >= 0 ? "+" : ""}${lo}% 到 ${hi >= 0 ? "+" : ""}${hi}%`,
+    seAvg: "全體平均",
     seTipTrig: (rate, trig, tot) => `觸發率 ${rate}%：${tot} 個底部裡 ${trig} 個真的突破了`,
     seTipSame: "與全體平均重疊：看不出差別",
     seTipBetter: "確實高於全體平均",
@@ -1043,6 +1042,7 @@ const I18N = {
     toPivot: "距觸發",
     pivotPx: "觸發價",
     listedOn: "上榜",
+    gap: "差距",
     score: "評分",
     width: "寬度",
     trigIn: d => `第 ${d} 個交易日觸發`,
@@ -1092,14 +1092,13 @@ const I18N = {
     pkNote: "実線：1 トレード平均損益の推移（ピボット買い、8% ストップ、20 セッション）。⭐ ポケット vs その他。ベース週数は初日で判定。\n破線：バックテストの対応値。ポケット線が破線の上なら、検証済みのエッジは健在。",
     pkPocket: "⭐ ポケット", pkBase: "その他",
     pkRef: v => `バックテスト ${v >= 0 ? "+" : ""}${v}%`,
-    pkTipN: n => `${n} トレード`,
+    pkTipNs: (a, b) => `⭐ ポケット ${a} 件 · その他 ${b} 件`,
     seTitle: "どのセクターのベースが実際に報われたか",
     seNote: minN => `セクター別の、決済済みトレード1件あたりの平均結果。${minN}件未満のセクターは折り畳み。\n誤差範囲が「全体平均」の破線に届くセクターは、全体との差が読み取れません。\nこの差はベースの質ではなく直近のセクター物色かもしれません。四半期ごとに見直す観察で、絞り込み条件ではありません。`,
     sePos: "このセクターは利益", seNeg: "このセクターは損失",
     seCI: "95%誤差範囲",
     seAll: v => `全体平均 ${v >= 0 ? "+" : ""}${v}%`,
-    seTipN: n => `決済済み ${n} トレード`,
-    seTipCI: (lo, hi) => `95%誤差範囲 ${lo >= 0 ? "+" : ""}${lo}% 〜 ${hi >= 0 ? "+" : ""}${hi}%`,
+    seAvg: "全体平均",
     seTipTrig: (rate, trig, tot) => `トリガー率 ${rate}%：${tot}件のベースのうち${trig}件が発動`,
     seTipSame: "全体平均と重なる：差は読み取れない",
     seTipBetter: "全体平均を明確に上回る",
@@ -1128,6 +1127,7 @@ const I18N = {
     toPivot: "ピボットまで",
     pivotPx: "ピボット",
     listedOn: "リスト入り",
+    gap: "差",
     score: "スコア",
     width: "幅",
     trigIn: d => `${d} セッション目にトリガー`,
@@ -1177,14 +1177,13 @@ const I18N = {
     pkNote: "실선: 거래당 롤링 평균 손익(피봇 매수, 8% 손절, 20세션 청산). ⭐ 포켓 vs 나머지. 베이스 주수는 첫날 기준.\n점선: 백테스트 수치. 포켓 선이 점선 위면 검증된 엣지가 유효합니다.",
     pkPocket: "⭐ 포켓", pkBase: "나머지",
     pkRef: v => `백테스트 ${v >= 0 ? "+" : ""}${v}%`,
-    pkTipN: n => `${n}건`,
+    pkTipNs: (a, b) => `⭐ 포켓 ${a}건 · 나머지 ${b}건`,
     seTitle: "어떤 섹터의 베이스가 실제로 결실을 맺었나",
     seNote: minN => `섹터별 청산 거래 1건당 평균 결과. ${minN}건 미만인 섹터는 접힙니다.\n오차 범위가 "전체 평균" 점선에 닿는 섹터는 전체와 구분되지 않습니다.\n이 차이는 베이스의 질이 아니라 최근 섹터 장세일 수 있습니다. 분기마다 다시 확인할 관찰이지, 필터가 아닙니다.`,
     sePos: "이 섹터는 수익", seNeg: "이 섹터는 손실",
     seCI: "95% 오차 범위",
     seAll: v => `전체 평균 ${v >= 0 ? "+" : ""}${v}%`,
-    seTipN: n => `청산된 거래 ${n}건`,
-    seTipCI: (lo, hi) => `95% 오차 범위 ${lo >= 0 ? "+" : ""}${lo}% ~ ${hi >= 0 ? "+" : ""}${hi}%`,
+    seAvg: "전체 평균",
     seTipTrig: (rate, trig, tot) => `발동률 ${rate}%: 베이스 ${tot}개 중 ${trig}개가 돌파`,
     seTipSame: "전체 평균과 겹침: 차이를 읽을 수 없음",
     seTipBetter: "전체 평균을 확실히 상회",
@@ -1213,6 +1212,7 @@ const I18N = {
     toPivot: "피봇까지",
     pivotPx: "피봇",
     listedOn: "등재",
+    gap: "격차",
     score: "점수",
     width: "폭",
     trigIn: d => `${d}번째 세션에 발동`,
@@ -1343,15 +1343,10 @@ function showTip(x, y, build) {
   tip.style.top = (y - r.height - 12 < 4 ? y + 16 : y - r.height - 12) + "px";
 }
 const hideTip = () => { tip.style.display = "none"; };
-function tipRows(t, rows, keyColor) {
-  const head = div("h", t);
-  if (keyColor) { const k = document.createElement("span"); k.className = "k"; k.style.background = keyColor; head.appendChild(k); }
-  const v = document.createElement("span"); v.className = "v"; v.textContent = rows[0]; head.appendChild(v);
-  rows.slice(1).filter(Boolean).forEach(r => div(null, t, r));
-}
-// The two rich tooltips (a trajectory, a grid cell) carry three different
-// kinds of fact, and as one flat list of sentences they read as a wall.
-// Split them: who this is, what the setup measured, what the trade did.
+// Every hover target on this page carries the same three kinds of fact, and
+// as one flat list of sentences they read as a wall. Split them: who or
+// what this is in the header, the numbers behind it in aligned pairs, what
+// it means in ink last.
 function tipCard(t, { title, aux, color, line, sub, kv, notes }) {
   const head = div("h", t);
   if (color) {
@@ -1668,11 +1663,28 @@ function renderApproach(mode) {
     const t = ev.target;
     if (t.tagName === "rect" && t.dataset.i !== undefined) {
       const i = +t.dataset.i, d = +t.dataset.d;
-      showTip(ev.clientX, ev.clientY, tt => tipRows(tt,
-        [`${T.sigName[i]} ${+t.dataset.c}`,
-         T.sigTip[i],
-         `${DATA.days[d]} · ${T.dayLine(totals[d])} · ⭐ ${DATA.cohort.pocket[d]}`],
-        cssVar(SIG_VAR[i])));
+      const counts = DATA.cohort.perDay[d];
+      showTip(ev.clientX, ev.clientY, tt => tipCard(tt, {
+        title: `${T.sigName[i]} ${+t.dataset.c}`,
+        aux: DATA.days[d],
+        color: cssVar(SIG_VAR[i]),
+        // The tier's meaning belongs with the count it describes: the
+        // segment's color already said which tier, this says what it is.
+        sub: T.sigTip[i],
+        // The whole column, not just the segment under the cursor. Whether
+        // the list is loaded is a question about the shape of the stack —
+        // and every other segment costs its own hover to answer it. Same
+        // top-down order as the legend and the grid, breakout first, so
+        // the scale is learned once. The pocket line rides on this same
+        // axis, so its count closes the block rather than starting a new
+        // one: at zero the day held nothing the backtest validated.
+        kv: [
+          ...SIGS.slice().reverse().map(j =>
+            counts[j] ? [T.sigName[j], `${counts[j]}`] : null),
+          [T.coPocketLine, `${DATA.cohort.pocket[d]}`],
+        ],
+        notes: [T.dayLine(totals[d])],
+      }));
     } else hideTip();
   });
   svg.addEventListener("pointerleave", hideTip);
@@ -1754,14 +1766,26 @@ function renderApproach(mode) {
     const d = Math.max(0, Math.min(DAYS - 1, Math.round((ev.clientX - box.left - ML) / DX)));
     cross.setAttribute("x1", xOf(d)); cross.setAttribute("x2", xOf(d));
     cross.setAttribute("visibility", "visible");
-    const rows = [DATA.days[d]];
-    lines.forEach(L => {
-      if (L.vals[d] !== null)
-        rows.push(`${L.lbl} ${pctTxt(L.vals[d])} · ${T.pkTipN(L.ns[d])}`);
-    });
-    if (rows.length > 1)
-      showTip(ev.clientX, ev.clientY, tt => tipRows(tt, rows));
-    else hideTip();
+    const live = lines.filter(L => L.vals[d] !== null);
+    if (live.length) {
+      const [pk, base] = lines.map(L => L.vals[d]);
+      showTip(ev.clientX, ev.clientY, tt => tipCard(tt, {
+        title: DATA.days[d],
+        kv: [
+          ...live.map(L => [L.lbl, pctTxt(L.vals[d])]),
+          // The comparison the panel exists to make, done rather than left
+          // to the reader's eye on two lines that can run close together.
+          // Both are %/trade, so the difference is %/trade too — and it
+          // only exists on days where both have printed.
+          pk === null || base === null ? null : [T.gap, pctTxt(pk - base)],
+        ],
+        // Sample size is the honesty line, so it takes the ink slot: early
+        // in either line the average is a handful of trades and one of them
+        // moves it several points. Both counts even when only one line has
+        // printed — a zero there is the reason the row above is missing.
+        notes: [T.pkTipNs(P.pktN[d], P.baseN[d])],
+      }));
+    } else hideTip();
   });
   svg.addEventListener("pointerleave", () => { cross.setAttribute("visibility", "hidden"); hideTip(); });
   }
@@ -1971,15 +1995,33 @@ if (!DATA.sectorEdge.rows.length) {
     const hit = el("rect", { x: 0, y: y - RH / 2, width: W, height: RH,
       fill: "transparent" }, svg);
     hit.addEventListener("pointermove", ev => showTip(ev.clientX, ev.clientY,
-      tt => tipRows(tt, [
-        `${secName(r.s)} ${pctTxt(r.exp)}`,
-        T.seTipN(r.n),
-        r.lo === null ? "" : T.seTipCI(r.lo, r.hi),
-        straddles(r) ? T.seTipSame
-          : (r.exp > SE.all ? T.seTipBetter : T.seTipWorse),
-        decided ? T.seTipTrig(Math.round(r.trig / decided * 100), r.trig,
-          decided) : "",
-      ].filter(Boolean), col)));
+      tt => tipCard(tt, {
+        title: `${secName(r.s)} ${pctTxt(r.exp)}`,
+        // "n=" rather than a sentence: it is the same tag the bar already
+        // carries at its end, and the header has to hold a sector name up
+        // to "Communication Services" wide before it.
+        aux: "n=" + r.n,
+        color: col,
+        // How many bases had to be watched for those trades to exist. It
+        // sits above the numbers because it qualifies all of them: a
+        // sector that pays well on a 20% trigger rate asked for four times
+        // the patience of one that pays the same at 80%.
+        sub: decided ? T.seTipTrig(Math.round(r.trig / decided * 100),
+          r.trig, decided) : null,
+        // The comparison spelled out in numbers, in the order the eye makes
+        // it on the chart: how wide this sector's noise is, where the line
+        // it has to clear sits, and by how much it misses or clears it.
+        kv: [
+          [T.seCI, r.lo === null ? "—" : `${pctTxt(r.lo)} ~ ${pctTxt(r.hi)}`],
+          [T.seAvg, pctTxt(SE.all)],
+          [T.gap, pctTxt(r.exp - SE.all)],
+        ],
+        // The verdict last and in ink, because the gap above is the number
+        // that misleads here: a 2-point gap under a straddling interval is
+        // still "no readable difference".
+        notes: [straddles(r) ? T.seTipSame
+          : (r.exp > SE.all ? T.seTipBetter : T.seTipWorse)],
+      })));
     hit.addEventListener("pointerleave", hideTip);
   });
 
