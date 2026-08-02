@@ -154,6 +154,46 @@ Rules that make this honest. Apply every one:
   grades whether the verdict confirmed (gap-keep, hour-one survival); the
   "add" trigger in these briefs tends to be observable there.
 
+## Outcome ledger
+
+`prior_run_review` grades one packet against the next; it cannot see whether
+the *rules* work. The packets are already the history, so
+`scripts/backtest_outcomes.py` replays `state/runs/*.json` into
+`state/outcomes.csv`. The trade convention is this skill's protocol, not the
+MR scan's: entry at `latest_close`, hard exit at `signal_day_low`, target at
+`mr_target`.
+
+```bash
+uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' \
+  python <SKILL_DIR>/scripts/backtest_outcomes.py
+... --window 5          # trading days to resolve (3/5/10 sensitivity always printed)
+... --entry next-open   # honest execution: fill at the next open, skip what gapped away
+... --refresh-prices    # bypass the price cache
+```
+
+It exists to settle the three claims stated above and never tested: does a
+dated spark pay (armed vs unarmed), is a sector verdict really the better
+structure than the keg's own coin-flip print, and what does the 🔥 chase
+actually cost. Two reading rules:
+
+- **T% / S% / R:R before any Win%.** An ignited keg is bought after it ran,
+  so `mr_target` sits ~1.5% overhead while the invalidation sits ~14% below.
+  That geometry manufactures a high win rate out of a bad payoff — an
+  ignited row beating the coiled row is not evidence the chase-guard is wrong.
+- **Exp% is a floor, not the return.** The replay closes at target 1; the
+  protocol trails past it. `NoExit%` is the untruncated read and only fills
+  in once a signal's full window has elapsed.
+
+Until the header banner clears (50+ resolved signals) the tables are a
+plumbing check, not evidence — the script prints how many more run days it
+needs. Never quote a stratum row into this file before then; rows with
+n < 10 are marked ⚠︎ for the same reason.
+
+Cadence follows that banner: **every couple of weeks while it's still up**
+(the packets accrue daily, so the gap closes fast and the ledger is cheap to
+re-run), then **quarterly** alongside the sisters' `backtest_outcomes.py`
+once the sample is readable.
+
 ## Tests
 
 ```bash
@@ -165,4 +205,8 @@ Pure-logic tests (no network; every network call site is stubbed) cover the
 keg age/score filters, arming rules (marketwide prints never arm; own
 earnings and macro do), signal-day slicing + the ignited chase-guard, the
 prior-run review's full-sample stats, and trading-day arithmetic across
-NYSE-observed holidays.
+NYSE-observed holidays. The ledger's own suite covers the protocol's
+win/loss/expiry resolution with gap-aware fills, dividend re-anchoring (and
+the refusal to anchor before the signal day, which would grade a setup on
+its own decline), and the exclusion of missing attributes from every
+stratum.
