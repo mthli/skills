@@ -23,13 +23,13 @@ on:
       - momentum-scan/state/benchmark.json
       - momentum-scan/scripts/render_history_html.py
       - mean-reversion-scan/state/history.csv
-      - mean-reversion-scan/state/outcomes.csv
       - mean-reversion-scan/state/sectors.json
       - mean-reversion-scan/state/benchmark.json
+      - mean-reversion-scan/state/outcomes.csv
       - mean-reversion-scan/scripts/render_history_html.py
       - base-breakout-scan/state/history.csv
-      - base-breakout-scan/state/outcomes.csv
       - base-breakout-scan/state/sectors.json
+      - base-breakout-scan/state/outcomes.csv
       - base-breakout-scan/scripts/render_history_html.py
       - .github/workflows/deploy-pages.yml
   workflow_dispatch:
