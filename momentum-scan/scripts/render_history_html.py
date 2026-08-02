@@ -520,7 +520,7 @@ svg { display: block; }
 svg text { font: 11px system-ui, -apple-system, "Segoe UI", sans-serif; fill: var(--muted); }
 svg text.tick { font-variant-numeric: tabular-nums; }
 svg text.dlabel { font-size: 11.5px; font-weight: 600; fill: var(--ink-2); }
-.legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 10px 0 0; font-size: 12.5px; color: var(--ink-2); align-items: center; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 10px 0 0; font-size: 12.5px; color: var(--ink-2); align-items: baseline; }
 /* Keys align on the BASELINE, not on centre, and every offset below is a whole
    number. Both facts are load-bearing.
    Centring leaves the mark's top edge and the text baseline at unrelated
@@ -533,13 +533,22 @@ svg text.dlabel { font-size: 11.5px; font-weight: 600; fill: var(--ink-2); }
    to baseline is exactly the mark's height. Integer height + integer nudge =
    integer distance, and the pair always snaps together wherever the row lands.
    Heights must share a parity: an odd box centres on a half-pixel and an even
-   one on a whole pixel, so 11px and 2px can never agree. Hence the 3px line. */
+   one on a whole pixel, so 11px and 2px can never agree. Hence the 3px line,
+   and hence the legend's eq dot is 11px where the table's own dot is 12px: an
+   even box wants a half-pixel nudge, which is the fractional offset this whole
+   scheme exists to avoid.
+   The ROW aligns on the baseline for the same reason its keys do. The heatmap
+   ramp's swatches sit directly in the row rather than inside a .key, so under
+   centring they took a nudge measured against a baseline they weren't on and
+   landed 1.8px below the digits they key. Baseline here puts every mark on the
+   same rule whether or not something wrapped it. */
 .legend .key { display: inline-flex; align-items: baseline; gap: 6px; }
 .legend .line { width: 14px; height: 3px; border-radius: 1.5px; }
 .legend .rect { width: 11px; height: 11px; border-radius: 3px; }
-.legend .line, .legend .rect { position: relative; }
-.legend .rect { top: 1px; }    /* 11px box, centre 4.5px up from the baseline */
-.legend .line { top: -3px; }   /* 3px box, same 4.5px centre */
+.legend .eqdot { width: 11px; height: 11px; }
+.legend .line, .legend .rect, .legend .eqdot { position: relative; }
+.legend .rect, .legend .eqdot { top: 1px; }  /* 11px box, centre 4.5px up from the baseline */
+.legend .line { top: -3px; }                 /* 3px box, same 4.5px centre */
 .detail { position: relative; display: none; grid-template-columns: auto 1fr; gap: 8px 20px; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--grid); }
 /* top = .detail padding-top (12) + half the .mlbl line (8) - half the button (11): centers on the label row */
 .detail .dt-close { position: absolute; top: 9px; right: 0; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; padding: 0; border: none; background: none; border-radius: 6px; color: var(--muted); font-size: 15px; line-height: 1; cursor: pointer; }
