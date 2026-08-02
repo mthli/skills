@@ -197,7 +197,7 @@ def test_horizon_table_scores_every_row_on_the_same_trades(capsys):
                   [("All signals", lambda s: True)], min_n=1)
     out = capsys.readouterr().out
     assert "n=1" in out                       # BBB dropped from every row
-    assert out.count("|") and "5d **(live)**" in out
+    assert "5d **(live)**" in out
     # The live row carries no delta against itself; the others do.
     live = next(ln for ln in out.splitlines() if "(live)" in ln)
     assert live.rstrip().endswith("| — | — |")
@@ -207,13 +207,46 @@ def test_horizon_table_scores_every_row_on_the_same_trades(capsys):
     assert "nan" not in out and one_day.rstrip().endswith("| — |")
 
 
-def test_horizon_table_skips_thin_groups(capsys):
+def test_horizon_table_skips_thin_groups_out_loud(capsys):
     bars = _bars([100] * 6, [101] * 6, [99] * 6, [100] * 6)
     horizon_table("T", "blurb", [_sig()], {"AAA": bars}, "close", [1, 5], 5,
                   [("All signals", lambda s: True)])
-    # One trade is not a stratum; the group prints no table rather than a
-    # one-trade "finding".
-    assert "n=" not in capsys.readouterr().out
+    # One trade is not a stratum, so no table — but the skip is announced
+    # with its count, never a silently missing section.
+    out = capsys.readouterr().out
+    assert "skipped: only 1 trades" in out and "30-trade floor" in out
+    assert "| 1d " not in out
+
+
+def test_horizon_table_reports_per_spell_view(capsys):
+    # Two spells: AAA lists once, BBB twice. Only the day-1 rows belong to
+    # the per-spell line, since consecutive days of one spell are the same
+    # piece of evidence counted twice.
+    bars = _bars([100, 100, 100, 100, 104, 104],
+                 [100, 101, 101, 101, 105, 105],
+                 [99, 99, 99, 99, 103, 103],
+                 [100, 100, 100, 100, 104, 104])
+    signals = [_sig(ticker="AAA"), _sig(ticker="BBB"),
+               _sig(ticker="BBB", run_day="20260707", day_of_spell=2)]
+    horizon_table("T", "blurb", signals, {"AAA": bars, "BBB": bars},
+                  "close", [1, 5], 5, [("All", lambda s: True)], min_n=2)
+    out = capsys.readouterr().out
+    assert "n=3" in out                        # table counts all three
+    assert "day-1 listings only, n=2" in out   # per-spell line drops the 2nd
+
+    # Too few day-1 listings to quote: say the line is missing and why,
+    # rather than printing a table with nothing under it.
+    horizon_table("T", "blurb", signals[1:], {"BBB": bars},
+                  "close", [1, 5], 5, [("All", lambda s: True)], min_n=2)
+    thin = capsys.readouterr().out
+    assert "Per-spell view omitted: only 1 of these trades" in thin
+
+
+def test_horizon_table_rejects_ref_outside_horizons():
+    bars = _bars([100] * 6, [101] * 6, [99] * 6, [100] * 6)
+    with pytest.raises(ValueError, match="must be one of"):
+        horizon_table("T", "b", [_sig()], {"AAA": bars}, "close", [1, 2], 5,
+                      [("All", lambda s: True)])
 
 
 def test_bucket_bounds_are_half_open():

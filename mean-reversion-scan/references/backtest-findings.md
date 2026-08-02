@@ -10,17 +10,27 @@ Full evidence behind the eight-bullet summary in SKILL.md's "Backtested outcomes
 6. **Signal breadth is a regime dial inside RISK-ON.** Days when the scan emits <30 signals: **−1.39%/signal, and score ≥40 doesn't save you (−1.62%)**: a name that's oversold when nothing else is tends to have its own bad news. Days with >60 signals (market-wide washout): +1.29%, and score ≥40 on those days +2.27%. Market-driven panic mean-reverts; idiosyncratic oversold doesn't. The banner's "Passed filter" count is itself a signal.
 7. **The 5-day window is the right default, and cutting early is the expensive mistake.** Every holding period replayed over ONE fixed set of trades (same signals, same target, same stop — only the deadline moves), with each delta paired per trade against the live rule:
 
-   | Exit by | Exp%/signal | Δ vs 5d (paired) | 95% CI | ⭐ pocket Δ | Exp/day |
-   |---|---|---|---|---|---|
-   | 1d | +0.11% | **−0.575%** | −0.79 ~ −0.36 | **−1.366%** | +0.109% |
-   | 2d | +0.48% | **−0.206%** | −0.39 ~ −0.02 | **−0.582%** | +0.269% |
-   | 3d | +0.65% | −0.037% | −0.18 ~ +0.11 | −0.142% | +0.271% |
-   | 4d | +0.75% | +0.067% | −0.03 ~ +0.16 | +0.058% | +0.258% |
-   | **5d (live)** | **+0.68%** | — | — | — | +0.204% |
-   | 7d | +0.61% | **−0.197%** | −0.32 ~ −0.08 | **−0.620%** | +0.153% |
-   | 10d | +0.29% | **−0.516%** | −0.70 ~ −0.33 | **−1.433%** | +0.061% |
+   **Time stops** — n=1,584, live rule +0.68%/signal. "Per-spell Δ" repeats the paired delta over day-1 listings only (n=1,005), one trade per oversold spell: the table's intervals count each consecutive day as fresh evidence and it isn't.
 
-   (n=1,584 for the 1-5d block, 1,529 for the 5-10d block — the longer horizons need more bars, so the two blocks are not comparable row-for-row. 4d beats 5d by less than its interval and the two halves of the sample disagree on which wins: noise, not a reason to move the default. Every sign and ordering survives `--entry next-open`.) The exit rule is therefore **target, stop, or the 5th close — whichever comes first**: 57% leave at the target (avg +3.71%), 5% at the stop (−9.98%), 38% at the deadline (−2.44%), average time in trade 3.35 sessions.
+   | Exit by | Exp%/signal | Δ vs 5d (paired) | 95% CI | Per-spell Δ | ⭐ pocket Δ | Exp/day |
+   |---|---|---|---|---|---|---|
+   | 1d | +0.11% | **−0.575%** | −0.79 ~ −0.36 | **−0.798%** | **−1.366%** | +0.109% |
+   | 2d | +0.48% | **−0.206%** | −0.39 ~ −0.02 | **−0.418%** | **−0.582%** | +0.269% |
+   | 3d | +0.65% | −0.037% | −0.18 ~ +0.11 | **−0.230%** | −0.142% | +0.271% |
+   | 4d | +0.75% | +0.067% | −0.03 ~ +0.16 | −0.032% | +0.058% | +0.258% |
+   | **5d (live)** | **+0.68%** | — | — | — | — | +0.204% |
+
+   **Longer windows** — a separate, smaller sample (n=1,529; the extra horizons need more bars), so its live row is not the +0.68% above and the two tables must not be read across:
+
+   | Exit by | Exp%/signal | Δ vs 5d (paired) | 95% CI | Per-spell Δ | ⭐ pocket Δ | Exp/day |
+   |---|---|---|---|---|---|---|
+   | **5d (live)** | **+0.81%** | — | — | — | — | +0.245% |
+   | 7d | +0.61% | **−0.197%** | −0.32 ~ −0.08 | **−0.159%** | **−0.620%** | +0.153% |
+   | 10d | +0.29% | **−0.516%** | −0.70 ~ −0.33 | **−0.511%** | **−1.433%** | +0.061% |
+
+   The ⭐ pocket's own per-spell deltas (day-1 listings at Score ≥ 40, n=233) run harder in the same direction: 1d −1.724%, 2d −0.868%, 3d −0.287%, 4d −0.130%, 7d −0.977%, 10d −1.999%.
+
+   Only the 4-day cut is a genuine tie: 3d ties on the full sample but loses −0.230% (interval excludes zero) once each spell counts once, and 4d beats 5d by less than its own interval while the two halves of the sample disagree on which wins — noise, not a reason to move the default. Every sign and ordering survives `--entry next-open`. The exit rule is therefore **target, stop, or the 5th close — whichever comes first**: 57% leave at the target (avg +3.71%), 5% at the stop (−9.98%), 38% at the deadline (−2.44%), average time in trade 3.35 sessions.
 
    **Two traps this finding exists to kill.** (a) The 38% expired bucket is the system's biggest drag, which makes "cut the ones that haven't moved" irresistible — but the loss those trades carry is already taken by day 2, cutting locks it in, and 25% of all winners print on days 3-5. (b) The outcomes ledger's `days_to_resolve` cannot be used to derive an exit rule: bucketing resolved trades by how long they took conditions on the future, and it gives the opposite answer (those buckets read "still open after day 2 → −1.5% expectancy", which is a statement about trades measured from entry, not about what the next three days pay). A shorter rule does earn more *per day held* (2d +0.27%/day vs +0.20% at 5d; ⭐ pocket +0.68% vs +0.49%), which is a real trade-off only when the freed capital has another signal to take — it is a ratio on a fixed signal set here, not a portfolio backtest with concurrency and capital limits.
 8. **Frequency penalty confirmed, sector skew is tape-driven.** Freq60d 3-5 (noisy names): +0.13% vs +0.84% for 1-2. By sector, Tech/Healthcare ran +1.2-1.5% while Energy/Materials/Defensive ran −0.3..−0.5%, matching those sectors' tapes over the sample; read it as regime-dependent, not structural.

@@ -351,6 +351,18 @@ def bucket(outs: list[Outcome], key, bounds: list[tuple[str, float, float]]):
             for name, lo, hi in bounds]
 
 
+def paired_delta(cur: list[Outcome], base: list[Outcome]) -> tuple[float, str]:
+    """Mean per-trade delta of one exit rule against another, trade matched
+    to trade, with its 95% interval. A one-trade sample has no spread to
+    quote and gets an em-dash rather than a nan."""
+    d = np.array([c.result for c in cur]) - np.array([b.result for b in base])
+    if len(d) < 2:
+        return float(d.mean()), "—"
+    se = float(d.std(ddof=1)) / np.sqrt(len(d))
+    return float(d.mean()), (f"{d.mean() - 1.96 * se:+.2f} ~ "
+                             f"{d.mean() + 1.96 * se:+.2f}")
+
+
 def hold_days(o: Outcome, horizon: int) -> int:
     """Sessions the trade was actually held. A decisive trade leaves the day
     its target or stop prints; an expired one is held to the horizon's close.
@@ -376,7 +388,15 @@ def horizon_table(title: str, blurb: str, signals: list[Signal], prices: dict,
     took to resolve — conditions on the future and inverts the answer: those
     buckets say holding past day 2 averages −1.5%, but that loss is measured
     from ENTRY and had already happened by day 2. Cutting there locks it in
-    and forfeits the quarter of winners that land on days 3-5."""
+    and forfeits the quarter of winners that land on days 3-5.
+
+    Each table is followed by the same deltas over day-1 listings only — one
+    trade per oversold spell, this file's per-spell view. The intervals in
+    the table itself treat every row as an independent trade, and the
+    consecutive days of one spell are not; the per-spell line is the honest
+    read of how much evidence there is."""
+    if ref not in horizons:
+        raise ValueError(f"ref horizon {ref} must be one of {horizons}")
     by_h: dict[int, dict[tuple[str, str], Outcome]] = {h: {} for h in horizons}
     for s in signals:
         bars = prices.get(s.ticker)
@@ -391,9 +411,13 @@ def horizon_table(title: str, blurb: str, signals: list[Signal], prices: dict,
     print(blurb)
     for gname, pred in groups:
         keys = [k for k in common if pred(by_h[ref][k].sig)]
+        # Never drop a group in silence: a short history reaching this floor
+        # would otherwise just make the table vanish.
         if len(keys) < min_n:
+            print(f"\n**{gname}** — skipped: only {len(keys)} trades cleared "
+                  f"every horizon, under this table's {min_n}-trade floor.")
             continue
-        base = np.array([by_h[ref][k].result for k in keys])
+        base = [by_h[ref][k] for k in keys]
         print(f"\n**{gname}** — n={len(keys)}\n")
         print(f"| Exit by | Win% | Stop% | Flat% | Hold d | Exp% | GapExp% | "
               f"Exp/day | Δ vs {ref}d | 95% CI |")
@@ -408,22 +432,33 @@ def horizon_table(title: str, blurb: str, signals: list[Signal], prices: dict,
             if h == ref:
                 delta = ci = "—"
             else:
-                d = r - base
-                delta = f"{d.mean():+.3f}%"
-                # A one-trade group has no spread to quote; say so rather
-                # than printing a nan interval.
-                if n < 2:
-                    ci = "—"
-                else:
-                    se = float(d.std(ddof=1)) / np.sqrt(n)
-                    ci = (f"{d.mean() - 1.96 * se:+.2f} ~ "
-                          f"{d.mean() + 1.96 * se:+.2f}")
+                m, ci = paired_delta(outs, base)
+                delta = f"{m:+.3f}%"
             label = f"{h}d" + (" **(live)**" if h == ref else "")
             print(f"| {label} | {100 * won / n:.0f}% | {100 * lost / n:.0f}% | "
                   f"{100 * (n - won - lost) / n:.0f}% | {days:.2f} | "
                   f"{r.mean():+.2f}% | "
                   f"{np.mean([o.gap_result for o in outs]):+.2f}% | "
                   f"{r.mean() / days:+.3f}% | {delta} | {ci} |")
+
+        # The correlation-honest read: one trade per oversold spell. The
+        # table's intervals count each consecutive day as its own evidence,
+        # which overstates how much there is.
+        indep = [k for k in keys if by_h[ref][k].sig.day_of_spell == 1]
+        if len(indep) < min_n:
+            print(f"\n_Per-spell view omitted: only {len(indep)} of these "
+                  f"trades are day-1 listings, under the {min_n}-trade "
+                  f"floor._")
+        else:
+            parts = []
+            for h in horizons:
+                if h == ref:
+                    continue
+                m, ci = paired_delta([by_h[h][k] for k in indep],
+                                     [by_h[ref][k] for k in indep])
+                parts.append(f"{h}d {m:+.3f}% ({ci})")
+            print(f"\n_Per-spell view — day-1 listings only, n={len(indep)}: "
+                  + " · ".join(parts) + "._")
 
 
 def main() -> None:
@@ -644,7 +679,11 @@ def main() -> None:
           "it, i.e. the capital-efficiency reading — a shorter rule can earn "
           "more per day held while earning less per trade, which only pays "
           "if the freed capital has another signal to go to. Δ and its "
-          "interval are paired per trade against the live rule._")
+          "interval are paired per trade against the live rule; that "
+          "interval assumes the trades are independent, so read the "
+          "per-spell line under each table as the amount of evidence there "
+          "actually is (even it is only de-clustered by spell, not by day: "
+          "names listed on the same session still fall together)._")
 
     print("\n_Columns: n = resolved signals; dec = decisive (target or stop "
           "hit); Win% = WON/dec; d→T = avg days to target among wins; Exp% = "
