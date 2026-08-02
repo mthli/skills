@@ -46,6 +46,12 @@ ENTRY_VOL_QUIET_MAX = 0.8
 ENTRY_CLEAN_DIST_MAX = 1
 ENTRY_LOADED_DIST_MIN = 4
 
+# The multiplier the hover cards draw their stop at. MUST equal scan.py's
+# --atr-stop-mult default: the page and the CLI publish the same stop, and
+# a page that quietly used a different one would be the harder of the two
+# to doubt. test_render_benchmark.py holds the drift-guard.
+ATR_STOP_MULT_DEFAULT = 2.5
+
 
 BENCH_KEYS = ("board", "spy", "qqq")
 
@@ -160,6 +166,26 @@ def build_payload(rows: list[dict], sectors: dict, top_n: int,
         t = r["ticker"]
         by_ticker.setdefault(t, {})[r["run_id"]] = r
 
+    # Prices for the hover cards come from benchmark.json, not from
+    # history.csv's `close`: that column only exists for runs since
+    # 2026-07-30 and is as-seen rather than adjusted, so a window drawn
+    # from it would be blank almost everywhere and wrong across a split.
+    # See compute_benchmark.build_prices.
+    px = (bench or {}).get("px") or {}
+    px_at = {rid: i for i, rid in enumerate((bench or {}).get("days") or [])}
+
+    def px_of(t: str, d: int, key: str):
+        """A price fact for `t` on run-day index `d`, or None.
+
+        Looked up through benchmark.json's own day list rather than by
+        position, so a stale file simply runs out — the days past its end
+        go blank instead of borrowing a value from the wrong date."""
+        arr = px.get(t, {}).get(key)
+        i = px_at.get(run_ids[d])
+        if arr is None or i is None or i >= len(arr):
+            return None
+        return arr[i]
+
     def sector_of(t: str) -> str:
         return sectors.get(t, {}).get("sector", "Unknown")
 
@@ -195,17 +221,107 @@ def build_payload(rows: list[dict], sectors: dict, top_n: int,
             streak += 1
         latest_row = runs.get(latest)
         latest_rank = int(latest_row["rank"]) if latest_row else None
-        win_pts = [{**p, "d": p["d"] - win_start}
-                   for p in pts if p["d"] >= win_start]
+
+        # Episodes: one unbroken spell on the board each, split on any gap
+        # in run-days. Prices hang off these rather than off the ticker,
+        # so a name that left and came back is measured against the cost
+        # basis of the spell being hovered, not its first ever listing.
+        # Skipped wholesale for a name benchmark.json has no series for:
+        # episodes exist only to hang prices on, and empty ones would be
+        # ~20 KB of labels the page never reads.
+        eps: list[dict] = []
+        ep_at: dict[int, int] = {}
+        for d in (sorted(p["d"] for p in top_days) if t in px else ()):
+            if eps and d == eps[-1]["d1"] + 1:
+                eps[-1]["d1"] = d
+            else:
+                eps.append({"d0": d, "d1": d})
+            ep_at[d] = len(eps) - 1
+        peak_at: dict[int, float] = {}
+        # Every below-cutoff day between one spell and the next belongs to
+        # the first spell's aftermath. The dropout day is the sale; the
+        # days after it are how far the name kept going once it was sold,
+        # which is the evidence for selling the dropout at all.
+        after_at: dict[int, int] = {}
+        for i, e in enumerate(eps):
+            e["c0"] = px_of(t, e["d0"], "c")
+            # The dropout-observation day closes the spell: the skill's
+            # one validated exit sells at that close, so the trade has a
+            # result the moment a next run-day exists.
+            nd = e["d1"] + 1
+            end = eps[i + 1]["d0"] if i + 1 < len(eps) else len(run_ids)
+            for d in range(nd, end):
+                after_at[d] = i
+            if nd < len(run_ids):
+                e["xd"], e["xc"] = nd, px_of(t, nd, "c")
+                # ...but the result needs a cell to hang off. Any
+                # below-cutoff row in the aftermath carries it, so only a
+                # name that left the scan's output entirely falls back to
+                # its last listed day — otherwise the note would repeat
+                # what the grey cells beside it already say.
+                e["xlast"] = not any(run_ids[d] in runs
+                                     for d in range(nd, end))
+            if e["c0"] is None:
+                continue
+            # Peak since entry, over every session in the spell rather
+            # than the run-days alone — `h` spans the gaps between runs,
+            # so a high made on a day the scan skipped still counts.
+            peak = e["c0"]
+            peak_at[e["d0"]] = peak
+            for d in range(e["d0"] + 1, e["d1"] + 1):
+                h = px_of(t, d, "h")
+                if h is not None and h > peak:
+                    peak = h
+                peak_at[d] = peak
+
+        win_pts = []
+        for p in pts:
+            if p["d"] < win_start:
+                continue
+            q = {**p, "d": p["d"] - win_start}
+            c = px_of(t, p["d"], "c")
+            if c is not None:
+                q["c"] = round(c, 4)
+            ei = ep_at.get(p["d"])
+            if ei is not None:
+                q["e"] = ei
+                a = px_of(t, p["d"], "a")
+                if a is not None:
+                    q["a"] = round(a, 4)
+                if p["d"] in peak_at:
+                    q["pk"] = round(peak_at[p["d"]], 4)
+                if p["d"] == eps[ei]["d1"] and eps[ei].get("xlast"):
+                    q["xl"] = 1
+            elif (ai := after_at.get(p["d"])) is not None:
+                # 1 = the dropout day, where the sale happens; 2 = a day
+                # after it, when the trade is already closed and the cell
+                # only reports where the name went without you.
+                q["e"] = ai
+                q["x"] = 1 if p["d"] == eps[ai]["d1"] + 1 else 2
+            win_pts.append(q)
         win_apps = sum(1 for p in win_pts if p["r"] <= top_n)
         if win_pts:
-            series.append({"t": t, "sec": sector_of(
-                t), "pts": win_pts, "apps": win_apps})
+            s = {"t": t, "sec": sector_of(t),
+                 "pts": win_pts, "apps": win_apps}
+            if eps:
+                s["eps"] = [
+                    {k: v for k, v in (("l", day_labels[e["d0"]]),
+                                       ("c", e.get("c0")),
+                                       ("xl", day_labels[e["xd"]]
+                                        if "xd" in e else None),
+                                       ("xc", e.get("xc")))
+                     if v is not None}
+                    for e in eps
+                ]
+            series.append(s)
         first_d = min(p["d"] for p in top_days)
         last_d = max(p["d"] for p in top_days)
         # Entry quality of the LATEST episode: walk back from the most
         # recent on-board day while days stay consecutive, then tier the
-        # spell's first day by its entry-day volume character.
+        # spell's first day by its entry-day volume character. Same
+        # "consecutive run-days" rule the price episodes above use, kept
+        # separate because this one has to work for names benchmark.json
+        # has no prices for — change one and change the other.
         top_ds = sorted(p["d"] for p in top_days)
         ep_start = top_ds[-1]
         for d in reversed(top_ds[:-1]):
@@ -303,6 +419,10 @@ def build_payload(rows: list[dict], sectors: dict, top_n: int,
 
     return {
         "topN": top_n,
+        "mult": ATR_STOP_MULT_DEFAULT,
+        # None when benchmark.json predates the price block — the stop
+        # rows then have no ATR to draw from and drop out on their own.
+        "atrN": (bench or {}).get("atr_period"),
         "days": day_labels[win_start:],
         "window": {"total": len(run_ids), "shown": len(win_ids)},
         "bench": window_benchmark(bench, run_ids, win_start, top_n),
@@ -433,6 +553,11 @@ svg text.dlabel { font-size: 11.5px; font-weight: 600; fill: var(--ink-2); }
 .topbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin: 0 0 20px; }
 .topbar .sub { margin-bottom: 0; }
 .head { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin: 0 0 12px; }
+/* Claim the row, don't size to the text: without this the title block is
+   content-width, so shortening the note narrows its own column and the
+   last line wraps anyway. min-width:0 lets it shrink below that content
+   width on a narrow screen instead of pushing the select off the card. */
+.head > div { flex: 1; min-width: 0; }
 .head .note { margin-bottom: 0; }
 select {
   font: 12.5px system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink);
@@ -579,9 +704,9 @@ const I18N = {
     benchCovNote: d => ` Prices were missing on ${d} day${d > 1 ? "s" : ""}; those names sit out that day.`,
     benchStale: d => ` The comparison stops at ${d}. Re-run compute_benchmark.py to extend it.`,
     bumpTitle: "Rank trajectories",
-    bumpNote: (m, min, n) => `${m} trajectories (≥${min} days on board + today's top ${n}; #1 at the top; ranks below #${n} clamp to the dashed floor). Top 8 in color; the right edge labels today's full board.\nHover to inspect; click a line to pin it and open its Score / Return / Drawdown strip.`,
+    bumpNote: (m, min, n) => `${m} trajectories (≥${min} board days + today's top ${n}). #1 on top, below #${n} clamps to the dashed floor. Click a line to pin its Score / Return / Drawdown strip.`,
     heatTitle: "Board heatmap",
-    heatNote: "Rows sorted by days on board: persistent leaders on top, one-day wonders at the bottom. The more vivid the blue, the better the rank.\nClick a row to open its Score / Return / Drawdown strip.",
+    heatNote: "Rows by days on board: leaders on top, one-day wonders at the bottom. The more vivid the blue, the better the rank. Click a row for its strip.",
     heatFilterLabel: "Filter by days on board",
     geDays: n => `≥${n} days`, all: "All",
     heatLegendBelow: "Passed filter, below display cutoff",
@@ -600,6 +725,11 @@ const I18N = {
     eqFrozen: "Tier frozen that day",
     eqFreshNote: "Filled = entered this run; ring = earlier entry (tier frozen at entry day).",
     score: "Score", ret: "Return", dd: "Drawdown",
+    entryPx: "Entry close", closePx: "Close", sellPx: "Sold at",
+    stopPx: "Stop", trailPx: "Trail stop",
+    stopNote: (m, n) => `Stop = that day's close − ${m}× ${n}-day ATR. Trail stop rides the highest close since listing; you still exit on the dropout.`,
+    trailHit: "This close is below the trail stop, so it fired.",
+    settled: (d, px, pct) => `Spell closed ${d} at ${px} (${pct}%).`,
     formula: "Score = Return ÷ |Drawdown|",
     formulaNote: ": return per 1% of drawdown endured (sub-1% drawdowns count as 1%).",
     detClose: "Close",
@@ -627,9 +757,9 @@ const I18N = {
     benchCovNote: d => ` 有 ${d} 天缺价格，这些标的当天不参与计算。`,
     benchStale: d => ` 对比只到 ${d}，重跑 compute_benchmark.py 续上。`,
     bumpTitle: "排名轨迹",
-    bumpNote: (m, min, n) => `共 ${m} 条轨迹（在榜 ≥${min} 天 + 今日 top ${n}；第 1 名在顶部；低于第 ${n} 名的排名压到虚线底线）。前 8 名着色；右缘标注今日完整榜单。\n悬停查看数值；点击一条线可固定并展开其评分 / 收益 / 回撤走势。`,
+    bumpNote: (m, min, n) => `共 ${m} 条轨迹（在榜 ≥${min} 天 + 今日 top ${n}）。第 1 名在顶部，低于第 ${n} 名的压到虚线底线。点击一条线可固定并展开其评分 / 收益 / 回撤走势。`,
     heatTitle: "榜单热力图",
-    heatNote: "行按在榜天数排序：常青领跑者在上，一日游在下。蓝色越醒目排名越好。\n点击任意行展开其评分 / 收益 / 回撤走势。",
+    heatNote: "行按在榜天数排序：常青领跑者在上，一日游在下。蓝色越醒目排名越好，点击任意行展开其评分 / 收益 / 回撤走势。",
     heatFilterLabel: "按在榜天数筛选",
     geDays: n => `≥${n} 天`, all: "全部",
     heatLegendBelow: "通过筛选，但低于显示截断线",
@@ -648,6 +778,11 @@ const I18N = {
     eqFrozen: "评级定格于当日",
     eqFreshNote: "实心 = 本期新入榜；空心 = 历史入场（评级定格于入场日）。",
     score: "评分", ret: "收益", dd: "回撤",
+    entryPx: "上榜价", closePx: "当日收盘", sellPx: "卖出价",
+    stopPx: "止损", trailPx: "移动止损",
+    stopNote: (m, n) => `止损价 = 当日收盘 − ${m}× ${n} 日 ATR。移动止损锚定上榜以来的最高收盘；出场仍以掉出榜单为准。`,
+    trailHit: "当日收盘已跌破移动止损，按它算已触发。",
+    settled: (d, px, pct) => `本轮已在 ${d} 以 ${px}（${pct}%）了结。`,
     formula: "评分 = 收益 ÷ |回撤|",
     formulaNote: "：每承受 1% 回撤换来的收益（回撤不足 1% 按 1% 计）。",
     detClose: "关闭",
@@ -680,9 +815,9 @@ const I18N = {
     benchCovNote: d => ` 有 ${d} 天缺價格，這些標的當天不參與計算。`,
     benchStale: d => ` 對比只到 ${d}，重跑 compute_benchmark.py 續上。`,
     bumpTitle: "排名軌跡",
-    bumpNote: (m, min, n) => `共 ${m} 條軌跡（在榜 ≥${min} 天 + 今日 top ${n}；第 1 名在頂部；低於第 ${n} 名的排名壓到虛線底線）。前 8 名著色；右緣標註今日完整榜單。\n懸停查看數值；點擊一條線可固定並展開其評分 / 報酬 / 回撤走勢。`,
+    bumpNote: (m, min, n) => `共 ${m} 條軌跡（在榜 ≥${min} 天 + 今日 top ${n}）。第 1 名在頂部，低於第 ${n} 名的壓到虛線底線。點擊一條線可固定並展開其評分 / 報酬 / 回撤走勢。`,
     heatTitle: "榜單熱力圖",
-    heatNote: "行按在榜天數排序：常青領跑者在上，一日遊在下。藍色越醒目排名越好。\n點擊任意行展開其評分 / 報酬 / 回撤走勢。",
+    heatNote: "行按在榜天數排序：常青領跑者在上，一日遊在下。藍色越醒目排名越好，點擊任意行展開其評分 / 報酬 / 回撤走勢。",
     heatFilterLabel: "按在榜天數篩選",
     geDays: n => `≥${n} 天`, all: "全部",
     heatLegendBelow: "通過篩選，但低於顯示截斷線",
@@ -701,6 +836,11 @@ const I18N = {
     eqFrozen: "評級定格於當日",
     eqFreshNote: "實心 = 本期新進榜；空心 = 歷史進場（評級定格於進場日）。",
     score: "評分", ret: "報酬", dd: "回撤",
+    entryPx: "上榜價", closePx: "當日收盤", sellPx: "賣出價",
+    stopPx: "止損", trailPx: "移動止損",
+    stopNote: (m, n) => `止損價 = 當日收盤 − ${m}× ${n} 日 ATR。移動止損錨定上榜以來的最高收盤；出場仍以掉出榜單為準。`,
+    trailHit: "當日收盤已跌破移動止損，按它算已觸發。",
+    settled: (d, px, pct) => `本輪已在 ${d} 以 ${px}（${pct}%）了結。`,
     formula: "評分 = 報酬 ÷ |回撤|",
     formulaNote: "：每承受 1% 回撤換來的報酬（回撤不足 1% 按 1% 計）。",
     detClose: "關閉",
@@ -733,9 +873,9 @@ const I18N = {
     benchCovNote: d => ` ${d} 日は価格が取れず、その銘柄はその日の計算から外しています。`,
     benchStale: d => ` 比較は ${d} まで。compute_benchmark.py を再実行すると延びます。`,
     bumpTitle: "順位推移",
-    bumpNote: (m, min, n) => `全 ${m} 本の推移線（ランクイン ${min} 日以上 + 本日の top ${n}；第 1 位が最上部；第 ${n} 位より下は破線の底辺に固定）。上位 8 銘柄を着色；右端は本日の全ランキング。\nホバーで数値を確認；線をクリックすると固定され、スコア / リターン / ドローダウンの推移が開きます。`,
+    bumpNote: (m, min, n) => `全 ${m} 本の推移線（ランクイン ${min} 日以上 + 本日の top ${n}）。第 1 位が最上部、第 ${n} 位より下は破線の底辺に固定。線をクリックで推移を表示。`,
     heatTitle: "ランキングヒートマップ",
-    heatNote: "行はランクイン日数順。定着したリーダーが上、一日だけの銘柄が下。青が鮮やかなほど順位が高い。\n行をクリックするとスコア / リターン / ドローダウンの推移が開きます。",
+    heatNote: "行はランクイン日数順。定着したリーダーが上、一日だけの銘柄が下。青が鮮やかなほど順位が高く、行をクリックで推移を表示。",
     heatFilterLabel: "ランクイン日数で絞り込み",
     geDays: n => `${n} 日以上`, all: "すべて",
     heatLegendBelow: "絞り込みは通過、表示カットオフ未満",
@@ -754,6 +894,11 @@ const I18N = {
     eqFrozen: "評価は当日で確定",
     eqFreshNote: "塗りつぶし = 今回新規ランクイン、リング = 過去のエントリー（評価はエントリー日で確定）。",
     score: "スコア", ret: "リターン", dd: "ドローダウン",
+    entryPx: "ランクイン時終値", closePx: "当日終値", sellPx: "売却価格",
+    stopPx: "ストップ", trailPx: "トレーリングストップ",
+    stopNote: (m, n) => `ストップ = 当日終値 − ${m}× ${n} 日 ATR。トレーリングストップはランクイン以降の最高終値が基準。出口は引き続きランキング脱落です。`,
+    trailHit: "終値がトレーリングストップ割れ。約定済みです。",
+    settled: (d, px, pct) => `この期間は ${d} に ${px}（${pct}%）で終了。`,
     formula: "スコア = リターン ÷ |ドローダウン|",
     formulaNote: "：ドローダウン 1% あたりのリターン（1% 未満のドローダウンは 1% として計算）。",
     detClose: "閉じる",
@@ -786,9 +931,9 @@ const I18N = {
     benchCovNote: d => ` ${d}일은 가격이 없어 해당 종목을 그날 계산에서 뺐습니다.`,
     benchStale: d => ` 비교는 ${d}까지입니다. compute_benchmark.py를 다시 실행하면 이어집니다.`,
     bumpTitle: "순위 궤적",
-    bumpNote: (m, min, n) => `총 ${m}개 궤적(순위 진입 ${min}일 이상 + 오늘의 top ${n}; 1위가 맨 위; ${n}위 아래 순위는 점선 바닥에 고정). 상위 8개 종목은 색상 표시; 오른쪽 끝은 오늘의 전체 보드.\n마우스를 올려 값 확인; 선을 클릭하면 고정되고 점수 / 수익률 / 낙폭 추이가 열립니다.`,
+    bumpNote: (m, min, n) => `총 ${m}개 궤적(순위 진입 ${min}일 이상 + 오늘의 top ${n}). 1위가 맨 위, ${n}위 아래는 점선 바닥에 고정. 선을 클릭하면 고정되고 점수 / 수익률 / 낙폭 추이가 열립니다.`,
     heatTitle: "보드 히트맵",
-    heatNote: "행은 순위 진입 일수순: 꾸준한 리더가 위, 하루짜리 종목이 아래. 파란색이 선명할수록 순위가 높습니다.\n행을 클릭하면 점수 / 수익률 / 낙폭 추이가 열립니다.",
+    heatNote: "행은 순위 진입 일수순: 꾸준한 리더가 위, 하루짜리 종목이 아래. 파란색이 선명할수록 순위가 높고, 행을 클릭하면 점수 / 수익률 / 낙폭 추이가 열립니다.",
     heatFilterLabel: "순위 진입 일수로 필터",
     geDays: n => `${n}일 이상`, all: "전체",
     heatLegendBelow: "필터 통과, 표시 컷오프 미만",
@@ -807,6 +952,11 @@ const I18N = {
     eqFrozen: "등급은 당일 확정",
     eqFreshNote: "채움 = 이번 런 신규 진입; 링 = 과거 진입 (등급은 진입일에 확정).",
     score: "점수", ret: "수익률", dd: "낙폭",
+    entryPx: "진입 종가", closePx: "당일 종가", sellPx: "매도가",
+    stopPx: "손절", trailPx: "추적 손절",
+    stopNote: (m, n) => `손절가 = 당일 종가 − ${m}× ${n}일 ATR. 추적 손절은 순위 진입 이후 최고 종가가 기준입니다. 출구는 여전히 보드 탈락입니다.`,
+    trailHit: "당일 종가가 추적 손절 아래, 이미 체결됐습니다.",
+    settled: (d, px, pct) => `이 구간은 ${d}에 ${px}(${pct}%)로 종료.`,
     formula: "점수 = 수익률 ÷ |낙폭|",
     formulaNote: ": 낙폭 1%당 얻은 수익률(1% 미만 낙폭은 1%로 계산).",
     detClose: "닫기",
@@ -912,6 +1062,69 @@ const gapNote = g => g > 1 ? T.gapNote(g) : null;
 // ±0 rather than going silent — silence would look like missing data.
 const sgnTxt = v => v > 0 ? "+" + v : v < 0 ? String(v) : "±0";
 const rankTxt = r => r <= N ? T.rankAt(r) : T.rankBelow(r);
+
+// ---- price block (both hover cards) ----
+// US large caps only, so the $ is not a currency guess.
+const pxTxt = v => "$" + v.toFixed(2);
+// Every % in the block is measured against the row directly above it —
+// the gain from the entry price, then the stop's distance from the close.
+// Reading down is always "this, versus the line I just read", which is the
+// only way four prices on two different baselines stay legible.
+const relTxt = (v, base) => ` (${sgnNum((v / base - 1) * 100, 1)}%)`;
+const MULT = DATA.mult;
+const epOf = (s, p) => p.e == null ? null : (s.eps || [])[p.e];
+// Every row stands on the numbers it needs and nothing else — a missing
+// entry price costs you the entry row and its percentages, not the stop,
+// which is only ever close and ATR. A cell from before the name first made
+// the board has no spell at all and shows its close alone.
+function priceRows(s, p) {
+  const e = epOf(s, p);
+  const entry = e && e.c != null ? e.c : null;
+  const rows = [];
+  if (entry != null) rows.push([T.entryPx, pxTxt(entry) + " · " + e.l]);
+  if (p.x) {
+    // Below the cutoff, so the position is closed: the block reports the
+    // trade rather than a stop that no longer protects anything. On the
+    // dropout day the sale is today (the header dates it); afterwards it
+    // needs its own date, and the close below it says how far the name
+    // ran on without you.
+    const sold = e && e.xc != null ? e.xc : null;
+    if (sold != null)
+      rows.push([T.sellPx, pxTxt(sold) + (p.x > 1 ? " · " + e.xl : "")
+                 + (entry != null ? relTxt(sold, entry) : "")]);
+    if (p.x > 1 && p.c != null) {
+      const base = sold != null ? sold : entry;
+      rows.push([T.closePx, pxTxt(p.c)
+                 + (base != null ? relTxt(p.c, base) : "")]);
+    }
+  } else if (p.c != null) {
+    rows.push([T.closePx, pxTxt(p.c)
+               + (entry != null ? relTxt(p.c, entry) : "")]);
+    if (p.a != null) {
+      const stop = p.c - MULT * p.a;
+      rows.push([T.stopPx, pxTxt(stop) + relTxt(stop, p.c)]);
+      if (p.pk != null) {
+        const trail = p.pk - MULT * p.a;
+        rows.push([T.trailPx, pxTxt(trail) + relTxt(trail, p.c)]);
+      }
+    }
+  }
+  return rows.length ? rows : null;
+}
+function priceNotes(s, p) {
+  const e = epOf(s, p);
+  if (!e) return [];
+  const out = [];
+  // A trail that has climbed past the close is not a level any more — it
+  // has already fired, and the % beside it reads as an upside otherwise.
+  if (!p.x && p.a != null && p.pk != null && p.c != null
+      && p.pk - MULT * p.a >= p.c) out.push(T.trailHit);
+  // The spell ended but the name left the scan's output entirely, so
+  // there is no dropout cell to hover — its last listed day settles it.
+  if (p.xl && e.xc != null && e.c != null)
+    out.push(T.settled(e.xl, pxTxt(e.xc), sgnNum((e.xc / e.c - 1) * 100, 1)));
+  return out;
+}
 function renderDetail(det, t, onClose) {
   det.textContent = "";
   det.style.display = t ? "grid" : "none";
@@ -977,7 +1190,11 @@ const hideTip = () => { tip.style.display = "none"; delete tip.dataset.eq; };
 // are pointing at in the header, the numbers in aligned pairs, the caveat
 // in ink last. keyClass swaps the generic swatch for the exact mark being
 // hovered (the roster's eq dot, filled or ring).
-function tipCard(t, { title, aux, color, line, keyClass, sub, kv, notes }) {
+// kv2 is a second pair group under its own rule. The price rows measure
+// each other (gain from entry, stop below close) while the kv rows measure
+// against the previous run, so running them into one grid would put two
+// unrelated baselines in one column.
+function tipCard(t, { title, aux, color, line, keyClass, sub, kv, kv2, notes }) {
   const head = div("h", t);
   if (color || keyClass) {
     const k = document.createElement("span");
@@ -990,12 +1207,13 @@ function tipCard(t, { title, aux, color, line, keyClass, sub, kv, notes }) {
   head.appendChild(v);
   if (aux) div("aux", head, aux);
   if (sub) div("sub", t, sub);
-  const pairs = (kv || []).filter(Boolean);
-  if (pairs.length) {
+  [kv, kv2].forEach(group => {
+    const pairs = (group || []).filter(Boolean);
+    if (!pairs.length) return;
     div("rule", t);
     const g = div("kv", t);
     pairs.forEach(([k, val]) => { div(null, g, k); div("val", g, val); });
-  }
+  });
   (notes || []).filter(Boolean).forEach((n, i) => div(i ? null : "oc", t, n));
 }
 
@@ -1258,7 +1476,8 @@ const BUMP_MIN_APPS = 5;
           [T.ret, p.ret.toFixed(1) + "%" + (pp ? dlt(p.ret - pp.ret, 1) : "")],
           [T.dd, p.dd.toFixed(1) + "%" + (pp ? dlt(p.dd - pp.dd, 1) : "")],
         ],
-        notes: [pp ? gapNote(p.d - pp.d) : null],
+        kv2: priceRows(best.s, p),
+        notes: [pp ? gapNote(p.d - pp.d) : null, ...priceNotes(best.s, p)],
       }));
     } else { lit = null; restyle(pinned); hideTip(); }
   });
@@ -1349,7 +1568,7 @@ function renderHeat(minApps) {
     const lt = el("text", {x: GL-8, y: y+CH-3, "text-anchor":"end", class:"tick"}, ra);
     lt.textContent = s.t; lt.dataset.t = s.t;
     let hprev = null;
-    for (const p of s.pts) {
+    for (const [pi, p] of s.pts.entries()) {
       const bucket = p.r <= N ? Math.min(9, Math.floor((N - p.r) / N * 10)) : null;
       const fill = bucket === null ? "var(--hx)" : `var(--h${bucket})`;
       const r = el("rect", {x: GL + p.d*CW, y: y+1, width: CW-2, height: CH-2, rx: 2,
@@ -1359,6 +1578,9 @@ function renderHeat(minApps) {
       r.dataset.f = fill;
       r.dataset.t = s.t; r.dataset.d = p.d; r.dataset.r = p.r;
       r.dataset.s = p.s; r.dataset.ret = p.ret; r.dataset.dd = p.dd;
+      // The price block needs the point and its episodes, not six more
+      // flattened attributes — carry the coordinates and look them up.
+      r.dataset.ri = ri; r.dataset.pi = pi;
       if (hprev) {
         r.dataset.gap = p.d - hprev.d;
         r.dataset.ds = (p.s - hprev.s).toFixed(2);
@@ -1372,6 +1594,7 @@ function renderHeat(minApps) {
     const t = ev.target;
     if (t.tagName === "rect" && t.dataset.t) {
       const c = t.dataset;
+      const hs = rows[+c.ri], hp = hs.pts[+c.pi];
       showTip(ev.clientX, ev.clientY, tt => tipCard(tt, {
         title: c.t,
         aux: DATA.days[+c.d],
@@ -1385,7 +1608,8 @@ function renderHeat(minApps) {
           [T.ret, (+c.ret).toFixed(1) + "%" + (c.dret ? dlt(+c.dret, 1) : "")],
           [T.dd, (+c.dd).toFixed(1) + "%" + (c.ddd ? dlt(+c.ddd, 1) : "")],
         ],
-        notes: [c.gap ? gapNote(+c.gap) : null],
+        kv2: priceRows(hs, hp),
+        notes: [c.gap ? gapNote(+c.gap) : null, ...priceNotes(hs, hp)],
       }));
     } else hideTip();
   });
@@ -1422,6 +1646,16 @@ function renderHeat(minApps) {
   const k = div("key", leg); const r = div("rect", k); r.style.background = "var(--hx)";
   k.appendChild(document.createTextNode(T.heatLegendBelow));
 }
+
+// ---- stop formula, said once per chart that draws one ----
+// No price block in benchmark.json (absent, or written before it existed)
+// means no ATR to multiply and no stop rows, so the note would describe
+// numbers the cards never show.
+if (DATA.atrN != null && DATA.series.some(s => s.pts.some(p => p.a != null)))
+  ["bump-note", "heat-note"].forEach(i => {
+    const n = document.getElementById(i);
+    n.textContent += "\n" + T.stopNote(MULT, DATA.atrN);
+  });
 
 // ---- table ----
 {

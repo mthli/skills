@@ -621,6 +621,10 @@ def attach_pullback(picks: list[dict], top_n: int,
 # The skill's only built-in exit otherwise is "dropped out of top-N" which
 # fires after a -20% max-drawdown — too late for active risk management.
 ATR_PERIOD_DAYS = 14  # canonical Wilder period
+# A constant rather than an argparse literal because the HTML dashboard
+# opens on this multiplier and has to be checkable against it — see
+# render_history_html.ATR_STOP_MULT_DEFAULT and its drift-guard test.
+ATR_STOP_MULT_DEFAULT = 2.5
 
 
 def compute_atrs(bars: pd.DataFrame, tickers: list[str],
@@ -1834,7 +1838,8 @@ def build_argparser() -> argparse.ArgumentParser:
                           "annualized prevents already-low-vol names from "
                           "being flagged. Hard cap is 1.0 (argparse rejects "
                           "above). Pass 0 or a negative value to disable."))
-    ap.add_argument("--atr-stop-mult", type=float, default=2.5,
+    ap.add_argument("--atr-stop-mult", type=float,
+                    default=ATR_STOP_MULT_DEFAULT,
                     help=("ATR-based stop loss multiplier (default 2.5). "
                           "Computes 14-day ATR per top-N pick and adds a Stop "
                           "column showing the suggested stop price = "

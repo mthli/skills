@@ -124,8 +124,17 @@ def test_the_file_on_disk_stays_diff_friendly(tmp_path):
 def test_price_start_follows_the_history_it_is_given():
     # A fixed start silently degrades to "no bars" (flat board + a
     # warning per day) the moment history reaches back past it.
-    assert cb.default_start("20260514") == "2026-04-30"
-    assert cb.default_start("20250102") == "2024-12-19"
+    assert cb.default_start("20260514") == "2026-04-12"
+    assert cb.default_start("20250102") == "2024-12-01"
+
+
+def test_price_start_clears_the_atr_warmup():
+    # The run-up is sized for the price block, not the curves: too short
+    # and the first run-days of the whole history carry no stop, which
+    # reads as "this name had no risk" rather than as missing data.
+    start = pd.Timestamp(cb.default_start("20260514"))
+    sessions = len(pd.bdate_range(start, cb.ts_of("20260514")))
+    assert sessions > cb.ATR_PERIOD_DAYS + 1
 
 
 def test_load_boards_keeps_only_the_displayed_top_n(tmp_path):
@@ -268,6 +277,201 @@ def test_payload_carries_the_panel_input():
     p = rh.build_payload(rows, {}, top_n=30, days_window=0, bench=bench())
     assert p["bench"]["board"] == [100.0, 110.0, 121.0]
     assert rh.build_payload(rows, {}, 30, 0, None)["bench"] is None
+
+
+# ----------------------------------------------- price block → hover card
+
+BD = pd.bdate_range("2026-06-01", periods=20)
+
+
+def ohlc(closes: list[float], spread=2.0) -> pd.DataFrame:
+    sp = spread if isinstance(spread, list) else [spread] * len(closes)
+    return pd.DataFrame({"High": [c + s / 2 for c, s in zip(closes, sp)],
+                         "Low": [c - s / 2 for c, s in zip(closes, sp)],
+                         "Close": closes}, index=BD)
+
+
+# A jagged series for the ATR guard below. A steady one will not do: with
+# a constant true range every smoothing and every period agree, so the
+# guard would pass against a wrong implementation.
+WOBBLY = [100.0, 104, 99, 107, 103, 96, 105, 113, 108, 101,
+          117, 112, 124, 118, 109, 128, 121, 133, 126, 138]
+WOBBLY_SPREAD = [3, 7, 2, 9, 4, 11, 5, 8, 3, 12, 6, 4, 10, 7, 13, 5, 9, 3, 11, 6]
+
+
+def day(i: int) -> str:
+    return BD[i].strftime("%Y%m%d")
+
+
+def test_the_atr_matches_the_one_the_cli_printed():
+    # The whole reason the dashboard computes its own ATR is that it has
+    # to land on the stop scan.py published that morning. Same bars, same
+    # number — or the page is confidently wrong.
+    frame = ohlc(WOBBLY, WOBBLY_SPREAD)
+    px = cb.build_prices([day(19)], ["AAA"], {"AAA": frame})
+    multi = frame.copy()
+    multi.columns = pd.MultiIndex.from_product([["AAA"], frame.columns])
+    ref = scan.compute_atrs(multi, ["AAA"])["AAA"]
+    assert px["AAA"]["a"][0] == pytest.approx(ref["atr"], abs=1e-4)
+    assert px["AAA"]["c"][0] == pytest.approx(ref["last_close"], abs=1e-4)
+
+
+def test_the_atr_guard_can_actually_fail():
+    # Pins the fixture, not the code: if WOBBLY ever flattens out, the
+    # guard above keeps passing while silently checking nothing. Wilder's
+    # smoothing and a shorter period are the two ways the implementations
+    # could plausibly drift apart, so the data has to separate them.
+    frame = ohlc(WOBBLY, WOBBLY_SPREAD)
+    prev = frame["Close"].shift(1)
+    tr = pd.concat([frame["High"] - frame["Low"],
+                    (frame["High"] - prev).abs(),
+                    (frame["Low"] - prev).abs()], axis=1).max(axis=1)
+    sma = tr.rolling(cb.ATR_PERIOD_DAYS).mean().iloc[-1]
+    wilder = tr.ewm(alpha=1 / cb.ATR_PERIOD_DAYS, adjust=False).mean().iloc[-1]
+    shorter = tr.rolling(cb.ATR_PERIOD_DAYS - 4).mean().iloc[-1]
+    assert abs(sma - wilder) > 1.0
+    assert abs(sma - shorter) > 0.5
+
+
+def test_the_interval_high_spans_the_days_between_runs():
+    closes = [100.0] * 20
+    closes[8] = 200.0   # before the first run-day: not this spell's peak
+    closes[17] = 130.0  # a session the scan skipped, but the trade held
+    px = cb.build_prices([day(16), day(18)], ["AAA"], {"AAA": ohlc(closes)})
+    assert px["AAA"]["h"] == [100.0, 130.0]
+
+
+def test_a_run_day_off_the_end_of_the_series_is_a_hole():
+    px = cb.build_prices([day(5), "20261231"], ["AAA"],
+                         {"AAA": ohlc([100.0] * 20)})
+    assert [v is None for v in px["AAA"]["c"]] == [False, True]
+    assert px["AAA"]["a"][1] is None and px["AAA"]["h"][1] is None
+
+
+def test_the_atr_period_and_default_multiplier_match_the_scan():
+    # Two scripts derive the same stop: compute_benchmark supplies the
+    # ATR, render_history_html the multiplier the page opens on. Either
+    # drifting from scan.py makes the dashboard disagree with the CLI.
+    assert cb.ATR_PERIOD_DAYS == scan.ATR_PERIOD_DAYS
+    assert rh.ATR_STOP_MULT_DEFAULT == scan.ATR_STOP_MULT_DEFAULT
+
+
+# -------------------------------------------- episodes → entry / exit rows
+
+D5 = [f"2026070{i}" for i in range(1, 6)]
+
+
+def priced(days=D5, c=(10.0, 12.0, 11.0, 20.0, 22.0),
+           h=(10.0, 15.0, 11.0, 20.0, 25.0), a=(1.0,) * 5,
+           ticker="AAA") -> dict:
+    b = bench(days=days, board=[100.0] * len(days), spy=[100.0] * len(days),
+              qqq=[100.0] * len(days))
+    b["atr_period"] = 14
+    b["px"] = {ticker: {"c": list(c), "a": list(a), "h": list(h)}}
+    return b
+
+
+def row(d: str, ticker: str, rank: int) -> dict:
+    return {"run_id": d, "ticker": ticker, "rank": str(rank), "score": "5.0",
+            "return_pct": "50.0", "max_dd_pct": "-5.0"}
+
+
+def history(ranks: dict[str, int], ticker="AAA") -> list[dict]:
+    """One row per (day, rank); days absent from `ranks` have no row for
+    `ticker`. A filler name holds every run-day open regardless, the way
+    a real board does — without it a day the subject skipped would vanish
+    from run_ids entirely and its spell would look unbroken."""
+    return ([row(d, ticker, r) for d, r in ranks.items()]
+            + [row(d, "ZFILL", 1) for d in D5])
+
+
+def series_of(rows, bench_, ticker="AAA", top_n=30):
+    p = rh.build_payload(rows, {}, top_n=top_n, days_window=0, bench=bench_)
+    return next(s for s in p["series"] if s["t"] == ticker)
+
+
+def test_each_spell_is_measured_against_its_own_entry():
+    # Left and came back: the second spell's cost basis is 20, not 10.
+    s = series_of(history(dict(zip(D5, [1, 1, 40, 1, 1]))), priced())
+    assert s["eps"][0]["c"] == 10.0 and s["eps"][1]["c"] == 20.0
+    assert [p.get("e") for p in s["pts"]] == [0, 0, 0, 1, 1]
+
+
+def test_the_dropout_cell_settles_the_trade():
+    # Day 3 is below the cutoff: under the one validated exit that close
+    # IS the sale, so the cell carries the result instead of going grey.
+    s = series_of(history(dict(zip(D5, [1, 1, 40, 1, 1]))), priced())
+    assert s["pts"][2]["x"] == 1 and s["pts"][2]["c"] == 11.0
+    assert s["eps"][0]["xc"] == 11.0 and s["eps"][0]["xl"] == "07-03"
+    # A sold position has no stop to draw.
+    assert "a" not in s["pts"][2] and "pk" not in s["pts"][2]
+    # The open spell has no exit at all.
+    assert "xc" not in s["eps"][1]
+
+
+def test_the_grey_tail_stays_attached_to_the_trade_it_followed():
+    # Days after the sale are the case FOR selling the dropout, so they
+    # keep the exit on screen instead of going blank.
+    s = series_of(history(dict(zip(D5, [1, 1, 40, 45, 50]))), priced())
+    assert [p.get("x") for p in s["pts"]] == [None, None, 1, 2, 2]
+    assert all(p["e"] == 0 for p in s["pts"][2:])
+
+
+def test_a_cell_before_the_first_spell_belongs_to_no_trade():
+    # Nothing was bought yet, so there is no cost basis to measure from.
+    s = series_of(history(dict(zip(D5, [40, 1, 1, 1, 1]))), priced())
+    assert "e" not in s["pts"][0] and "x" not in s["pts"][0]
+    assert s["pts"][0]["c"] == 10.0
+
+
+def test_the_peak_runs_from_entry_and_resets_each_spell():
+    s = series_of(history(dict(zip(D5, [1, 1, 40, 1, 1]))), priced())
+    assert [p.get("pk") for p in s["pts"]] == [10.0, 15.0, None, 20.0, 25.0]
+
+
+def test_a_name_that_left_the_scan_settles_on_its_last_listed_day():
+    # No row on day 3 means no cell to hover there, so the last day on
+    # the board carries the result instead.
+    s = series_of(history({D5[0]: 1, D5[1]: 1, D5[3]: 1, D5[4]: 1}), priced())
+    assert s["pts"][1]["xl"] == 1
+    assert s["eps"][0]["xc"] == 11.0
+    # ...and a spell that ends by a cell going grey does not, since that
+    # cell says it itself.
+    s2 = series_of(history(dict(zip(D5, [1, 1, 40, 1, 1]))), priced())
+    assert all("xl" not in p for p in s2["pts"])
+    # Nor when the dropout day itself has no row but a later grey cell
+    # does: that cell carries the sale, so the note would be a duplicate
+    # sitting one column to its left.
+    s3 = series_of(history({D5[0]: 1, D5[1]: 1, D5[3]: 40, D5[4]: 1}), priced())
+    assert all("xl" not in p for p in s3["pts"])
+    assert [p.get("x") for p in s3["pts"]] == [None, None, 2, None]
+
+
+def test_a_name_the_benchmark_has_no_prices_for_carries_no_episodes():
+    # Empty episodes would be kilobytes of labels the page never reads.
+    s = series_of(history(dict(zip(D5, [1] * 5))), priced(ticker="ZZZ"))
+    assert "eps" not in s
+    assert all("c" not in p and "e" not in p for p in s["pts"])
+
+
+def test_a_benchmark_that_stops_early_leaves_the_later_days_blank():
+    # Borrowing the last covered day's price for every day after it would
+    # read as a flat position rather than as missing data.
+    s = series_of(history(dict(zip(D5, [1] * 5))),
+                  priced(days=D5[:3], c=(10.0, 12.0, 11.0),
+                         h=(10.0, 15.0, 11.0), a=(1.0,) * 3))
+    assert [p.get("c") for p in s["pts"]] == [10.0, 12.0, 11.0, None, None]
+
+
+@pytest.mark.parametrize("lang", ["en", "zh", "zht", "ja", "ko"])
+def test_every_language_has_the_price_strings(lang):
+    # The price block reads eight T keys; a missing one renders as
+    # "undefined" in exactly one language, which no one running the
+    # default English page would ever see.
+    block = rh.HTML_TEMPLATE.split(f"  {lang}: {{")[1].split("\n  },")[0]
+    for key in ("entryPx", "closePx", "sellPx", "stopPx", "trailPx",
+                "stopNote", "trailHit", "settled"):
+        assert f"{key}:" in block, f"{lang} is missing {key}"
 
 
 @pytest.mark.parametrize("lang", ["en", "zh", "zht", "ja", "ko"])

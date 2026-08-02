@@ -32,6 +32,11 @@ Per-day price coverage is recorded alongside the curves, so a name whose
 series went missing shows up as a hole instead of quietly flattering the
 board.
 
+The same bars also yield a per-(member, run-day) price block — close, ATR
+and the interval high — which the dashboard's tooltips turn into entry
+price, stop and trailing stop. See build_prices for why those live here
+instead of in history.csv.
+
 Prices come from backtest_outcomes.fetch_prices (auto_adjust=True) and
 share its on-disk cache, so running this right after the backtest costs
 only the two index series.
@@ -59,6 +64,11 @@ SKILL_DIR = Path(__file__).resolve().parent.parent
 HISTORY_CSV = SKILL_DIR / "state" / "history.csv"
 OUT_JSON = SKILL_DIR / "state" / "benchmark.json"
 INDICES = ("SPY", "QQQ")
+# MUST equal scan.py's ATR_PERIOD_DAYS. The dashboard draws its stop from
+# the ATR computed here, and a stop that disagreed with the one the CLI
+# printed the same morning is the worst kind of wrong — it looks right.
+# test_render_benchmark.py holds the drift-guard.
+ATR_PERIOD_DAYS = 14
 
 
 def load_boards(history_path: Path, top_n: int) -> tuple[list[str], dict[str, list[str]]]:
@@ -96,17 +106,23 @@ def ts_of(day: str) -> pd.Timestamp:
 
 
 def default_start(first_day: str) -> str:
-    """Price-download start: a two-week run-up before the first run-day.
+    """Price-download start: a run-up before the first run-day.
 
     Derived rather than fixed, so a history that reaches further back
     can't silently resolve to "no bars before the start" — which reads
-    as a flat board with a warning per day, not as an error. Two weeks
-    is also inside fetch_prices' 7-day staleness tolerance in the common
-    case, so sharing a cache with backtest_outcomes.py (whose own start
-    is a constant) doesn't make the two refetch each other's range; when
-    the histories really do disagree by more than that, one refetch
-    widens the cache for both."""
-    return (ts_of(first_day) - pd.Timedelta(days=14)).strftime("%Y-%m-%d")
+    as a flat board with a warning per day, not as an error.
+
+    The curves only need one prior bar, but the price block's ATR needs
+    ATR_PERIOD_DAYS + 1 sessions before it reports anything, so the
+    run-up is sized for that instead: a two-week lead-in left the first
+    three run-days of the whole history with no stop to draw. 32 calendar
+    days clears ~22 sessions, holidays included.
+
+    That is wider than fetch_prices' 7-day staleness tolerance around
+    backtest_outcomes.py's own constant start, so the two no longer agree
+    on range and the first run after this widening refetches once. The
+    cache they share is wider for both afterwards."""
+    return (ts_of(first_day) - pd.Timedelta(days=32)).strftime("%Y-%m-%d")
 
 
 def priced_pairs(tickers: list[str], d0: pd.Timestamp, d1: pd.Timestamp,
@@ -161,6 +177,85 @@ def build_curves(days: list[str], boards: dict[str, list[str]],
     }
 
 
+def build_prices(days: list[str], members: list[str],
+                 prices: dict[str, pd.DataFrame]) -> dict:
+    """Per-(member, run-day) close, ATR and interval high.
+
+    The tooltips want three price facts history.csv cannot supply: what a
+    name closed at on a day it was listed, where an ATR stop would have
+    sat, and how high it got between two run-days (what a trailing stop
+    rides). All three need daily bars, which this script already holds for
+    every board member — so computing them here costs no fetch and covers
+    the *whole* recorded history at once, rather than only the days since
+    a new column started being written.
+
+    Everything comes off one auto-adjusted series, which is the real
+    reason not to store these per run: a split between the entry day and
+    today rescales both ends here, so "up 11.7% since it listed" stays
+    arithmetic. Mixing an as-seen entry close with a later adjusted close
+    would not. The cost is that an old day's level is today's adjusted
+    view of it, not the price that printed — history.csv's `close` stays
+    the as-seen record for anything that needs it.
+
+      c: close on the run-day itself
+      a: ATR over the trailing ATR_PERIOD_DAYS sessions as of that bar
+      h: highest close from the session after the previous run-day through
+         this one — the piece a running peak-since-entry sums from, which
+         keeps episode knowledge out of this function
+
+    A day with no bar of its own is null in all three, and holds the
+    interval open so the next day's `h` still spans the gap. The curves
+    resolve such a day to the nearest prior bar within 5 days, which is
+    right for them (the return over a halt is zero) and wrong here: a
+    tooltip would print a week-old price under today's date. Requiring the
+    exact session costs nothing on the current history (0 of 6987 cells
+    resolve to an earlier bar) and keeps a halted name blank instead of
+    stale.
+    """
+    stamps = [ts_of(d) for d in days]
+    out: dict[str, dict] = {}
+    for t in members:
+        bars = prices.get(t)
+        if bars is None or bars.empty:
+            continue
+        close = bars["Close"]
+        prev_close = close.shift(1)
+        tr = pd.concat([
+            bars["High"] - bars["Low"],
+            (bars["High"] - prev_close).abs(),
+            (bars["Low"] - prev_close).abs(),
+        ], axis=1).max(axis=1)
+        # Simple mean of the last N true ranges, matching scan.py's
+        # compute_atrs (Wilder's smoothing differs by <5% in steady state
+        # and this one has to agree with the CLI, not with the textbook).
+        atr = tr.rolling(ATR_PERIOD_DAYS).mean()
+        cs, as_, hs = [], [], []
+        seen = None  # bar position of the last run-day that resolved
+        for stamp in stamps:
+            p = pos_of(bars, stamp)
+            # A non-positive close would divide into the page's percentages
+            # (scan.compute_atrs rejects the same thing before sizing a
+            # stop off it), so it is missing data rather than a price.
+            c = float(close.iloc[p]) if p is not None else 0.0
+            if p is None or bars.index[p].normalize() != stamp or c <= 0:
+                cs.append(None)
+                as_.append(None)
+                hs.append(None)
+                continue
+            cs.append(round(c, 4))
+            a = atr.iloc[p]
+            as_.append(None if pd.isna(a) or a <= 0 else round(float(a), 4))
+            # First resolved day has no prior run-day to span from, so its
+            # interval is itself — a peak-since-entry must start at the
+            # entry close, not at some high the name made before listing.
+            seg = close.iloc[(p if seen is None else seen + 1):p + 1]
+            hs.append(round(float(seg.max()) if len(seg) else c, 4))
+            seen = p
+        if any(v is not None for v in cs):
+            out[t] = {"c": cs, "a": as_, "h": hs}
+    return out
+
+
 DEFAULT_CACHE = Path(tempfile.gettempdir()) / "momentum_backtest_prices.pkl"
 
 
@@ -207,7 +302,9 @@ def refresh(history: Path = HISTORY_CSV, out: Path = OUT_JSON,
                              .strftime("%Y-%m-%d %H:%M %Z"),
         "top_n": top_n,
         "fills": "close",
+        "atr_period": ATR_PERIOD_DAYS,
         **build_curves(days, boards, prices),
+        "px": build_prices(days, members, prices),
     }
     write_curves(payload, out)
     return payload
@@ -221,7 +318,11 @@ def write_curves(payload: dict, out: Path) -> None:
     unreviewable one-line rewrites. Values are cumulative from a fixed
     base and a dividend rescales every bar before its ex-date by one
     factor, which leaves the ratios between older bars alone — so past
-    days hold still and each run really does append."""
+    days hold still and each run really does append.
+
+    The price block dominates the byte count (three arrays per member vs
+    four curves), and it appends the same way — one new value per array
+    per run-day — so the format holds up at that size."""
     # tmp + rename, like append_history and save_sectors: the file is
     # tracked and the nightly job commits whatever it finds, so a write
     # interrupted halfway would be committed as truncated JSON.
@@ -234,7 +335,10 @@ def summarize(payload: dict, out: Path) -> str:
     curves = ("board",) + tuple(k.lower() for k in INDICES)
     last = {k: payload[k][-1] - 100 for k in curves}
     return (f"wrote {out} ({len(payload['days'])} run-days: "
-            + ", ".join(f"{k} {v:+.1f}%" for k, v in last.items()) + ")")
+            + ", ".join(f"{k} {v:+.1f}%" for k, v in last.items())
+            # .get: a summary line is never worth crashing a scan over,
+            # and scan.py calls this on whatever payload it was handed.
+            + f"; prices for {len(payload.get('px') or {})} members)")
 
 
 def main() -> None:
