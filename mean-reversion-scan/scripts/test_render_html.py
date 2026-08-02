@@ -140,6 +140,21 @@ def test_pocket_lines_and_kpi():
     assert k["tracked"] == 5
 
 
+def test_grid_points_carry_price_levels():
+    rows, outcomes = _fixture()
+    # A signal row carrying the levels the ledger resolves against.
+    rows.append({**_row(DAYS6[5], "FFF"), "last_close": "100.0",
+                 "target_price": "104.0", "stop_price": "96.5"})
+    p = rh.build_payload(rows, outcomes, {})
+    fff = next(s for s in p["series"] if s["t"] == "FFF")["pts"][0]
+    assert (fff["px"], fff["tg"], fff["sp"]) == (100.0, 104.0, 96.5)
+    assert fff["tt"] == 4.0          # the bounce the target demanded
+    # A row without the levels (pre-schema history) leaves the block blank
+    # rather than inventing a target.
+    aaa = next(s for s in p["series"] if s["t"] == "AAA")["pts"][0]
+    assert aaa["px"] is None and aaa["tg"] is None and aaa["tt"] is None
+
+
 def test_windowing_keeps_summary_full():
     rows, outcomes = _fixture()
     p = rh.build_payload(rows, outcomes, {}, days_window=3)
