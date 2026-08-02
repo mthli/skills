@@ -151,9 +151,81 @@ def sector_edge(buckets: dict[str, list[float]],
     }
 
 
+BENCH_KEYS = ("spy", "qqq")
+
+
+def load_benchmark(path: Path) -> dict | None:
+    """Matched-horizon index returns, or None when they don't exist.
+
+    Optional by design: benchmark.json needs network prices, so it is a
+    separate step (compute_benchmark.py) and the panel must still draw
+    without it. A missing file says how to make one rather than going
+    quiet about a benchmark that silently never appears."""
+    if not path.exists():
+        print(f"note: no benchmark at {path}; the ⭐ pocket panel will draw "
+              f"without its index reference. Generate it with "
+              f"scripts/compute_benchmark.py.", file=sys.stderr)
+        return None
+    bench = json.loads(path.read_text())
+    missing = [k for k in ("days", "n") + BENCH_KEYS if k not in bench]
+    if missing or any(len(bench[k]) != len(bench["days"])
+                      for k in ("n",) + BENCH_KEYS):
+        print(f"WARNING: {path} is missing or out of step with its days "
+              f"({missing or 'length mismatch'}); the panel will draw "
+              f"without it. Re-run scripts/compute_benchmark.py.",
+              file=sys.stderr)
+        return None
+    return bench
+
+
+def bench_lines(bench: dict | None, run_ids: list[str]) -> dict | None:
+    """Running mean matched return per index, one value per run-day.
+
+    Same accumulation as the pocket lines (a signal counts on its signal
+    day), so the three are read off one axis: %/signal to date."""
+    if not bench:
+        return None
+    at = {d: i for i, d in enumerate(bench["days"])}
+    out = {k: [] for k in BENCH_KEYS}
+    ns: list[int] = []
+    totals = {k: 0.0 for k in BENCH_KEYS}
+    n = 0
+    for rid in run_ids:
+        i = at.get(rid)
+        if i is not None and bench["n"][i]:
+            n += bench["n"][i]
+            for k in BENCH_KEYS:
+                totals[k] += bench[k][i] * bench["n"][i]
+        ns.append(n)
+        for k in BENCH_KEYS:
+            out[k].append(round(totals[k] / n, 2) if n else None)
+    if not n:
+        print(f"WARNING: the benchmark covers none of the recorded run-days; "
+              f"the panel will draw without it. Re-run "
+              f"scripts/compute_benchmark.py.", file=sys.stderr)
+        return None
+    # No staleness flag: the ledger always trails the last run-day because
+    # the newest signals haven't resolved, so "the benchmark stops at X"
+    # would fire every single day and mean nothing.
+    return {**out, "n": ns}
+
+
+def bench_window(lines: dict | None, win_start: int) -> dict | None:
+    """Trim the benchmark lines to the window the charts draw.
+
+    Trimmed, not re-based: these are running means over every signal to
+    date, exactly like the pocket lines beside them, so a window that
+    starts later still reads against the same all-time average."""
+    if not lines:
+        return None
+    return {k: (v[win_start:] if isinstance(v, list) else v)
+            for k, v in lines.items()}
+
+
 def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
                   days_window: int = 0,
-                  target_window_days: int = TARGET_WINDOW_DAYS) -> dict:
+                  target_window_days: int = TARGET_WINDOW_DAYS,
+                  bench: dict | None = None) -> dict:
     run_ids = sorted({r["run_id"] for r in rows})
     day_idx = {rid: i for i, rid in enumerate(run_ids)}
     day_labels = [f"{rid[4:6]}-{rid[6:8]}" for rid in run_ids]
@@ -338,6 +410,7 @@ def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
             "refBase": BACKTEST_BASELINE_EXPECT,
             "minScore": VALIDATED_MIN_SCORE,
             "maxStreak": VALIDATED_MAX_STREAK,
+            "bench": bench_window(bench_lines(bench, run_ids), win_start),
         },
         "sectorEdge": sec_panel,
         "kpi": {
@@ -622,7 +695,10 @@ const I18N = {
     gridNote: () => `One row per name, one cell per listed day, color = that day's outcome; a center dot = ⭐ pocket day (Score ≥ ${DATA.pocket.minScore}, day ≤ ${DATA.pocket.maxStreak}).\nRows sorted by expectancy, best first (matching the roster); nothing-resolved names sink. Row-end = expectancy (%/signal).\nRows running ≥ __STUCK_MIN_STREAK__ days unbroken = stuck oversold, a warning, not a bargain.`,
     all: "All",
     pkTitle: "⭐ Pocket vs the rest",
-    pkNote: "Solid lines: the running expectancy (avg %/signal to date) of ⭐ pocket signals vs the rest.\nDashed lines: the backtest references. Pocket holding above its dash = the validated edge still pays.",
+    pkNote: "Solid: the running expectancy (avg %/signal to date) of ⭐ pocket signals vs the rest. Dashed: the backtest references.\nDotted: the index, same days and holding lengths. It settles at the close and signals at their touch, so the gap is a ceiling.",
+    pkBench: n => `${n} same days`,
+    pkVsMkt: "⭐ beyond SPY",
+    pkBenchNote: n => `${n} signals matched to the index`,
     pkPocket: "⭐ Pocket", pkBase: "The rest",
     pkRef: v => `backtest +${v}%`,
     pkTipNs: (a, b) => `${a} pocket / ${b} rest resolved`,
@@ -691,7 +767,10 @@ const I18N = {
     gridNote: () => `一行一只票，一格一个上榜日，颜色 = 那天的结局；带中心点 = ⭐ 口袋日（Score ≥ ${DATA.pocket.minScore} 且上榜 ≤ ${DATA.pocket.maxStreak} 天）。\n行序按期望从高到低（与名录一致），无结算的沉底；行尾 = 该票期望（%/单）。\n连续 ≥ __STUCK_MIN_STREAK__ 天的长行 = 卡死超卖，是警告不是便宜货。`,
     all: "全部",
     pkTitle: "⭐ 口袋 vs 其余",
-    pkNote: "实线：⭐ 口袋与其余信号各自的滚动期望（截至当日平均每单盈亏 %）。\n虚线：回测参考值。口袋线稳在自己虚线上方 = 验证过的边际还在兑现。",
+    pkNote: "实线：⭐ 口袋与其余信号各自的滚动期望（截至当日平均每单盈亏 %）。虚线：回测参考值。\n点线：同样的日子买指数、持有同样多的交易日。信号按触碰价结算、指数按收盘，所以差距偏乐观。",
+    pkBench: n => `同期 ${n}`,
+    pkVsMkt: "⭐ 超出 SPY",
+    pkBenchNote: n => `${n} 个信号已对齐指数`,
     pkPocket: "⭐ 口袋", pkBase: "其余信号",
     pkRef: v => `回测 +${v}%`,
     pkTipNs: (a, b) => `已结算 ⭐ ${a} 个 · 其余 ${b} 个`,
@@ -765,7 +844,10 @@ const I18N = {
     gridNote: () => `一行一檔票，一格一個上榜日，顏色 = 那天的結局；帶中心點 = ⭐ 口袋日（Score ≥ ${DATA.pocket.minScore} 且上榜 ≤ ${DATA.pocket.maxStreak} 天）。\n行序按期望從高到低（與名錄一致），無結算的沉底；行尾 = 該檔期望（%/單）。\n連續 ≥ __STUCK_MIN_STREAK__ 天的長行 = 卡死超賣，是警告不是便宜貨。`,
     all: "全部",
     pkTitle: "⭐ 口袋 vs 其餘",
-    pkNote: "實線：⭐ 口袋與其餘訊號各自的滾動期望（截至當日平均每單盈虧 %）。\n虛線：回測參考值。口袋線穩在自己虛線上方 = 驗證過的邊際還在兌現。",
+    pkNote: "實線：⭐ 口袋與其餘訊號各自的滾動期望（截至當日平均每單盈虧 %）。虛線：回測參考值。\n點線：同樣的日子買指數、持有同樣多的交易日。訊號按觸碰價結算、指數按收盤，所以差距偏樂觀。",
+    pkBench: n => `同期 ${n}`,
+    pkVsMkt: "⭐ 超出 SPY",
+    pkBenchNote: n => `${n} 個訊號已對齊指數`,
     pkPocket: "⭐ 口袋", pkBase: "其餘訊號",
     pkRef: v => `回測 +${v}%`,
     pkTipNs: (a, b) => `已結算 ⭐ ${a} 個 · 其餘 ${b} 個`,
@@ -839,7 +921,10 @@ const I18N = {
     gridNote: () => `1 行 = 1 銘柄、1 セル = リスト入り 1 日、色 = その日の結果。中心の点 = ⭐ ポケット日（Score ≥ ${DATA.pocket.minScore} かつ ${DATA.pocket.maxStreak} 日目以内）。\n行は期待値の高い順（一覧表と同じ）。確定なしは下へ。行末 = 期待値（%/シグナル）。\n__STUCK_MIN_STREAK__ 日以上続く行は停滞した売られすぎ。警告であり掘り出し物ではない。`,
     all: "すべて",
     pkTitle: "⭐ ポケット vs その他",
-    pkNote: "実線：⭐ ポケットとその他それぞれのローリング期待値（当日までの平均損益 %/シグナル）。\n破線：バックテストの参考値。ポケット線が自身の破線の上にあれば、検証済みのエッジは健在。",
+    pkNote: "実線：⭐ ポケットとその他それぞれのローリング期待値（当日までの平均損益 %/シグナル）。破線：バックテストの参考値。\n点線：同じ日に指数を買い、同じ日数だけ持った場合。シグナルはタッチ価格、指数は終値で決済するため、差は甘めに出る。",
+    pkBench: n => `同期間 ${n}`,
+    pkVsMkt: "⭐ の SPY 超過",
+    pkBenchNote: n => `指数と対応させたシグナル ${n} 件`,
     pkPocket: "⭐ ポケット", pkBase: "その他",
     pkRef: v => `バックテスト +${v}%`,
     pkTipNs: (a, b) => `確定 ⭐ ${a} 件 · その他 ${b} 件`,
@@ -913,7 +998,10 @@ const I18N = {
     gridNote: () => `1행 = 1종목, 1셀 = 등재 1일, 색 = 그날의 결과. 중심의 점 = ⭐ 포켓일 (Score ≥ ${DATA.pocket.minScore}, 등재 ${DATA.pocket.maxStreak}일 이내).\n행은 기대값 높은 순(목록과 동일), 확정 없는 종목은 아래로. 행 끝 = 기대값(%/신호).\n__STUCK_MIN_STREAK__일 이상 이어지는 행은 정체된 과매도, 경고이지 헐값이 아닙니다.`,
     all: "전체",
     pkTitle: "⭐ 포켓 vs 나머지",
-    pkNote: "실선: ⭐ 포켓과 나머지 각각의 롤링 기대값(현재까지 평균 손익 %/신호).\n점선: 백테스트 참고값. 포켓 선이 자기 점선 위에 있으면 검증된 엣지가 유효합니다.",
+    pkNote: "실선: ⭐ 포켓과 나머지 각각의 롤링 기대값(현재까지 평균 손익 %/신호). 파선: 백테스트 참고값.\n점선: 같은 날 지수를 사서 같은 일수만큼 보유한 경우. 신호는 터치가로, 지수는 종가로 정산하므로 격차는 후하게 나옵니다.",
+    pkBench: n => `같은 기간 ${n}`,
+    pkVsMkt: "⭐의 SPY 초과",
+    pkBenchNote: n => `지수에 대응시킨 신호 ${n}건`,
     pkPocket: "⭐ 포켓", pkBase: "나머지",
     pkRef: v => `백테스트 +${v}%`,
     pkTipNs: (a, b) => `확정 ⭐ ${a}건 · 나머지 ${b}건`,
@@ -1303,8 +1391,18 @@ function renderGrid(minRes) {
   document.getElementById("pk-note").textContent = T.pkNote + WIN_TAG;
   const ML = 40, MT = 12, MB = 26, DX = 19, PH = 160;
   const P = DATA.pocket;
-  const allVals = [...P.pkt, ...P.base, P.refPkt, P.refBase, 0]
-    .filter(v => v !== null);
+  // Fixed identity slots; the benchmarks ride the muted context color and
+  // a dotted stroke, a third stroke family so they read as reference, not
+  // as two more strategies.
+  // One neutral family (they are the market, not two more strategies), so
+  // identity rides the rhythm and the end label rather than a hue: the
+  // page's greens, reds and blues already mean won, lost and pocket.
+  const BM = P.bench
+    ? [{ k: "spy", lbl: "SPY", dash: "1 3" },
+       { k: "qqq", lbl: "QQQ", dash: "7 3" }]
+    : [];
+  const allVals = [...P.pkt, ...P.base, P.refPkt, P.refBase, 0,
+    ...BM.flatMap(b => P.bench[b.k])].filter(v => v !== null);
   let lo = Math.min(...allVals), hi = Math.max(...allVals);
   const pad = (hi - lo) * 0.12 || 1;
   lo -= pad; hi += pad;
@@ -1331,6 +1429,22 @@ function renderGrid(minRes) {
     el("line", { x1: ML, x2: ML + (DAYS - 1) * DX, y1: yOf(v), y2: yOf(v),
       stroke: col, "stroke-dasharray": "4 3", opacity: 0.7 }, svg);
   });
+  // Drawn before the solid pair so the strategy lines stay on top where
+  // they cross.
+  BM.forEach(b => {
+    let dstr = "", started = false, lastD = -1;
+    P.bench[b.k].forEach((v, d) => {
+      if (v === null) return;
+      dstr += (started ? "L" : "M") + xOf(d) + " " + yOf(v).toFixed(1);
+      started = true; lastD = d;
+    });
+    if (!started) return;
+    el("path", { d: dstr, fill: "none", stroke: "var(--muted)",
+      "stroke-width": 1.25, "stroke-dasharray": b.dash,
+      "stroke-linecap": "round" }, svg);
+    b.end = { y: yOf(P.bench[b.k][lastD]), x: xOf(lastD),
+              txt: `${b.lbl} ${pctTxt(P.bench[b.k][lastD])}` };
+  });
   const lines = [
     { vals: P.pkt, ns: P.pktN, col: "var(--accent)", w: 2, lbl: T.pkPocket },
     { vals: P.base, ns: P.baseN, col: "var(--ctx-line)", w: 2, lbl: T.pkBase },
@@ -1349,14 +1463,32 @@ function renderGrid(minRes) {
     if (lastD >= 0) {
       el("circle", { cx: xOf(lastD), cy: yOf(L.vals[lastD]).toFixed(1), r: 4,
         fill: L.col, stroke: "var(--surface)", "stroke-width": 2 }, svg);
-      el("text", { x: xOf(lastD) + 10, y: yOf(L.vals[lastD]) + 4, class: "dlabel" }, svg)
-        .textContent = `${L.lbl} ${pctTxt(L.vals[lastD])}`;
+      L.end = { x: xOf(lastD), y: yOf(L.vals[lastD]),
+                txt: `${L.lbl} ${pctTxt(L.vals[lastD])}`, strong: true };
     }
   });
+  // Four lines end within a few points of each other, so the labels are
+  // placed together: sorted by height, then pushed down to a 14px minimum
+  // gap. Reading order survives; overlap doesn't.
+  const ends = [...lines, ...BM].map(L => L.end).filter(Boolean)
+    .sort((a, b) => a.y - b.y);
+  ends.forEach((e, i) => { if (i) e.y = Math.max(e.y, ends[i - 1].y + 14); });
+  ends.forEach(e => el("text", { x: e.x + 10, y: e.y + 4,
+    class: e.strong ? "dlabel" : "tick" }, svg).textContent = e.txt);
+
   const leg = document.getElementById("pk-legend");
   lines.forEach(L => {
     const k = div("key", leg); const l = div("line", k); l.style.background = L.col;
     k.appendChild(document.createTextNode(L.lbl));
+  });
+  BM.forEach((b, i) => {
+    const vals = P.bench[b.k].filter(v => v !== null);
+    if (!vals.length) return;
+    const k = div("key", leg);
+    const l = div("line", k);
+    // The key mirrors that line's rhythm: dots for SPY, dashes for QQQ.
+    l.style.cssText = `background:repeating-linear-gradient(90deg,var(--muted) 0 ${i ? 7 : 1.5}px,transparent ${i ? 7 : 1.5}px ${i ? 10 : 4}px)`;
+    k.appendChild(document.createTextNode(T.pkBench(b.lbl)));
   });
   [[P.refPkt, T.pkPocket, "var(--accent)"],
    [P.refBase, T.pkBase, "var(--ctx-line)"]].forEach(([v, lbl, col]) => {
@@ -1384,12 +1516,21 @@ function renderGrid(minRes) {
           // Both are %/signal, so the difference is %/signal too — and it
           // only exists on days where both have printed.
           pk === null || base === null ? null : [T.gap, pctTxt(pk - base)],
+          ...BM.map(b => {
+            const v = P.bench[b.k][d];
+            return v === null ? null : [T.pkBench(b.lbl), pctTxt(v)];
+          }),
+          // What the pocket earned beyond the market over its own holding
+          // windows: the number the panel is really claiming.
+          pk === null || P.bench === null || P.bench.spy[d] === null
+            ? null : [T.pkVsMkt, pctTxt(pk - P.bench.spy[d])],
         ],
         // Sample size is the honesty line, so it takes the ink slot: early
         // in either line the average is a handful of trades and one of them
         // moves it several points. Both counts even when only one line has
         // printed — a zero there is the reason the row above is missing.
-        notes: [T.pkTipNs(P.pktN[d], P.baseN[d])],
+        notes: [T.pkTipNs(P.pktN[d], P.baseN[d]),
+                P.bench ? T.pkBenchNote(P.bench.n[d]) : null],
       }));
     } else hideTip();
   });
@@ -1691,6 +1832,10 @@ def main() -> None:
         "--outcomes", default=str(SKILL_DIR / "state" / "outcomes.csv"))
     ap.add_argument(
         "--sectors", default=str(SKILL_DIR / "state" / "sectors.json"))
+    ap.add_argument(
+        "--benchmark", default=str(SKILL_DIR / "state" / "benchmark.json"),
+        help="matched-horizon index returns from compute_benchmark.py; "
+             "the pocket panel drops its reference lines when absent")
     ap.add_argument("--out", default=str(SKILL_DIR / "state" / "history.html"))
     args = ap.parse_args()
 
@@ -1699,7 +1844,8 @@ def main() -> None:
         raise SystemExit("history.csv is empty; run a scan first")
     payload = build_payload(rows, load_outcomes(Path(args.outcomes)),
                             load_sectors(Path(args.sectors)),
-                            args.days, args.target_window_days)
+                            args.days, args.target_window_days,
+                            load_benchmark(Path(args.benchmark)))
     generated = datetime.now(
         timezone.utc).astimezone().strftime("%Y-%m-%d %H:%M %Z")
     k = payload["kpi"]

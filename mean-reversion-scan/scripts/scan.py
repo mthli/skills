@@ -44,6 +44,7 @@ STATE_DIR = SKILL_DIR / "state"
 UNIVERSE_FILE = STATE_DIR / "universe.txt"
 HISTORY_FILE = STATE_DIR / "history.csv"
 OUTCOMES_FILE = STATE_DIR / "outcomes.csv"
+BENCHMARK_FILE = STATE_DIR / "benchmark.json"
 SECTORS_FILE = STATE_DIR / "sectors.json"
 UNIVERSE_TTL_DAYS = 7
 SCREENER_PAGE_SIZE = 250
@@ -1638,6 +1639,13 @@ def build_argparser() -> argparse.ArgumentParser:
     ap.add_argument("--regime-gate", choices=["off", "warn", "strict"],
                     default="warn")
     ap.add_argument("--atr-stop-mult", type=float, default=2.5)
+    ap.add_argument("--no-benchmark", action="store_true",
+                    help=("Skip rebuilding state/benchmark.json after the "
+                          "outcome ledger is written. Default behavior "
+                          "fetches SPY and QQQ (two tickers, quick) and "
+                          "averages what the index paid over each resolved "
+                          "signal's own entry day and holding length — the "
+                          "index reference lines on the ⭐ pocket panel."))
     ap.add_argument("--no-sectors", action="store_true")
     ap.add_argument("--vol-collapse-ratio", type=_vol_collapse_ratio,
                     default=0.2)
@@ -1649,8 +1657,36 @@ def build_argparser() -> argparse.ArgumentParser:
     return ap
 
 
-def main():
+def refresh_benchmark() -> None:
+    """Rebuild state/benchmark.json for the ⭐ pocket panel's index lines.
+
+    Runs after the ledger write (the matched-horizon returns are derived
+    from it) and after the report is printed (its price fetch shouldn't
+    delay the signals). Nothing here may end the run: benchmark.json is
+    tracked, so a failure keeps the previous file and warns, and even a
+    SystemExit is caught — a two-ticker download failing is no reason to
+    lose a scan."""
+    try:
+        import compute_benchmark as cb
+        payload = cb.refresh(outcomes=OUTCOMES_FILE, out=BENCHMARK_FILE)
+    except (Exception, SystemExit) as e:
+        print(f"WARNING: benchmark refresh failed ({type(e).__name__}: {e}); "
+              f"{BENCHMARK_FILE.name} is unchanged and the ⭐ pocket panel "
+              f"keeps its previous index lines. Re-run "
+              f"scripts/compute_benchmark.py to retry.", file=sys.stderr)
+        return
+    if payload is None:
+        return  # nothing resolved yet: no matched window to average
+    print(cb.summarize(payload, BENCHMARK_FILE), file=sys.stderr)
+
+
+def main() -> bool:
+    """Run the scan and print its report.
+
+    Returns whether the benchmark curves should be rebuilt once the
+    report is out (False when nothing was saved or --no-benchmark)."""
     args = build_argparser().parse_args()
+    benchmark_after = False
     STATE_DIR.mkdir(parents=True, exist_ok=True)
 
     if args.clear_history:
@@ -1696,7 +1732,7 @@ def main():
         print(f"Backfilled {len(outcomes)} resolved outcome(s) from "
               f"{n_signals} history signal(s); {OUTCOMES_FILE.name} now "
               f"holds {total} row(s).")
-        return
+        return not args.no_benchmark
 
     if args.ticker:
         result = run_single_ticker(args)
@@ -1747,6 +1783,10 @@ def main():
     # would delay ledger updates for signals that resolved on Friday.
     if not args.no_save:
         upsert_outcomes(outcomes)
+        # Deferred past every print below: the ⭐ pocket panel's index
+        # reference is derived from the ledger we just wrote, and the
+        # reader shouldn't wait on a price fetch to see the signals.
+        benchmark_after = not args.no_benchmark
 
     # Non-trading-day guard for history save.
     today_et = now.astimezone(MARKET_TZ).date()
@@ -1781,7 +1821,7 @@ def main():
             "outcomes": outcomes,
             "excluded_vol_collapse": excluded_vol_collapse,
         }, indent=2, default=str))
-        return
+        return benchmark_after
 
     # Markdown render.
     n_prior = len(history["run_id"].drop_duplicates()
@@ -1881,7 +1921,7 @@ def main():
                   f"ratio {p['vol_ratio']:.2f})")
 
     if suppress_picks:
-        return
+        return benchmark_after
 
     # ⭐️ pocket before the table — the funnel's validated stratum, printed
     # even when empty because an empty pocket is itself the signal that
@@ -1915,6 +1955,8 @@ def main():
     for line in render_stuck_section(picks, args.top_n,
                                      args.persistent_min_streak, history):
         print(line)
+
+    return benchmark_after
 
 
 def render_single_ticker_markdown(result: dict, args):
@@ -2030,5 +2072,8 @@ def render_single_ticker_markdown(result: dict, args):
             print(f"- No prior triggers in the lookback window.")
 
 
+
+
 if __name__ == "__main__":
-    main()
+    if main():
+        refresh_benchmark()
