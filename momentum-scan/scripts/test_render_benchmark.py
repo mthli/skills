@@ -10,6 +10,7 @@ Run (from this directory):
     --with 'numpy>=1.24,<3' --with pytest pytest test_render_benchmark.py
 """
 import json
+import pathlib
 
 import pandas as pd
 import pytest
@@ -116,6 +117,8 @@ def test_the_file_on_disk_stays_diff_friendly(tmp_path):
     text = out.read_text()
     assert json.loads(text) == payload
     assert text.count("\n") > len(payload["board"])
+    # ...and lands whole: the nightly job commits whatever it finds.
+    assert not list(out.parent.glob("*.tmp"))
 
 
 def test_price_start_follows_the_history_it_is_given():
@@ -137,7 +140,8 @@ def test_load_boards_keeps_only_the_displayed_top_n(tmp_path):
 
 # --------------------------------------------------- scan.py auto-refresh
 
-def test_scan_refreshes_for_the_board_it_just_displayed(monkeypatch):
+def test_scan_refreshes_for_the_board_it_just_displayed(monkeypatch, tmp_path):
+    monkeypatch.setattr(scan, "BENCHMARK_FILE", tmp_path / "benchmark.json")
     seen = {}
     monkeypatch.setattr(cb, "refresh",
                         lambda **kw: seen.update(kw) or {"days": DAYS3,
@@ -150,14 +154,40 @@ def test_scan_refreshes_for_the_board_it_just_displayed(monkeypatch):
     assert seen["out"] == scan.BENCHMARK_FILE
 
 
-def test_a_failed_refresh_never_fails_the_scan(monkeypatch, capsys):
-    # The picks are already computed and printed by the time this runs; a
-    # dead network must not turn a good scan into a traceback.
+@pytest.mark.parametrize("err", [OSError("connection reset"),
+                                 RuntimeError("no price series for SPY"),
+                                 SystemExit("no price series for SPY")])
+def test_a_failed_refresh_never_fails_the_scan(monkeypatch, capsys, err):
+    # SystemExit is the one that got through: it isn't an Exception, and
+    # this call sits between a finished scan and its report.
     def boom(**kw):
-        raise OSError("connection reset")
+        raise err
     monkeypatch.setattr(cb, "refresh", boom)
     scan.refresh_benchmark(30)
     assert "benchmark refresh failed" in capsys.readouterr().err
+
+
+def test_a_missing_index_is_an_error_the_caller_can_catch():
+    # Only the CLI turns it into an exit; refresh() is library code.
+    assert not issubclass(RuntimeError, SystemExit)
+    src = (pathlib.Path(cb.__file__).read_text()
+           .split("def refresh(")[1].split("\ndef ")[0])
+    assert "raise RuntimeError" in src and "raise SystemExit" not in src
+
+
+def test_the_run_leaves_a_differently_sized_board_alone(monkeypatch, tmp_path,
+                                                        capsys):
+    # benchmark.json is tracked and the nightly job commits what it finds,
+    # so an ad-hoc --top-n 10 scan must not quietly replace the curves the
+    # default dashboard draws.
+    f = tmp_path / "benchmark.json"
+    f.write_text(json.dumps({"top_n": 30, **bench()}))
+    monkeypatch.setattr(scan, "BENCHMARK_FILE", f)
+    monkeypatch.setattr(cb, "refresh",
+                        lambda **kw: pytest.fail("should not have refreshed"))
+    scan.refresh_benchmark(10)
+    assert "top-30" in capsys.readouterr().err
+    assert json.loads(f.read_text())["top_n"] == 30
 
 
 def test_a_history_too_short_to_draw_says_nothing(monkeypatch, capsys):

@@ -191,8 +191,11 @@ def refresh(history: Path = HISTORY_CSV, out: Path = OUT_JSON,
                               refresh=True)
     for k in INDICES:
         if k not in prices:
-            raise SystemExit(f"no price series for {k}; cannot draw the "
-                             f"benchmark (retry with --refresh-prices)")
+            # RuntimeError, not SystemExit: scan.py calls this mid-run and
+            # a SystemExit would walk straight through its except-Exception
+            # guard and kill the scan before it prints anything.
+            raise RuntimeError(f"no price series for {k}; cannot draw the "
+                               f"benchmark (retry with --refresh-prices)")
     missing = [t for t in members if t not in prices]
     if missing:
         print(f"no price series for {len(missing)} member(s) — they drop out "
@@ -219,7 +222,12 @@ def write_curves(payload: dict, out: Path) -> None:
     base and a dividend rescales every bar before its ex-date by one
     factor, which leaves the ratios between older bars alone — so past
     days hold still and each run really does append."""
-    out.write_text(json.dumps(payload, indent=1) + "\n")
+    # tmp + rename, like append_history and save_sectors: the file is
+    # tracked and the nightly job commits whatever it finds, so a write
+    # interrupted halfway would be committed as truncated JSON.
+    tmp = out.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(payload, indent=1) + "\n")
+    tmp.replace(out)
 
 
 def summarize(payload: dict, out: Path) -> str:
@@ -243,8 +251,11 @@ def main() -> None:
                          "(default: two weeks before the first run-day)")
     args = ap.parse_args()
 
-    payload = refresh(args.history, args.out, args.top_n, args.cache,
-                      args.refresh_prices, args.start)
+    try:
+        payload = refresh(args.history, args.out, args.top_n, args.cache,
+                          args.refresh_prices, args.start)
+    except RuntimeError as e:
+        raise SystemExit(str(e))
     if payload is None:
         raise SystemExit("need at least 2 run-days to draw a curve")
     print(summarize(payload, args.out))

@@ -1184,24 +1184,46 @@ def load_history() -> pd.DataFrame:
     return df
 
 
+def benchmark_top_n() -> int | None:
+    """The board size the existing benchmark file was computed for."""
+    if not BENCHMARK_FILE.exists():
+        return None
+    try:
+        return json.loads(BENCHMARK_FILE.read_text()).get("top_n")
+    except (json.JSONDecodeError, OSError):
+        return None  # unreadable: let the refresh overwrite it
+
+
 def refresh_benchmark(top_n: int) -> None:
     """Rebuild state/benchmark.json for the dashboard's board-vs-index panel.
 
-    Called after the history save, so the curves always cover the day just
-    recorded — otherwise the panel would sit a scan behind the board it is
-    being compared against, and say so on the page.
+    Runs after the history save (so the curves cover the day just
+    recorded) and after the report is printed (so its ~10s of price
+    fetching doesn't hold the table hostage).
 
-    Two deliberate weaknesses. It buys prices, so it can fail on a network
-    that the scan itself survived: a failure here warns and returns, since
-    the picks are already computed and the panel is optional. And it is
-    computed for the top-N of THIS run, so a one-off `--top-n 10` scan
-    leaves a top-10 file behind; the renderer refuses to draw that against
-    a top-30 page rather than mixing the two."""
+    It buys prices, so it can fail on a network the scan itself survived.
+    benchmark.json is tracked, so a failure leaves the previous file and
+    warns; nothing here is allowed to end the run, SystemExit included
+    (library code shouldn't raise it, but this guard is the last thing
+    standing between a price hiccup and a scan that prints nothing).
+
+    A run whose --top-n differs from the file's leaves it alone. The file
+    is tracked and the nightly job commits whatever is dirty, so a one-off
+    `--top-n 10` scan would otherwise commit a top-10 curve that the
+    default dashboard refuses to draw. compute_benchmark.py --top-n is the
+    deliberate way to switch which board the comparison follows."""
+    have = benchmark_top_n()
+    if have is not None and have != top_n:
+        print(f"Skipping benchmark refresh: this run is top-{top_n} but "
+              f"{BENCHMARK_FILE.name} holds top-{have}, which is what the "
+              f"dashboard draws. Run scripts/compute_benchmark.py --top-n "
+              f"{top_n} to switch it.", file=sys.stderr)
+        return
     try:
         import compute_benchmark as cb
         payload = cb.refresh(history=HISTORY_FILE, out=BENCHMARK_FILE,
                              top_n=top_n)
-    except Exception as e:  # network, Yahoo shape change, unreadable cache
+    except (Exception, SystemExit) as e:  # network, Yahoo shape change, bad cache
         print(f"WARNING: benchmark refresh failed ({type(e).__name__}: {e}); "
               f"{BENCHMARK_FILE.name} is unchanged and the dashboard panel "
               f"will show its own staleness. Re-run "
@@ -1851,10 +1873,15 @@ def build_argparser() -> argparse.ArgumentParser:
     return ap
 
 
-def main():
+def main() -> int | None:
+    """Run the scan and print its report.
+
+    Returns the top-N whose benchmark curves should be rebuilt once the
+    report is out (None when history wasn't saved or --no-benchmark)."""
     args = build_argparser().parse_args()
 
     STATE_DIR.mkdir(parents=True, exist_ok=True)
+    benchmark_after: int | None = None
 
     if args.clear_history:
         clear_history()
@@ -1949,8 +1976,10 @@ def main():
                   f"override.", file=sys.stderr)
         else:
             append_history(picks, run_id, now, allow_same_day=args.allow_same_day)
-            if not args.no_benchmark:
-                refresh_benchmark(args.top_n)
+            # Deferred to the caller, past every print below: refreshing
+            # the benchmark is a side effect of having saved history, and
+            # the reader shouldn't wait on a price fetch to see the board.
+            benchmark_after = None if args.no_benchmark else args.top_n
 
     # In strict mode, suppress the discovery sections when RISK-OFF. History
     # save still happens — streak is a fact about the market, not a trading
@@ -1978,7 +2007,7 @@ def main():
             "dropouts_since_last_run": [] if suppress_picks else drops,
             "excluded_vol_collapse": excluded_vol_collapse,
         }, indent=2, default=str))
-        return
+        return benchmark_after
 
     n_prior = len(history["run_id"].drop_duplicates()) if not history.empty else 0
     print(f"# Momentum scan — {now.strftime('%Y-%m-%d %H:%M UTC')}")
@@ -2056,7 +2085,7 @@ def main():
                   f"ratio {p['vol_ratio']:.2f})")
 
     if suppress_picks:
-        return
+        return benchmark_after
 
     print(f"\n## Top {args.top_n}\n")
     print(render_table(picks, args.top_n, args.window_months,
@@ -2127,6 +2156,10 @@ def main():
                              f"peak ${p['peak_since_first_seen']:.2f})")
                 print(line)
 
+    return benchmark_after
+
 
 if __name__ == "__main__":
-    main()
+    top_n = main()
+    if top_n is not None:
+        refresh_benchmark(top_n)
