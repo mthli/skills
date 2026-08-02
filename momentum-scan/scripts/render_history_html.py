@@ -467,9 +467,10 @@ select {
 #tip .kv { display: grid; grid-template-columns: auto 1fr; gap: 3px 14px; }
 #tip .kv .val { color: var(--ink); font-variant-numeric: tabular-nums; }
 #tip .oc { color: var(--ink); margin-top: 7px; }
-/* Inherit .eqdot's baseline -1px alignment (the roster-cell look);
-   vertical-align: middle sat visibly below the title's optical center. */
-#tip .eqdot { margin-right: 6px; }
+/* The eq dot keys its card the way .k keys the chart cards: the header's
+   flex gap and centering do the spacing the roster cell's inline flow did,
+   and flex:none keeps the dot round when the title wraps. */
+#tip .eqdot { flex: none; }
 table { border-collapse: collapse; width: 100%; font-size: 13px; }
 th, td { text-align: right; padding: 6px 10px; border-bottom: 1px solid var(--grid); white-space: nowrap; }
 th { color: var(--muted); font-weight: 500; font-size: 12px; cursor: pointer; user-select: none;
@@ -593,7 +594,9 @@ const I18N = {
     rosterNote: "One row per name that ever made the board. Click a header to sort; click again to reverse. Every hover value from the charts is readable here.\nEntry quality = entry-day distribution-day count of the latest board spell (darker blue = cleaner entry, the backtest-validated edge; hover or tap the dot for the volume character).",
     cols: ["Ticker", "Sector", "Current rank", "Latest score", "Entry quality", "Streak", "Days on board", "Best rank", "First seen", "Last seen"],
     eqLabels: ["Loaded (4+ dist days)", "Mixed (2-3)", "Clean (≤1 dist day)"],
-    eqTip: (v, d, day) => [`${d} dist days (down on higher vol, last 25)`, ...(v == null ? [] : [`Vol ${v}× (entry day / 20-day avg)`]), `Entered ${day}`],
+    eqKv: (v, d) => [["Dist days (down on higher vol, last 25)", `${d}`],
+                     v == null ? null : ["Vol (entry day / 20-day avg)", `${v}×`]],
+    eqEntered: day => `Entered ${day}`,
     eqFrozen: "Tier frozen that day",
     eqFreshNote: "Filled = entered this run; ring = earlier entry (tier frozen at entry day).",
     score: "Score", ret: "Return", dd: "Drawdown",
@@ -639,7 +642,9 @@ const I18N = {
     rosterNote: "每个曾经上榜的标的一行。点击表头排序；再次点击反向。图表中所有悬停数值在此均可查阅。\n入场质量 = 最近一段在榜区间入场日的派发日数（蓝色越深入场越干净，即回测验证的边际；悬停或点按圆点看量能特征）。",
     cols: ["代码", "行业", "当前排名", "最新评分", "入场质量", "连续在榜", "在榜天数", "最佳排名", "首次上榜", "最近上榜"],
     eqLabels: ["派发密集（≥4 天）", "中性（2-3 天）", "干净（≤1 天）"],
-    eqTip: (v, d, day) => [`派发日 ${d} 天（近 25 日放量下跌）`, ...(v == null ? [] : [`量比 ${v}×（当日量 / 20 日均量）`]), `${day} 入场`],
+    eqKv: (v, d) => [["派发日（近 25 日放量下跌）", `${d} 天`],
+                     v == null ? null : ["量比（当日量 / 20 日均量）", `${v}×`]],
+    eqEntered: day => `${day} 入场`,
     eqFrozen: "评级定格于当日",
     eqFreshNote: "实心 = 本期新入榜；空心 = 历史入场（评级定格于入场日）。",
     score: "评分", ret: "收益", dd: "回撤",
@@ -690,7 +695,9 @@ const I18N = {
     rosterNote: "每個曾經上榜的標的一行。點擊表頭排序；再次點擊反向。圖表中所有懸停數值在此均可查閱。\n進場品質 = 最近一段在榜區間進場日的派發日數（藍色越深進場越乾淨，即回測驗證的邊際；懸停或點按圓點看量能特徵）。",
     cols: ["代號", "產業", "目前排名", "最新評分", "進場品質", "連續在榜", "在榜天數", "最佳排名", "首次上榜", "最近上榜"],
     eqLabels: ["派發密集（≥4 天）", "中性（2-3 天）", "乾淨（≤1 天）"],
-    eqTip: (v, d, day) => [`派發日 ${d} 天（近 25 日放量下跌）`, ...(v == null ? [] : [`量比 ${v}×（當日量 / 20 日均量）`]), `${day} 進場`],
+    eqKv: (v, d) => [["派發日（近 25 日放量下跌）", `${d} 天`],
+                     v == null ? null : ["量比（當日量 / 20 日均量）", `${v}×`]],
+    eqEntered: day => `${day} 進場`,
     eqFrozen: "評級定格於當日",
     eqFreshNote: "實心 = 本期新進榜；空心 = 歷史進場（評級定格於進場日）。",
     score: "評分", ret: "報酬", dd: "回撤",
@@ -741,7 +748,9 @@ const I18N = {
     rosterNote: "ランクインしたことのある銘柄を 1 行ずつ表示。ヘッダーをクリックでソート、もう一度クリックで逆順。チャートのホバー数値はすべてこの表で確認できます。\nエントリー品質 = 直近ランクイン期間の初日の分配日数（青が濃いほどクリーンなエントリー、バックテストで検証されたエッジ。ドットにホバーまたはタップで出来高特性）。",
     cols: ["ティッカー", "セクター", "現在順位", "最新スコア", "エントリー品質", "連続日数", "ランクイン日数", "最高順位", "初登場", "直近登場"],
     eqLabels: ["分配日過多（4 日以上）", "中間（2-3 日）", "クリーン（1 日以下）"],
-    eqTip: (v, d, day) => [`分配日 ${d}（直近25日・出来高増の下落日）`, ...(v == null ? [] : [`出来高比 ${v}×（当日 / 20日平均）`]), `${day} エントリー`],
+    eqKv: (v, d) => [["分配日（直近25日・出来高増の下落日）", `${d}`],
+                     v == null ? null : ["出来高比（当日 / 20日平均）", `${v}×`]],
+    eqEntered: day => `${day} エントリー`,
     eqFrozen: "評価は当日で確定",
     eqFreshNote: "塗りつぶし = 今回新規ランクイン、リング = 過去のエントリー（評価はエントリー日で確定）。",
     score: "スコア", ret: "リターン", dd: "ドローダウン",
@@ -792,7 +801,9 @@ const I18N = {
     rosterNote: "순위에 오른 적 있는 종목을 한 행씩 표시. 헤더를 클릭해 정렬, 다시 클릭하면 역순. 차트의 모든 호버 값을 이 표에서 확인할 수 있습니다.\n진입 품질 = 최근 순위권 구간 첫날의 분배일 수 (파란색이 진할수록 깨끗한 진입, 백테스트로 검증된 엣지; 점에 호버하거나 탭하면 거래량 특성).",
     cols: ["티커", "섹터", "현재 순위", "최신 점수", "진입 품질", "연속 일수", "진입 일수", "최고 순위", "첫 진입", "최근 진입"],
     eqLabels: ["분배일 과다 (4일 이상)", "중간 (2-3일)", "클린 (1일 이하)"],
-    eqTip: (v, d, day) => [`분배일 ${d} (최근 25일 · 거래량 증가 하락일)`, ...(v == null ? [] : [`거래량비 ${v}× (당일 / 20일 평균)`]), `${day} 진입`],
+    eqKv: (v, d) => [["분배일 (최근 25일 · 거래량 증가 하락일)", `${d}`],
+                     v == null ? null : ["거래량비 (당일 / 20일 평균)", `${v}×`]],
+    eqEntered: day => `${day} 진입`,
     eqFrozen: "등급은 당일 확정",
     eqFreshNote: "채움 = 이번 런 신규 진입; 링 = 과거 진입 (등급은 진입일에 확정).",
     score: "점수", ret: "수익률", dd: "낙폭",
@@ -960,26 +971,18 @@ function showTip(x, y, build) {
   tip.style.top = (y - r.height - 12 < 4 ? y + 16 : y - r.height - 12) + "px";
 }
 const hideTip = () => { tip.style.display = "none"; delete tip.dataset.eq; };
-// The eq-dot's tip is a list of sentences about one frozen judgement, and
-// it keys with the exact dot being hovered (filled or ring) rather than a
-// generic swatch — so it keeps the plain-rows shape the chart tips left.
-function tipRows(t, rows, keyClass) {
-  const head = div(null, t);
-  const k = document.createElement("span"); k.className = keyClass; head.appendChild(k);
-  const v = document.createElement("span"); v.className = "v"; v.textContent = rows[0]; head.appendChild(v);
-  rows.slice(1).forEach(r => div(null, t, r));
-}
-// Every chart hover on this page carries the same three kinds of fact, and
-// as one flat list of sentences they read as a wall — Score, Return and
-// Drawdown shared two lines, each with a delta in parentheses. Split them:
-// what you are pointing at in the header, the numbers in aligned pairs,
-// the caveat in ink last.
-function tipCard(t, { title, aux, color, line, sub, kv, notes }) {
+// Every hover on this page carries the same three kinds of fact, and as one
+// flat list of sentences they read as a wall — Score, Return and Drawdown
+// shared two lines, each with a delta in parentheses. Split them: what you
+// are pointing at in the header, the numbers in aligned pairs, the caveat
+// in ink last. keyClass swaps the generic swatch for the exact mark being
+// hovered (the roster's eq dot, filled or ring).
+function tipCard(t, { title, aux, color, line, keyClass, sub, kv, notes }) {
   const head = div("h", t);
-  if (color) {
+  if (color || keyClass) {
     const k = document.createElement("span");
-    k.className = line ? "kline" : "k";
-    k.style.background = color;
+    k.className = keyClass || (line ? "kline" : "k");
+    if (color) k.style.background = color;
     head.appendChild(k);
   }
   const v = document.createElement("span");
@@ -1476,19 +1479,29 @@ function renderHeat(minApps) {
           if (c === null || c === undefined) td.textContent = "—";
           else {
             const dot = document.createElement("span");
-            dot.className = "eqdot eq" + c + (s.eqNew ? "" : " ring");
-            dot.setAttribute("aria-label",
-              `${T.eqLabels[c]} · ${T.eqTip(s.eqv, s.eqd, s.eqDay).join(" · ")} · ${T.eqFrozen}`);
+            const dotClass = "eqdot eq" + c + (s.eqNew ? "" : " ring");
+            dot.className = dotClass;
+            const eqKv = T.eqKv(s.eqv, s.eqd).filter(Boolean);
+            dot.setAttribute("aria-label", [
+              T.eqLabels[c], ...eqKv.map(p => p.join(" ")),
+              T.eqEntered(s.eqDay), T.eqFrozen,
+            ].join(" · "));
             dot.setAttribute("role", "img");
             dot.tabIndex = 0;
             // Shared #tip layer instead of a native title: works for
             // hover, tap (mobile), and keyboard focus alike.
             const show = () => {
               const r = dot.getBoundingClientRect();
-              const lines = [T.eqLabels[c], ...T.eqTip(s.eqv, s.eqd, s.eqDay)];
-              lines[lines.length - 1] += " · " + T.eqFrozen;
-              showTip(r.left + r.width / 2, r.top, t => tipRows(
-                t, lines, "eqdot eq" + c + (s.eqNew ? "" : " ring")));
+              // Same card as the charts: the tier reads as the title, the
+              // entry date as the header's aux, and the two measurements
+              // behind the tier as aligned pairs instead of sentences.
+              showTip(r.left + r.width / 2, r.top, t => tipCard(t, {
+                title: T.eqLabels[c],
+                aux: T.eqEntered(s.eqDay),
+                keyClass: dotClass,
+                kv: eqKv,
+                notes: [T.eqFrozen],
+              }));
               tip.dataset.eq = s.t;
             };
             dot.addEventListener("pointerenter", ev => {
