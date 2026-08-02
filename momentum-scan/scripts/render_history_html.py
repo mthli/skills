@@ -727,7 +727,7 @@ const I18N = {
     score: "Score", ret: "Return", dd: "Drawdown",
     entryPx: "Entry close", closePx: "Close", sellPx: "Sold at",
     stopPx: "Stop", trailPx: "Trail stop",
-    stopNote: (m, n) => `Stop = that day's close − ${m}× ${n}-day ATR. Trail stop rides the highest close since listing; you still exit on the dropout.`,
+    stopNote: (m, n, k) => `Stop = that day's close − ${m}× ${n}-day ATR. Trail stop rides the highest close since listing; the exit is still the day the name falls out of the top-${k} board.`,
     trailHit: "This close is below the trail stop, so it fired.",
     settled: (d, px, pct) => `Spell closed ${d} at ${px} (${pct}%).`,
     formula: "Score = Return ÷ |Drawdown|",
@@ -780,7 +780,7 @@ const I18N = {
     score: "评分", ret: "收益", dd: "回撤",
     entryPx: "上榜价", closePx: "当日收盘", sellPx: "卖出价",
     stopPx: "止损", trailPx: "移动止损",
-    stopNote: (m, n) => `止损价 = 当日收盘 − ${m}× ${n} 日 ATR。移动止损锚定上榜以来的最高收盘；出场仍以掉出榜单为准。`,
+    stopNote: (m, n, k) => `止损价 = 当日收盘 − ${m}× ${n} 日 ATR。移动止损锚定上榜以来的最高收盘；出场仍以掉出 top-${k} 榜单那天为准。`,
     trailHit: "当日收盘已跌破移动止损，按它算已触发。",
     settled: (d, px, pct) => `本轮已在 ${d} 以 ${px}（${pct}%）了结。`,
     formula: "评分 = 收益 ÷ |回撤|",
@@ -838,7 +838,7 @@ const I18N = {
     score: "評分", ret: "報酬", dd: "回撤",
     entryPx: "上榜價", closePx: "當日收盤", sellPx: "賣出價",
     stopPx: "止損", trailPx: "移動止損",
-    stopNote: (m, n) => `止損價 = 當日收盤 − ${m}× ${n} 日 ATR。移動止損錨定上榜以來的最高收盤；出場仍以掉出榜單為準。`,
+    stopNote: (m, n, k) => `止損價 = 當日收盤 − ${m}× ${n} 日 ATR。移動止損錨定上榜以來的最高收盤；出場仍以掉出 top-${k} 榜單那天為準。`,
     trailHit: "當日收盤已跌破移動止損，按它算已觸發。",
     settled: (d, px, pct) => `本輪已在 ${d} 以 ${px}（${pct}%）了結。`,
     formula: "評分 = 報酬 ÷ |回撤|",
@@ -896,7 +896,7 @@ const I18N = {
     score: "スコア", ret: "リターン", dd: "ドローダウン",
     entryPx: "ランクイン時終値", closePx: "当日終値", sellPx: "売却価格",
     stopPx: "ストップ", trailPx: "トレーリングストップ",
-    stopNote: (m, n) => `ストップ = 当日終値 − ${m}× ${n} 日 ATR。トレーリングストップはランクイン以降の最高終値が基準。出口は引き続きランキング脱落です。`,
+    stopNote: (m, n, k) => `ストップ = 当日終値 − ${m}× ${n} 日 ATR。トレーリングストップはランクイン以降の最高終値が基準。出口は引き続き top-${k} から外れた日です。`,
     trailHit: "終値がトレーリングストップ割れ。約定済みです。",
     settled: (d, px, pct) => `この期間は ${d} に ${px}（${pct}%）で終了。`,
     formula: "スコア = リターン ÷ |ドローダウン|",
@@ -954,7 +954,7 @@ const I18N = {
     score: "점수", ret: "수익률", dd: "낙폭",
     entryPx: "진입 종가", closePx: "당일 종가", sellPx: "매도가",
     stopPx: "손절", trailPx: "추적 손절",
-    stopNote: (m, n) => `손절가 = 당일 종가 − ${m}× ${n}일 ATR. 추적 손절은 순위 진입 이후 최고 종가가 기준입니다. 출구는 여전히 보드 탈락입니다.`,
+    stopNote: (m, n, k) => `손절가 = 당일 종가 − ${m}× ${n}일 ATR. 추적 손절은 순위 진입 이후 최고 종가가 기준입니다. 출구는 여전히 top-${k} 밖으로 밀려난 날입니다.`,
     trailHit: "당일 종가가 추적 손절 아래, 이미 체결됐습니다.",
     settled: (d, px, pct) => `이 구간은 ${d}에 ${px}(${pct}%)로 종료.`,
     formula: "점수 = 수익률 ÷ |낙폭|",
@@ -1654,7 +1654,7 @@ function renderHeat(minApps) {
 if (DATA.atrN != null && DATA.series.some(s => s.pts.some(p => p.a != null)))
   ["bump-note", "heat-note"].forEach(i => {
     const n = document.getElementById(i);
-    n.textContent += "\n" + T.stopNote(MULT, DATA.atrN);
+    n.textContent += "\n" + T.stopNote(MULT, DATA.atrN, N);
   });
 
 // ---- table ----
