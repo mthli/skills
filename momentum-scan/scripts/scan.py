@@ -39,6 +39,7 @@ STATE_DIR = SKILL_DIR / "state"
 UNIVERSE_FILE = STATE_DIR / "universe.txt"
 HISTORY_FILE = STATE_DIR / "history.csv"
 SECTORS_FILE = STATE_DIR / "sectors.json"
+BENCHMARK_FILE = STATE_DIR / "benchmark.json"
 UNIVERSE_TTL_DAYS = 7
 SCREENER_PAGE_SIZE = 250  # Yahoo's hard cap per request — yf.screen raises ValueError above this
 SCREENER_PAGE_SLEEP_SEC = 0.2  # small gap between pages so a 5-page sweep doesn't trip Yahoo throttling
@@ -1183,6 +1184,34 @@ def load_history() -> pd.DataFrame:
     return df
 
 
+def refresh_benchmark(top_n: int) -> None:
+    """Rebuild state/benchmark.json for the dashboard's board-vs-index panel.
+
+    Called after the history save, so the curves always cover the day just
+    recorded — otherwise the panel would sit a scan behind the board it is
+    being compared against, and say so on the page.
+
+    Two deliberate weaknesses. It buys prices, so it can fail on a network
+    that the scan itself survived: a failure here warns and returns, since
+    the picks are already computed and the panel is optional. And it is
+    computed for the top-N of THIS run, so a one-off `--top-n 10` scan
+    leaves a top-10 file behind; the renderer refuses to draw that against
+    a top-30 page rather than mixing the two."""
+    try:
+        import compute_benchmark as cb
+        payload = cb.refresh(history=HISTORY_FILE, out=BENCHMARK_FILE,
+                             top_n=top_n)
+    except Exception as e:  # network, Yahoo shape change, unreadable cache
+        print(f"WARNING: benchmark refresh failed ({type(e).__name__}: {e}); "
+              f"{BENCHMARK_FILE.name} is unchanged and the dashboard panel "
+              f"will show its own staleness. Re-run "
+              f"scripts/compute_benchmark.py to retry.", file=sys.stderr)
+        return
+    if payload is None:
+        return  # first run against a fresh history: no curve to draw yet
+    print(cb.summarize(payload, BENCHMARK_FILE), file=sys.stderr)
+
+
 def append_history(picks: list[dict], run_id: str, run_date: datetime,
                    allow_same_day: bool = False):
     """At most one snapshot per America/New_York calendar day — aligning the
@@ -1811,6 +1840,14 @@ def build_argparser() -> argparse.ArgumentParser:
                           "Sector column, and prints a sector-breakdown line. "
                           "First-run cost is ~1-2 sec per missing ticker "
                           "(parallelized at 10 workers)."))
+    ap.add_argument("--no-benchmark", action="store_true",
+                    help=("Skip the board-vs-index benchmark refresh. Default "
+                          "behavior rebuilds state/benchmark.json after the "
+                          "history save (~10 sec, one batched price fetch for "
+                          "every name that ever made the board, plus SPY and "
+                          "QQQ) so the dashboard's benchmark panel covers the "
+                          "run just recorded. Skipped anyway when history "
+                          "isn't saved."))
     return ap
 
 
@@ -1912,6 +1949,8 @@ def main():
                   f"override.", file=sys.stderr)
         else:
             append_history(picks, run_id, now, allow_same_day=args.allow_same_day)
+            if not args.no_benchmark:
+                refresh_benchmark(args.top_n)
 
     # In strict mode, suppress the discovery sections when RISK-OFF. History
     # save still happens — streak is a fact about the market, not a trading

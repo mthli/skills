@@ -16,6 +16,7 @@ import pytest
 
 import compute_benchmark as cb
 import render_history_html as rh
+import scan
 
 DAYS3 = ["20260701", "20260702", "20260703"]
 
@@ -105,6 +106,18 @@ def test_a_missing_index_bar_carries_that_index_flat():
     assert c["qqq"] == [100.0, 110.0, 110.0]
 
 
+def test_the_file_on_disk_stays_diff_friendly(tmp_path):
+    # The file is tracked and the daily scan rewrites it whole, so a
+    # compact one-line dump would turn every commit into an unreadable
+    # rewrite. One value per line keeps a run's change to what it is.
+    out = tmp_path / "benchmark.json"
+    payload = {"top_n": 30, **bench()}
+    cb.write_curves(payload, out)
+    text = out.read_text()
+    assert json.loads(text) == payload
+    assert text.count("\n") > len(payload["board"])
+
+
 def test_price_start_follows_the_history_it_is_given():
     # A fixed start silently degrades to "no bars" (flat board + a
     # warning per day) the moment history reaches back past it.
@@ -120,6 +133,37 @@ def test_load_boards_keeps_only_the_displayed_top_n(tmp_path):
     days, boards = cb.load_boards(csv, top_n=30)
     assert days == ["20260701", "20260702"]
     assert boards == {"20260701": ["AAA"], "20260702": ["BBB"]}
+
+
+# --------------------------------------------------- scan.py auto-refresh
+
+def test_scan_refreshes_for_the_board_it_just_displayed(monkeypatch):
+    seen = {}
+    monkeypatch.setattr(cb, "refresh",
+                        lambda **kw: seen.update(kw) or {"days": DAYS3,
+                                                         "board": [100.0] * 3,
+                                                         "spy": [100.0] * 3,
+                                                         "qqq": [100.0] * 3})
+    scan.refresh_benchmark(10)
+    assert seen["top_n"] == 10
+    assert seen["history"] == scan.HISTORY_FILE
+    assert seen["out"] == scan.BENCHMARK_FILE
+
+
+def test_a_failed_refresh_never_fails_the_scan(monkeypatch, capsys):
+    # The picks are already computed and printed by the time this runs; a
+    # dead network must not turn a good scan into a traceback.
+    def boom(**kw):
+        raise OSError("connection reset")
+    monkeypatch.setattr(cb, "refresh", boom)
+    scan.refresh_benchmark(30)
+    assert "benchmark refresh failed" in capsys.readouterr().err
+
+
+def test_a_history_too_short_to_draw_says_nothing(monkeypatch, capsys):
+    monkeypatch.setattr(cb, "refresh", lambda **kw: None)
+    scan.refresh_benchmark(30)
+    assert capsys.readouterr().err == ""
 
 
 # ------------------------------------------------- payload → panel input

@@ -161,36 +161,33 @@ def build_curves(days: list[str], boards: dict[str, list[str]],
     }
 
 
-def main() -> None:
-    ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--history", type=Path, default=HISTORY_CSV)
-    ap.add_argument("--top-n", type=int, default=30,
-                    help="board membership cutoff, matching scan.py's default")
-    ap.add_argument("--out", type=Path, default=OUT_JSON)
-    ap.add_argument("--cache", type=Path,
-                    default=Path(tempfile.gettempdir())
-                    / "momentum_backtest_prices.pkl",
-                    help="shared with backtest_outcomes.py")
-    ap.add_argument("--refresh-prices", action="store_true")
-    ap.add_argument("--start", default=None,
-                    help="price download start date "
-                         "(default: two weeks before the first run-day)")
-    args = ap.parse_args()
+DEFAULT_CACHE = Path(tempfile.gettempdir()) / "momentum_backtest_prices.pkl"
 
-    days, boards = load_boards(args.history, args.top_n)
+
+def refresh(history: Path = HISTORY_CSV, out: Path = OUT_JSON,
+            top_n: int = 30, cache: Path = DEFAULT_CACHE,
+            refresh_prices: bool = False,
+            start: str | None = None) -> dict | None:
+    """Rebuild the curves from `history` and write them to `out`.
+
+    Returns the payload, or None when history is too short to draw one
+    (the first scan against a fresh history.csv). scan.py calls this
+    right after its own history save, so the file is never a day behind
+    the board the dashboard would draw."""
+    days, boards = load_boards(history, top_n)
     if len(days) < 2:
-        raise SystemExit("need at least 2 run-days to draw a curve")
-    start = args.start or default_start(days[0])
+        return None
+    start = start or default_start(days[0])
     members = sorted({t for m in boards.values() for t in m})
     print(f"history: {len(days)} run-days, {len(members)} board members",
           file=sys.stderr)
 
-    prices = fetch_prices(members + list(INDICES), start, args.cache,
-                          args.refresh_prices)
-    if not args.refresh_prices and not covers_last_day(days, boards, prices):
+    prices = fetch_prices(members + list(INDICES), start, cache,
+                          refresh_prices)
+    if not refresh_prices and not covers_last_day(days, boards, prices):
         print(f"cached bars don't reach {days[-1]}; refetching everything",
               file=sys.stderr)
-        prices = fetch_prices(members + list(INDICES), start, args.cache,
+        prices = fetch_prices(members + list(INDICES), start, cache,
                               refresh=True)
     for k in INDICES:
         if k not in prices:
@@ -205,15 +202,52 @@ def main() -> None:
     payload = {
         "generated": datetime.now(timezone.utc).astimezone()
                              .strftime("%Y-%m-%d %H:%M %Z"),
-        "top_n": args.top_n,
+        "top_n": top_n,
         "fills": "close",
         **build_curves(days, boards, prices),
     }
-    args.out.write_text(json.dumps(payload, separators=(",", ":")))
+    write_curves(payload, out)
+    return payload
+
+
+def write_curves(payload: dict, out: Path) -> None:
+    """Write the curves one value per line.
+
+    The file is tracked, and the daily scan rewrites it whole, so the
+    format decides whether a year of commits reads as 250 appends or 250
+    unreviewable one-line rewrites. Values are cumulative from a fixed
+    base and a dividend rescales every bar before its ex-date by one
+    factor, which leaves the ratios between older bars alone — so past
+    days hold still and each run really does append."""
+    out.write_text(json.dumps(payload, indent=1) + "\n")
+
+
+def summarize(payload: dict, out: Path) -> str:
     curves = ("board",) + tuple(k.lower() for k in INDICES)
     last = {k: payload[k][-1] - 100 for k in curves}
-    print(f"wrote {args.out} ({len(days)} run-days: "
-          + ", ".join(f"{k} {v:+.1f}%" for k, v in last.items()) + ")")
+    return (f"wrote {out} ({len(payload['days'])} run-days: "
+            + ", ".join(f"{k} {v:+.1f}%" for k, v in last.items()) + ")")
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--history", type=Path, default=HISTORY_CSV)
+    ap.add_argument("--top-n", type=int, default=30,
+                    help="board membership cutoff, matching scan.py's default")
+    ap.add_argument("--out", type=Path, default=OUT_JSON)
+    ap.add_argument("--cache", type=Path, default=DEFAULT_CACHE,
+                    help="shared with backtest_outcomes.py")
+    ap.add_argument("--refresh-prices", action="store_true")
+    ap.add_argument("--start", default=None,
+                    help="price download start date "
+                         "(default: two weeks before the first run-day)")
+    args = ap.parse_args()
+
+    payload = refresh(args.history, args.out, args.top_n, args.cache,
+                      args.refresh_prices, args.start)
+    if payload is None:
+        raise SystemExit("need at least 2 run-days to draw a curve")
+    print(summarize(payload, args.out))
 
 
 if __name__ == "__main__":

@@ -155,6 +155,15 @@ vite.config.ts.timestamp-*
 !**/state/history/
 !**/state/history/**
 !**/state/sectors.json
+# momentum-scan's board-vs-index curves. Cheap to rebuild (one batched
+# fetch, and scan.py redoes it after every history save), but history.csv
+# is tracked, so a fresh checkout can render the dashboard immediately —
+# and without this it renders every panel except the top one. Written one
+# value per line: the curves compound from a fixed base, so each run
+# appends rather than rewriting the file. Named per skill, not **/: only
+# this dashboard has the panel, and a wildcard would invite committing a
+# file no script writes.
+!momentum-scan/state/benchmark.json
 # Outcome ledgers — mean-reversion's per-signal WON/LOST/EXPIRED and
 # base-breakout's per-episode TRIGGERED/FADED/BROKE_DOWN. Only regenerable
 # while yfinance still serves the price window (~13 months) and the ticker
