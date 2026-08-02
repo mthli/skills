@@ -52,9 +52,9 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.14'
 
@@ -77,12 +77,16 @@ jobs:
             cp "$skill/state/history.html" "_site/$skill/state/"
           done
 
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
 
-      - uses: actions/upload-pages-artifact@v3
+      # Bump these two together: upload-pages-artifact decides the artifact
+      # format deploy-pages consumes, and it is a composite action whose own
+      # pinned actions/upload-artifact is what the Node deprecation warnings
+      # actually name — the version here is the only lever over it.
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
