@@ -10,16 +10,22 @@ name: Deploy scan dashboards to Pages
 # live pages with stale data. The github-pages environment's deployment
 # branch policy mirrors this (develop only); if the automation ever moves
 # branches, update both this filter and that policy.
+# The path list must name every tracked file a renderer READS, not just
+# the obvious ones: a page whose input changed without a trigger keeps
+# serving the old numbers, and nothing fails. base-breakout-scan needs no
+# benchmark.json — its control lines are columns inside outcomes.csv.
 on:
   push:
     branches: [develop]
     paths:
       - momentum-scan/state/history.csv
       - momentum-scan/state/sectors.json
+      - momentum-scan/state/benchmark.json
       - momentum-scan/scripts/render_history_html.py
       - mean-reversion-scan/state/history.csv
       - mean-reversion-scan/state/outcomes.csv
       - mean-reversion-scan/state/sectors.json
+      - mean-reversion-scan/state/benchmark.json
       - mean-reversion-scan/scripts/render_history_html.py
       - base-breakout-scan/state/history.csv
       - base-breakout-scan/state/outcomes.csv
