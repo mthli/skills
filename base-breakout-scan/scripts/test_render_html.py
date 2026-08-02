@@ -11,6 +11,7 @@ Run (from this directory):
     --with 'numpy>=1.24,<3' --with pytest pytest test_render_html.py
 """
 import csv
+import pathlib
 from pathlib import Path
 
 import pytest
@@ -796,3 +797,38 @@ def test_ledger_int_columns_survive_upsert_as_ints(tmp_path):
     assert got["FAD"]["days_to_trigger"] == ""
     assert all(r["censored"] == "0" for r in got.values())
     assert all(r["horizon"] == "20" for r in got.values())
+
+
+# ------------------------------------------------- matched-SPY control line
+
+def test_the_ledger_carries_what_the_control_line_needs():
+    # The panel's SPY line is a ledger column, not a second fetch: the
+    # resolver already has SPY open when it decides the exit.
+    assert {"exit_day", "spy_trade"} <= set(bt.LEDGER_COLS)
+    assert "exit_day" in bt.INT_LEDGER_COLS
+
+
+def test_the_exit_day_is_the_stop_day_when_a_trade_stops_out():
+    # Half these trades stop out before the horizon; matching the index to
+    # 20 sessions anyway would answer a different question.
+    import ast
+    src = pathlib.Path(bt.__file__).read_text()
+    block = src.split("out.stop_hit = bool(")[1].split("out.trade_ret_cut")[0]
+    assert "stop_k" in block and "min(horizon" in block
+    assert "index_trade_return(spy, trigger_ts, out.exit_day)" in src
+
+
+@pytest.mark.parametrize("lang", ["en", "zh", "zht", "ja", "ko"])
+def test_every_language_has_the_control_line_strings(lang):
+    block = rh.HTML_TEMPLATE.split(f"\n  {lang}: {{")[1].split("\n  },")[0]
+    for key in ("pkBench", "pkVsMkt", "pkBenchNote", "pkNote"):
+        assert f"{key}:" in block, f"{lang} is missing {key}"
+
+
+def test_a_trade_missing_one_index_sits_out_both_control_lines():
+    # The tooltip subtracts each index from the same pocket number, so the
+    # two lines have to cover the same trades; a run whose QQQ fetch failed
+    # writes spy_trade alone, and half a pair must not enter one line.
+    src = pathlib.Path(rh.__file__).read_text()
+    block = src.split("vals = {k: _f(led.get(f\"{k}_trade\"))")[1][:400]
+    assert "all(v is not None for v in vals.values())" in block

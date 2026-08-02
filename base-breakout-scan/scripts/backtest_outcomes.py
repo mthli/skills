@@ -258,6 +258,9 @@ class Outcome:
     fellback5: bool | None = None
     stop_hit: bool | None = None
     trade_ret: float | None = None  # stop-based trade: -stop% or +horizon close
+    exit_day: int | None = None     # sessions from the fill to that exit
+    spy_trade: float | None = None  # SPY over exactly the trade's own window
+    qqq_trade: float | None = None  # QQQ over the same window
     # Same fill and same stop, but cut on the first close back below the
     # pivot — the "the breakout didn't hold" exit. Two windows for the cut:
     # the whole horizon, and sessions 1-5 only (after that, hold as usual).
@@ -270,10 +273,22 @@ class Outcome:
     broke_down: bool | None = None
 
 
+def index_trade_return(index: pd.DataFrame | None, trigger_ts: pd.Timestamp,
+                       exit_day: int) -> float | None:
+    """An index's close-to-close return over one trade's own window."""
+    if index is None or exit_day is None:
+        return None
+    win = index.loc[index.index >= trigger_ts, "Close"]
+    if len(win) <= exit_day:
+        return None
+    return (win.iloc[exit_day] / win.iloc[0] - 1) * 100
+
+
 def resolve_episode(ep: Episode, bars: pd.DataFrame, spy: pd.DataFrame,
                     calendar: pd.DatetimeIndex, horizon: int,
                     stop_pct: float, entry: str = "touch",
-                    series_ended: bool = False) -> Outcome | None:
+                    series_ended: bool = False,
+                    qqq: pd.DataFrame | None = None) -> Outcome | None:
     start_ts = ts_of(ep.start_day)
     end_ts = ts_of(ep.end_day)
 
@@ -376,6 +391,14 @@ def resolve_episode(ep: Episode, bars: pd.DataFrame, spy: pd.DataFrame,
             # close; from day 1 on the position exists all session.
             lows.iloc[0] = win["Close"].iloc[0]
         out.stop_hit = bool((lows <= stop_level).any())
+        # The day the position actually ends. Recorded because half these
+        # trades stop out well before the horizon, and a benchmark that
+        # holds the index for 20 sessions against a trade that lived 3 is
+        # answering a different question.
+        stop_k = next((k for k in range(len(win))
+                       if lows.iloc[k] <= stop_level), None)
+        out.exit_day = stop_k if stop_k is not None else min(horizon,
+                                                             len(win) - 1)
         if out.stop_hit:
             out.trade_ret = -stop_pct
         elif len(post) > horizon:
@@ -401,6 +424,12 @@ def resolve_episode(ep: Episode, bars: pd.DataFrame, spy: pd.DataFrame,
         spy_win = spy.loc[spy.index >= trigger_ts, "Close"]
         if len(spy_win) > horizon:
             out.spy_h = (spy_win.iloc[horizon] / spy_win.iloc[0] - 1) * 100
+        # Same trigger day, same number of sessions the trade actually
+        # held. Close-to-close, while the trade fills at its intraday pivot
+        # touch and exits an intraday stop at -stop%: the index gets the
+        # arbitrary price on both ends and the trade the decisive one.
+        out.spy_trade = index_trade_return(spy, trigger_ts, out.exit_day)
+        out.qqq_trade = index_trade_return(qqq, trigger_ts, out.exit_day)
     return out
 
 
@@ -417,15 +446,16 @@ def resolve_episode(ep: Episode, bars: pd.DataFrame, spy: pd.DataFrame,
 # touch) without having to guess.
 LEDGER_COLS = ["start_run_id", "ticker", "end_run_id", "outcome",
                "days_to_trigger", "gap_pct", "ret5", "ret10", "ret_h",
-               "trade_ret_pct", "fellback5", "stop_hit", "censored",
-               "horizon", "stop_pct", "entry"]
+               "trade_ret_pct", "exit_day", "spy_trade", "qqq_trade",
+               "fellback5", "stop_hit", "censored", "horizon", "stop_pct",
+               "entry"]
 # Whole-number columns (flags / counts). write_ledger pins these to nullable
 # Int64 on write: once a None joins an int column pandas floats the whole
 # thing, and the on-disk vocabulary drifts ("1" → "1.0") between upserts —
 # consumers compare these strings literally (scan.py's pending_episodes
 # reads censored == "1").
-INT_LEDGER_COLS = ["days_to_trigger", "fellback5", "stop_hit", "censored",
-                   "horizon"]
+INT_LEDGER_COLS = ["days_to_trigger", "exit_day", "fellback5", "stop_hit",
+                   "censored", "horizon"]
 
 
 def ledger_rows(outcomes: list[Outcome], horizon: int, stop_pct: float,
@@ -468,6 +498,9 @@ def ledger_rows(outcomes: list[Outcome], horizon: int, stop_pct: float,
             # saying which kind it is.
             "ret_h": r2(o.ret_h if o.triggered else o.no_trigger_drift),
             "trade_ret_pct": r2(o.trade_ret),
+            "exit_day": o.exit_day,
+            "spy_trade": r2(o.spy_trade),
+            "qqq_trade": r2(o.qqq_trade),
             "fellback5": b01(o.fellback5),
             "stop_hit": b01(o.stop_hit),
             "censored": b01(o.censored),
@@ -671,7 +704,7 @@ def main() -> None:
     print(f"history: {len(run_days)} run-days, {len(episodes)} episodes, "
           f"{len(tickers)} tickers", file=sys.stderr)
 
-    prices = fetch_prices(tickers + ["SPY"], args.start, args.cache,
+    prices = fetch_prices(tickers + ["SPY", "QQQ"], args.start, args.cache,
                           args.refresh_prices)
     missing = [t for t in tickers if t not in prices]
     spy = prices["SPY"]
@@ -690,7 +723,8 @@ def main() -> None:
             continue
         o = resolve_episode(ep, bars, spy, calendar, args.horizon,
                             args.stop_pct, args.entry,
-                            series_ended=series_has_ended(bars, calendar))
+                            series_ended=series_has_ended(bars, calendar),
+                            qqq=prices.get("QQQ"))
         if o is None:
             skipped += 1
             continue

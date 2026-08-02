@@ -61,6 +61,7 @@ SKILL_DIR = Path(__file__).resolve().parent.parent
 # test_render_html.py has a drift-guard test asserting equality).
 # Duplicated numerically because this script deliberately stays
 # stdlib-only while scan.py imports yfinance at module level.
+BENCH_KEYS = ("spy", "qqq")
 VALIDATED_BASE_WEEKS = 20.0
 # Sig tiers in ascending order of "how close to firing" — the ordinal ramp
 # for the grid, the stack order for the cohort chart, and the sort order
@@ -294,6 +295,10 @@ def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
     # running expectancy advances when the bet was placed, not when it paid.
     pocket_by_day: list[list[float]] = [[] for _ in run_ids]
     base_by_day: list[list[float]] = [[] for _ in run_ids]
+    # Each index over the trade's OWN window, bucketed on the same day as
+    # the trade it belongs to: the panel's control lines.
+    bench_by_day: dict[str, list[list[float]]] = {
+        k: [[] for _ in run_ids] for k in BENCH_KEYS}
     # Realized trade returns bucketed by the name's sector, plus that
     # sector's triggered/faded/broke-down episode tally. Only TRIGGERED
     # episodes carry a trade return, so the bar is "what the ones that
@@ -375,6 +380,14 @@ def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
                 if tr is not None:
                     (pocket_by_day if pocket else base_by_day)[d].append(tr)
                     sec_results.setdefault(sec, []).append(tr)
+                    # All or nothing per trade: the tooltip subtracts
+                    # each index from the same pocket number, and two
+                    # control lines built on different trade sets would
+                    # not be comparable to each other.
+                    vals = {k: _f(led.get(f"{k}_trade")) for k in BENCH_KEYS}
+                    if all(v is not None for v in vals.values()):
+                        for k, v in vals.items():
+                            bench_by_day[k][d].append(v)
 
             # The pivot moves as the base rebases, so it is a per-DAY value:
             # the buy-stop price that was live that day, not the episode's.
@@ -469,6 +482,7 @@ def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
 
     pkt_line, pkt_n = cum_mean(pocket_by_day)
     base_line, base_n = cum_mean(base_by_day)
+    bench = {k: cum_mean(bench_by_day[k]) for k in BENCH_KEYS}
 
     latest = cohort[-1]
     latest_total = sum(latest)
@@ -509,6 +523,15 @@ def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
         },
         "pocket": {
             "pkt": pkt_line[win_start:], "pktN": pkt_n[win_start:],
+            # None when no ledger row carries spy_trade yet (a ledger
+            # written before the column existed): the panel drops the line
+            # rather than drawing a flat zero.
+            # A ledger written before both index columns existed carries
+            # no control at all rather than a line built on half the
+            # trades; one count then describes both lines truthfully.
+            "bench": ({**{k: bench[k][0][win_start:] for k in BENCH_KEYS},
+                       "n": bench["spy"][1][win_start:]}
+                      if bench["spy"][1][-1] else None),
             "base": base_line[win_start:], "baseN": base_n[win_start:],
             "refPkt": BACKTEST_POCKET_TRADE,
             "refBase": BACKTEST_BASELINE_TRADE,
@@ -839,7 +862,10 @@ const I18N = {
     coNote: () => `One column per day: the whole watchlist stacked by how close each name is to firing.\nA stack thick with imminent and breakout means the list is loaded and time-sensitive. All forming means nothing is near a trigger, so check back later.\nThe line counts the ⭐ pocket (bases ≥ ${MINWK} weeks). At zero, the list holds nothing the backtest validated.`,
     coPocketLine: "⭐ Pocket count",
     pkTitle: "⭐ Pocket vs the rest",
-    pkNote: "Solid: the running average result per trade (pivot buy, 8% stop, 20 sessions), ⭐ pocket vs the rest. Base length counts from day one.\nDashed: the backtest's own numbers. A pocket line above its dash means the validated edge still pays.",
+    pkNote: "Solid: the running average result per trade (pivot buy, 8% stop, 20 sessions), ⭐ pocket vs the rest. Dashed: the backtest's own numbers.\nDotted: SPY and QQQ bought the same day and sold when the trade was, stop-outs included. They sell at the close, the trade at its stop, so the gap is a ceiling.",
+    pkBench: n => `${n}, same trades`,
+    pkVsMkt: n => `⭐ beyond ${n}`,
+    pkBenchNote: n => `${n} trades matched to both SPY and QQQ`,
     pkPocket: "⭐ Pocket", pkBase: "The rest",
     pkRef: v => `backtest ${v >= 0 ? "+" : ""}${v}%`,
     pkTipNs: (a, b) => `${a} pocket / ${b} rest trades`,
@@ -919,7 +945,10 @@ const I18N = {
     coNote: () => `每天一根柱：当天名单上的全部票，按「离触发还有多远」分层堆叠。\n柱子又高、临门一脚和今日突破又多 = 名单已上膛，时间敏感；全是成形中 = 没有一只逼近触发，过几天再看。\n折线 = ⭐ 口袋只数（基龄 ≥ ${MINWK} 周）。折线落到 0，当天名单里没有一只是回测验证过的类型。`,
     coPocketLine: "⭐ 口袋只数",
     pkTitle: "⭐ 口袋 vs 其余",
-    pkNote: "实线：每单滚动平均盈亏（触发价买入、8% 止损、20 天卖出），⭐ 口袋 vs 其余。基龄按上榜第一天算。\n虚线：回测里的对应数。口袋线在虚线上方 = 那点验证过的边际还在兑现。",
+    pkNote: "实线：每单滚动平均盈亏（触发价买入、8% 止损、20 天卖出），⭐ 口袋 vs 其余。虚线：回测里的对应数。\n点线：同一天买 SPY / QQQ，这单何时了结就何时卖，止损出场也照算。指数按收盘卖、这单按止损价，所以差距是上限。",
+    pkBench: n => `同期 ${n}`,
+    pkVsMkt: n => `⭐ 超出 ${n}`,
+    pkBenchNote: n => `${n} 单 SPY / QQQ 均已对齐`,
     pkPocket: "⭐ 口袋", pkBase: "其余全部",
     pkRef: v => `回测 ${v >= 0 ? "+" : ""}${v}%`,
     pkTipNs: (a, b) => `⭐ 口袋 ${a} 单 · 其余 ${b} 单`,
@@ -1004,7 +1033,10 @@ const I18N = {
     coNote: () => `每天一根柱：當天名單上的全部票，按「離觸發還有多遠」分層堆疊。\n柱子又高、臨門一腳和今日突破又多 = 名單已上膛，時間敏感；全是成形中 = 沒有一檔逼近觸發，過幾天再看。\n折線 = ⭐ 口袋檔數（基齡 ≥ ${MINWK} 週）。折線落到 0，當天名單裡沒有一檔是回測驗證過的類型。`,
     coPocketLine: "⭐ 口袋檔數",
     pkTitle: "⭐ 口袋 vs 其餘",
-    pkNote: "實線：每筆滾動平均盈虧（觸發價買入、8% 停損、20 天賣出），⭐ 口袋 vs 其餘。基齡按上榜第一天算。\n虛線：回測裡的對應數。口袋線在虛線上方 = 那點驗證過的邊際還在兌現。",
+    pkNote: "實線：每筆滾動平均盈虧（觸發價買入、8% 停損、20 天賣出），⭐ 口袋 vs 其餘。虛線：回測裡的對應數。\n點線：同一天買 SPY / QQQ，這筆何時了結就何時賣，停損出場也照算。指數按收盤賣、這筆按停損價，所以差距是上限。",
+    pkBench: n => `同期 ${n}`,
+    pkVsMkt: n => `⭐ 超出 ${n}`,
+    pkBenchNote: n => `${n} 筆 SPY / QQQ 均已對齊`,
     pkPocket: "⭐ 口袋", pkBase: "其餘全部",
     pkRef: v => `回測 ${v >= 0 ? "+" : ""}${v}%`,
     pkTipNs: (a, b) => `⭐ 口袋 ${a} 筆 · 其餘 ${b} 筆`,
@@ -1089,7 +1121,10 @@ const I18N = {
     coNote: () => `1 日 1 本の柱：その日のリスト全体を「発火までの近さ」で積み上げたもの。\n目前とブレイクが厚い柱 = リストは装填済みで時間との勝負。すべて形成中 = 発火寸前の銘柄なし、日を改めて確認を。\n折れ線は ⭐ ポケット数（ベース ${MINWK} 週以上）。ゼロの日は検証済みタイプが 1 つもありません。`,
     coPocketLine: "⭐ ポケット数",
     pkTitle: "⭐ ポケット vs その他",
-    pkNote: "実線：1 トレード平均損益の推移（ピボット買い、8% ストップ、20 セッション）。⭐ ポケット vs その他。ベース週数は初日で判定。\n破線：バックテストの対応値。ポケット線が破線の上なら、検証済みのエッジは健在。",
+    pkNote: "実線：1 トレード平均損益の推移（ピボット買い、8% ストップ、20 セッション）。⭐ ポケット vs その他。破線：バックテストの対応値。\n点線：同じ日に SPY / QQQ を買い、そのトレードが終わった日に売った場合。指数は終値、トレードはストップ価格なので、差は上限。",
+    pkBench: n => `同期間 ${n}`,
+    pkVsMkt: n => `⭐ の ${n} 超過`,
+    pkBenchNote: n => `SPY・QQQ 双方と対応したトレード ${n} 件`,
     pkPocket: "⭐ ポケット", pkBase: "その他",
     pkRef: v => `バックテスト ${v >= 0 ? "+" : ""}${v}%`,
     pkTipNs: (a, b) => `⭐ ポケット ${a} 件 · その他 ${b} 件`,
@@ -1174,7 +1209,10 @@ const I18N = {
     coNote: () => `하루 1개 기둥: 그날 목록 전체를 '발동까지의 거리'로 쌓은 것.\n임박과 돌파가 두꺼운 기둥이면 목록이 장전된 상태이고 시간이 중요합니다. 전부 형성 중이면 발동에 가까운 종목이 없다는 뜻이니 나중에 다시 보세요.\n선은 ⭐ 포켓 개수(베이스 ${MINWK}주 이상)입니다. 0인 날은 백테스트로 검증된 유형이 하나도 없습니다.`,
     coPocketLine: "⭐ 포켓 개수",
     pkTitle: "⭐ 포켓 vs 나머지",
-    pkNote: "실선: 거래당 롤링 평균 손익(피봇 매수, 8% 손절, 20세션 청산). ⭐ 포켓 vs 나머지. 베이스 주수는 첫날 기준.\n점선: 백테스트 수치. 포켓 선이 점선 위면 검증된 엣지가 유효합니다.",
+    pkNote: "실선: 거래당 롤링 평균 손익(피봇 매수, 8% 손절, 20세션 청산). ⭐ 포켓 vs 나머지. 파선: 백테스트 수치.\n점선: 같은 날 SPY / QQQ를 사서 그 거래가 끝난 날 판 경우. 지수는 종가로, 거래는 손절가로 정산하므로 격차는 상한입니다.",
+    pkBench: n => `같은 기간 ${n}`,
+    pkVsMkt: n => `⭐의 ${n} 초과`,
+    pkBenchNote: n => `SPY·QQQ 모두에 대응시킨 거래 ${n}건`,
     pkPocket: "⭐ 포켓", pkBase: "나머지",
     pkRef: v => `백테스트 ${v >= 0 ? "+" : ""}${v}%`,
     pkTipNs: (a, b) => `⭐ 포켓 ${a}건 · 나머지 ${b}건`,
@@ -1701,8 +1739,18 @@ function renderApproach(mode) {
   else {
   document.getElementById("pk-note").textContent = T.pkNote + WIN_TAG;
   const ML = 40, MT = 12, MB = 26, DX = 19, PH = 160;
-  const allVals = [...P.pkt, ...P.base, P.refPkt, P.refBase, 0]
-    .filter(v => v !== null);
+  // Same neutral family with unmistakably different rhythms: the page's
+  // greens and grays already mean won, lost and rest, so a hue here would
+  // read as a third strategy. Dots vs long dashes, not two dot spacings.
+  const BM = P.bench
+    ? [{ k: "spy", lbl: "SPY", dash: "1 3" },
+       { k: "qqq", lbl: "QQQ", dash: "7 3" }].filter(b => P.bench[b.k])
+    : [];
+  // End labels are placed together at the end: the control line runs near
+  // zero and either strategy line can drift onto it.
+  const ends = [];
+  const allVals = [...P.pkt, ...P.base, P.refPkt, P.refBase, 0,
+    ...BM.flatMap(b => P.bench[b.k])].filter(v => v !== null);
   let lo = Math.min(...allVals), hi = Math.max(...allVals);
   const pad = (hi - lo) * 0.12 || 1;
   lo -= pad; hi += pad;
@@ -1726,6 +1774,23 @@ function renderApproach(mode) {
     el("line", { x1: ML, x2: ML + (DAYS - 1) * DX, y1: yOf(v), y2: yOf(v),
       stroke: col, "stroke-dasharray": "4 3", opacity: 0.7 }, svg);
   });
+  // One dotted neutral line: SPY bought at the same trigger close and sold
+  // after exactly as many sessions as the trade itself lasted. Same axis
+  // (%/trade), so it belongs beside them rather than on a second scale.
+  BM.forEach(b => {
+    let dstr = "", started = false, lastD = -1;
+    P.bench[b.k].forEach((v, d) => {
+      if (v === null) return;
+      dstr += (started ? "L" : "M") + xOf(d) + " " + yOf(v).toFixed(1);
+      started = true; lastD = d;
+    });
+    if (!started) return;
+    el("path", { d: dstr, fill: "none", stroke: "var(--muted)",
+      "stroke-width": 1.25, "stroke-dasharray": b.dash,
+      "stroke-linecap": "round" }, svg);
+    ends.push({ x: xOf(lastD), y: yOf(P.bench[b.k][lastD]),
+                txt: `${b.lbl} ${pctTxt(P.bench[b.k][lastD])}` });
+  });
   const lines = [
     { vals: P.pkt, ns: P.pktN, col: "var(--pkt)", w: 2, lbl: T.pkPocket },
     { vals: P.base, ns: P.baseN, col: "var(--ctx-line)", w: 2, lbl: T.pkBase },
@@ -1744,14 +1809,26 @@ function renderApproach(mode) {
     if (lastD >= 0) {
       el("circle", { cx: xOf(lastD), cy: yOf(L.vals[lastD]).toFixed(1), r: 4,
         fill: L.col, stroke: "var(--surface)", "stroke-width": 2 }, svg);
-      el("text", { x: xOf(lastD) + 10, y: yOf(L.vals[lastD]) + 4, class: "dlabel" }, svg)
-        .textContent = `${L.lbl} ${pctTxt(L.vals[lastD])}`;
+      ends.push({ x: xOf(lastD), y: yOf(L.vals[lastD]), strong: true,
+                  txt: `${L.lbl} ${pctTxt(L.vals[lastD])}` });
     }
   });
+  ends.sort((a, b) => a.y - b.y);
+  ends.forEach((e, i) => { if (i) e.y = Math.max(e.y, ends[i - 1].y + 14); });
+  ends.forEach(e => el("text", { x: e.x + 10, y: e.y + 4,
+    class: e.strong ? "dlabel" : "tick" }, svg).textContent = e.txt);
+
   const leg = document.getElementById("pk-legend");
   lines.forEach(L => {
     const k = div("key", leg); const l = div("line", k); l.style.background = L.col;
     k.appendChild(document.createTextNode(L.lbl));
+  });
+  BM.forEach((b, i) => {
+    const k = div("key", leg);
+    const l = div("line", k);
+    // The key mirrors that line's rhythm: dots for SPY, dashes for QQQ.
+    l.style.cssText = `background:repeating-linear-gradient(90deg,var(--muted) 0 ${i ? 7 : 1.5}px,transparent ${i ? 7 : 1.5}px ${i ? 10 : 4}px)`;
+    k.appendChild(document.createTextNode(T.pkBench(b.lbl)));
   });
   [[P.refPkt, T.pkPocket, "var(--pkt)"],
    [P.refBase, T.pkBase, "var(--ctx-line)"]].forEach(([v, lbl, col]) => {
@@ -1778,12 +1855,25 @@ function renderApproach(mode) {
           // Both are %/trade, so the difference is %/trade too — and it
           // only exists on days where both have printed.
           pk === null || base === null ? null : [T.gap, pctTxt(pk - base)],
+          ...BM.map(b => {
+            const v = P.bench[b.k][d];
+            return v === null ? null : [T.pkBench(b.lbl), pctTxt(v)];
+          }),
+          // What the pocket kept after each market's own contribution over
+          // the very same holding windows. One row per index: which one you
+          // measure against changes the answer by more than a point here.
+          ...BM.map(b => {
+            const v = P.bench[b.k][d];
+            return pk === null || v === null
+              ? null : [T.pkVsMkt(b.lbl), pctTxt(pk - v)];
+          }),
         ],
         // Sample size is the honesty line, so it takes the ink slot: early
         // in either line the average is a handful of trades and one of them
         // moves it several points. Both counts even when only one line has
         // printed — a zero there is the reason the row above is missing.
-        notes: [T.pkTipNs(P.pktN[d], P.baseN[d])],
+        notes: [T.pkTipNs(P.pktN[d], P.baseN[d]),
+                BM.length ? T.pkBenchNote(P.bench.n[d]) : null],
       }));
     } else hideTip();
   });

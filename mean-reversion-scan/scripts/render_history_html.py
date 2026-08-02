@@ -697,8 +697,8 @@ const I18N = {
     pkTitle: "⭐ Pocket vs the rest",
     pkNote: "Solid: the running expectancy (avg %/signal to date) of ⭐ pocket signals vs the rest. Dashed: the backtest references.\nDotted: the index, same days and holding lengths. It settles at the close and signals at their touch, so the gap is a ceiling.",
     pkBench: n => `${n} same days`,
-    pkVsMkt: "⭐ beyond SPY",
-    pkBenchNote: n => `${n} signals matched to the index`,
+    pkVsMkt: n => `⭐ beyond ${n}`,
+    pkBenchNote: n => `${n} signals matched to both SPY and QQQ`,
     pkPocket: "⭐ Pocket", pkBase: "The rest",
     pkRef: v => `backtest +${v}%`,
     pkTipNs: (a, b) => `${a} pocket / ${b} rest resolved`,
@@ -769,8 +769,8 @@ const I18N = {
     pkTitle: "⭐ 口袋 vs 其余",
     pkNote: "实线：⭐ 口袋与其余信号各自的滚动期望（截至当日平均每单盈亏 %）。虚线：回测参考值。\n点线：同样的日子买指数、持有同样多的交易日。信号按触碰价结算、指数按收盘，所以差距偏乐观。",
     pkBench: n => `同期 ${n}`,
-    pkVsMkt: "⭐ 超出 SPY",
-    pkBenchNote: n => `${n} 个信号已对齐指数`,
+    pkVsMkt: n => `⭐ 超出 ${n}`,
+    pkBenchNote: n => `${n} 个信号 SPY / QQQ 均已对齐`,
     pkPocket: "⭐ 口袋", pkBase: "其余信号",
     pkRef: v => `回测 +${v}%`,
     pkTipNs: (a, b) => `已结算 ⭐ ${a} 个 · 其余 ${b} 个`,
@@ -846,8 +846,8 @@ const I18N = {
     pkTitle: "⭐ 口袋 vs 其餘",
     pkNote: "實線：⭐ 口袋與其餘訊號各自的滾動期望（截至當日平均每單盈虧 %）。虛線：回測參考值。\n點線：同樣的日子買指數、持有同樣多的交易日。訊號按觸碰價結算、指數按收盤，所以差距偏樂觀。",
     pkBench: n => `同期 ${n}`,
-    pkVsMkt: "⭐ 超出 SPY",
-    pkBenchNote: n => `${n} 個訊號已對齊指數`,
+    pkVsMkt: n => `⭐ 超出 ${n}`,
+    pkBenchNote: n => `${n} 個訊號 SPY / QQQ 均已對齊`,
     pkPocket: "⭐ 口袋", pkBase: "其餘訊號",
     pkRef: v => `回測 +${v}%`,
     pkTipNs: (a, b) => `已結算 ⭐ ${a} 個 · 其餘 ${b} 個`,
@@ -923,8 +923,8 @@ const I18N = {
     pkTitle: "⭐ ポケット vs その他",
     pkNote: "実線：⭐ ポケットとその他それぞれのローリング期待値（当日までの平均損益 %/シグナル）。破線：バックテストの参考値。\n点線：同じ日に指数を買い、同じ日数だけ持った場合。シグナルはタッチ価格、指数は終値で決済するため、差は甘めに出る。",
     pkBench: n => `同期間 ${n}`,
-    pkVsMkt: "⭐ の SPY 超過",
-    pkBenchNote: n => `指数と対応させたシグナル ${n} 件`,
+    pkVsMkt: n => `⭐ の ${n} 超過`,
+    pkBenchNote: n => `SPY・QQQ 双方と対応したシグナル ${n} 件`,
     pkPocket: "⭐ ポケット", pkBase: "その他",
     pkRef: v => `バックテスト +${v}%`,
     pkTipNs: (a, b) => `確定 ⭐ ${a} 件 · その他 ${b} 件`,
@@ -1000,8 +1000,8 @@ const I18N = {
     pkTitle: "⭐ 포켓 vs 나머지",
     pkNote: "실선: ⭐ 포켓과 나머지 각각의 롤링 기대값(현재까지 평균 손익 %/신호). 파선: 백테스트 참고값.\n점선: 같은 날 지수를 사서 같은 일수만큼 보유한 경우. 신호는 터치가로, 지수는 종가로 정산하므로 격차는 후하게 나옵니다.",
     pkBench: n => `같은 기간 ${n}`,
-    pkVsMkt: "⭐의 SPY 초과",
-    pkBenchNote: n => `지수에 대응시킨 신호 ${n}건`,
+    pkVsMkt: n => `⭐의 ${n} 초과`,
+    pkBenchNote: n => `SPY·QQQ 모두에 대응시킨 신호 ${n}건`,
     pkPocket: "⭐ 포켓", pkBase: "나머지",
     pkRef: v => `백테스트 +${v}%`,
     pkTipNs: (a, b) => `확정 ⭐ ${a}건 · 나머지 ${b}건`,
@@ -1520,10 +1520,14 @@ function renderGrid(minRes) {
             const v = P.bench[b.k][d];
             return v === null ? null : [T.pkBench(b.lbl), pctTxt(v)];
           }),
-          // What the pocket earned beyond the market over its own holding
-          // windows: the number the panel is really claiming.
-          pk === null || P.bench === null || P.bench.spy[d] === null
-            ? null : [T.pkVsMkt, pctTxt(pk - P.bench.spy[d])],
+          // What the pocket earned beyond each market over its own holding
+          // windows: the number the panel is really claiming. One row per
+          // index, since which one you measure against moves the answer.
+          ...BM.map(b => {
+            const v = P.bench[b.k][d];
+            return pk === null || v === null
+              ? null : [T.pkVsMkt(b.lbl), pctTxt(pk - v)];
+          }),
         ],
         // Sample size is the honesty line, so it takes the ink slot: early
         // in either line the average is a handful of trades and one of them

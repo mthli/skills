@@ -1509,7 +1509,32 @@ def pending_episodes(episodes: list, ledger: dict) -> list:
     return out
 
 
-def refresh_outcomes(bars: pd.DataFrame, spy_close: pd.Series) -> dict:
+def _index_close(symbol: str, note: str | None = None) -> pd.Series:
+    """Adjusted daily closes for one index, or an empty series.
+
+    For the fetches whose failure is survivable: the ledger treats a
+    missing index as one absent column, and --ticker mode simply drops
+    its RS rating. `note` is printed on failure when the caller has
+    something useful to say. The regime gate's own SPY fetch deliberately
+    does NOT come through here — losing SPY there changes which picks the
+    strict gate would have suppressed, so it stays loud and inline."""
+    try:
+        bars = yf.download(symbol, period=f"{DEFAULT_HISTORY_MONTHS}mo",
+                           interval="1d", auto_adjust=True, progress=False)
+        if bars is None or bars.empty:
+            raise ValueError("empty frame")
+        close = bars["Close"]
+        if isinstance(close, pd.DataFrame):
+            close = close.iloc[:, 0]
+        return close.dropna()
+    except Exception as e:
+        if note:
+            print(f"{symbol} fetch failed ({e}); {note}", file=sys.stderr)
+        return pd.Series(dtype=float)
+
+
+def refresh_outcomes(bars: pd.DataFrame, spy_close: pd.Series,
+                     qqq_close: pd.Series | None = None) -> dict:
     """Resolve pending episodes against the bars this run already holds and
     upsert them into the outcomes ledger. Returns a breakdown of the pass.
 
@@ -1551,6 +1576,11 @@ def refresh_outcomes(bars: pd.DataFrame, spy_close: pd.Series) -> dict:
         return stats
 
     spy = pd.DataFrame({"Close": spy_close})
+    # Optional: a QQQ fetch that failed costs the ledger one column, not
+    # the pass. Rows written without it keep an empty qqq_trade and the
+    # dashboard drops that line rather than drawing a hole.
+    qqq = (pd.DataFrame({"Close": qqq_close})
+           if qqq_close is not None and not qqq_close.empty else None)
     calendar = spy.index
     resolved = []
     for ep in todo:
@@ -1566,7 +1596,8 @@ def refresh_outcomes(bars: pd.DataFrame, spy_close: pd.Series) -> dict:
             continue
         o = bt.resolve_episode(ep, tb, spy, calendar, bt.DEFAULT_HORIZON,
                                bt.DEFAULT_STOP_PCT, bt.DEFAULT_ENTRY,
-                               series_ended=bt.series_has_ended(tb, calendar))
+                               series_ended=bt.series_has_ended(tb, calendar),
+                               qqq=qqq)
         if o is None:
             stats["open"] += 1                   # watch window hasn't elapsed
             continue
@@ -2210,16 +2241,9 @@ def _run_single_ticker_pipeline(args) -> dict:
             "threshold": args.vol_collapse_ratio,
         }
 
-    # SPY for RS slope (during base) and RS Rating proxy.
-    try:
-        spy_bars = yf.download("SPY", period=f"{DEFAULT_HISTORY_MONTHS}mo",
-                               interval="1d", auto_adjust=True, progress=False)
-        spy_close = spy_bars["Close"]
-        if isinstance(spy_close, pd.DataFrame):
-            spy_close = spy_close.iloc[:, 0]
-        spy_close = spy_close.dropna()
-    except Exception:
-        spy_close = pd.Series(dtype=float)
+    # SPY for RS slope (during base) and RS Rating proxy. Silent on
+    # failure: --ticker mode drops the RS rating and keeps going.
+    spy_close = _index_close("SPY")
 
     if not spy_close.empty and len(close) >= max(RS_PERIODS_TRADING_DAYS) + 1:
         rs_rating = _compute_rs_proxy(close, spy_close)
@@ -2879,7 +2903,15 @@ def main():
         # Same gate as history: --no-save means this run writes no state.
         if not args.no_outcomes:
             try:
-                refresh_outcomes(bars, spy_close)
+                # QQQ is only ever the ledger's second control column, so
+                # it is fetched here rather than with SPY: a run that
+                # writes no ledger shouldn't pay for it, nor warn about a
+                # column it was never going to fill. Separate request from
+                # SPY's on purpose — a two-ticker download reshapes the
+                # frame the regime gate reads.
+                refresh_outcomes(bars, spy_close, _index_close(
+                    "QQQ", "the ledger's qqq_trade column stays empty for "
+                           "rows written this run."))
             except Exception as e:      # never cost the user their watchlist
                 print(f"outcomes: ledger refresh failed ({e}); the watchlist "
                       f"below is unaffected. Rebuild with "
