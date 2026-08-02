@@ -11,6 +11,7 @@ Run from the skill root via:
     uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy>=1.24,<3' \
       --with 'pytest' pytest scripts/
 """
+import pathlib
 from datetime import datetime, timezone
 
 import numpy as np
@@ -368,6 +369,70 @@ def test_main_integration_call_chain_in_source():
         "main() should call filter_vol_collapse on picks")
     assert "excluded_tickers=" in src, (
         "main() should pass excluded_tickers= to dropouts_with_reason")
+
+
+def test_atr_reaches_picks_below_the_displayed_top_n():
+    """Two halves of the same guarantee: the function fills every pick, and
+    the caller hands it every ticker. Narrowing either one back to the
+    top-N would leave the ⭐️ pocket's below-cutoff rows unfilled — the
+    same bug the sector cache had, on data that cannot be backfilled."""
+    picks = [{"ticker": f"T{i}", "pivot_price": 100.0} for i in range(40)]
+    atrs = {p["ticker"]: {"atr": 2.0, "last_close": 96.0, "atr_pct": 2.08}
+            for p in picks}
+
+    out = scan.attach_atr_stops(picks, atrs, 2.5)
+    assert all(p.get("atr") == 2.0 for p in out)
+    assert all(p.get("stop_trigger") == 95.0 for p in out)
+    assert all(p.get("atr_stop_mult") == 2.5 for p in out)
+
+    # Fail loudly rather than with an IndexError if the call is ever
+    # reformatted or the variable renamed — this guard's whole job is to
+    # say clearly what broke.
+    src = pathlib.Path(scan.__file__).read_text()
+    anchor = "atrs = compute_atrs(bars,"
+    assert anchor in src, f"guard is stale: no {anchor!r} in scan.py"
+    call = src.split(anchor)[1].split(")")[0]
+    assert "top_n" not in call, f"call site narrowed to the top-N: {call}"
+
+
+def test_append_history_records_the_stop_inputs_for_every_pick(history_file):
+    """The stop-rule columns are the whole point of the schema bump, and a
+    typo in the pick keys would leave them silently blank for months. They
+    also have to reach picks BELOW the displayed top-N: the ⭐️ pocket does
+    not respect that line, so filling only the top-N would sample the data
+    on exactly the wrong side of it."""
+    picks = [
+        {"ticker": "AAA", "rank": 1, "score_rank": 1, "base_score": 60.0,
+         "base_weeks": 22.0, "pivot_price": 100.0, "signal": "⏳",
+         "last_close": 96.0, "atr": 2.0, "atr_stop_mult": 2.5},
+        # Rank 99 stands in for a pick the table never prints.
+        {"ticker": "BBB", "rank": 99, "score_rank": 99, "base_score": 40.0,
+         "base_weeks": 21.0, "pivot_price": 50.0, "signal": "📊",
+         "last_close": 47.0, "atr": 1.0, "atr_stop_mult": 2.5},
+    ]
+    scan.append_history(picks, "20260803",
+                        datetime(2026, 8, 3, 20, 0, 0, tzinfo=timezone.utc))
+
+    df = pd.read_csv(history_file).set_index("ticker")
+    assert df.loc["BBB", "atr"] == 1.0, "picks below the top-N lost their ATR"
+    for t, close, atr in (("AAA", 96.0, 2.0), ("BBB", 47.0, 1.0)):
+        assert (df.loc[t, "close"], df.loc[t, "atr"]) == (close, atr)
+        assert df.loc[t, "atr_stop_mult"] == 2.5
+
+
+def test_append_history_keeps_close_when_atr_stops_are_disabled(history_file):
+    """`--atr-stop-mult 0` skips attach_atr_stops entirely, but `close`
+    comes off the base detection, so it must still land."""
+    scan.append_history(
+        [{"ticker": "AAA", "rank": 1, "score_rank": 1, "base_score": 60.0,
+          "base_weeks": 22.0, "pivot_price": 100.0, "signal": "⏳",
+          "last_close": 96.0}],
+        "20260803", datetime(2026, 8, 3, 20, 0, 0, tzinfo=timezone.utc))
+
+    df = pd.read_csv(history_file)
+    assert df.iloc[0]["close"] == 96.0
+    assert pd.isna(df.iloc[0]["atr"])
+    assert pd.isna(df.iloc[0]["atr_stop_mult"])
 
 
 def test_prune_non_trading_days_reindexes_old_schema_file(history_file, monkeypatch):

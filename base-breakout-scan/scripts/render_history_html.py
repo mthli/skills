@@ -392,10 +392,19 @@ def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
             # The pivot moves as the base rebases, so it is a per-DAY value:
             # the buy-stop price that was live that day, not the episode's.
             pv = _n(_f(r.get("pivot_price")), 2)
-            cur["pts"].append({"d": d, "tp": tp, "pv": pv, "bw": _n(bw)})
+            # Pivot-anchored stop, resolved here rather than shipped as raw
+            # ATR: history.csv keeps the ATR precisely so any multiplier can
+            # be replayed, but the panel's job is to show the level the run
+            # actually published, and the multiplier can differ per row.
+            # Null on rows written before the ATR columns existed.
+            atr, mult = _f(r.get("atr")), _f(r.get("atr_stop_mult"))
+            sp = (_n(pv - mult * atr, 2)
+                  if pv is not None and atr is not None and mult else None)
+            cur["pts"].append({"d": d, "tp": tp, "pv": pv, "sp": sp,
+                               "bw": _n(bw)})
             pts.append({
                 "d": d, "s": si, "p": 1 if pocket else 0, "k": streak,
-                "bw": _n(bw), "tp": _n(tp, 2), "pv": pv,
+                "bw": _n(bw), "tp": _n(tp, 2), "pv": pv, "sp": sp,
                 "sc": _n(_f(r.get("base_score"))), "wd": _n(wd),
                 "e": len(eps) - 1,
             })
@@ -436,7 +445,8 @@ def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
                     # against. Base weeks rides along because it is the
                     # ranker the backtest validated; the tooltip would
                     # otherwise send the reader to the roster for it.
-                    "pv": seg[-1]["pv"], "bw": seg[-1]["bw"],
+                    "pv": seg[-1]["pv"], "sp": seg[-1]["sp"],
+                    "bw": seg[-1]["bw"],
                 })
 
         last = pts[-1]
@@ -902,6 +912,7 @@ const I18N = {
     wks: n => `${n} wks`,
     toPivot: "To pivot",
     pivotPx: "Pivot",
+    stopPx: "Stop",
     listedOn: "Listed",
     gap: "Gap",
     score: "Score",
@@ -985,6 +996,7 @@ const I18N = {
     wks: n => `${n} 周`,
     toPivot: "距触发",
     pivotPx: "触发价",
+    stopPx: "止损价",
     listedOn: "上榜",
     gap: "差距",
     score: "评分",
@@ -1073,6 +1085,7 @@ const I18N = {
     wks: n => `${n} 週`,
     toPivot: "距觸發",
     pivotPx: "觸發價",
+    stopPx: "止損價",
     listedOn: "上榜",
     gap: "差距",
     score: "評分",
@@ -1161,6 +1174,7 @@ const I18N = {
     wks: n => `${n} 週`,
     toPivot: "ピボットまで",
     pivotPx: "ピボット",
+    stopPx: "ストップ",
     listedOn: "リスト入り",
     gap: "差",
     score: "スコア",
@@ -1249,6 +1263,7 @@ const I18N = {
     wks: n => `${n}주`,
     toPivot: "피봇까지",
     pivotPx: "피봇",
+    stopPx: "손절가",
     listedOn: "등재",
     gap: "격차",
     score: "점수",
@@ -1370,6 +1385,10 @@ const pctTxt = (v, nd) => (v >= 0 ? "+" : "") + v.toFixed(nd === undefined ? 2 :
 // The pivot is the one number on this page you could act on — it is the
 // buy-stop price. US large caps only, so the $ is not a currency guess.
 const pxTxt = v => "$" + v.toFixed(2);
+// The stop carries its distance from the pivot, not from spot: these setups
+// are entered with a buy-stop AT the pivot, so that % is the per-trade risk
+// the reader would actually size against. The pivot is the row above it.
+const stopTxt = (sp, pv) => `${pxTxt(sp)} (${pctTxt((sp / pv - 1) * 100, 1)})`;
 const cssVar = v => getComputedStyle(document.documentElement).getPropertyValue(v);
 const tip = document.getElementById("tip");
 function showTip(x, y, build) {
@@ -1597,10 +1616,13 @@ function renderApproach(mode) {
         [T.listedOn, DATA.days[a.d0] + (a.tps.length > 1
           ? ` → ${DATA.days[a.d0 + a.tps.length - 1]}` : "")],
         a.bw == null ? null : [T.baseWks, T.wks(a.bw)],
-        // Then the two price rows. Spans and base length are both
-        // durations; the pivot and the distance to it are both prices, and
-        // the pivot sits next to the outcome lines that measure against it.
+        // Then the price rows. Spans and base length are both durations;
+        // the two levels come first (buy trigger, then where the trade
+        // dies), and the distance to the pivot closes the group because it
+        // is measured from spot, not from either level. The pivot also
+        // sits next to the outcome lines that measure against it.
         a.pv == null ? null : [T.pivotPx, pxTxt(a.pv)],
+        a.pv == null || a.sp == null ? null : [T.stopPx, stopTxt(a.sp, a.pv)],
         [T.toPivot, pctTxt(a.tps[a.tps.length - 1], 1)],
       ],
       notes: epLines(a),
@@ -1948,6 +1970,7 @@ function renderGrid(minDays) {
           [T.baseWks, p.bw == null ? "—" : T.wks(p.bw)],
           [T.width, p.wd == null ? "—" : p.wd.toFixed(1) + "%"],
           p.pv == null ? null : [T.pivotPx, pxTxt(p.pv)],
+          p.pv == null || p.sp == null ? null : [T.stopPx, stopTxt(p.sp, p.pv)],
           [T.toPivot, p.tp == null ? "—" : pctTxt(p.tp, 1)],
           [T.score, p.sc == null ? "—" : p.sc.toFixed(0)],
         ],

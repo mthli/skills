@@ -191,6 +191,33 @@ def test_approach_line_splits_where_days_go_missing():
     assert len(p["series"][0]["pts"]) == 4
 
 
+def test_stop_is_resolved_from_the_atr_the_run_recorded():
+    """history.csv stores raw ATR so any multiplier can be replayed; the
+    panel has to resolve it to the level the run actually published, and
+    per-row because a run can override --atr-stop-mult."""
+    rows = [{**_row(DAYS6[0], "AAA"), "atr": "2.0", "atr_stop_mult": "2.5"},
+            {**_row(DAYS6[1], "AAA"), "atr": "2.0", "atr_stop_mult": "3.0"}]
+    p = rh.build_payload(rows, {}, {})
+    pts = p["series"][0]["pts"]
+    assert [pt["sp"] for pt in pts] == [95, 94]        # pivot 100 − mult×ATR
+    # The trajectory card reads the segment's last day, same as the pivot.
+    assert [a["sp"] for a in p["approach"] if a["t"] == "AAA"] == [94]
+
+
+def test_rows_predating_the_atr_columns_carry_no_stop():
+    """Backfilling them is impossible (corporate actions rewrite the
+    adjusted series), so the row must drop out of the card, not render a
+    stop equal to the pivot."""
+    p = rh.build_payload([_row(DAYS6[0], "AAA")], {}, {})
+    assert p["series"][0]["pts"][0]["sp"] is None
+    # Either half missing is the same hole, not a 0x stop and not a stop
+    # sitting on the pivot.
+    for partial in ({**_row(DAYS6[0], "BBB"), "atr": "2.0"},
+                    {**_row(DAYS6[0], "CCC"), "atr_stop_mult": "2.5"}):
+        p2 = rh.build_payload([partial], {}, {})
+        assert p2["series"][0]["pts"][0]["sp"] is None
+
+
 def test_payload_carries_no_fields_the_page_never_reads():
     """Dead payload weight is ~50 bytes per roster row and misleads the next
     reader into thinking something consumes it."""
@@ -202,6 +229,15 @@ def test_payload_carries_no_fields_the_page_never_reads():
     assert set(p["series"][0]) == {"t", "pts", "days", "exp", "eps"}
     assert set(p["series"][0]["eps"][0]) == {"oc", "tr", "dtt", "gap", "fb",
                                              "od"}
+    # The two per-day structures carry the most fields and had no guard,
+    # which is exactly where a dead field would hide: `pts` is one entry per
+    # ticker-day across the whole roster, so an unread key here costs more
+    # than anywhere else on the page.
+    assert set(p["series"][0]["pts"][0]) == {
+        "d", "s", "p", "k", "bw", "tp", "pv", "sp", "sc", "wd", "e"}
+    assert set(p["approach"][0]) == {
+        "t", "sec", "pk", "oc", "tr", "dtt", "od", "fb", "gap", "d0", "tps",
+        "pv", "sp", "bw"}
 
 
 # ------------------------------------------------------------ sector panel
@@ -821,7 +857,7 @@ def test_the_exit_day_is_the_stop_day_when_a_trade_stops_out():
 @pytest.mark.parametrize("lang", ["en", "zh", "zht", "ja", "ko"])
 def test_every_language_has_the_control_line_strings(lang):
     block = rh.HTML_TEMPLATE.split(f"\n  {lang}: {{")[1].split("\n  },")[0]
-    for key in ("pkBench", "pkVsMkt", "pkBenchNote", "pkNote"):
+    for key in ("pkBench", "pkVsMkt", "pkBenchNote", "pkNote", "stopPx"):
         assert f"{key}:" in block, f"{lang} is missing {key}"
 
 

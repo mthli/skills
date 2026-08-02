@@ -71,12 +71,25 @@ HISTORY_COLS = [
     "run_id", "run_date", "ticker", "rank", "score_rank", "base_score",
     "base_weeks", "width_pct", "bb_pctile", "vol_dryup_ratio",
     "rs_slope_pct_per_wk", "to_pivot_pct", "pivot_price", "signal",
+    "close", "atr", "atr_stop_mult",
 ]
 # `rank` = display position after dedup + vol-collapse filter (contiguous
 # 1..N). `score_rank` = canonical pre-filter score-based ordering (survives
 # both filters), used by enrich_with_persistence so rank_delta reflects real
 # score movement, not filter-induced shift. Old history rows without
 # score_rank fall back to rank in enrich_with_persistence.
+# The last three (added 2026-08-02) exist for stop-rule research, and store
+# the *raw* ATR rather than a derived stop level on purpose: `stop_trigger`
+# would freeze whatever `--atr-stop-mult` happened to be live that day, and
+# the open question is which multiplier is right — including whether the
+# ledger's fixed 8% beats any of them. With `atr` + `pivot_price` every
+# multiplier replays on identical episodes; `atr_stop_mult` records what the
+# run actually displayed so that stays recoverable too. `close` is the
+# adjusted close the scan saw (also what `stop_now` is anchored to) and is
+# written whether or not ATR is enabled. Empty for rows before the upgrade
+# and left unfilled by design: later corporate actions rewrite the adjusted
+# series and delistings erase it, so a backfill would not reproduce what the
+# run saw.
 
 
 # ─── NYSE calendar ───────────────────────────────────────────────────────
@@ -1181,7 +1194,7 @@ def compute_atrs(bars: pd.DataFrame, tickers: list[str],
     return out
 
 
-def attach_atr_stops(picks: list[dict], top_n: int,
+def attach_atr_stops(picks: list[dict],
                      atrs: dict[str, dict], atr_mult: float) -> list[dict]:
     """Add two stop levels per pick:
       - stop_now / stop_now_pct: ATR-from-current-price. Risk if entered at
@@ -1196,13 +1209,29 @@ def attach_atr_stops(picks: list[dict], top_n: int,
     proper breakout entry.
 
     No TrailStop here: trailing makes sense for already-running positions;
-    base setups haven't triggered, so spot/pivot stops are what matters."""
-    for p in picks[:top_n]:
+    base setups haven't triggered, so spot/pivot stops are what matters.
+
+    Runs over EVERY pick, not just the displayed top-N: append_history writes
+    the whole list, and the ⭐️ pocket (BaseWks >= 20) does not respect the
+    top-N line — filling only the top-N would sample the stop-rule data on
+    exactly the wrong side of that cutoff. Same lesson the sector cache
+    learned at the call site. Costs nothing extra: compute_atrs reads the
+    bars frame already in memory."""
+    for p in picks:
         info = atrs.get(p["ticker"])
         if info is None:
             continue
         p["atr"] = round(info["atr"], 2)
         p["atr_pct"] = round(info["atr_pct"], 2)
+        # Recorded per row so history.csv can tell what the run displayed,
+        # even on a run that overrode the default. Per-pick rather than
+        # passed to append_history as a scalar so that a pick compute_atrs
+        # skipped lands with neither `atr` nor a multiplier, instead of a
+        # multiplier describing a stop that was never computed. In `--format
+        # json` this does duplicate `params.atr_stop_mult`; that run-level
+        # copy is the authoritative one for consumers, and this one exists
+        # for the CSV row.
+        p["atr_stop_mult"] = atr_mult
         # Stop-from-spot
         stop_now = info["last_close"] - atr_mult * info["atr"]
         p["stop_now"] = round(stop_now, 2)
@@ -1436,6 +1465,11 @@ def append_history(picks: list[dict], run_id: str, run_date: datetime,
                 "to_pivot_pct": p.get("to_pivot_pct"),
                 "pivot_price": p.get("pivot_price"),
                 "signal": p.get("signal"),
+                # `close` comes from the base detection, so it lands even
+                # with ATR disabled; `atr` / `atr_stop_mult` are empty then.
+                "close": p.get("last_close"),
+                "atr": p.get("atr"),
+                "atr_stop_mult": p.get("atr_stop_mult"),
             }
             for p in picks
         ],
@@ -2798,9 +2832,11 @@ def main():
     picks = enrich_with_persistence(picks, history, run_id)
 
     if args.atr_stop_mult and args.atr_stop_mult > 0:
-        top_tickers = [p["ticker"] for p in picks[: args.top_n]]
-        atrs = compute_atrs(bars, top_tickers)
-        picks = attach_atr_stops(picks, args.top_n, atrs, args.atr_stop_mult)
+        # Every pick, not just the top-N: history.csv persists the whole
+        # list and the ⭐️ pocket ignores the rank-30 line. Pure CPU on the
+        # bars already in memory — no extra fetch.
+        atrs = compute_atrs(bars, [p["ticker"] for p in picks])
+        picks = attach_atr_stops(picks, atrs, args.atr_stop_mult)
     if not args.no_sectors:
         # Tag EVERY pick, not just the top-N: append_history writes the whole
         # list, and the HTML's sector panel reads the full roster. Tagging
