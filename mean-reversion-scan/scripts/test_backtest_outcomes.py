@@ -10,8 +10,8 @@ Run (from this directory):
 import pandas as pd
 import pytest
 
-from backtest_outcomes import (Outcome, Signal, agg, bucket, load_signals,
-                               resolve_signal)
+from backtest_outcomes import (Outcome, Signal, agg, bucket, hold_days,
+                               horizon_table, load_signals, resolve_signal)
 
 HDR = ("run_id,run_date,ticker,rank,score_rank,score,rsi2,dist_5dma_pct,"
        "dist_50dma_pct,dist_200dma_pct,last_close,target_price,stop_price,"
@@ -169,6 +169,51 @@ def test_agg_empty_and_no_decisive():
     assert agg([])["win"] is None
     a = agg([Outcome(_sig(), "EXPIRED", 5, -1.0, -1.0, False, None)])
     assert a["win"] is None and a["expired"] == 100.0 and a["fwd"] is None
+
+
+def test_hold_days_counts_time_in_market():
+    # Decisive trades leave the day they print; an expired one is held to
+    # the horizon's close, which is what the Exp/day denominator needs.
+    assert hold_days(Outcome(_sig(), "WON", 2, 3.0, 3.0, False, None), 5) == 2
+    assert hold_days(Outcome(_sig(), "LOST", 1, -5.0, -5.0, False, None), 5) == 1
+    assert hold_days(Outcome(_sig(), "EXPIRED", 3, -1.0, -1.0, False, None), 3) == 3
+
+
+def test_horizon_table_scores_every_row_on_the_same_trades(capsys):
+    # AAA has a full window; BBB runs out of bars after 2 sessions, so it
+    # resolves at the 1- and 2-day horizons but is still open at 5. Scoring
+    # it in the short rows only would credit the short exit with a trade the
+    # live rule never got to finish — the whole point of the common set.
+    long_bars = _bars([100, 100, 100, 100, 104, 104],
+                      [100, 101, 101, 101, 105, 105],
+                      [99, 99, 99, 99, 103, 103],
+                      [100, 100, 100, 100, 104, 104])
+    short_bars = _bars([100, 100, 100], [100, 101, 101],
+                       [99, 99, 99], [100, 100, 100])
+    signals = [_sig(ticker="AAA"), _sig(ticker="BBB")]
+    horizon_table("T", "blurb", signals,
+                  {"AAA": long_bars, "BBB": short_bars},
+                  "close", [1, 2, 5], 5,
+                  [("All signals", lambda s: True)], min_n=1)
+    out = capsys.readouterr().out
+    assert "n=1" in out                       # BBB dropped from every row
+    assert out.count("|") and "5d **(live)**" in out
+    # The live row carries no delta against itself; the others do.
+    live = next(ln for ln in out.splitlines() if "(live)" in ln)
+    assert live.rstrip().endswith("| — | — |")
+    one_day = next(ln for ln in out.splitlines() if ln.startswith("| 1d "))
+    assert "%" in one_day.split("|")[-3]
+    # ...and a lone trade has no spread to quote, so no nan interval.
+    assert "nan" not in out and one_day.rstrip().endswith("| — |")
+
+
+def test_horizon_table_skips_thin_groups(capsys):
+    bars = _bars([100] * 6, [101] * 6, [99] * 6, [100] * 6)
+    horizon_table("T", "blurb", [_sig()], {"AAA": bars}, "close", [1, 5], 5,
+                  [("All signals", lambda s: True)])
+    # One trade is not a stratum; the group prints no table rather than a
+    # one-trade "finding".
+    assert "n=" not in capsys.readouterr().out
 
 
 def test_bucket_bounds_are_half_open():

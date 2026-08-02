@@ -75,8 +75,12 @@ python <SKILL_DIR>/scripts/render_history_html.py   # --days 60 --out <path>
 ... python <SKILL_DIR>/scripts/scan.py --vol-collapse-ratio 0
 
 # Outcome backtest: replay history.csv with the canonical target/stop trade,
-# stratified by signal attributes (see "Backtested outcomes" section)
+# stratified by signal attributes, plus the exit-horizon tables (every
+# holding period paired against the live rule on one fixed trade set —
+# this is where "should I cut it early?" gets answered, NOT from the
+# ledger's days_to_resolve). See "Backtested outcomes" section.
 ... python <SKILL_DIR>/scripts/backtest_outcomes.py
+# --target-window resets the live rule the exit-horizon tables compare to
 ... python <SKILL_DIR>/scripts/backtest_outcomes.py --target-window 10
 # Realistic execution variant: enter at the NEXT session's open instead of
 # the signal-day close (skips signals that gap past target/stop overnight)
@@ -108,7 +112,7 @@ python <SKILL_DIR>/scripts/render_history_html.py   # --days 60 --out <path>
 | `--no-sectors` | — | Disable sector tagging. Default fetches sector/industry from yfinance for top-N picks (cached, 30-day TTL) and shows a Sector column + breakdown line. |
 | `--vol-collapse-ratio` | 0.2 | Acquisition-target / lock-in filter. Same logic as the sister skills: a stock pinned at a cash buyout offer satisfies "low RSI(2)" without being tradable as mean reversion. Excludes names where 2nd-half realized vol over a 3-month window is < ratio × 1st-half vol. Default 0.2; raise to 0.3 for more aggressive exclusion (more false positives), lower to 0.15 for stricter. Hard cap 1.0. Pass `0` or negative to disable. |
 | `--persistent-min-streak` | 3 | Streak threshold for the **Stuck oversold** section. **In mean reversion, a long streak is a yellow flag, not green**: the bounce hasn't materialized after multiple runs, which suggests something structural rather than a noise overreaction. Default 3 surfaces these for review. Backtest-validated: expectancy collapses at the 3rd consecutive listing (**Backtested outcomes** #3), so don't lower this to 2. |
-| `--target-window-days` | 5 | Number of trading days within which the bounce-to-5DMA must occur for an outcome to count as WON. Connors's canonical exit is "first close ≥ 5DMA"; we use intraday high to be charitable. After this many days without target or stop hit, outcome is EXPIRED. |
+| `--target-window-days` | 5 | Number of trading days within which the bounce-to-5DMA must occur for an outcome to count as WON. Connors's canonical exit is "first close ≥ 5DMA"; we use intraday high to be charitable. After this many days without target or stop hit, outcome is EXPIRED. Backtest-validated in both directions: shortening to 1-2 days and stretching to 7-10 both cost expectancy on identical trades (**Backtested outcomes** #7), so don't move it without re-running that table. |
 
 ## Output shape
 
@@ -231,7 +235,7 @@ The historical reliability section is unique to single-ticker mode: it scans the
 
 ## Backtested outcomes (2026-05-14 → 2026-07-29 sample)
 
-`scripts/backtest_outcomes.py` replays `state/history.csv` with the exact convention the running win-rate stat uses (entry at the signal-day close, limit at the 5DMA target, stop at the ATR level, 5-day window) and stratifies by everything recorded at signal time. 1,584 resolved signals over a mostly RISK-ON tape; re-run quarterly. Findings, strongest first; full evidence, magnitudes, and caveats in `references/backtest-findings.md` (sections throughout this file reference the numbering below):
+`scripts/backtest_outcomes.py` replays `state/history.csv` with the exact convention the running win-rate stat uses (entry at the signal-day close, limit at the 5DMA target, stop at the ATR level, 5-day window), stratifies by everything recorded at signal time, and replays every alternative holding period over one fixed trade set (the exit-horizon tables). 1,584 resolved signals over a mostly RISK-ON tape; re-run quarterly. Findings, strongest first; full evidence, magnitudes, and caveats in `references/backtest-findings.md` (sections throughout this file reference the numbering below):
 
 1. **The win rate is real but not the point; expectancy is**: 92% of decisive signals win yet the system nets +0.68%/signal (stops and flat expiries give most of it back); judge every filter by expectancy. Next-open entry trims it only to +0.61%, so the edge is not an entry-timing artifact.
 2. **Score ≥ 40 plus fresh-or-second-day listing is the validated entry filter**: +1.83%/signal (95% win rate), ~3× the unfiltered baseline; it's the *absolute* score that matters, not the daily rank.
@@ -239,7 +243,7 @@ The historical reliability section is unique to single-ticker mode: it scans the
 4. **Pullback depth is bimodal**: ≤−7% washouts pay +2.28%; the −7..−4% middle zone is the trap (−0.22%, worst pocket); shallow dips are the one pocket where the canonical exit costs money.
 5. **Deeper RSI(2) is NOT better: 🔵 underperforms 🟢** (+0.37% vs +0.78%); the Score's RSI-depth component is dead weight in-sample, and the pullback/trend/frequency components carry the edge.
 6. **Signal breadth is a regime dial**: <30 emitted signals: −1.39%/signal, unrescued by Score ≥ 40; >60 (washout): +1.29%, and +2.27% on Score ≥ 40. Idiosyncratic oversold doesn't mean-revert.
-7. **The 5-day window is the right default**: the bounce edge is spent within a week; 10-day windows only add the losses back.
+7. **The 5-day window is the right default, and cutting early is the expensive mistake**: paired on identical trades, a 2-day time stop costs −0.21%/signal (⭐ pocket −0.58%) and a 1-day stop −0.58% (pocket −1.37%); 7- and 10-day windows cost −0.20% and −0.52% (pocket 10d −1.43%). Only 3- and 4-day cuts tie the live rule. Same verdict at next-open entry. Hold to target, stop, or day 5 — nothing in between pays.
 8. **Frequency penalty confirmed**: Freq60d 3-5: +0.13% vs +0.84% for 1-2; the sector skew in-sample is tape-driven, not structural.
 
 ## How to interpret (Claude's job after running)
@@ -263,6 +267,8 @@ Relay the script's markdown output **in full — every row of the top-N table an
 5. **The Stuck oversold section is more important than the top-N.** Names appearing here have failed the mean-reversion thesis; the bounce didn't come. The backtest puts numbers on it: 3rd+ consecutive listings ran −0.12%/signal vs +0.76-0.93% for day 1-2, and the worst single pocket in the whole sample was stuck names in the −7..−4% pullback zone at −1.79% (**Backtested outcomes** #3, #4). The natural next step is to investigate *why*: news search, earnings calendar, sector ETF check. That digging often surfaces information the broader market hasn't priced yet. **Never recommend buying these.** The scan flags them for analysis, not action.
 
 6. **Stop discipline is non-negotiable for this style.** The 70% win rate only turns into profit if you cap the losses. Connors-style MR is asymmetric in the wrong direction: many small wins, occasional larger losses. Without the stop, one breakdown trade can wipe out 5-10 winners. The Stop column is the hard floor; Target is the take-profit. Both persist to history so the win-rate stat reflects realistic execution.
+
+   **Say the exit rule as three levels, never as a holding period.** "5 days" is a deadline, not a plan: whichever of target, stop, or the 5th session's close comes first. In-sample, 57% of trades left at the target (avg +3.71%), 5% at the stop (−9.98%), 38% at the deadline (−2.44% drift), average time in the trade **3.35 sessions** — 23% are out on day 1. The temptation the expired bucket creates is to cut the dead ones early; **Backtested outcomes** #7 measures that and it loses money, because the loss is already taken by day 2 and a quarter of the winners land on days 3-5. Two traps to name if the user raises them: the ledger's `days_to_resolve` cannot be used to derive an exit rule (bucketing trades by how long they took conditions on the future — it says holding past day 2 averages −1.5%, and the paired test says the opposite), and a shorter rule's higher return *per day held* (2-day: +0.27%/day vs +0.20% at 5) is only real capital efficiency if the freed money has another signal to take. Improve the P&L at entry (#2), not by fiddling mid-trade.
 
 7. **Sector clustering means less here than in momentum; total breadth means a lot.** A momentum scan with 16/30 Tech tells you AI infra is the cluster trade. A mean-reversion scan with 8/30 Tech in the same week probably means the Nasdaq had a bad day: a market-wide event, not a sector edge. And market-wide is what you want: the backtest found signals on broad-washout days (>60 emitted) ran +1.29%/signal while signals on quiet days (<30) ran **−1.39%, unrescued by high scores** (**Backtested outcomes** #6). The banner's **Signal breadth** line now tiers this for you (thin / normal / washout); lead with it: a THIN banner overrides everything below it, including high-score names. Diversification still applies: pick each name from a different sector where possible, so the stops don't all fire together on one bad SPY day. **Don't confuse this with the dashboard's per-sector result panel** — that one is longitudinal (how a sector's signals have actually resolved over the whole ledger), this one is same-day cross-section (how concentrated today's list is). They answer different questions, and the same-day reading is the weaker of the two: measured across the ledger, a day's sector concentration has no monotonic relationship to outcome (mid-concentration days ran ahead of the most concentrated ones), which is exactly why the breadth tier, not the sector mix, is what the banner leads with.
 

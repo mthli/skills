@@ -24,7 +24,12 @@ rolling stat can't see:
 Beyond the single-attribute strata it reports the combined entry filter
 (Score >= 40 on a 1st-2nd-day listing), a scan-breadth stratification
 (signals emitted that run-day — quiet-day vs washout-day signals behave
-very differently), and a first-half/second-half stability split, so every
+very differently), a first-half/second-half stability split, and an
+exit-horizon test — every maximum holding period replayed over ONE fixed
+set of trades, with the delta paired per trade against the live rule, so
+"cut it if it hasn't bounced by day K" is answered by what the change
+would have earned rather than by bucketing the ledger on days-to-resolve
+(which conditions on the future and gives the opposite answer). Every
 number quoted in SKILL.md's "Backtested outcomes" section reproduces from
 this one script.
 
@@ -346,6 +351,81 @@ def bucket(outs: list[Outcome], key, bounds: list[tuple[str, float, float]]):
             for name, lo, hi in bounds]
 
 
+def hold_days(o: Outcome, horizon: int) -> int:
+    """Sessions the trade was actually held. A decisive trade leaves the day
+    its target or stop prints; an expired one is held to the horizon's close.
+    Averaged, this is time-in-market — the denominator a shorter exit rule is
+    really buying."""
+    return o.days if o.outcome in ("WON", "LOST") else horizon
+
+
+def horizon_table(title: str, blurb: str, signals: list[Signal], prices: dict,
+                  entry: str, horizons: list[int], ref: int, groups,
+                  min_n: int = 30) -> None:
+    """Exit-rule comparison on ONE fixed set of trades.
+
+    Every horizon is replayed over the same signals — those resolvable at all
+    of them — so the rows differ only by the exit rule, not by which signals
+    happened to have enough bars (the trap the old window-sensitivity table
+    fell into: a shorter window resolves signals a longer one still calls
+    open, so the two columns were scoring different trades).
+
+    The delta is PAIRED per trade against `ref`, the live rule, because that
+    difference is what changing the rule would actually have earned. Reading
+    it out of the resolved ledger instead — bucketing trades by how long they
+    took to resolve — conditions on the future and inverts the answer: those
+    buckets say holding past day 2 averages −1.5%, but that loss is measured
+    from ENTRY and had already happened by day 2. Cutting there locks it in
+    and forfeits the quarter of winners that land on days 3-5."""
+    by_h: dict[int, dict[tuple[str, str], Outcome]] = {h: {} for h in horizons}
+    for s in signals:
+        bars = prices.get(s.ticker)
+        if bars is None:
+            continue
+        for h in horizons:
+            o, status = resolve_signal(s, bars, h, entry)
+            if status == "resolved":
+                by_h[h][(s.run_day, s.ticker)] = o
+    common = [k for k in by_h[ref] if all(k in by_h[h] for h in horizons)]
+    print(f"\n### {title}\n")
+    print(blurb)
+    for gname, pred in groups:
+        keys = [k for k in common if pred(by_h[ref][k].sig)]
+        if len(keys) < min_n:
+            continue
+        base = np.array([by_h[ref][k].result for k in keys])
+        print(f"\n**{gname}** — n={len(keys)}\n")
+        print(f"| Exit by | Win% | Stop% | Flat% | Hold d | Exp% | GapExp% | "
+              f"Exp/day | Δ vs {ref}d | 95% CI |")
+        print("|---|---|---|---|---|---|---|---|---|---|")
+        for h in horizons:
+            outs = [by_h[h][k] for k in keys]
+            r = np.array([o.result for o in outs])
+            days = float(np.mean([hold_days(o, h) for o in outs]))
+            won = sum(o.outcome == "WON" for o in outs)
+            lost = sum(o.outcome == "LOST" for o in outs)
+            n = len(outs)
+            if h == ref:
+                delta = ci = "—"
+            else:
+                d = r - base
+                delta = f"{d.mean():+.3f}%"
+                # A one-trade group has no spread to quote; say so rather
+                # than printing a nan interval.
+                if n < 2:
+                    ci = "—"
+                else:
+                    se = float(d.std(ddof=1)) / np.sqrt(n)
+                    ci = (f"{d.mean() - 1.96 * se:+.2f} ~ "
+                          f"{d.mean() + 1.96 * se:+.2f}")
+            label = f"{h}d" + (" **(live)**" if h == ref else "")
+            print(f"| {label} | {100 * won / n:.0f}% | {100 * lost / n:.0f}% | "
+                  f"{100 * (n - won - lost) / n:.0f}% | {days:.2f} | "
+                  f"{r.mean():+.2f}% | "
+                  f"{np.mean([o.gap_result for o in outs]):+.2f}% | "
+                  f"{r.mean() / days:+.3f}% | {delta} | {ci} |")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--history", type=Path, default=HISTORY_CSV)
@@ -536,24 +616,35 @@ def main() -> None:
     if sector_groups:
         print(strata_table("By sector (n ≥ 60 only)", sector_groups))
 
-    # Window sensitivity — re-resolve everything at alternative windows.
-    print("\n### Window sensitivity (aggregate)\n")
-    print("| Window | n | dec | Win% | Expired% | d→T | Exp% | GapExp% | "
-          "NoExit% |")
-    print("|---|---|---|---|---|---|---|---|---|")
-    for w in (3, 5, 10):
-        outs_w = []
-        for s in signals:
-            if s.ticker not in prices:
-                continue
-            o, status = resolve_signal(s, prices[s.ticker], w, args.entry)
-            if status == "resolved":
-                outs_w.append(o)
-        aw = agg(outs_w)
-        print(f"| {w}d | {aw['n']} | {aw['dec']} | {fmt(aw['win'], '%', 0)} | "
-              f"{fmt(aw['expired'], '%', 0)} | {fmt(aw['days_to_t'])} | "
-              f"{fmt(aw['exp'], '%', 2)} | {fmt(aw['gap_exp'], '%', 2)} | "
-              f"{fmt(aw['fwd'], '%', 2)} |")
+    # Exit-rule sensitivity, both directions, paired on a fixed trade set.
+    W = args.target_window
+    horizon_groups = [
+        ("All signals", lambda s: True),
+        ("⭐ pocket (Score≥40 & spell≤2)",
+         lambda s: s.score >= 40 and s.day_of_spell <= 2),
+    ]
+    horizon_table(
+        f"Exit horizon — time stops vs the live {W}-day rule",
+        "Same trades, same target and same stop; only the maximum holding "
+        "period moves. This is the \"cut it if it hasn't bounced by day K\" "
+        "rule, and Δ is what adopting it would have earned per trade.",
+        signals, prices, args.entry, sorted({1, 2, 3, 4, W}), W,
+        horizon_groups)
+    horizon_table(
+        f"Exit horizon — longer windows vs the live {W}-day rule",
+        "The other direction: more time for the bounce. Paired on the "
+        "signals that have bars for the longest horizon, so n is smaller "
+        "than the table above and the two are not comparable row-for-row.",
+        signals, prices, args.entry, sorted({W, W + 2, W * 2}), W,
+        horizon_groups)
+
+    print("\n_Exit-horizon columns: Win%/Stop%/Flat% = share of trades "
+          "leaving at the target, at the stop, and at the horizon's close; "
+          "Hold d = average sessions in the trade; Exp/day = Exp% divided by "
+          "it, i.e. the capital-efficiency reading — a shorter rule can earn "
+          "more per day held while earning less per trade, which only pays "
+          "if the freed capital has another signal to go to. Δ and its "
+          "interval are paired per trade against the live rule._")
 
     print("\n_Columns: n = resolved signals; dec = decisive (target or stop "
           "hit); Win% = WON/dec; d→T = avg days to target among wins; Exp% = "
