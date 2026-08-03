@@ -145,11 +145,22 @@ This is the section that can do harm if written lazily, so frame it honestly:
   *ratio* lead over the level: > 1 (inverted) = acute near-term stress, < 1
   (contango) = calm; on a fast overnight move the live ratio beats the
   end-of-day cache.
-- **Raise-wall no-chase (TSM 07-17, AMD 07-27, FTNT 07-30; all three
+- **Raise-wall no-chase (TSM 07-17, AMD 07-27, FTNT 07-30, CORT 07-31; all
   round-tripped).** Multiple same-morning analyst price-target raises stacked
   on an already-large premarket gap is a crowding gauge, not confirmation:
   stalk the pullback, don't chase. Weight genuine upgrades and downgrades over
-  a routine "maintains + PT nudge".
+  a routine "maintains + PT nudge". **Boundary (07-31): this is a
+  don't-chase-the-*gap* rule, not a bearish-on-the-*name* rule — it needs a gap
+  to apply to.** A raise-wall on a name printing *flat* premarket is the
+  pullback the rule tells you to stalk, not a name to avoid: FTNT −0.16%
+  premarket → **+4.99%** close on the day the brief filed it under avoid.
+- **Grade index-level tests with breadth attached (07-30, 07-31).** A
+  close-graded level test answers *did it hold*, not *on what*. Pair every
+  verdict with RSP-vs-SPY and the green-sector count: a level held on
+  participation is a real signal; the same close carried by one megacap is a
+  weak one. 07-31 passed both tests while **RSP closed −0.17% against SPY
+  +0.72%** with 6 of 11 sectors red and AMZN alone inside it — the level held,
+  the "capex board bid underneath" attribution was false.
 - **Grade catalyst claims by % of gap kept at the close, per name.** > 70%
   kept = the catalyst is real for that name; < 30% = it traded like sympathy
   (07-20 SIMO inverted inside the catalyst bucket; 07-30 FTNT kept 10% of its
