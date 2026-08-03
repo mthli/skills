@@ -77,6 +77,11 @@ class Appearance:
     base_weeks: float
     width_pct: float
     rank: int
+    # VCP annotation (history rows from 2026-08-03 on; None before that).
+    # Kept optional so old ledgers replay unchanged.
+    vcp_is_vcp: bool | None = None
+    vcp_contractions: float | None = None
+    vcp_ratio: float | None = None
 
 
 @dataclass
@@ -102,6 +107,20 @@ class Episode:
                    key=lambda s: order.get(s.strip("*"), 0))
 
 
+def _opt_float(v) -> float | None:
+    try:
+        return float(v) if v not in (None, "") else None
+    except (TypeError, ValueError):
+        return None
+
+
+def _opt_bool(v) -> bool | None:
+    """Parse pandas' bool serialization ('True'/'False'); ''/missing → None."""
+    if v in (None, ""):
+        return None
+    return str(v).strip().lower() == "true"
+
+
 def load_episodes(history_path: Path) -> tuple[list[Episode], list[str]]:
     with open(history_path, newline="", encoding="utf-8") as f:
         rows = [r for r in csv.DictReader(f) if r.get("rank")]
@@ -122,6 +141,9 @@ def load_episodes(history_path: Path) -> tuple[list[Episode], list[str]]:
             base_weeks=float(r["base_weeks"]),
             width_pct=float(r["width_pct"]),
             rank=int(r["rank"]),
+            vcp_is_vcp=_opt_bool(r.get("vcp_is_vcp")),
+            vcp_contractions=_opt_float(r.get("vcp_contractions")),
+            vcp_ratio=_opt_float(r.get("vcp_ratio")),
         ))
 
     episodes: list[Episode] = []
@@ -822,6 +844,30 @@ def main() -> None:
         outcomes, lambda x: x.width_pct,
         [("<10%", 0, 10), ("10–15%", 10, 15), (">15%", 15, 99)]),
         args.horizon))
+
+    # VCP annotation strata — only once history rows carry the columns
+    # (2026-08-03 on). Two tables: the raw split, then the same split held
+    # to the sub-20wk cohort so a "VCP edge" can't be base length in
+    # disguise (the finding #10 control that already killed RS slope's
+    # apparent band).
+    annotated = [o for o in outcomes if o.ep.start.vcp_is_vcp is not None]
+    if annotated:
+        vcp_split = [
+            ("VCP geometry ✓", [o for o in annotated
+                                if o.ep.start.vcp_is_vcp]),
+            ("non-VCP", [o for o in annotated
+                         if not o.ep.start.vcp_is_vcp]),
+            ("unannotated (pre-2026-08-03)",
+             [o for o in outcomes if o.ep.start.vcp_is_vcp is None]),
+        ]
+        print(strata_table("By VCP annotation at episode start", vcp_split,
+                           args.horizon))
+        sub20 = [o for o in annotated if o.ep.start.base_weeks < 20]
+        print(strata_table(
+            "By VCP annotation, sub-20wk cohort only (base-length control)",
+            [("VCP geometry ✓", [o for o in sub20 if o.ep.start.vcp_is_vcp]),
+             ("non-VCP", [o for o in sub20 if not o.ep.start.vcp_is_vcp])],
+            args.horizon))
 
     print(strata_table("By days-to-trigger (triggered only)", [
         (name, [o for o in trig if o.days_to_trigger is not None

@@ -504,6 +504,99 @@ class TestComputeRsProxy:
         assert 95 <= rating <= 99
 
 
+# ─── VCP sequence annotation ─────────────────────────────────────────────
+def make_contraction_window(depths_pct: list[float], leg: int = 8,
+                            start: float = 200.0) -> pd.Series:
+    """Base window that pulls back by each given depth in turn, recovering
+    to 99% of the prior high between legs — a synthetic VCP footprint."""
+    vals = [start]
+    high = start
+    for d in depths_pct:
+        low = high * (1 - d / 100)
+        vals += list(np.linspace(vals[-1], low, leg + 1))[1:]
+        next_high = high * 0.99
+        vals += list(np.linspace(low, next_high, leg + 1))[1:]
+        high = next_high
+    return pd.Series(vals, index=daily_index(len(vals)), dtype=float)
+
+
+class TestDetectVcpSequence:
+    def test_textbook_contraction_sequence_is_vcp(self):
+        close = make_contraction_window([20, 10, 4])
+        out = scan.detect_vcp_sequence(close, None)
+        assert out["vcp_contractions"] == 3
+        assert out["vcp_is_vcp"] is True
+        assert out["vcp_ratio"] == pytest.approx(0.2, abs=0.05)
+        assert out["vcp_last_depth_pct"] == pytest.approx(4.0, abs=0.5)
+        # Handle pivot = the high starting the last leg: 200 × 0.99² ≈ 196.
+        assert out["vcp_handle_pivot"] == pytest.approx(196.0, abs=1.0)
+
+    def test_expanding_volatility_is_not_vcp(self):
+        close = make_contraction_window([4, 10, 20])
+        out = scan.detect_vcp_sequence(close, None)
+        assert out["vcp_contractions"] == 3
+        assert out["vcp_is_vcp"] is False
+
+    def test_flat_window_has_no_contractions(self):
+        close = make_close([200.0] * 40)
+        out = scan.detect_vcp_sequence(close, None)
+        assert out["vcp_contractions"] == 0
+        assert out["vcp_is_vcp"] is False
+        assert out["vcp_depths"] is None
+
+    def test_single_contraction_not_enough(self):
+        # One completed pullback: a real leg, but below VCP_MIN_CONTRACTIONS.
+        close = make_contraction_window([10])
+        out = scan.detect_vcp_sequence(close, None)
+        assert out["vcp_contractions"] == 1
+        assert out["vcp_is_vcp"] is False
+        assert out["vcp_ratio"] is None
+
+    def test_volume_contraction_measured_but_not_gating(self):
+        close = make_contraction_window([20, 10, 4])
+        rising = pd.Series(np.linspace(1e6, 2e6, len(close)),
+                           index=close.index)
+        out = scan.detect_vcp_sequence(close, rising)
+        # Volume EXPANDS into the last leg — ratio records it, boolean
+        # (geometry-only by design; see backtest finding #2) still passes.
+        assert out["vcp_vol_contraction"] > 1.0
+        assert out["vcp_is_vcp"] is True
+        falling = pd.Series(np.linspace(2e6, 1e6, len(close)),
+                            index=close.index)
+        assert scan.detect_vcp_sequence(
+            close, falling)["vcp_vol_contraction"] < 1.0
+
+    def test_detect_base_carries_vcp_keys(self):
+        uptrend = list(np.linspace(100, 200, 200))
+        flat = [200.0] * 60
+        close = make_close(uptrend + flat)
+        vol = make_volume(len(close))
+        base = scan.detect_base(close, vol)
+        assert base is not None
+        assert "vcp_is_vcp" in base and "vcp_contractions" in base
+        # A dead-flat base has no swings, hence no contractions.
+        assert base["vcp_contractions"] == 0
+        assert base["vcp_is_vcp"] is False
+
+
+class TestHistoryCarriesVcpColumns:
+    def test_append_history_round_trip(self, tmp_path, monkeypatch):
+        from datetime import timezone
+        monkeypatch.setattr(scan, "HISTORY_FILE", tmp_path / "history.csv")
+        pick = _pick(vcp_contractions=3, vcp_depths="18.2>9.1>4.0",
+                     vcp_ratio=0.22, vcp_last_depth_pct=4.0,
+                     vcp_handle_pivot=196.02, vcp_vol_contraction=0.61,
+                     vcp_is_vcp=True)
+        scan.append_history([pick], "20260803",
+                            datetime(2026, 8, 3, 20, 0, tzinfo=timezone.utc))
+        df = pd.read_csv(tmp_path / "history.csv")
+        row = df.iloc[0]
+        assert bool(row["vcp_is_vcp"]) is True
+        assert row["vcp_depths"] == "18.2>9.1>4.0"
+        assert row["vcp_contractions"] == 3
+        assert row["vcp_ratio"] == pytest.approx(0.22)
+
+
 # ─── Slim/verbose table + Sig strip (2026-07-31 readability redesign) ────
 def _pick(**over):
     p = {
@@ -515,6 +608,8 @@ def _pick(**over):
         "rank_delta": -1, "first_seen": "2026-05-12",
         "stop_trigger": 104.68, "stop_trigger_pct": -3.6,
         "validated_pocket": True,
+        "vcp_contractions": 3, "vcp_depths": "18.2>9.1>4.0",
+        "vcp_ratio": 0.22, "vcp_is_vcp": True,
     }
     p.update(over)
     return p
@@ -527,17 +622,24 @@ class TestRenderTableSlimVerbose:
                     "Sig", "Stop@trigger", "Streak"):
             assert col in out
         for col in ("| RS |", "Smooth%", "BB%ile", "Vol↓", "RSslope%/wk",
-                    "RankΔ", "FirstSeen"):
+                    "VCP", "RankΔ", "FirstSeen"):
             assert col not in out
         assert "⭐️" in out          # pocket prefix survives the slim cut
 
     def test_verbose_restores_diagnostics(self):
         out = scan.render_table([_pick()], 5, verbose=True)
         for col in ("| RS |", "Smooth%", "BB%ile", "Vol↓", "RSslope%/wk",
-                    "RankΔ", "FirstSeen"):
+                    "| VCP |", "RankΔ", "FirstSeen"):
             assert col in out
         assert "-1 ↘" in out
         assert "0.71" in out
+        assert "18.2>9.1>4.0 ✓" in out
+
+    def test_verbose_vcp_cell_without_flag_shows_cross(self):
+        out = scan.render_table([_pick(vcp_is_vcp=False)], 5, verbose=True)
+        assert "18.2>9.1>4.0 ✗" in out
+        out2 = scan.render_table([_pick(vcp_depths=None)], 5, verbose=True)
+        assert "✓" not in out2 and "✗" not in out2
 
     def test_sig_strip_counts_all_four(self):
         picks = [_pick(signal=s) for s in ("🔥", "📊", "📊", "⏳")]

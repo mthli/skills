@@ -72,24 +72,32 @@ HISTORY_COLS = [
     "base_weeks", "width_pct", "bb_pctile", "vol_dryup_ratio",
     "rs_slope_pct_per_wk", "to_pivot_pct", "pivot_price", "signal",
     "close", "atr", "atr_stop_mult",
+    "vcp_contractions", "vcp_depths", "vcp_ratio", "vcp_last_depth_pct",
+    "vcp_handle_pivot", "vcp_vol_contraction", "vcp_is_vcp",
 ]
 # `rank` = display position after dedup + vol-collapse filter (contiguous
 # 1..N). `score_rank` = canonical pre-filter score-based ordering (survives
 # both filters), used by enrich_with_persistence so rank_delta reflects real
 # score movement, not filter-induced shift. Old history rows without
 # score_rank fall back to rank in enrich_with_persistence.
-# The last three (added 2026-08-02) exist for stop-rule research, and store
-# the *raw* ATR rather than a derived stop level on purpose: `stop_trigger`
-# would freeze whatever `--atr-stop-mult` happened to be live that day, and
-# the open question is which multiplier is right — including whether the
-# ledger's fixed 8% beats any of them. With `atr` + `pivot_price` every
-# multiplier replays on identical episodes; `atr_stop_mult` records what the
-# run actually displayed so that stays recoverable too. `close` is the
-# adjusted close the scan saw (also what `stop_now` is anchored to) and is
-# written whether or not ATR is enabled. Empty for rows before the upgrade
-# and left unfilled by design: later corporate actions rewrite the adjusted
-# series and delistings erase it, so a backfill would not reproduce what the
-# run saw.
+# close/atr/atr_stop_mult (added 2026-08-02) exist for stop-rule research,
+# and store the *raw* ATR rather than a derived stop level on purpose:
+# `stop_trigger` would freeze whatever `--atr-stop-mult` happened to be live
+# that day, and the open question is which multiplier is right — including
+# whether the ledger's fixed 8% beats any of them. With `atr` + `pivot_price`
+# every multiplier replays on identical episodes; `atr_stop_mult` records
+# what the run actually displayed so that stays recoverable too. `close` is
+# the adjusted close the scan saw (also what `stop_now` is anchored to) and
+# is written whether or not ATR is enabled. Empty for rows before the
+# upgrade and left unfilled by design: later corporate actions rewrite the
+# adjusted series and delistings erase it, so a backfill would not reproduce
+# what the run saw.
+# The vcp_* block (added 2026-08-03) records each base's Volatility
+# Contraction Pattern geometry as a HYPOTHESIS under test — nothing reads it
+# for scoring or ranking. Definition and the planned quarterly
+# stratification (inside the sub-20wk cohort, finding #10's control) live
+# with the VCP constants above detect_vcp_sequence. Empty before 2026-08-03
+# and unfilled by the same no-backfill reasoning as the ATR block.
 
 
 # ─── NYSE calendar ───────────────────────────────────────────────────────
@@ -510,6 +518,117 @@ LOOKBACK_FOR_BASE_SEARCH = 252  # 1 year window for finding the anchor
 # typical-day noise in liquid large-caps without flagging healthy small swings.
 SMOOTH_BAND_PCT = 2.0
 
+# ─── VCP annotation (data collection since 2026-08-03) ──────────────────
+# Annotates each detected base with Minervini's Volatility Contraction
+# Pattern geometry: successive pullbacks (swing high → swing low) whose
+# depths shrink left to right (e.g. 20% → 10% → 4%). Recorded to
+# history.csv as a HYPOTHESIS under test, not a signal: the composite
+# Score ignores it, ranking ignores it, and the boolean is geometry-only —
+# the doctrine's volume half is recorded separately (vcp_vol_contraction)
+# because the outcome backtest found deep dry-up INVERTED in this universe
+# (backtest findings #2/#10). Quarterly: stratify outcomes by vcp_is_vcp
+# inside the sub-20wk cohort (finding #10's control, so any "VCP edge"
+# can't be base length in disguise) before believing it.
+VCP_SWING_ORDER = 5        # swing point = extreme of a ±5-bar neighborhood
+VCP_MIN_CONTRACTIONS = 2   # Minervini: 2-6 contractions ("T"s)
+VCP_MAX_CONTRACTIONS = 6
+VCP_STEP_TOLERANCE = 1.15  # each depth may exceed its predecessor by ≤15%
+VCP_OVERALL_RATIO_MAX = 0.5   # last/first depth must at least halve
+VCP_LAST_DEPTH_MAX_PCT = 10.0  # final contraction in single digits
+
+
+def detect_vcp_sequence(close_bars: pd.Series,
+                        volume_bars: pd.Series | None) -> dict:
+    """Measure the VCP geometry of an already-detected base window.
+
+    Zigzags the window into alternating swing highs/lows (a swing point is
+    the extreme of its ±VCP_SWING_ORDER-bar neighborhood; runs of same-type
+    swings merge to the most extreme bar, so plateaus don't double-count),
+    then reads each completed high→low leg as one "contraction" with depth
+    (high − low) / high. `vcp_is_vcp` is the doctrine's claim as a boolean:
+    2-6 contractions, depths non-increasing (±VCP_STEP_TOLERANCE wobble),
+    at least halving overall, final one in single digits. An in-progress
+    pullback (a high with no confirmed low after it) is not counted — its
+    depth would understate until the leg completes.
+
+    A dead-flat window has no swings, hence zero contractions and
+    vcp_is_vcp=False: that's a flat base, not a VCP, by design."""
+    out = {
+        "vcp_contractions": 0,
+        "vcp_depths": None,
+        "vcp_ratio": None,
+        "vcp_last_depth_pct": None,
+        "vcp_handle_pivot": None,
+        "vcp_vol_contraction": None,
+        "vcp_is_vcp": False,
+    }
+    n = len(close_bars)
+    if n < 2 * VCP_SWING_ORDER + 1:
+        return out
+    vals = close_bars.to_numpy(dtype=float)
+
+    swings: list[list] = []  # [bar_index, "H"|"L"]
+    for i in range(n):
+        lo = max(0, i - VCP_SWING_ORDER)
+        hi = min(n, i + VCP_SWING_ORDER + 1)
+        w = vals[lo:hi]
+        if w.max() == w.min():
+            continue
+        if vals[i] == w.max():
+            swings.append([i, "H"])
+        elif vals[i] == w.min():
+            swings.append([i, "L"])
+    merged: list[list] = []
+    for idx, kind in swings:
+        if merged and merged[-1][1] == kind:
+            j = merged[-1][0]
+            if (vals[idx] > vals[j]) if kind == "H" else (vals[idx] < vals[j]):
+                merged[-1][0] = idx
+        else:
+            merged.append([idx, kind])
+
+    legs = []  # (high_idx, low_idx, depth_pct)
+    for k in range(len(merged) - 1):
+        (h_idx, h_kind), (l_idx, l_kind) = merged[k], merged[k + 1]
+        if h_kind == "H" and l_kind == "L" and vals[h_idx] > 0:
+            depth = (vals[h_idx] - vals[l_idx]) / vals[h_idx] * 100
+            if depth > 0:
+                legs.append((h_idx, l_idx, depth))
+    if not legs:
+        return out
+
+    depths = [d for _, _, d in legs]
+    n_c = len(depths)
+    out["vcp_contractions"] = n_c
+    out["vcp_depths"] = ">".join(f"{d:.1f}" for d in depths)
+    out["vcp_last_depth_pct"] = round(depths[-1], 1)
+    # Handle pivot: the high that starts the final contraction — the buy
+    # point VCP doctrine actually uses (vs our conservative base high).
+    # Recorded so a later backtest can replay handle-pivot entries.
+    out["vcp_handle_pivot"] = round(float(vals[legs[-1][0]]), 2)
+    if n_c >= 2 and depths[0] > 0:
+        out["vcp_ratio"] = round(depths[-1] / depths[0], 2)
+
+    # Volume signature: mean volume during the last completed leg vs the
+    # first (the doctrine's "quiet right side"). Kept OUT of the boolean —
+    # outcome finding #2 measured deep dry-up as inverted in this sample.
+    if volume_bars is not None and len(volume_bars) == n and n_c >= 2:
+        v_first = float(volume_bars.iloc[legs[0][0]:legs[0][1] + 1].mean())
+        v_last = float(volume_bars.iloc[legs[-1][0]:legs[-1][1] + 1].mean())
+        if v_first > 0 and not pd.isna(v_last):
+            out["vcp_vol_contraction"] = round(v_last / v_first, 2)
+
+    monotone = all(depths[k + 1] <= depths[k] * VCP_STEP_TOLERANCE
+                   for k in range(n_c - 1))
+    out["vcp_is_vcp"] = bool(
+        VCP_MIN_CONTRACTIONS <= n_c <= VCP_MAX_CONTRACTIONS
+        and monotone
+        and depths[0] > 0
+        and depths[-1] / depths[0] <= VCP_OVERALL_RATIO_MAX
+        and depths[-1] <= VCP_LAST_DEPTH_MAX_PCT
+    )
+    return out
+
 
 def detect_base(close: pd.Series, volume: pd.Series,
                 min_base_weeks: float = DEFAULT_MIN_BASE_WEEKS,
@@ -673,6 +792,11 @@ def detect_base(close: pd.Series, volume: pd.Series,
     best["smoothness_pct"] = (round(smoothness_pct, 1)
                               if smoothness_pct is not None else None)
     best["last_close"] = last
+    # VCP annotation on the same window smoothness used. Volume aligns by
+    # reindex (missing bars → NaN, which the leg means skip).
+    vcp_vol = (volume.reindex(base_bars.index)
+               if volume is not None and len(base_bars) else None)
+    best.update(detect_vcp_sequence(base_bars, vcp_vol))
     return best
 
 
@@ -1470,6 +1594,13 @@ def append_history(picks: list[dict], run_id: str, run_date: datetime,
                 "close": p.get("last_close"),
                 "atr": p.get("atr"),
                 "atr_stop_mult": p.get("atr_stop_mult"),
+                "vcp_contractions": p.get("vcp_contractions"),
+                "vcp_depths": p.get("vcp_depths"),
+                "vcp_ratio": p.get("vcp_ratio"),
+                "vcp_last_depth_pct": p.get("vcp_last_depth_pct"),
+                "vcp_handle_pivot": p.get("vcp_handle_pivot"),
+                "vcp_vol_contraction": p.get("vcp_vol_contraction"),
+                "vcp_is_vcp": p.get("vcp_is_vcp"),
             }
             for p in picks
         ],
@@ -1939,6 +2070,14 @@ def score_tickers(closes: dict[str, pd.Series],
             "signal": signal,
             "last_close": base["last_close"],
             "validated_pocket": base["base_weeks"] >= VALIDATED_BASE_WEEKS,
+            # VCP annotation passthrough — hypothesis columns, not signal.
+            "vcp_contractions": base.get("vcp_contractions"),
+            "vcp_depths": base.get("vcp_depths"),
+            "vcp_ratio": base.get("vcp_ratio"),
+            "vcp_last_depth_pct": base.get("vcp_last_depth_pct"),
+            "vcp_handle_pivot": base.get("vcp_handle_pivot"),
+            "vcp_vol_contraction": base.get("vcp_vol_contraction"),
+            "vcp_is_vcp": base.get("vcp_is_vcp"),
         })
 
     results.sort(key=lambda r: -r["base_score"])
@@ -2057,9 +2196,9 @@ def render_table(picks: list[dict], top_n: int, verbose: bool = False) -> str:
     """Top-N table. The slim default keeps the decision columns: BaseWks
     (the backtest-validated ranker), Score, Width%, pivot geometry, Sig,
     Stop@trigger, Streak. The diagnostic columns (RS, Smooth%, BB%ile,
-    Vol↓, RSslope%/wk, RankΔ, FirstSeen) print only with verbose=True —
-    they feed the Score rather than the entry decision. JSON carries every
-    field either way."""
+    Vol↓, RSslope%/wk, VCP, RankΔ, FirstSeen) print only with verbose=True —
+    they feed the Score rather than the entry decision (VCP feeds neither;
+    it's the hypothesis annotation). JSON carries every field either way."""
     rows = picks[:top_n]
     if not rows:
         return "(no picks passed the filter)"
@@ -2080,7 +2219,7 @@ def render_table(picks: list[dict], top_n: int, verbose: bool = False) -> str:
     if show_smooth:
         headers.append("Smooth%")
     if verbose:
-        headers += ["BB%ile", "Vol↓", "RSslope%/wk"]
+        headers += ["BB%ile", "Vol↓", "RSslope%/wk", "VCP"]
     headers += ["ToPivot%", "Pivot", "Sig"]
     if show_stop:
         # Stop @ trigger (pivot-anchored) is the canonical stop for these
@@ -2125,10 +2264,17 @@ def render_table(picks: list[dict], top_n: int, verbose: bool = False) -> str:
             bb = p.get("bb_pctile")
             vol_dryup = p.get("vol_dryup_ratio")
             rs_slope = p.get("rs_slope_pct_per_wk")
+            # VCP cell: the contraction-depth chain plus a ✓/✗ verdict on
+            # the geometry test, e.g. "18.2>9.1>4.0 ✓". Chain without a ✓
+            # means the sequence exists but fails the tightening criteria.
+            vcp_depths = p.get("vcp_depths")
+            vcp_cell = (f"{vcp_depths} {'✓' if p.get('vcp_is_vcp') else '✗'}"
+                        if vcp_depths else "—")
             row += [
                 f"{bb:.0f}" if bb is not None else "—",
                 f"{vol_dryup:.2f}" if vol_dryup is not None else "—",
                 f"{rs_slope:+.2f}" if rs_slope is not None else "—",
+                vcp_cell,
             ]
         row += [
             f"{p['to_pivot_pct']:+.1f}",
@@ -2486,6 +2632,23 @@ def _render_single_ticker_markdown(args, result: dict) -> None:
           f"{base.get('vol_dryup_ratio', '—')}")
     print(f"- Today's volume vs 20d avg: "
           f"{base.get('today_vol_ratio', '—')}×")
+    # VCP annotation — descriptive only; no outcome data validates it yet
+    # (recorded to history since 2026-08-03 precisely to test it).
+    if base.get("vcp_contractions"):
+        verdict = "yes" if base.get("vcp_is_vcp") else "no"
+        vol_c = base.get("vcp_vol_contraction")
+        vol_note = (f", leg-volume ratio {vol_c:.2f}"
+                    if vol_c is not None else "")
+        handle = base.get("vcp_handle_pivot")
+        handle_note = (f", handle high ${handle:.2f}"
+                       if handle is not None else "")
+        print(f"- VCP geometry: {base['vcp_contractions']} contraction(s) "
+              f"[{base['vcp_depths']}%]{vol_note}{handle_note} → "
+              f"tightening sequence: {verdict} (hypothesis metric, "
+              f"unvalidated)")
+    else:
+        print(f"- VCP geometry: no completed contractions in the base "
+              f"window (flat or single-leg range)")
 
     # Stage 3
     q = result["stages"]["quality"]
@@ -2730,11 +2893,11 @@ def build_argparser() -> argparse.ArgumentParser:
     ap.add_argument("--verbose", action="store_true",
                     help=("Full diagnostics: adds the diagnostic table "
                           "columns (RS, Smooth%%, BB%%ile, Vol↓, "
-                          "RSslope%%/wk, RankΔ, FirstSeen; the slim default "
-                          "keeps the decision columns) and prints pipeline "
-                          "funnel detail (how many names passed each filter "
-                          "stage) to stderr. JSON always carries every "
-                          "field."))
+                          "RSslope%%/wk, VCP, RankΔ, FirstSeen; the slim "
+                          "default keeps the decision columns) and prints "
+                          "pipeline funnel detail (how many names passed "
+                          "each filter stage) to stderr. JSON always "
+                          "carries every field."))
     return ap
 
 
@@ -3103,7 +3266,7 @@ def main():
     print(render_table(picks, args.top_n, verbose=args.verbose))
     if picks[: args.top_n] and not args.verbose:
         print(f"\n_Diagnostic columns (RS, Smooth%, BB%ile, Vol↓, "
-              f"RSslope%/wk, RankΔ, FirstSeen): --verbose_")
+              f"RSslope%/wk, VCP, RankΔ, FirstSeen): --verbose_")
     # Legend for the Sig `*` marker — printed only when at least one pick
     # is in breakout mode (so we don't add noise on quiet days). Pulls
     # the "N days" wording from the constant so the legend stays in sync
