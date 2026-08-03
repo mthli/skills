@@ -317,7 +317,10 @@ Deliberate design choices:
 - **`vcp_handle_pivot`** records the high of the final contraction — the entry VCP doctrine actually uses, typically a few percent below this scan's conservative base-high pivot — so handle-entry vs base-high-entry becomes replayable later.
 - **The test plan.** `backtest_outcomes.py` stratifies by the flag automatically once annotated rows exist in history, including a sub-20-week-cohort split so a "VCP edge" can't be base length in disguise — the finding #10 control that already killed RS slope's apparent band. Until roughly a quarter of annotated rows accumulate, treat ✓ as vocabulary, not conviction.
 
-If the flag survives that control it earns a filter or ranking role; if not, it retires as a few dead columns. One prior to keep in mind when reading ✓s: Minervini's VCP record comes from mid/small-cap growth stocks, while this scan's default universe is ≥$5B large caps, where bases are smoother and contraction sequences fainter — if the hypothesis deserves a test in its native habitat, `--min-market-cap` is the knob.
+If the flag survives that control it earns a filter or ranking role; if not, it retires as a few dead columns. Two priors to keep in mind when reading ✓s:
+
+- **The flag anti-correlates with base length by construction, not by market information.** Swing granularity is fixed at ±5 bars regardless of base length, so a 40-week base fragments into many small legs and near-never passes the ≤6-count and monotone tests, while a 8-12-week base has room for exactly the 2-4 clean legs the test wants. A low ✓ rate among long bases is the measuring stick, not the market. The definition is held fixed anyway so annotated rows stay comparable quarter over quarter, and the sub-20wk control absorbs the bias where it matters — at the conclusion layer.
+- Minervini's VCP record comes from mid/small-cap growth stocks, while this scan's default universe is ≥$5B large caps, where bases are smoother and contraction sequences fainter — if the hypothesis deserves a test in its native habitat, `--min-market-cap` is the knob.
 
 ## How to interpret (Claude's job after running)
 

@@ -529,6 +529,14 @@ SMOOTH_BAND_PCT = 2.0
 # (backtest findings #2/#10). Quarterly: stratify outcomes by vcp_is_vcp
 # inside the sub-20wk cohort (finding #10's control, so any "VCP edge"
 # can't be base length in disguise) before believing it.
+# Swing granularity is FIXED at ±5 bars for every base length. Known,
+# deliberate bias: a 40-week base fragments into many small legs at this
+# granularity and near-never flags ✓ (fails the ≤6-count and monotone
+# tests), so vcp_is_vcp anti-correlates with base_weeks BY CONSTRUCTION —
+# don't read raw ✓ rates across base lengths as market information. Held
+# constant anyway so annotated rows stay comparable; the backtest's
+# sub-20wk control absorbs it at the conclusion layer. See SKILL.md's
+# VCP annotation section.
 VCP_SWING_ORDER = 5        # swing point = extreme of a ±5-bar neighborhood
 VCP_MIN_CONTRACTIONS = 2   # Minervini: 2-6 contractions ("T"s)
 VCP_MAX_CONTRACTIONS = 6
@@ -549,7 +557,14 @@ def detect_vcp_sequence(close_bars: pd.Series,
     2-6 contractions, depths non-increasing (±VCP_STEP_TOLERANCE wobble),
     at least halving overall, final one in single digits. An in-progress
     pullback (a high with no confirmed low after it) is not counted — its
-    depth would understate until the leg completes.
+    depth would understate until the leg completes. Confirmation is the
+    right-edge gate below: a candidate in the last VCP_SWING_ORDER bars has
+    a truncated future window, so a window ending mid-decline would
+    otherwise register its running bottom as a "completed" low — biasing
+    the final depth small (and the flag optimistic) at exactly the
+    first-listing decision point the backtest stratifies on. The left edge
+    keeps the truncated-window behavior: a base opens right after an
+    advance, so treating bar 0 as the origin high is the point.
 
     A dead-flat window has no swings, hence zero contractions and
     vcp_is_vcp=False: that's a flat base, not a VCP, by design."""
@@ -568,9 +583,9 @@ def detect_vcp_sequence(close_bars: pd.Series,
     vals = close_bars.to_numpy(dtype=float)
 
     swings: list[list] = []  # [bar_index, "H"|"L"]
-    for i in range(n):
+    for i in range(n - VCP_SWING_ORDER):  # right-edge confirmation gate
         lo = max(0, i - VCP_SWING_ORDER)
-        hi = min(n, i + VCP_SWING_ORDER + 1)
+        hi = i + VCP_SWING_ORDER + 1
         w = vals[lo:hi]
         if w.max() == w.min():
             continue
@@ -2267,9 +2282,17 @@ def render_table(picks: list[dict], top_n: int, verbose: bool = False) -> str:
             # VCP cell: the contraction-depth chain plus a ✓/✗ verdict on
             # the geometry test, e.g. "18.2>9.1>4.0 ✓". Chain without a ✓
             # means the sequence exists but fails the tightening criteria.
+            # Long chains (choppy bases log 7+ legs) elide to first-3>…>last
+            # for column width; history/JSON keep the full chain.
             vcp_depths = p.get("vcp_depths")
-            vcp_cell = (f"{vcp_depths} {'✓' if p.get('vcp_is_vcp') else '✗'}"
-                        if vcp_depths else "—")
+            if vcp_depths:
+                legs = vcp_depths.split(">")
+                if len(legs) > 4:
+                    vcp_depths = ">".join(legs[:3]) + f">…>{legs[-1]}"
+                vcp_cell = (f"{vcp_depths} "
+                            f"{'✓' if p.get('vcp_is_vcp') else '✗'}")
+            else:
+                vcp_cell = "—"
             row += [
                 f"{bb:.0f}" if bb is not None else "—",
                 f"{vol_dryup:.2f}" if vol_dryup is not None else "—",

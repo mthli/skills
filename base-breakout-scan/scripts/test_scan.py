@@ -544,6 +544,20 @@ class TestDetectVcpSequence:
         assert out["vcp_is_vcp"] is False
         assert out["vcp_depths"] is None
 
+    def test_in_progress_pullback_not_counted(self):
+        # Two completed contractions, then the window ENDS mid-decline: a
+        # fresh 5-bar drop with no recovery. Without the right-edge
+        # confirmation gate the running bottom registers as a swing low and
+        # the in-progress leg counts as a third, understated contraction —
+        # exactly the optimistic bias the gate exists to block.
+        base = make_contraction_window([20, 10])
+        top = float(base.iloc[-1])
+        partial = list(np.linspace(top, top * 0.97, 6))[1:]
+        close = make_close(list(base.values) + partial)
+        out = scan.detect_vcp_sequence(close, None)
+        assert out["vcp_contractions"] == 2
+        assert "3." not in (out["vcp_depths"] or "")
+
     def test_single_contraction_not_enough(self):
         # One completed pullback: a real leg, but below VCP_MIN_CONTRACTIONS.
         close = make_contraction_window([10])
@@ -577,24 +591,6 @@ class TestDetectVcpSequence:
         # A dead-flat base has no swings, hence no contractions.
         assert base["vcp_contractions"] == 0
         assert base["vcp_is_vcp"] is False
-
-
-class TestHistoryCarriesVcpColumns:
-    def test_append_history_round_trip(self, tmp_path, monkeypatch):
-        from datetime import timezone
-        monkeypatch.setattr(scan, "HISTORY_FILE", tmp_path / "history.csv")
-        pick = _pick(vcp_contractions=3, vcp_depths="18.2>9.1>4.0",
-                     vcp_ratio=0.22, vcp_last_depth_pct=4.0,
-                     vcp_handle_pivot=196.02, vcp_vol_contraction=0.61,
-                     vcp_is_vcp=True)
-        scan.append_history([pick], "20260803",
-                            datetime(2026, 8, 3, 20, 0, tzinfo=timezone.utc))
-        df = pd.read_csv(tmp_path / "history.csv")
-        row = df.iloc[0]
-        assert bool(row["vcp_is_vcp"]) is True
-        assert row["vcp_depths"] == "18.2>9.1>4.0"
-        assert row["vcp_contractions"] == 3
-        assert row["vcp_ratio"] == pytest.approx(0.22)
 
 
 # ─── Slim/verbose table + Sig strip (2026-07-31 readability redesign) ────
@@ -641,7 +637,32 @@ class TestRenderTableSlimVerbose:
         out2 = scan.render_table([_pick(vcp_depths=None)], 5, verbose=True)
         assert "✓" not in out2 and "✗" not in out2
 
+    def test_verbose_vcp_cell_elides_long_chains(self):
+        chain = "12.1>9.3>7.7>6.2>4.8>3.2"
+        out = scan.render_table([_pick(vcp_depths=chain, vcp_is_vcp=False)],
+                                5, verbose=True)
+        assert "12.1>9.3>7.7>…>3.2 ✗" in out
+        assert chain not in out  # full 6-leg chain never renders
+
     def test_sig_strip_counts_all_four(self):
         picks = [_pick(signal=s) for s in ("🔥", "📊", "📊", "⏳")]
         assert scan.render_sig_strip(picks, 10) == "**Sig**: 🚀0 🔥1 ⏳1 📊2"
+
+
+class TestHistoryCarriesVcpColumns:
+    def test_append_history_round_trip(self, tmp_path, monkeypatch):
+        from datetime import timezone
+        monkeypatch.setattr(scan, "HISTORY_FILE", tmp_path / "history.csv")
+        pick = _pick(vcp_contractions=3, vcp_depths="18.2>9.1>4.0",
+                     vcp_ratio=0.22, vcp_last_depth_pct=4.0,
+                     vcp_handle_pivot=196.02, vcp_vol_contraction=0.61,
+                     vcp_is_vcp=True)
+        scan.append_history([pick], "20260803",
+                            datetime(2026, 8, 3, 20, 0, tzinfo=timezone.utc))
+        df = pd.read_csv(tmp_path / "history.csv")
+        row = df.iloc[0]
+        assert bool(row["vcp_is_vcp"]) is True
+        assert row["vcp_depths"] == "18.2>9.1>4.0"
+        assert row["vcp_contractions"] == 3
+        assert row["vcp_ratio"] == pytest.approx(0.22)
         assert scan.render_sig_strip([{"ticker": "X"}], 10) is None
