@@ -170,6 +170,15 @@ This is the section that can do harm if written lazily, so frame it honestly:
 - **Premarket single-stock prints are thin.** Weight the futures gap, Europe,
   and sector ETFs over individual moves; respect the gappers' volume floor,
   and treat pre-8:00 ET thin prints as noise.
+- **No-fresh-driver gap-down = snapback candidate (06-12, 07-09, 08-03).** On
+  a confirmed risk-on tape, a premarket-red name or group with no
+  identifiable owning trigger (rate shock, rejected print, unwind vacuum) is
+  a snapback candidate, not confirmation of an unwind — and an Asia give-back
+  of a verified prior-day spike is *backward-looking*, not a fresh driver
+  (06-09 KOSPI). 08-03: chips gapped down on KOSPI −5.1% (after +17.9%) with
+  the regime at its cycle-best score; the brief headlined "day 2 of the
+  unwind" and SOXX closed +0.55% / NVDA +2.93% with QQQ the leading index.
+  Frame such gaps two-sided and let the close grade them.
 
 ## Output honesty rules
 
