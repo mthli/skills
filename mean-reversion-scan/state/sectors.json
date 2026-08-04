@@ -362,7 +362,7 @@
   "BGC": {
     "industry": "Capital Markets",
     "sector": "Financial Services",
-    "ts": 1780452118
+    "ts": 1785801823
   },
   "BHP": {
     "industry": "Other Industrial Metals & Mining",
@@ -512,7 +512,7 @@
   "CF": {
     "industry": "Agricultural Inputs",
     "sector": "Basic Materials",
-    "ts": 1779848102
+    "ts": 1785801823
   },
   "CGNX": {
     "industry": "Scientific & Technical Instruments",
@@ -757,7 +757,7 @@
   "D": {
     "industry": "Utilities - Regulated Electric",
     "sector": "Utilities",
-    "ts": 1782864173
+    "ts": 1785801823
   },
   "DAL": {
     "industry": "Airlines",
@@ -867,7 +867,7 @@
   "EBAY": {
     "industry": "Internet Retail",
     "sector": "Consumer Cyclical",
-    "ts": 1782173066
+    "ts": 1785801823
   },
   "EC": {
     "industry": "Oil & Gas Integrated",
@@ -1242,7 +1242,7 @@
   "HLT": {
     "industry": "Lodging",
     "sector": "Consumer Cyclical",
-    "ts": 1782173066
+    "ts": 1785801823
   },
   "HNGE": {
     "industry": "Health Information Services",
@@ -1342,7 +1342,7 @@
   "INGM": {
     "industry": "Information Technology Services",
     "sector": "Technology",
-    "ts": 1782345778
+    "ts": 1785801823
   },
   "INTC": {
     "industry": "Semiconductors",
@@ -1452,7 +1452,7 @@
   "KNX": {
     "industry": "Trucking",
     "sector": "Industrials",
-    "ts": 1781747799
+    "ts": 1785801823
   },
   "KO": {
     "industry": "Beverages - Non-Alcoholic",
@@ -1463,6 +1463,11 @@
     "industry": "REIT - Retail",
     "sector": "Real Estate",
     "ts": 1785589371
+  },
+  "KVUE": {
+    "industry": "Household & Personal Products",
+    "sector": "Consumer Defensive",
+    "ts": 1785801823
   },
   "LAUR": {
     "industry": "Education & Training Services",
@@ -1572,7 +1577,7 @@
   "MAR": {
     "industry": "Lodging",
     "sector": "Consumer Cyclical",
-    "ts": 1782173067
+    "ts": 1785801823
   },
   "MAS": {
     "industry": "Building Products & Equipment",
@@ -1872,7 +1877,7 @@
   "OHI": {
     "industry": "REIT - Healthcare Facilities",
     "sector": "Real Estate",
-    "ts": 1780452119
+    "ts": 1785801823
   },
   "OKE": {
     "industry": "Oil & Gas Midstream",
@@ -1937,7 +1942,7 @@
   "PBA": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
-    "ts": 1780114451
+    "ts": 1785801823
   },
   "PBF": {
     "industry": "Oil & Gas Refining & Marketing",
@@ -2152,7 +2157,7 @@
   "RPRX": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1782135720
+    "ts": 1785801823
   },
   "RRC": {
     "industry": "Oil & Gas E&P",
@@ -2472,7 +2477,7 @@
   "TRP": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
-    "ts": 1782864173
+    "ts": 1785801823
   },
   "TRV": {
     "industry": "Insurance - Property & Casualty",

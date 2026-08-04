@@ -79,6 +79,11 @@
     "sector": "Technology",
     "ts": 1785589355
   },
+  "APGE": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1785801774
+  },
   "APH": {
     "industry": "Electronic Components",
     "sector": "Technology",
@@ -177,7 +182,7 @@
   "BNY": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1782518534
+    "ts": 1785801774
   },
   "BP": {
     "industry": "Oil & Gas Integrated",
@@ -227,7 +232,7 @@
   "CFG": {
     "industry": "Banks - Regional",
     "sector": "Financial Services",
-    "ts": 1780860673
+    "ts": 1785801774
   },
   "CGNX": {
     "industry": "Scientific & Technical Instruments",
@@ -257,7 +262,7 @@
   "CM": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1779020942
+    "ts": 1785801774
   },
   "CMBT": {
     "industry": "Oil & Gas Midstream",
@@ -274,6 +279,11 @@
     "sector": "Healthcare",
     "ts": 1783987440
   },
+  "CNI": {
+    "industry": "Railroads",
+    "sector": "Industrials",
+    "ts": 1785801774
+  },
   "CNQ": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
@@ -289,6 +299,11 @@
     "sector": "Financial Services",
     "ts": 1778771760
   },
+  "COMP": {
+    "industry": "Real Estate Services",
+    "sector": "Real Estate",
+    "ts": 1785801774
+  },
   "CORZ": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
@@ -297,7 +312,7 @@
   "CROX": {
     "industry": "Footwear & Accessories",
     "sector": "Consumer Cyclical",
-    "ts": 1782864123
+    "ts": 1785801774
   },
   "CRWD": {
     "industry": "Software - Infrastructure",
@@ -339,10 +354,15 @@
     "sector": "Healthcare",
     "ts": 1785589356
   },
+  "CZR": {
+    "industry": "Resorts & Casinos",
+    "sector": "Consumer Cyclical",
+    "ts": 1785801774
+  },
   "DAL": {
     "industry": "Airlines",
     "sector": "Industrials",
-    "ts": 1782135679
+    "ts": 1785801774
   },
   "DAR": {
     "industry": "Packaged Foods",
@@ -377,7 +397,7 @@
   "DOC": {
     "industry": "REIT - Healthcare Facilities",
     "sector": "Real Estate",
-    "ts": 1783036957
+    "ts": 1785801774
   },
   "DOCN": {
     "industry": "Software - Infrastructure",
@@ -403,6 +423,11 @@
     "industry": "Banks - Regional",
     "sector": "Financial Services",
     "ts": 1785589356
+  },
+  "EC": {
+    "industry": "Oil & Gas Integrated",
+    "sector": "Energy",
+    "ts": 1785801774
   },
   "EIX": {
     "industry": "Utilities - Regulated Electric",
@@ -452,7 +477,7 @@
   "EXEL": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1782950545
+    "ts": 1785801774
   },
   "F": {
     "industry": "Auto Manufacturers",
@@ -487,7 +512,7 @@
   "FRO": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
-    "ts": 1779285544
+    "ts": 1785801774
   },
   "FROG": {
     "industry": "Software - Application",
@@ -502,7 +527,7 @@
   "FTNT": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1782518534
+    "ts": 1785801774
   },
   "GE": {
     "industry": "Aerospace & Defense",
@@ -574,6 +599,11 @@
     "sector": "Financial Services",
     "ts": 1785769691
   },
+  "HSIC": {
+    "industry": "Medical Distribution",
+    "sector": "Healthcare",
+    "ts": 1785801774
+  },
   "HST": {
     "industry": "REIT - Hotel & Motel",
     "sector": "Real Estate",
@@ -607,7 +637,7 @@
   "IMVT": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1783036957
+    "ts": 1785801774
   },
   "INCY": {
     "industry": "Biotechnology",
@@ -757,7 +787,7 @@
   "MFG": {
     "industry": "Banks - Regional",
     "sector": "Financial Services",
-    "ts": 1782950545
+    "ts": 1785801774
   },
   "MGA": {
     "industry": "Auto Parts",
@@ -809,6 +839,11 @@
     "sector": "Basic Materials",
     "ts": 1785589358
   },
+  "MTB": {
+    "industry": "Banks - Regional",
+    "sector": "Financial Services",
+    "ts": 1785801774
+  },
   "MTSI": {
     "industry": "Semiconductors",
     "sector": "Technology",
@@ -817,7 +852,7 @@
   "MUFG": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1782950545
+    "ts": 1785801774
   },
   "MUR": {
     "industry": "Oil & Gas E&P",
@@ -867,7 +902,7 @@
   "NTRS": {
     "industry": "Asset Management",
     "sector": "Financial Services",
-    "ts": 1782864123
+    "ts": 1785801774
   },
   "NUE": {
     "industry": "Steel",
@@ -893,6 +928,11 @@
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
     "ts": 1785589359
+  },
+  "ORKA": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1785801774
   },
   "OSCR": {
     "industry": "Healthcare Plans",
@@ -1052,7 +1092,7 @@
   "SMFG": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1781136178
+    "ts": 1785801774
   },
   "SN": {
     "industry": "Furnishings, Fixtures & Appliances",
@@ -1102,7 +1142,7 @@
   "STT": {
     "industry": "Asset Management",
     "sector": "Financial Services",
-    "ts": 1781568197
+    "ts": 1785801774
   },
   "STX": {
     "industry": "Computer Hardware",
@@ -1127,7 +1167,7 @@
   "TD": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1783036957
+    "ts": 1785801774
   },
   "TECK": {
     "industry": "Copper",
@@ -1152,7 +1192,7 @@
   "TIGO": {
     "industry": "Telecom Services",
     "sector": "Communication Services",
-    "ts": 1778771444
+    "ts": 1785801774
   },
   "TKR": {
     "industry": "Tools & Accessories",
@@ -1204,6 +1244,11 @@
     "sector": "Technology",
     "ts": 1780589170
   },
+  "UAL": {
+    "industry": "Airlines",
+    "sector": "Industrials",
+    "ts": 1785801774
+  },
   "UBS": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
@@ -1247,7 +1292,7 @@
   "VLO": {
     "industry": "Oil & Gas Refining & Marketing",
     "sector": "Energy",
-    "ts": 1782518534
+    "ts": 1785801774
   },
   "VLY": {
     "industry": "Banks - Regional",

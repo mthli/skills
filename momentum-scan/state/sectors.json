@@ -79,6 +79,11 @@
     "sector": "Technology",
     "ts": 1782744225
   },
+  "BBVA": {
+    "industry": "Banks - Diversified",
+    "sector": "Financial Services",
+    "ts": 1785801705
+  },
   "BBY": {
     "industry": "Specialty Retail",
     "sector": "Consumer Cyclical",
@@ -487,7 +492,7 @@
   "PANW": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1782950494
+    "ts": 1785801705
   },
   "PAYX": {
     "industry": "Software - Application",
@@ -692,7 +697,7 @@
   "TWST": {
     "industry": "Diagnostics & Research",
     "sector": "Healthcare",
-    "ts": 1782786281
+    "ts": 1785801705
   },
   "TXG": {
     "industry": "Health Information Services",
@@ -718,6 +723,11 @@
     "industry": "Healthcare Plans",
     "sector": "Healthcare",
     "ts": 1782135476
+  },
+  "VIK": {
+    "industry": "Travel Services",
+    "sector": "Consumer Cyclical",
+    "ts": 1785801705
   },
   "VNO": {
     "industry": "REIT - Office",
