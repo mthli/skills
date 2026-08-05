@@ -179,6 +179,20 @@ This is the section that can do harm if written lazily, so frame it honestly:
   the regime at its cycle-best score; the brief headlined "day 2 of the
   unwind" and SOXX closed +0.55% / NVDA +2.93% with QQQ the leading index.
   Frame such gaps two-sided and let the close grade them.
+- **Gap-is-half-the-move symmetry (unwind 07-01; risk-on 06-29, 07-30,
+  08-04).** In a crowded unwind the premarket gap ≈ half the closing damage;
+  on a corroborated catalyst-owned risk-on morning the gap ≈ half the day's
+  gain (08-04: QQQ +1.16% gap → +3.40% close, SOXX +4.26 → +6.80, AMD +3.99
+  → +7.00, gap-keeps >100% board-wide). Never frame a big corroborated gap
+  as "the move already happened" or as "the exit price" — treat the morning
+  print as a floor for the day's move, and grade the claim at the close with
+  the >70%-kept rule.
+- **⭐ MR pocket has zero day-1 edge on broad risk-on days (08-03, 08-04).**
+  08-03 the pocket lost 2.4pp to SPY on a broad green day; 08-04 it matched
+  SPY to the basis point. Its validated KPI is 5-day expectancy (score≥40 +
+  ≤2d listed = +1.83%/signal), not the day-1 print: on a trend day the
+  pocket is beta — size it small, never bill it as the day's alpha venue,
+  and don't grade its day-1 move as pass/fail.
 
 ## Output honesty rules
 
