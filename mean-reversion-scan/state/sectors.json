@@ -87,7 +87,7 @@
   "AFL": {
     "industry": "Insurance - Life",
     "sector": "Financial Services",
-    "ts": 1780114451
+    "ts": 1785888203
   },
   "AGNC": {
     "industry": "REIT - Mortgage",
@@ -489,6 +489,11 @@
     "sector": "Financial Services",
     "ts": 1780114451
   },
+  "CCEP": {
+    "industry": "Beverages - Non-Alcoholic",
+    "sector": "Consumer Defensive",
+    "ts": 1785888203
+  },
   "CCJ": {
     "industry": "Uranium",
     "sector": "Energy",
@@ -718,6 +723,11 @@
     "industry": "REIT - Industrial",
     "sector": "Real Estate",
     "ts": 1785589368
+  },
+  "CUZ": {
+    "industry": "REIT - Office",
+    "sector": "Real Estate",
+    "ts": 1785888203
   },
   "CVE": {
     "industry": "Oil & Gas Integrated",
@@ -1932,7 +1942,12 @@
   "PAA": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
-    "ts": 1781568272
+    "ts": 1785888203
+  },
+  "PAGP": {
+    "industry": "Oil & Gas Midstream",
+    "sector": "Energy",
+    "ts": 1785888203
   },
   "PANW": {
     "industry": "Software - Infrastructure",
@@ -1997,7 +2012,7 @@
   "PLD": {
     "industry": "REIT - Industrial",
     "sector": "Real Estate",
-    "ts": 1782864173
+    "ts": 1785888203
   },
   "PLUG": {
     "industry": "Electrical Equipment & Parts",
@@ -2097,7 +2112,7 @@
   "REG": {
     "industry": "REIT - Retail",
     "sector": "Real Estate",
-    "ts": 1780452119
+    "ts": 1785888203
   },
   "RELY": {
     "industry": "Software - Infrastructure",
@@ -2227,7 +2242,7 @@
   "SFD": {
     "industry": "Packaged Foods",
     "sector": "Consumer Defensive",
-    "ts": 1782135720
+    "ts": 1785888203
   },
   "SFTBY": {
     "industry": "Telecom Services",
@@ -2323,6 +2338,11 @@
     "industry": "Packaging & Containers",
     "sector": "Consumer Cyclical",
     "ts": 1785589375
+  },
+  "SPG": {
+    "industry": "REIT - Retail",
+    "sector": "Real Estate",
+    "ts": 1785888203
   },
   "SQM": {
     "industry": "Specialty Chemicals",
@@ -2563,6 +2583,11 @@
     "industry": "Semiconductors",
     "sector": "Technology",
     "ts": 1784592170
+  },
+  "UNH": {
+    "industry": "Healthcare Plans",
+    "sector": "Healthcare",
+    "ts": 1785888203
   },
   "UNM": {
     "industry": "Insurance - Life",

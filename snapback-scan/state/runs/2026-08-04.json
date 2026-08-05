@@ -1,0 +1,462 @@
+{
+  "as_of": "2026-08-04T20:03:34.055907-04:00",
+  "today": "2026-08-04",
+  "spark_window": [
+    "2026-08-05",
+    "2026-08-06",
+    "2026-08-07"
+  ],
+  "macro_note": "",
+  "regime": {
+    "snapshot": "20260804",
+    "state": "RISK-ON",
+    "score": 8,
+    "vix": 16.5,
+    "spy_vs_200_pct": 10.4,
+    "flags": "Narrowing rally: only megacaps lifting the index (RSP/SPY -0.6%/20d)"
+  },
+  "mr_run": {
+    "run_id": "20260804",
+    "run_date": "2026-08-04",
+    "stale_days": 0,
+    "rows_in_run": 49,
+    "kegs_after_filter": 6
+  },
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "MAR",
+      "rank": 3,
+      "score": 51.9,
+      "rsi2": 1.42,
+      "dist_200dma_pct": 3.04,
+      "signal_close": 345.2,
+      "mr_target": 364.29,
+      "mr_stop": 321.26,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "sector": "Consumer Cyclical",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "LLY",
+          "date": "2026-08-05",
+          "slot": "BMO",
+          "detail": "LLY ($1056B) reports 2026-08-05 BMO"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "TM",
+          "date": "2026-08-06",
+          "slot": "?",
+          "detail": "TM (Consumer Cyclical, $294B) reports 2026-08-06 ?"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "BRK.A",
+          "date": "2026-08-07",
+          "slot": "?",
+          "detail": "BRK.A ($1105B) reports 2026-08-07 ?"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "BRK.B",
+          "date": "2026-08-07",
+          "slot": "?",
+          "detail": "BRK.B ($1105B) reports 2026-08-07 ?"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-07",
+          "detail": "Non-Farm Employment Change 2026-08-07 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-07",
+          "detail": "Unemployment Rate 2026-08-07 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 345.2,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -9.99,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.54,
+      "signal_day_low": 340.82,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "BRKR",
+      "rank": 6,
+      "score": 49.8,
+      "rsi2": 7.43,
+      "dist_200dma_pct": 9.55,
+      "signal_close": 50.3,
+      "mr_target": 60.71,
+      "mr_stop": 40.5,
+      "signal": "\ud83d\udfe1",
+      "listing_age_runs": 1,
+      "freq_60d": 0,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "LLY",
+          "date": "2026-08-05",
+          "slot": "BMO",
+          "detail": "LLY (Healthcare, $1056B) reports 2026-08-05 BMO"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "NVO",
+          "date": "2026-08-05",
+          "slot": "?",
+          "detail": "NVO (Healthcare, $209B) reports 2026-08-05 ?"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "BRK.A",
+          "date": "2026-08-07",
+          "slot": "?",
+          "detail": "BRK.A ($1105B) reports 2026-08-07 ?"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "BRK.B",
+          "date": "2026-08-07",
+          "slot": "?",
+          "detail": "BRK.B ($1105B) reports 2026-08-07 ?"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-07",
+          "detail": "Non-Farm Employment Change 2026-08-07 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-07",
+          "detail": "Unemployment Rate 2026-08-07 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 50.3,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 1,
+      "ret_5d_pct": -20.04,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.59,
+      "signal_day_low": 50.12,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "BGC",
+      "rank": 9,
+      "score": 46.0,
+      "rsi2": 2.18,
+      "dist_200dma_pct": 11.08,
+      "signal_close": 11.11,
+      "mr_target": 11.49,
+      "mr_stop": 10.25,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "sector": "Financial Services",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "LLY",
+          "date": "2026-08-05",
+          "slot": "BMO",
+          "detail": "LLY ($1056B) reports 2026-08-05 BMO"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "HSBC",
+          "date": "2026-08-05",
+          "slot": "?",
+          "detail": "HSBC (Financial Services, $365B) reports 2026-08-05 ?"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "BRK.A",
+          "date": "2026-08-07",
+          "slot": "?",
+          "detail": "BRK.A ($1105B) reports 2026-08-07 ?"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "BRK.B",
+          "date": "2026-08-07",
+          "slot": "?",
+          "detail": "BRK.B (Financial Services, $1105B) reports 2026-08-07 ?"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-07",
+          "detail": "Non-Farm Employment Change 2026-08-07 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-07",
+          "detail": "Unemployment Rate 2026-08-07 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 11.11,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -7.18,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 1.2,
+      "signal_day_low": 11.08,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "KRG",
+      "rank": 10,
+      "score": 45.9,
+      "rsi2": 1.87,
+      "dist_200dma_pct": 10.7,
+      "signal_close": 27.51,
+      "mr_target": 28.39,
+      "mr_stop": 25.94,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 3,
+      "sector": "Real Estate",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "LLY",
+          "date": "2026-08-05",
+          "slot": "BMO",
+          "detail": "LLY ($1056B) reports 2026-08-05 BMO"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "BRK.A",
+          "date": "2026-08-07",
+          "slot": "?",
+          "detail": "BRK.A ($1105B) reports 2026-08-07 ?"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "BRK.B",
+          "date": "2026-08-07",
+          "slot": "?",
+          "detail": "BRK.B ($1105B) reports 2026-08-07 ?"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-07",
+          "detail": "Non-Farm Employment Change 2026-08-07 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-07",
+          "detail": "Unemployment Rate 2026-08-07 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 27.51,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -5.4,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.35,
+      "signal_day_low": 27.45,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "PLD",
+      "rank": 12,
+      "score": 44.5,
+      "rsi2": 1.92,
+      "dist_200dma_pct": 3.78,
+      "signal_close": 139.05,
+      "mr_target": 143.89,
+      "mr_stop": 129.41,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 1,
+      "freq_60d": 2,
+      "sector": "Real Estate",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "LLY",
+          "date": "2026-08-05",
+          "slot": "BMO",
+          "detail": "LLY ($1056B) reports 2026-08-05 BMO"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "BRK.A",
+          "date": "2026-08-07",
+          "slot": "?",
+          "detail": "BRK.A ($1105B) reports 2026-08-07 ?"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "BRK.B",
+          "date": "2026-08-07",
+          "slot": "?",
+          "detail": "BRK.B ($1105B) reports 2026-08-07 ?"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-07",
+          "detail": "Non-Farm Employment Change 2026-08-07 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-07",
+          "detail": "Unemployment Rate 2026-08-07 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 139.05,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -5.49,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.19,
+      "signal_day_low": 138.91,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "ARMK",
+      "rank": 14,
+      "score": 42.4,
+      "rsi2": 3.34,
+      "dist_200dma_pct": 27.37,
+      "signal_close": 56.22,
+      "mr_target": 56.87,
+      "mr_stop": 53.56,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "sector": "Industrials",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "LLY",
+          "date": "2026-08-05",
+          "slot": "BMO",
+          "detail": "LLY ($1056B) reports 2026-08-05 BMO"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "BRK.A",
+          "date": "2026-08-07",
+          "slot": "?",
+          "detail": "BRK.A ($1105B) reports 2026-08-07 ?"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "BRK.B",
+          "date": "2026-08-07",
+          "slot": "?",
+          "detail": "BRK.B ($1105B) reports 2026-08-07 ?"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-07",
+          "detail": "Non-Farm Employment Change 2026-08-07 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-07",
+          "detail": "Unemployment Rate 2026-08-07 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 56.22,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -2.06,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.84,
+      "signal_day_low": 56.11,
+      "quiet_warning": true
+    }
+  ],
+  "macro_calendar": [
+    {
+      "date": "2026-08-07",
+      "time_et": "08:30",
+      "title": "Non-Farm Employment Change"
+    },
+    {
+      "date": "2026-08-07",
+      "time_et": "08:30",
+      "title": "Unemployment Rate"
+    }
+  ],
+  "prior_run_review": {
+    "source": "snapback:2026-08-03",
+    "n": 6,
+    "pct_positive": 66.7,
+    "avg_pct": 1.88,
+    "median_pct": 2.14,
+    "best": [
+      {
+        "ticker": "TGTX",
+        "since_pct": 5.56
+      },
+      {
+        "ticker": "CTVA",
+        "since_pct": 2.99
+      },
+      {
+        "ticker": "ADM",
+        "since_pct": 2.32
+      }
+    ],
+    "worst": [
+      {
+        "ticker": "EIX",
+        "since_pct": -1.08
+      },
+      {
+        "ticker": "MAR",
+        "since_pct": -0.47
+      },
+      {
+        "ticker": "AAPL",
+        "since_pct": 1.96
+      }
+    ],
+    "armed_subset": {
+      "n": 4,
+      "pct_positive": 75.0,
+      "avg_pct": 2.34,
+      "median_pct": 2.14
+    }
+  },
+  "errors": []
+}

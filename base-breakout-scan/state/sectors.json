@@ -157,7 +157,7 @@
   "BHP": {
     "industry": "Other Industrial Metals & Mining",
     "sector": "Basic Materials",
-    "ts": 1780114396
+    "ts": 1785888158
   },
   "BIIB": {
     "industry": "Drug Manufacturers - General",
@@ -319,6 +319,11 @@
     "sector": "Technology",
     "ts": 1785589356
   },
+  "CSCO": {
+    "industry": "Communication Equipment",
+    "sector": "Technology",
+    "ts": 1785888158
+  },
   "CSX": {
     "industry": "Railroads",
     "sector": "Industrials",
@@ -393,6 +398,11 @@
     "industry": "Discount Stores",
     "sector": "Consumer Defensive",
     "ts": 1785369754
+  },
+  "DNTH": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1785888158
   },
   "DOC": {
     "industry": "REIT - Healthcare Facilities",
@@ -822,7 +832,7 @@
   "MPC": {
     "industry": "Oil & Gas Refining & Marketing",
     "sector": "Energy",
-    "ts": 1781225234
+    "ts": 1785888158
   },
   "MRK": {
     "industry": "Drug Manufacturers - General",
@@ -832,7 +842,7 @@
   "MS": {
     "industry": "Capital Markets",
     "sector": "Financial Services",
-    "ts": 1781568197
+    "ts": 1785888158
   },
   "MT": {
     "industry": "Steel",
@@ -929,6 +939,11 @@
     "sector": "Energy",
     "ts": 1785589359
   },
+  "OKTA": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1785888158
+  },
   "ORKA": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
@@ -1014,6 +1029,11 @@
     "sector": "Technology",
     "ts": 1784592126
   },
+  "RELY": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1785888158
+  },
   "RIO": {
     "industry": "Other Industrial Metals & Mining",
     "sector": "Basic Materials",
@@ -1033,6 +1053,11 @@
     "industry": "Biotechnology",
     "sector": "Healthcare",
     "ts": 1785509849
+  },
+  "RRX": {
+    "industry": "Specialty Industrial Machinery",
+    "sector": "Industrials",
+    "ts": 1785888158
   },
   "RVMD": {
     "industry": "Biotechnology",
