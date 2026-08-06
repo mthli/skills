@@ -192,7 +192,7 @@
   "AMX": {
     "industry": "Telecom Services",
     "sector": "Communication Services",
-    "ts": 1782173066
+    "ts": 1785974601
   },
   "AMZN": {
     "industry": "Internet Retail",
@@ -207,7 +207,7 @@
   "APA": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1781654633
+    "ts": 1785974601
   },
   "APD": {
     "industry": "Specialty Chemicals",
@@ -402,7 +402,7 @@
   "BP": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
-    "ts": 1779848101
+    "ts": 1785974602
   },
   "BRKR": {
     "industry": "Medical Devices",
@@ -617,7 +617,7 @@
   "CNQ": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1779848101
+    "ts": 1785974601
   },
   "COGT": {
     "industry": "Biotechnology",
@@ -642,7 +642,7 @@
   "COP": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1779848102
+    "ts": 1785974602
   },
   "CORT": {
     "industry": "Biotechnology",
@@ -704,6 +704,11 @@
     "sector": "Industrials",
     "ts": 1785510645
   },
+  "CTAS": {
+    "industry": "Specialty Business Services",
+    "sector": "Industrials",
+    "ts": 1785974601
+  },
   "CTRA": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
@@ -732,12 +737,12 @@
   "CVE": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
-    "ts": 1779848101
+    "ts": 1785974601
   },
   "CVS": {
     "industry": "Healthcare Plans",
     "sector": "Healthcare",
-    "ts": 1779848101
+    "ts": 1785974601
   },
   "CVX": {
     "industry": "Oil & Gas Integrated",
@@ -862,7 +867,7 @@
   "DVN": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1782864173
+    "ts": 1785974602
   },
   "DXCM": {
     "industry": "Medical Devices",
@@ -927,7 +932,7 @@
   "EOG": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1781568272
+    "ts": 1785974601
   },
   "EPD": {
     "industry": "Oil & Gas Midstream",
@@ -942,7 +947,7 @@
   "EQNR": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
-    "ts": 1781568272
+    "ts": 1785974601
   },
   "EQR": {
     "industry": "REIT - Residential",
@@ -1027,7 +1032,7 @@
   "FANG": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1782950590
+    "ts": 1785974601
   },
   "FCX": {
     "industry": "Copper",
@@ -1732,7 +1737,7 @@
   "MUR": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1779848102
+    "ts": 1785974601
   },
   "MXL": {
     "industry": "Semiconductors",
@@ -1902,7 +1907,7 @@
   "ON": {
     "industry": "Semiconductors",
     "sector": "Technology",
-    "ts": 1782518609
+    "ts": 1785974601
   },
   "ONTO": {
     "industry": "Semiconductor Equipment & Materials",
@@ -1927,12 +1932,12 @@
   "OVV": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1779848101
+    "ts": 1785974601
   },
   "OXY": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1782777789
+    "ts": 1785974602
   },
   "OZK": {
     "industry": "Banks - Regional",
@@ -2047,7 +2052,7 @@
   "PR": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1782950590
+    "ts": 1785974601
   },
   "PRM": {
     "industry": "Specialty Chemicals",
@@ -2072,7 +2077,7 @@
   "PSX": {
     "industry": "Oil & Gas Refining & Marketing",
     "sector": "Energy",
-    "ts": 1781654633
+    "ts": 1785974601
   },
   "PTCT": {
     "industry": "Biotechnology",
@@ -2287,7 +2292,7 @@
   "SM": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1781568272
+    "ts": 1785974601
   },
   "SMFG": {
     "industry": "Banks - Diversified",
@@ -2362,7 +2367,7 @@
   "SSL": {
     "industry": "Specialty Chemicals",
     "sector": "Basic Materials",
-    "ts": 1781309036
+    "ts": 1785974601
   },
   "SSRM": {
     "industry": "Gold",
@@ -2402,7 +2407,7 @@
   "SU": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
-    "ts": 1779848101
+    "ts": 1785974601
   },
   "SW": {
     "industry": "Packaging & Containers",
@@ -2624,6 +2629,11 @@
     "sector": "Basic Materials",
     "ts": 1780944732
   },
+  "VG": {
+    "industry": "Oil & Gas Midstream",
+    "sector": "Energy",
+    "ts": 1785974601
+  },
   "VIAV": {
     "industry": "Communication Equipment",
     "sector": "Technology",
@@ -2807,7 +2817,7 @@
   "XOM": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
-    "ts": 1780114451
+    "ts": 1785974601
   },
   "XPO": {
     "industry": "Trucking",
@@ -2822,7 +2832,7 @@
   "YPF": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
-    "ts": 1781654632
+    "ts": 1785974601
   },
   "YUM": {
     "industry": "Restaurants",

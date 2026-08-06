@@ -9,6 +9,11 @@
     "sector": "Technology",
     "ts": 1782345684
   },
+  "ADP": {
+    "industry": "Software - Application",
+    "sector": "Technology",
+    "ts": 1785974488
+  },
   "ALAB": {
     "industry": "Semiconductors",
     "sector": "Technology",
@@ -53,6 +58,11 @@
     "industry": "Specialty Business Services",
     "sector": "Industrials",
     "ts": 1781568120
+  },
+  "ARXS": {
+    "industry": "Aerospace & Defense",
+    "sector": "Industrials",
+    "ts": 1785974488
   },
   "ASX": {
     "industry": "Semiconductors",
@@ -103,6 +113,11 @@
     "industry": "Health Information Services",
     "sector": "Healthcare",
     "ts": 1784246492
+  },
+  "CAKE": {
+    "industry": "Restaurants",
+    "sector": "Consumer Cyclical",
+    "ts": 1785974488
   },
   "CIEN": {
     "industry": "Communication Equipment",
@@ -263,6 +278,11 @@
     "industry": "Computer Hardware",
     "sector": "Technology",
     "ts": 1780068222
+  },
+  "HRB": {
+    "industry": "Personal Services",
+    "sector": "Consumer Cyclical",
+    "ts": 1785974488
   },
   "HST": {
     "industry": "REIT - Hotel & Motel",
@@ -593,6 +613,11 @@
     "industry": "Semiconductors",
     "sector": "Technology",
     "ts": 1781568120
+  },
+  "SN": {
+    "industry": "Furnishings, Fixtures & Appliances",
+    "sector": "Consumer Cyclical",
+    "ts": 1785974488
   },
   "SNDK": {
     "industry": "Computer Hardware",

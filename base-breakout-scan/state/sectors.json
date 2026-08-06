@@ -1269,6 +1269,11 @@
     "sector": "Technology",
     "ts": 1780589170
   },
+  "TXRH": {
+    "industry": "Restaurants",
+    "sector": "Consumer Cyclical",
+    "ts": 1785974550
+  },
   "UAL": {
     "industry": "Airlines",
     "sector": "Industrials",
