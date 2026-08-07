@@ -119,6 +119,11 @@
     "sector": "Consumer Cyclical",
     "ts": 1785974488
   },
+  "CHYM": {
+    "industry": "Software - Application",
+    "sector": "Technology",
+    "ts": 1786060896
+  },
   "CIEN": {
     "industry": "Communication Equipment",
     "sector": "Technology",
@@ -198,6 +203,11 @@
     "industry": "Software - Infrastructure",
     "sector": "Technology",
     "ts": 1779285358
+  },
+  "EAT": {
+    "industry": "Restaurants",
+    "sector": "Consumer Cyclical",
+    "ts": 1786060896
   },
   "EBAY": {
     "industry": "Internet Retail",
@@ -358,6 +368,11 @@
     "industry": "Drug Manufacturers - General",
     "sector": "Healthcare",
     "ts": 1784937692
+  },
+  "LNC": {
+    "industry": "Insurance - Life",
+    "sector": "Financial Services",
+    "ts": 1786060896
   },
   "LQDA": {
     "industry": "Drug Manufacturers - Specialty & Generic",

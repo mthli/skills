@@ -139,6 +139,16 @@
     "sector": "Basic Materials",
     "ts": 1785589355
   },
+  "BAYRY": {
+    "industry": "Drug Manufacturers - General",
+    "sector": "Healthcare",
+    "ts": 1786060958
+  },
+  "BBIO": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1786060958
+  },
   "BBVA": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
@@ -389,6 +399,11 @@
     "sector": "Technology",
     "ts": 1784073833
   },
+  "DFTX": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1786060958
+  },
   "DINO": {
     "industry": "Oil & Gas Refining & Marketing",
     "sector": "Energy",
@@ -542,7 +557,7 @@
   "GE": {
     "industry": "Aerospace & Defense",
     "sector": "Industrials",
-    "ts": 1783468950
+    "ts": 1786060958
   },
   "GEV": {
     "industry": "Specialty Industrial Machinery",
@@ -747,7 +762,7 @@
   "LUV": {
     "industry": "Airlines",
     "sector": "Industrials",
-    "ts": 1783382562
+    "ts": 1786060958
   },
   "LYB": {
     "industry": "Specialty Chemicals",
@@ -1017,7 +1032,7 @@
   "PSX": {
     "industry": "Oil & Gas Refining & Marketing",
     "sector": "Energy",
-    "ts": 1780114396
+    "ts": 1786060958
   },
   "PWR": {
     "industry": "Engineering & Construction",

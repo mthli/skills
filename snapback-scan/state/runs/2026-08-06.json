@@ -1,0 +1,451 @@
+{
+  "as_of": "2026-08-06T20:03:33.980467-04:00",
+  "today": "2026-08-06",
+  "spark_window": [
+    "2026-08-07",
+    "2026-08-10",
+    "2026-08-11"
+  ],
+  "macro_note": "ForexFactory covers the current week only \u2014 macro sparks beyond Sunday not visible",
+  "regime": {
+    "snapshot": "20260806",
+    "state": "RISK-ON",
+    "score": 9,
+    "vix": 15.1,
+    "spy_vs_200_pct": 9.9,
+    "flags": ""
+  },
+  "mr_run": {
+    "run_id": "20260806",
+    "run_date": "2026-08-06",
+    "stale_days": 0,
+    "rows_in_run": 51,
+    "kegs_after_filter": 7
+  },
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "OSCR",
+      "rank": 1,
+      "score": 82.6,
+      "rsi2": 1.16,
+      "dist_200dma_pct": 38.91,
+      "signal_close": 26.54,
+      "mr_target": 29.8,
+      "mr_stop": 22.23,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 1,
+      "freq_60d": 0,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "BRK.A",
+          "date": "2026-08-07",
+          "slot": "?",
+          "detail": "BRK.A ($1118B) reports 2026-08-07 ?"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "BRK.B",
+          "date": "2026-08-07",
+          "slot": "?",
+          "detail": "BRK.B ($1118B) reports 2026-08-07 ?"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-07",
+          "detail": "Non-Farm Employment Change 2026-08-07 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-07",
+          "detail": "Unemployment Rate 2026-08-07 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 26.54,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -15.02,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.32,
+      "signal_day_low": 25.8,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "MAC",
+      "rank": 2,
+      "score": 64.6,
+      "rsi2": 1.5,
+      "dist_200dma_pct": 15.47,
+      "signal_close": 23.49,
+      "mr_target": 25.24,
+      "mr_stop": 21.74,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 1,
+      "freq_60d": 0,
+      "sector": "Real Estate",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "BRK.A",
+          "date": "2026-08-07",
+          "slot": "?",
+          "detail": "BRK.A ($1118B) reports 2026-08-07 ?"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "BRK.B",
+          "date": "2026-08-07",
+          "slot": "?",
+          "detail": "BRK.B ($1118B) reports 2026-08-07 ?"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-07",
+          "detail": "Non-Farm Employment Change 2026-08-07 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-07",
+          "detail": "Unemployment Rate 2026-08-07 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 23.49,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -7.77,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 1.74,
+      "signal_day_low": 23.46,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "DDOG",
+      "rank": 7,
+      "score": 57.3,
+      "rsi2": 7.71,
+      "dist_200dma_pct": 35.27,
+      "signal_close": 229.29,
+      "mr_target": 268.44,
+      "mr_stop": 189.97,
+      "signal": "\ud83d\udfe1",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "BRK.A",
+          "date": "2026-08-07",
+          "slot": "?",
+          "detail": "BRK.A ($1118B) reports 2026-08-07 ?"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "BRK.B",
+          "date": "2026-08-07",
+          "slot": "?",
+          "detail": "BRK.B ($1118B) reports 2026-08-07 ?"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-07",
+          "detail": "Non-Farm Employment Change 2026-08-07 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-07",
+          "detail": "Unemployment Rate 2026-08-07 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 229.29,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -14.62,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.52,
+      "signal_day_low": 225.26,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "VTRS",
+      "rank": 8,
+      "score": 57.1,
+      "rsi2": 2.1,
+      "dist_200dma_pct": 16.71,
+      "signal_close": 16.29,
+      "mr_target": 17.37,
+      "mr_stop": 14.84,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "BRK.A",
+          "date": "2026-08-07",
+          "slot": "?",
+          "detail": "BRK.A ($1118B) reports 2026-08-07 ?"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "BRK.B",
+          "date": "2026-08-07",
+          "slot": "?",
+          "detail": "BRK.B ($1118B) reports 2026-08-07 ?"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-07",
+          "detail": "Non-Farm Employment Change 2026-08-07 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-07",
+          "detail": "Unemployment Rate 2026-08-07 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 16.29,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -8.28,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 1.33,
+      "signal_day_low": 16.22,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "WDC",
+      "rank": 14,
+      "score": 52.0,
+      "rsi2": 8.91,
+      "dist_200dma_pct": 32.99,
+      "signal_close": 451.52,
+      "mr_target": 518.26,
+      "mr_stop": 317.15,
+      "signal": "\ud83d\udfe1",
+      "listing_age_runs": 1,
+      "freq_60d": 2,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "BRK.A",
+          "date": "2026-08-07",
+          "slot": "?",
+          "detail": "BRK.A ($1118B) reports 2026-08-07 ?"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "BRK.B",
+          "date": "2026-08-07",
+          "slot": "?",
+          "detail": "BRK.B ($1118B) reports 2026-08-07 ?"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-07",
+          "detail": "Non-Farm Employment Change 2026-08-07 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-07",
+          "detail": "Unemployment Rate 2026-08-07 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 451.52,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -15.29,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 1.29,
+      "signal_day_low": 407.48,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "DINO",
+      "rank": 15,
+      "score": 51.8,
+      "rsi2": 2.94,
+      "dist_200dma_pct": 36.58,
+      "signal_close": 82.92,
+      "mr_target": 86.85,
+      "mr_stop": 72.7,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "sector": "Energy",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "BRK.A",
+          "date": "2026-08-07",
+          "slot": "?",
+          "detail": "BRK.A ($1118B) reports 2026-08-07 ?"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "BRK.B",
+          "date": "2026-08-07",
+          "slot": "?",
+          "detail": "BRK.B ($1118B) reports 2026-08-07 ?"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-07",
+          "detail": "Non-Farm Employment Change 2026-08-07 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-07",
+          "detail": "Unemployment Rate 2026-08-07 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 82.92,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -10.3,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 1.0,
+      "signal_day_low": 81.34,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "CVS",
+      "rank": 16,
+      "score": 51.6,
+      "rsi2": 2.27,
+      "dist_200dma_pct": 14.75,
+      "signal_close": 96.22,
+      "mr_target": 101.91,
+      "mr_stop": 88.39,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "BRK.A",
+          "date": "2026-08-07",
+          "slot": "?",
+          "detail": "BRK.A ($1118B) reports 2026-08-07 ?"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "BRK.B",
+          "date": "2026-08-07",
+          "slot": "?",
+          "detail": "BRK.B ($1118B) reports 2026-08-07 ?"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-07",
+          "detail": "Non-Farm Employment Change 2026-08-07 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-07",
+          "detail": "Unemployment Rate 2026-08-07 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 96.22,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -8.55,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.15,
+      "signal_day_low": 96.11,
+      "quiet_warning": false
+    }
+  ],
+  "macro_calendar": [
+    {
+      "date": "2026-08-07",
+      "time_et": "08:30",
+      "title": "Non-Farm Employment Change"
+    },
+    {
+      "date": "2026-08-07",
+      "time_et": "08:30",
+      "title": "Unemployment Rate"
+    }
+  ],
+  "prior_run_review": {
+    "source": "snapback:2026-08-05",
+    "n": 4,
+    "pct_positive": 25.0,
+    "avg_pct": -1.28,
+    "median_pct": -1.28,
+    "best": [
+      {
+        "ticker": "PBF",
+        "since_pct": 0.11
+      },
+      {
+        "ticker": "DINO",
+        "since_pct": -0.07
+      },
+      {
+        "ticker": "BRX",
+        "since_pct": -2.49
+      }
+    ],
+    "worst": [
+      {
+        "ticker": "REG",
+        "since_pct": -2.67
+      },
+      {
+        "ticker": "BRX",
+        "since_pct": -2.49
+      },
+      {
+        "ticker": "DINO",
+        "since_pct": -0.07
+      }
+    ],
+    "armed_subset": {
+      "n": 4,
+      "pct_positive": 25.0,
+      "avg_pct": -1.28,
+      "median_pct": -1.28
+    }
+  },
+  "errors": []
+}

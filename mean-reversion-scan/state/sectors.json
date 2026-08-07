@@ -32,7 +32,7 @@
   "ABEV": {
     "industry": "Beverages - Brewers",
     "sector": "Consumer Defensive",
-    "ts": 1783382616
+    "ts": 1786061003
   },
   "ABNB": {
     "industry": "Travel Services",
@@ -333,6 +333,11 @@
     "industry": "Biotechnology",
     "sector": "Healthcare",
     "ts": 1785510645
+  },
+  "BBY": {
+    "industry": "Specialty Retail",
+    "sector": "Consumer Cyclical",
+    "ts": 1786061003
   },
   "BCE": {
     "industry": "Telecom Services",
@@ -1292,7 +1297,7 @@
   "HST": {
     "industry": "REIT - Hotel & Motel",
     "sector": "Real Estate",
-    "ts": 1782864173
+    "ts": 1786061003
   },
   "HUM": {
     "industry": "Healthcare Plans",
@@ -1438,6 +1443,11 @@
     "industry": "Oil & Gas Equipment & Services",
     "sector": "Energy",
     "ts": 1783382616
+  },
+  "KHC": {
+    "industry": "Packaged Foods",
+    "sector": "Consumer Defensive",
+    "ts": 1786061003
   },
   "KIM": {
     "industry": "REIT - Retail",
@@ -1587,7 +1597,7 @@
   "MAC": {
     "industry": "REIT - Retail",
     "sector": "Real Estate",
-    "ts": 1781747799
+    "ts": 1786061003
   },
   "MAR": {
     "industry": "Lodging",
@@ -1603,6 +1613,11 @@
     "industry": "Semiconductors",
     "sector": "Technology",
     "ts": 1778771637
+  },
+  "MCO": {
+    "industry": "Financial Data & Stock Exchanges",
+    "sector": "Financial Services",
+    "ts": 1786061003
   },
   "MDLZ": {
     "industry": "Confectioners",
@@ -2114,6 +2129,11 @@
     "sector": "Industrials",
     "ts": 1785510645
   },
+  "RDN": {
+    "industry": "Insurance - Specialty",
+    "sector": "Financial Services",
+    "ts": 1786061003
+  },
   "REG": {
     "industry": "REIT - Retail",
     "sector": "Real Estate",
@@ -2434,6 +2454,11 @@
     "sector": "Healthcare",
     "ts": 1779543664
   },
+  "TECH": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1786061003
+  },
   "TECK": {
     "industry": "Other Industrial Metals & Mining",
     "sector": "Basic Materials",
@@ -2512,7 +2537,7 @@
   "TS": {
     "industry": "Oil & Gas Equipment & Services",
     "sector": "Energy",
-    "ts": 1782950590
+    "ts": 1786061003
   },
   "TSEM": {
     "industry": "Semiconductors",
@@ -2712,7 +2737,7 @@
   "VTRS": {
     "industry": "Drug Manufacturers - Specialty & Generic",
     "sector": "Healthcare",
-    "ts": 1782135719
+    "ts": 1786061003
   },
   "VVV": {
     "industry": "Auto & Truck Dealerships",
@@ -2742,7 +2767,7 @@
   "WDC": {
     "industry": "Computer Hardware",
     "sector": "Technology",
-    "ts": 1783037008
+    "ts": 1786061003
   },
   "WDS": {
     "industry": "Oil & Gas E&P",
