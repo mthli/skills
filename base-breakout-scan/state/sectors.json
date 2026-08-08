@@ -87,7 +87,7 @@
   "APH": {
     "industry": "Electronic Components",
     "sector": "Technology",
-    "ts": 1783555348
+    "ts": 1786147365
   },
   "APLS": {
     "industry": "Biotechnology",
@@ -219,6 +219,11 @@
     "sector": "Consumer Defensive",
     "ts": 1785369754
   },
+  "BWA": {
+    "industry": "Auto Parts",
+    "sector": "Consumer Cyclical",
+    "ts": 1786147365
+  },
   "C": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
@@ -298,6 +303,11 @@
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
     "ts": 1780589170
+  },
+  "COGT": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1786147365
   },
   "COHR": {
     "industry": "Scientific & Technical Instruments",
@@ -673,6 +683,11 @@
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
     "ts": 1783987440
+  },
+  "IRDM": {
+    "industry": "Telecom Services",
+    "sector": "Communication Services",
+    "ts": 1786147365
   },
   "IRM": {
     "industry": "REIT - Specialty",
@@ -1248,6 +1263,11 @@
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
     "ts": 1782259331
+  },
+  "TRV": {
+    "industry": "Insurance - Property & Casualty",
+    "sector": "Financial Services",
+    "ts": 1786147365
   },
   "TS": {
     "industry": "Oil & Gas Equipment & Services",

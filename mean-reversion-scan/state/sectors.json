@@ -1344,6 +1344,11 @@
     "sector": "Basic Materials",
     "ts": 1783728176
   },
+  "ILMN": {
+    "industry": "Diagnostics & Research",
+    "sector": "Healthcare",
+    "ts": 1786147413
+  },
   "IMVT": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
@@ -1427,7 +1432,7 @@
   "KDP": {
     "industry": "Beverages - Non-Alcoholic",
     "sector": "Consumer Defensive",
-    "ts": 1783555398
+    "ts": 1786147413
   },
   "KEY": {
     "industry": "Banks - Regional",
@@ -1662,7 +1667,7 @@
   "MNST": {
     "industry": "Beverages - Non-Alcoholic",
     "sector": "Consumer Defensive",
-    "ts": 1783555398
+    "ts": 1786147413
   },
   "MO": {
     "industry": "Tobacco",
@@ -1929,6 +1934,11 @@
     "sector": "Technology",
     "ts": 1783468998
   },
+  "ORI": {
+    "industry": "Insurance - Property & Casualty",
+    "sector": "Financial Services",
+    "ts": 1786147413
+  },
   "ORKA": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
@@ -1973,6 +1983,11 @@
     "industry": "Software - Infrastructure",
     "sector": "Technology",
     "ts": 1784764989
+  },
+  "PB": {
+    "industry": "Banks - Regional",
+    "sector": "Financial Services",
+    "ts": 1786147413
   },
   "PBA": {
     "industry": "Oil & Gas Midstream",

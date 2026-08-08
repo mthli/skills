@@ -144,6 +144,11 @@
     "sector": "Healthcare",
     "ts": 1784764900
   },
+  "CRNX": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1786147298
+  },
   "CRWD": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
@@ -194,6 +199,11 @@
     "sector": "Energy",
     "ts": 1784332986
   },
+  "DLTR": {
+    "industry": "Discount Stores",
+    "sector": "Consumer Defensive",
+    "ts": 1786147298
+  },
   "DOC": {
     "industry": "REIT - Healthcare Facilities",
     "sector": "Real Estate",
@@ -223,6 +233,11 @@
     "industry": "Biotechnology",
     "sector": "Healthcare",
     "ts": 1785456073
+  },
+  "EXPE": {
+    "industry": "Travel Services",
+    "sector": "Consumer Cyclical",
+    "ts": 1786147298
   },
   "FBIN": {
     "industry": "Building Products & Equipment",
@@ -273,6 +288,11 @@
     "industry": "Auto Parts",
     "sector": "Consumer Cyclical",
     "ts": 1784246492
+  },
+  "HALO": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1786147298
   },
   "HNGE": {
     "industry": "Health Information Services",
@@ -489,6 +509,11 @@
     "sector": "Technology",
     "ts": 1785508599
   },
+  "NTRA": {
+    "industry": "Diagnostics & Research",
+    "sector": "Healthcare",
+    "ts": 1786147298
+  },
   "NUE": {
     "industry": "Steel",
     "sector": "Basic Materials",
@@ -697,7 +722,7 @@
   "TECH": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1782786281
+    "ts": 1786147298
   },
   "TGTX": {
     "industry": "Biotechnology",
