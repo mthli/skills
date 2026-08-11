@@ -187,6 +187,15 @@ This is the section that can do harm if written lazily, so frame it honestly:
   as "the move already happened" or as "the exit price" — treat the morning
   print as a floor for the day's move, and grade the claim at the close with
   the >70%-kept rule.
+- **Premarket tells are provisional; only the close grades them (08-06,
+  08-10).** Any read derived from the premarket board — a "splitting" tell
+  (one name red, its group flat), a shrugged downgrade, board color, a mild
+  no-driver red — is a hypothesis, not a verdict: 08-06's 9/11-green
+  premarket board closed 8/11 red and BBY's premarket shrug inverted −6.5pp
+  by the close; 08-10's SOXX flat-vs-INTC "splitting, sleeve safe" closed at
+  its dead low through the trim trigger while XE's mild red closed −8.9%
+  through its void. Attach a pre-committed, close-graded price line (trigger
+  + void) to every tell; the lines, not the reads, do the work.
 - **⭐ MR pocket has zero day-1 edge on broad risk-on days (08-03, 08-04).**
   08-03 the pocket lost 2.4pp to SPY on a broad green day; 08-04 it matched
   SPY to the basis point. Its validated KPI is 5-day expectancy (score≥40 +
