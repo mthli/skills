@@ -1,0 +1,253 @@
+{
+  "as_of": "2026-08-10T20:03:37.320865-04:00",
+  "today": "2026-08-10",
+  "spark_window": [
+    "2026-08-11",
+    "2026-08-12",
+    "2026-08-13"
+  ],
+  "macro_note": "",
+  "regime": {
+    "snapshot": "20260810",
+    "state": "RISK-ON",
+    "score": 9,
+    "vix": 15.5,
+    "spy_vs_200_pct": 10.3,
+    "flags": ""
+  },
+  "mr_run": {
+    "run_id": "20260810",
+    "run_date": "2026-08-10",
+    "stale_days": 0,
+    "rows_in_run": 49,
+    "kegs_after_filter": 3
+  },
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "NNN",
+      "rank": 10,
+      "score": 43.3,
+      "rsi2": 2.01,
+      "dist_200dma_pct": 7.93,
+      "signal_close": 45.86,
+      "mr_target": 46.85,
+      "mr_stop": 43.7,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 1,
+      "freq_60d": 2,
+      "sector": "Real Estate",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-12",
+          "detail": "Core CPI m/m 2026-08-12 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-12",
+          "detail": "Core CPI y/y 2026-08-12 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-12",
+          "detail": "CPI m/m 2026-08-12 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-12",
+          "detail": "CPI y/y 2026-08-12 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-13",
+          "detail": "Core PPI m/m 2026-08-13 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-13",
+          "detail": "PPI m/m 2026-08-13 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 45.86,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -3.43,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.9,
+      "signal_day_low": 45.79,
+      "quiet_warning": true
+    },
+    {
+      "ticker": "OUT",
+      "rank": 11,
+      "score": 41.4,
+      "rsi2": 2.91,
+      "dist_200dma_pct": 10.89,
+      "signal_close": 30.04,
+      "mr_target": 31.28,
+      "mr_stop": 27.53,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 2,
+      "sector": "Real Estate",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-12",
+          "detail": "Core CPI m/m 2026-08-12 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-12",
+          "detail": "Core CPI y/y 2026-08-12 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-12",
+          "detail": "CPI m/m 2026-08-12 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-12",
+          "detail": "CPI y/y 2026-08-12 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-13",
+          "detail": "Core PPI m/m 2026-08-13 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-13",
+          "detail": "PPI m/m 2026-08-13 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 30.04,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 1,
+      "ret_5d_pct": -5.77,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 1.71,
+      "signal_day_low": 29.92,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "PB",
+      "rank": 13,
+      "score": 40.4,
+      "rsi2": 2.49,
+      "dist_200dma_pct": 6.21,
+      "signal_close": 73.34,
+      "mr_target": 74.18,
+      "mr_stop": 69.87,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 0,
+      "sector": "Financial Services",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-12",
+          "detail": "Core CPI m/m 2026-08-12 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-12",
+          "detail": "Core CPI y/y 2026-08-12 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-12",
+          "detail": "CPI m/m 2026-08-12 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-12",
+          "detail": "CPI y/y 2026-08-12 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-13",
+          "detail": "Core PPI m/m 2026-08-13 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-13",
+          "detail": "PPI m/m 2026-08-13 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 73.34,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -2.54,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.99,
+      "signal_day_low": 73.24,
+      "quiet_warning": true
+    }
+  ],
+  "macro_calendar": [
+    {
+      "date": "2026-08-12",
+      "time_et": "08:30",
+      "title": "Core CPI m/m"
+    },
+    {
+      "date": "2026-08-12",
+      "time_et": "08:30",
+      "title": "Core CPI y/y"
+    },
+    {
+      "date": "2026-08-12",
+      "time_et": "08:30",
+      "title": "CPI m/m"
+    },
+    {
+      "date": "2026-08-12",
+      "time_et": "08:30",
+      "title": "CPI y/y"
+    },
+    {
+      "date": "2026-08-13",
+      "time_et": "08:30",
+      "title": "Core PPI m/m"
+    },
+    {
+      "date": "2026-08-13",
+      "time_et": "08:30",
+      "title": "PPI m/m"
+    }
+  ],
+  "prior_run_review": null,
+  "errors": []
+}

@@ -7,7 +7,7 @@
   "AAL": {
     "industry": "Airlines",
     "sector": "Industrials",
-    "ts": 1783555398
+    "ts": 1786406609
   },
   "AAOI": {
     "industry": "Communication Equipment",
@@ -43,6 +43,11 @@
     "industry": "Biotechnology",
     "sector": "Healthcare",
     "ts": 1785589364
+  },
+  "ACGL": {
+    "industry": "Insurance - Diversified",
+    "sector": "Financial Services",
+    "ts": 1786406609
   },
   "ACMR": {
     "industry": "Semiconductor Equipment & Materials",
@@ -98,6 +103,11 @@
     "industry": "REIT - Healthcare Facilities",
     "sector": "Real Estate",
     "ts": 1785510935
+  },
+  "AIG": {
+    "industry": "Insurance - Diversified",
+    "sector": "Financial Services",
+    "ts": 1786406609
   },
   "AKAM": {
     "industry": "Software - Infrastructure",
@@ -494,6 +504,11 @@
     "sector": "Financial Services",
     "ts": 1780114451
   },
+  "CBSH": {
+    "industry": "Banks - Regional",
+    "sector": "Financial Services",
+    "ts": 1786406609
+  },
   "CCEP": {
     "industry": "Beverages - Non-Alcoholic",
     "sector": "Consumer Defensive",
@@ -722,7 +737,7 @@
   "CTRE": {
     "industry": "REIT - Healthcare Facilities",
     "sector": "Real Estate",
-    "ts": 1783728176
+    "ts": 1786406609
   },
   "CTVA": {
     "industry": "Agricultural Inputs",
@@ -782,7 +797,7 @@
   "DAL": {
     "industry": "Airlines",
     "sector": "Industrials",
-    "ts": 1783468998
+    "ts": 1786406609
   },
   "DAR": {
     "industry": "Packaged Foods",
@@ -1269,6 +1284,11 @@
     "sector": "Healthcare",
     "ts": 1784160163
   },
+  "HOMB": {
+    "industry": "Banks - Regional",
+    "sector": "Financial Services",
+    "ts": 1786406609
+  },
   "HON": {
     "industry": "Conglomerates",
     "sector": "Industrials",
@@ -1283,6 +1303,11 @@
     "industry": "REIT - Healthcare Facilities",
     "sector": "Real Estate",
     "ts": 1785510935
+  },
+  "HRL": {
+    "industry": "Packaged Foods",
+    "sector": "Consumer Defensive",
+    "ts": 1786406609
   },
   "HSBC": {
     "industry": "Banks - Diversified",
@@ -1508,6 +1533,11 @@
     "industry": "Oil & Gas Equipment & Services",
     "sector": "Energy",
     "ts": 1779543663
+  },
+  "LEVI": {
+    "industry": "Apparel Manufacturing",
+    "sector": "Consumer Cyclical",
+    "ts": 1786406609
   },
   "LIN": {
     "industry": "Specialty Chemicals",
@@ -1923,6 +1953,11 @@
     "industry": "Software - Infrastructure",
     "sector": "Technology",
     "ts": 1784764989
+  },
+  "OMF": {
+    "industry": "Credit Services",
+    "sector": "Financial Services",
+    "ts": 1786406609
   },
   "ON": {
     "industry": "Semiconductors",
@@ -2494,6 +2529,11 @@
     "sector": "Industrials",
     "ts": 1785456162
   },
+  "TFC": {
+    "industry": "Banks - Regional",
+    "sector": "Financial Services",
+    "ts": 1786406609
+  },
   "TGT": {
     "industry": "Discount Stores",
     "sector": "Consumer Defensive",
@@ -2682,7 +2722,7 @@
   "VIK": {
     "industry": "Travel Services",
     "sector": "Consumer Cyclical",
-    "ts": 1783382616
+    "ts": 1786406609
   },
   "VIRT": {
     "industry": "Capital Markets",

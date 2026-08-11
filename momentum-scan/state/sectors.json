@@ -42,7 +42,7 @@
   "AMRX": {
     "industry": "Drug Manufacturers - Specialty & Generic",
     "sector": "Healthcare",
-    "ts": 1782786281
+    "ts": 1786406504
   },
   "APGE": {
     "industry": "Biotechnology",
@@ -104,6 +104,11 @@
     "sector": "Financial Services",
     "ts": 1781654506
   },
+  "BKNG": {
+    "industry": "Travel Services",
+    "sector": "Consumer Cyclical",
+    "ts": 1786406504
+  },
   "BRKR": {
     "industry": "Medical Devices",
     "sector": "Healthcare",
@@ -143,6 +148,11 @@
     "industry": "Biotechnology",
     "sector": "Healthcare",
     "ts": 1784764900
+  },
+  "CRBG": {
+    "industry": "Asset Management",
+    "sector": "Financial Services",
+    "ts": 1786406504
   },
   "CRNX": {
     "industry": "Biotechnology",
@@ -223,6 +233,11 @@
     "industry": "Internet Retail",
     "sector": "Consumer Cyclical",
     "ts": 1778771326
+  },
+  "ELF": {
+    "industry": "Household & Personal Products",
+    "sector": "Consumer Defensive",
+    "ts": 1786406504
   },
   "ELV": {
     "industry": "Healthcare Plans",
@@ -349,6 +364,11 @@
     "sector": "Financial Services",
     "ts": 1780717144
   },
+  "JHX": {
+    "industry": "Building Materials",
+    "sector": "Basic Materials",
+    "ts": 1786406504
+  },
   "KDP": {
     "industry": "Beverages - Non-Alcoholic",
     "sector": "Consumer Defensive",
@@ -437,7 +457,7 @@
   "MNST": {
     "industry": "Beverages - Non-Alcoholic",
     "sector": "Consumer Defensive",
-    "ts": 1782405187
+    "ts": 1786406504
   },
   "MOH": {
     "industry": "Healthcare Plans",
@@ -584,6 +604,11 @@
     "sector": "Industrials",
     "ts": 1778771326
   },
+  "QGEN": {
+    "industry": "Diagnostics & Research",
+    "sector": "Healthcare",
+    "ts": 1786406504
+  },
   "QRVO": {
     "industry": "Semiconductors",
     "sector": "Technology",
@@ -728,6 +753,11 @@
     "industry": "Biotechnology",
     "sector": "Healthcare",
     "ts": 1785456073
+  },
+  "TMO": {
+    "industry": "Diagnostics & Research",
+    "sector": "Healthcare",
+    "ts": 1786406504
   },
   "TNGX": {
     "industry": "Biotechnology",
