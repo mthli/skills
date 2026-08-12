@@ -872,7 +872,7 @@
   "MRK": {
     "industry": "Drug Manufacturers - General",
     "sector": "Healthcare",
-    "ts": 1782259331
+    "ts": 1786492951
   },
   "MS": {
     "industry": "Capital Markets",
@@ -963,6 +963,11 @@
     "industry": "Banks - Regional",
     "sector": "Financial Services",
     "ts": 1785589359
+  },
+  "OC": {
+    "industry": "Building Products & Equipment",
+    "sector": "Industrials",
+    "ts": 1786492951
   },
   "ODFL": {
     "industry": "Trucking",
@@ -1438,6 +1443,11 @@
     "industry": "Capital Markets",
     "sector": "Financial Services",
     "ts": 1779848040
+  },
+  "XENE": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1786492951
   },
   "XPO": {
     "industry": "Trucking",

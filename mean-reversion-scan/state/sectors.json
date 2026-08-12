@@ -199,6 +199,11 @@
     "sector": "Technology",
     "ts": 1783468998
   },
+  "AMRX": {
+    "industry": "Drug Manufacturers - Specialty & Generic",
+    "sector": "Healthcare",
+    "ts": 1786493002
+  },
   "AMX": {
     "industry": "Telecom Services",
     "sector": "Communication Services",
@@ -297,7 +302,7 @@
   "AVB": {
     "industry": "REIT - Residential",
     "sector": "Real Estate",
-    "ts": 1781225311
+    "ts": 1786493002
   },
   "AVGO": {
     "industry": "Semiconductors",
@@ -447,7 +452,7 @@
   "BUD": {
     "industry": "Beverages - Brewers",
     "sector": "Consumer Defensive",
-    "ts": 1780659418
+    "ts": 1786493002
   },
   "BVN": {
     "industry": "Other Precious Metals & Mining",
@@ -828,6 +833,11 @@
     "industry": "Computer Hardware",
     "sector": "Technology",
     "ts": 1785369802
+  },
+  "DFTX": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1786493002
   },
   "DINO": {
     "industry": "Oil & Gas Refining & Marketing",
@@ -1274,6 +1284,11 @@
     "sector": "Energy",
     "ts": 1781568272
   },
+  "HIG": {
+    "industry": "Insurance - Diversified",
+    "sector": "Financial Services",
+    "ts": 1786493002
+  },
   "HLT": {
     "industry": "Lodging",
     "sector": "Consumer Cyclical",
@@ -1292,7 +1307,7 @@
   "HON": {
     "industry": "Conglomerates",
     "sector": "Industrials",
-    "ts": 1780659418
+    "ts": 1786493002
   },
   "HPE": {
     "industry": "Communication Equipment",
@@ -1559,6 +1574,11 @@
     "sector": "Healthcare",
     "ts": 1784073920
   },
+  "LNC": {
+    "industry": "Insurance - Life",
+    "sector": "Financial Services",
+    "ts": 1786493002
+  },
   "LNG": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
@@ -1662,7 +1682,7 @@
   "MFC": {
     "industry": "Insurance - Life",
     "sector": "Financial Services",
-    "ts": 1778771637
+    "ts": 1786493002
   },
   "MFG": {
     "industry": "Banks - Regional",
@@ -2657,12 +2677,12 @@
   "UDR": {
     "industry": "REIT - Residential",
     "sector": "Real Estate",
-    "ts": 1782135719
+    "ts": 1786493002
   },
   "UGP": {
     "industry": "Oil & Gas Refining & Marketing",
     "sector": "Energy",
-    "ts": 1780114450
+    "ts": 1786493002
   },
   "UMC": {
     "industry": "Semiconductors",
