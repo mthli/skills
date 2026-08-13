@@ -164,9 +164,17 @@ This is the section that can do harm if written lazily, so frame it honestly:
 - **Grade catalyst claims by % of gap kept at the close, per name.** > 70%
   kept = the catalyst is real for that name; < 30% = it traded like sympathy
   (07-20 SIMO inverted inside the catalyst bucket; 07-30 FTNT kept 10% of its
-  own print's gap). Close-graded tests need an explicit middle branch: a
-  finish within ~0.2% of the line is "unconfirmed, next session decides", not
-  a verdict.
+  own print's gap).
+- **Every close-graded test ships three branches, and the middle prescribes an
+  action (07-17, 07-20, 08-11 SPCX, 08-12 SOXX).** Two-branch tests keep
+  landing in their own gap: 08-11 SPCX fell −3.9% into an unwritten middle,
+  08-12 SOXX kept **65%** of its gap — squarely between the ≥70% "ride" and
+  <30% "tighten" branches. For a level test the middle is a band (a finish
+  within ~0.2% of the line = "unconfirmed, next session decides"); for a
+  gap-keep test the 30–70% band is the *modal* outcome, not an edge case, so
+  name what it means (usually: the thesis is intact but unconfirmed — hold
+  size, no adds, the far line still governs). A middle branch that only says
+  "regrade tomorrow" is half-written.
 - **Premarket single-stock prints are thin.** Weight the futures gap, Europe,
   and sector ETFs over individual moves; respect the gappers' volume floor,
   and treat pre-8:00 ET thin prints as noise.
@@ -196,6 +204,19 @@ This is the section that can do harm if written lazily, so frame it honestly:
   its dead low through the trim trigger while XE's mild red closed −8.9%
   through its void. Attach a pre-committed, close-graded price line (trigger
   + void) to every tell; the lines, not the reads, do the work.
+- **A fired line is not re-litigated by a green premarket (08-10, 08-11,
+  08-12; 0-for-3).** Once a close-graded exit or trim has fired, the next
+  morning's bounce above that line is a *better fill*, not a reprieve: XE
+  bounced over 20.80 three mornings running and closed below it every time —
+  08-12's 21.04 open beat the close by 3.3% and the day's low by 7%. Holding
+  through a fired line is a **new** trade and needs its own written thesis.
+- **The premarket sector board inverts unless a catalyst owns the sector
+  (07-15, 06-25, 08-12).** Premarket sector-ETF leadership is as gap-unreliable
+  as the index ETFs — 08-12: XLB +0.56% premarket → **−1.24%, worst sector**;
+  XLE −0.56% → +0.16%; XLP −0.48% → +0.46%. The single survivor was **XLK**,
+  the sector a dated catalyst (CPI + the AI-infra prints) actually owned. So:
+  treat the premarket board as noise by default, and promote exactly the
+  sector whose catalyst you can name to a real read.
 - **⭐ MR pocket has zero day-1 edge on broad risk-on days (08-03, 08-04).**
   08-03 the pocket lost 2.4pp to SPY on a broad green day; 08-04 it matched
   SPY to the basis point. Its validated KPI is 5-day expectancy (score≥40 +
