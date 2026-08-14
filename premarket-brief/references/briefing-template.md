@@ -205,11 +205,16 @@ This is the section that can do harm if written lazily, so frame it honestly:
   through its void. Attach a pre-committed, close-graded price line (trigger
   + void) to every tell; the lines, not the reads, do the work.
 - **A fired line is not re-litigated by a green premarket (08-10, 08-11,
-  08-12; 0-for-3).** Once a close-graded exit or trim has fired, the next
-  morning's bounce above that line is a *better fill*, not a reprieve: XE
+  08-12, 08-13; 1-for-4).** Once a close-graded exit or trim has fired, the
+  next morning's bounce above that line is a *better fill*, not a reprieve: XE
   bounced over 20.80 three mornings running and closed below it every time —
   08-12's 21.04 open beat the close by 3.3% and the day's low by 7%. Holding
   through a fired line is a **new** trade and needs its own written thesis.
+  **Refinement (08-13, 1st instance — watch):** the one bounce that stuck was
+  the one carrying a *fresh dated catalyst* (XE's Q2 revenue +154% print, close
+  +11.7%). A catalyst-less bounce is a better fill; a bounce with an owning
+  catalyst is a legitimate re-trade — and either way it gets a **new written
+  line**, which is what makes the distinction gradeable instead of hopeful.
 - **The premarket sector board inverts unless a catalyst owns the sector
   (07-15, 06-25, 08-12).** Premarket sector-ETF leadership is as gap-unreliable
   as the index ETFs — 08-12: XLB +0.56% premarket → **−1.24%, worst sector**;
@@ -217,6 +222,24 @@ This is the section that can do harm if written lazily, so frame it honestly:
   the sector a dated catalyst (CPI + the AI-infra prints) actually owned. So:
   treat the premarket board as noise by default, and promote exactly the
   sector whose catalyst you can name to a real read.
+- **Containment beats the event — the posture must follow the brief's own
+  evidence (08-03, 08-13).** When an overnight negative is loud but the
+  dashboard says it was *contained* (the group didn't follow it down, a
+  corroborating market rallied, the regime score is healthy), the containment
+  is the read and the headline stance has to match it. 08-03 headlined "day 2
+  of the chip unwind" off a backward-looking KOSPI give-back and QQQ finished
+  the leading index; 08-13 headlined "it is not an adding day" after writing
+  SOXX-flat, NVDA-green and KOSPI +3.6% into its own table, and **both indices
+  closed at records through the resistance it had mapped to the tick.** Three
+  reporting names blowing up is a fact about those three names until the
+  complex confirms it. Ask before filing the call: *does my own dashboard
+  contradict my headline?*
+- **Name which constraint binds (08-13).** "Not an adding day" is two claims
+  wearing one coat — *no venue is open* (the scan is stale, the ⭐ pocket's
+  listing age can't be verified, the book is full) and *the tape doesn't merit
+  adds*. They are graded differently and they fail differently: on 08-13 only
+  the first was true, and XLRE closed the 2nd-best sector with the stood-down
+  REITs inside it. Say which one is doing the work, every time.
 - **⭐ MR pocket has zero day-1 edge on broad risk-on days (08-03, 08-04).**
   08-03 the pocket lost 2.4pp to SPY on a broad green day; 08-04 it matched
   SPY to the basis point. Its validated KPI is 5-day expectancy (score≥40 +
