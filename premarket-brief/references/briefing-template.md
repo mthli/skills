@@ -210,11 +210,16 @@ This is the section that can do harm if written lazily, so frame it honestly:
   bounced over 20.80 three mornings running and closed below it every time —
   08-12's 21.04 open beat the close by 3.3% and the day's low by 7%. Holding
   through a fired line is a **new** trade and needs its own written thesis.
-  **Refinement (08-13, 1st instance — watch):** the one bounce that stuck was
-  the one carrying a *fresh dated catalyst* (XE's Q2 revenue +154% print, close
-  +11.7%). A catalyst-less bounce is a better fill; a bounce with an owning
-  catalyst is a legitimate re-trade — and either way it gets a **new written
-  line**, which is what makes the distinction gradeable instead of hopeful.
+  **Refinement (08-13; 1-for-2 after 08-14 — watch):** the catalyst
+  differentiator (a bounce with a *fresh dated catalyst* is a legitimate
+  re-trade, a catalyst-less one is a better fill) held for XE's +154% print
+  (close +11.7%) but failed 08-14, when REMX stuck **without** any catalyst
+  (+3.18% → 78.55, sector-wide and driverless). Second watch (08-14, 1st
+  instance): the doctrine's three confirming cases were all *exit* lines on a
+  broken post-earnings name — a fired **trim** on an intact-uptrend name may
+  not behave the same way. Either way a held-through line gets a **new
+  written line**, which is what makes the distinction gradeable instead of
+  hopeful.
 - **The premarket sector board inverts unless a catalyst owns the sector
   (07-15, 06-25, 08-12).** Premarket sector-ETF leadership is as gap-unreliable
   as the index ETFs — 08-12: XLB +0.56% premarket → **−1.24%, worst sector**;
