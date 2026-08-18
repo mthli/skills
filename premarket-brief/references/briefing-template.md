@@ -226,7 +226,12 @@ This is the section that can do harm if written lazily, so frame it honestly:
   XLE −0.56% → +0.16%; XLP −0.48% → +0.46%. The single survivor was **XLK**,
   the sector a dated catalyst (CPI + the AI-infra prints) actually owned. So:
   treat the premarket board as noise by default, and promote exactly the
-  sector whose catalyst you can name to a real read.
+  sector whose catalyst you can name to a real read. **The promotion is a
+  close-grade line, never a pre-open verdict (08-17):** XLE with a named
+  catalyst (ceasefire expiry) got demoted off a +0.1% premarket print —
+  "a catalyst without a move" — and led the entire board at +1.26% by the
+  close. A flat premarket does not veto a catalyst-owned sector; it means
+  the grading clock hasn't run yet, same as a sympathy gap on a name.
 - **Containment beats the event — the posture must follow the brief's own
   evidence (08-03, 08-13).** When an overnight negative is loud but the
   dashboard says it was *contained* (the group didn't follow it down, a
