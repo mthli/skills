@@ -107,7 +107,7 @@
   "ARWR": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1781568197
+    "ts": 1787011454
   },
   "ASML": {
     "industry": "Semiconductor Equipment & Materials",
@@ -162,7 +162,7 @@
   "BCS": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1784333103
+    "ts": 1787011455
   },
   "BEN": {
     "industry": "Asset Management",
@@ -232,7 +232,7 @@
   "C": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1783468950
+    "ts": 1787011455
   },
   "CARR": {
     "industry": "Building Products & Equipment",
@@ -287,7 +287,7 @@
   "CMBT": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
-    "ts": 1782135679
+    "ts": 1787011456
   },
   "CMC": {
     "industry": "Metal Fabrication",
@@ -307,7 +307,7 @@
   "CNQ": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1780589170
+    "ts": 1787011455
   },
   "COGT": {
     "industry": "Biotechnology",
@@ -352,7 +352,7 @@
   "CSX": {
     "industry": "Railroads",
     "sector": "Industrials",
-    "ts": 1781568198
+    "ts": 1787011455
   },
   "CTVA": {
     "industry": "Agricultural Inputs",
@@ -448,6 +448,11 @@
     "industry": "Chemicals",
     "sector": "Basic Materials",
     "ts": 1779020942
+  },
+  "DXCM": {
+    "industry": "Medical Devices",
+    "sector": "Healthcare",
+    "ts": 1787011455
   },
   "EAT": {
     "industry": "Restaurants",
@@ -657,7 +662,7 @@
   "HWM": {
     "industry": "Aerospace & Defense",
     "sector": "Industrials",
-    "ts": 1784246534
+    "ts": 1787011454
   },
   "HXL": {
     "industry": "Aerospace & Defense",
@@ -667,7 +672,7 @@
   "IBKR": {
     "industry": "Capital Markets",
     "sector": "Financial Services",
-    "ts": 1783468950
+    "ts": 1787011455
   },
   "ILMN": {
     "industry": "Diagnostics & Research",
@@ -687,7 +692,7 @@
   "ING": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1783987440
+    "ts": 1787011455
   },
   "IRDM": {
     "industry": "Telecom Services",
@@ -723,6 +728,11 @@
     "industry": "Building Materials",
     "sector": "Basic Materials",
     "ts": 1784246534
+  },
+  "JNJ": {
+    "industry": "Drug Manufacturers - General",
+    "sector": "Healthcare",
+    "ts": 1787011454
   },
   "KEYS": {
     "industry": "Scientific & Technical Instruments",
@@ -827,7 +837,7 @@
   "MFC": {
     "industry": "Insurance - Life",
     "sector": "Financial Services",
-    "ts": 1784073833
+    "ts": 1787011455
   },
   "MFG": {
     "industry": "Banks - Regional",
@@ -1092,7 +1102,7 @@
   "ROKU": {
     "industry": "Entertainment",
     "sector": "Communication Services",
-    "ts": 1783987440
+    "ts": 1787011454
   },
   "RPRX": {
     "industry": "Biotechnology",
@@ -1252,7 +1262,7 @@
   "TGT": {
     "industry": "Discount Stores",
     "sector": "Consumer Defensive",
-    "ts": 1779410554
+    "ts": 1787011455
   },
   "TGTX": {
     "industry": "Biotechnology",
@@ -1272,7 +1282,7 @@
   "TRGP": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
-    "ts": 1781136178
+    "ts": 1787011454
   },
   "TRP": {
     "industry": "Oil & Gas Midstream",
@@ -1307,7 +1317,7 @@
   "TVTX": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1784246534
+    "ts": 1787011454
   },
   "TWST": {
     "industry": "Diagnostics & Research",
@@ -1337,7 +1347,7 @@
   "UGP": {
     "industry": "Oil & Gas Refining & Marketing",
     "sector": "Energy",
-    "ts": 1778771444
+    "ts": 1787011456
   },
   "UNH": {
     "industry": "Healthcare Plans",
@@ -1348,6 +1358,11 @@
     "industry": "Banks - Regional",
     "sector": "Financial Services",
     "ts": 1785589361
+  },
+  "USFD": {
+    "industry": "Food Distribution",
+    "sector": "Consumer Defensive",
+    "ts": 1787011455
   },
   "VAL": {
     "industry": "Oil & Gas Drilling",
@@ -1363,6 +1378,11 @@
     "industry": "Travel Services",
     "sector": "Consumer Cyclical",
     "ts": 1785558751
+  },
+  "VIRT": {
+    "industry": "Capital Markets",
+    "sector": "Financial Services",
+    "ts": 1787011455
   },
   "VIST": {
     "industry": "Oil & Gas E&P",
@@ -1437,7 +1457,7 @@
   "WSM": {
     "industry": "Specialty Retail",
     "sector": "Consumer Cyclical",
-    "ts": 1784333103
+    "ts": 1787011455
   },
   "WULF": {
     "industry": "Capital Markets",
@@ -1452,7 +1472,7 @@
   "XPO": {
     "industry": "Trucking",
     "sector": "Industrials",
-    "ts": 1784246534
+    "ts": 1787011455
   },
   "YOU": {
     "industry": "Software - Application",

@@ -1,0 +1,333 @@
+{
+  "as_of": "2026-08-17T20:05:54.275003-04:00",
+  "today": "2026-08-17",
+  "spark_window": [
+    "2026-08-18",
+    "2026-08-19",
+    "2026-08-20"
+  ],
+  "macro_note": "",
+  "regime": {
+    "snapshot": "20260817",
+    "state": "RISK-ON",
+    "score": 9,
+    "vix": 15.2,
+    "spy_vs_200_pct": 9.9,
+    "flags": ""
+  },
+  "mr_run": {
+    "run_id": "20260817",
+    "run_date": "2026-08-17",
+    "stale_days": 0,
+    "rows_in_run": 38,
+    "kegs_after_filter": 5
+  },
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "VSXY",
+      "rank": 1,
+      "score": 66.1,
+      "rsi2": 2.19,
+      "dist_200dma_pct": 41.55,
+      "signal_close": 84.1,
+      "mr_target": 90.27,
+      "mr_stop": 73.26,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 1,
+      "freq_60d": 0,
+      "sector": "Consumer Cyclical",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "HD",
+          "date": "2026-08-18",
+          "slot": "BMO",
+          "detail": "HD (Consumer Cyclical, $338B) reports 2026-08-18 BMO"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "TJX",
+          "date": "2026-08-19",
+          "slot": "BMO",
+          "detail": "TJX (Consumer Cyclical, $168B) reports 2026-08-19 BMO"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-19",
+          "detail": "FOMC Meeting Minutes 2026-08-19 14:00 ET"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "WMT",
+          "date": "2026-08-20",
+          "slot": "BMO",
+          "detail": "WMT ($917B) reports 2026-08-20 BMO"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "BABA",
+          "date": "2026-08-20",
+          "slot": "BMO",
+          "detail": "BABA (Consumer Cyclical, $289B) reports 2026-08-20 BMO"
+        }
+      ],
+      "armed": true,
+      "latest_close": 84.1,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -15.87,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.9,
+      "signal_day_low": 84.04,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "ROST",
+      "rank": 2,
+      "score": 50.2,
+      "rsi2": 1.99,
+      "dist_200dma_pct": 13.66,
+      "signal_close": 235.28,
+      "mr_target": 245.13,
+      "mr_stop": 223.07,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 1,
+      "freq_60d": 2,
+      "sector": "Consumer Cyclical",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "HD",
+          "date": "2026-08-18",
+          "slot": "BMO",
+          "detail": "HD (Consumer Cyclical, $338B) reports 2026-08-18 BMO"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "TJX",
+          "date": "2026-08-19",
+          "slot": "BMO",
+          "detail": "TJX (Consumer Cyclical, $168B) reports 2026-08-19 BMO"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-19",
+          "detail": "FOMC Meeting Minutes 2026-08-19 14:00 ET"
+        },
+        {
+          "type": "own_earnings",
+          "symbol": "ROST",
+          "date": "2026-08-20",
+          "slot": "AMC",
+          "detail": "ROST reports 2026-08-20 AMC (eps est $1.93) \u2014 a coin flip, NOT a verdict: earnings-gap rule says zero directional trust"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "WMT",
+          "date": "2026-08-20",
+          "slot": "BMO",
+          "detail": "WMT ($917B) reports 2026-08-20 BMO"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "BABA",
+          "date": "2026-08-20",
+          "slot": "BMO",
+          "detail": "BABA (Consumer Cyclical, $289B) reports 2026-08-20 BMO"
+        }
+      ],
+      "armed": true,
+      "latest_close": 235.28,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 1,
+      "ret_5d_pct": -7.67,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 1.08,
+      "signal_day_low": 234.86,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "ITW",
+      "rank": 3,
+      "score": 50.0,
+      "rsi2": 1.3,
+      "dist_200dma_pct": 9.66,
+      "signal_close": 287.28,
+      "mr_target": 290.95,
+      "mr_stop": 271.37,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "sector": "Industrials",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-19",
+          "detail": "FOMC Meeting Minutes 2026-08-19 14:00 ET"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "WMT",
+          "date": "2026-08-20",
+          "slot": "BMO",
+          "detail": "WMT ($917B) reports 2026-08-20 BMO"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "DE",
+          "date": "2026-08-20",
+          "slot": "BMO",
+          "detail": "DE (Industrials, $164B) reports 2026-08-20 BMO"
+        }
+      ],
+      "armed": true,
+      "latest_close": 287.28,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 6,
+      "ret_5d_pct": -2.46,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.68,
+      "signal_day_low": 287.21,
+      "quiet_warning": true
+    },
+    {
+      "ticker": "TROW",
+      "rank": 4,
+      "score": 47.3,
+      "rsi2": 1.54,
+      "dist_200dma_pct": 9.14,
+      "signal_close": 110.46,
+      "mr_target": 111.5,
+      "mr_stop": 103.41,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "sector": "Financial Services",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-19",
+          "detail": "FOMC Meeting Minutes 2026-08-19 14:00 ET"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "WMT",
+          "date": "2026-08-20",
+          "slot": "BMO",
+          "detail": "WMT ($917B) reports 2026-08-20 BMO"
+        }
+      ],
+      "armed": true,
+      "latest_close": 110.46,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 6,
+      "ret_5d_pct": -2.91,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 0.7,
+      "signal_day_low": 109.94,
+      "quiet_warning": true
+    },
+    {
+      "ticker": "BAX",
+      "rank": 5,
+      "score": 44.1,
+      "rsi2": 3.88,
+      "dist_200dma_pct": 30.82,
+      "signal_close": 25.91,
+      "mr_target": 26.85,
+      "mr_stop": 22.6,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-19",
+          "detail": "FOMC Meeting Minutes 2026-08-19 14:00 ET"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "WMT",
+          "date": "2026-08-20",
+          "slot": "BMO",
+          "detail": "WMT ($917B) reports 2026-08-20 BMO"
+        }
+      ],
+      "armed": true,
+      "latest_close": 25.91,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -6.73,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.79,
+      "signal_day_low": 25.86,
+      "quiet_warning": false
+    }
+  ],
+  "macro_calendar": [
+    {
+      "date": "2026-08-19",
+      "time_et": "14:00",
+      "title": "FOMC Meeting Minutes"
+    }
+  ],
+  "prior_run_review": {
+    "source": "snapback:2026-08-11",
+    "n": 9,
+    "pct_positive": 55.6,
+    "avg_pct": 1.62,
+    "median_pct": 0.54,
+    "best": [
+      {
+        "ticker": "DFTX",
+        "since_pct": 10.63
+      },
+      {
+        "ticker": "AMRX",
+        "since_pct": 7.72
+      },
+      {
+        "ticker": "NNN",
+        "since_pct": 1.74
+      }
+    ],
+    "worst": [
+      {
+        "ticker": "BUD",
+        "since_pct": -4.23
+      },
+      {
+        "ticker": "VIK",
+        "since_pct": -1.66
+      },
+      {
+        "ticker": "HRL",
+        "since_pct": -1.15
+      }
+    ],
+    "armed_subset": {
+      "n": 9,
+      "pct_positive": 55.6,
+      "avg_pct": 1.62,
+      "median_pct": 0.54
+    }
+  },
+  "errors": []
+}

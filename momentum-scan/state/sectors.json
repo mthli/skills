@@ -432,7 +432,7 @@
   "LTH": {
     "industry": "Leisure",
     "sector": "Consumer Cyclical",
-    "ts": 1783987360
+    "ts": 1787011354
   },
   "MAC": {
     "industry": "REIT - Retail",
@@ -567,7 +567,7 @@
   "ORKA": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1782786281
+    "ts": 1787011355
   },
   "OSCR": {
     "industry": "Healthcare Plans",
@@ -628,6 +628,11 @@
     "industry": "Internet Content & Information",
     "sector": "Communication Services",
     "ts": 1780944612
+  },
+  "RGEN": {
+    "industry": "Medical Instruments & Supplies",
+    "sector": "Healthcare",
+    "ts": 1787011354
   },
   "RIOT": {
     "industry": "Capital Markets",
@@ -702,7 +707,7 @@
   "SNOW": {
     "industry": "Software - Application",
     "sector": "Technology",
-    "ts": 1783987360
+    "ts": 1787011354
   },
   "SSL": {
     "industry": "Specialty Chemicals",
@@ -783,6 +788,11 @@
     "industry": "Semiconductors",
     "sector": "Technology",
     "ts": 1780452266
+  },
+  "TTEK": {
+    "industry": "Engineering & Construction",
+    "sector": "Industrials",
+    "ts": 1787011354
   },
   "TVTX": {
     "industry": "Biotechnology",

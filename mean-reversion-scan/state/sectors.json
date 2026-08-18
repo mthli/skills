@@ -174,6 +174,11 @@
     "sector": "Technology",
     "ts": 1783468998
   },
+  "AMCR": {
+    "industry": "Packaging & Containers",
+    "sector": "Consumer Cyclical",
+    "ts": 1787011540
+  },
   "AMD": {
     "industry": "Semiconductors",
     "sector": "Technology",
@@ -334,10 +339,15 @@
     "sector": "Consumer Cyclical",
     "ts": 1785589365
   },
+  "BAX": {
+    "industry": "Medical Instruments & Supplies",
+    "sector": "Healthcare",
+    "ts": 1787011540
+  },
   "BAYRY": {
     "industry": "Drug Manufacturers - General",
     "sector": "Healthcare",
-    "ts": 1784073920
+    "ts": 1787011541
   },
   "BB": {
     "industry": "Software - Infrastructure",
@@ -424,6 +434,11 @@
     "sector": "Energy",
     "ts": 1785974602
   },
+  "BRK-B": {
+    "industry": "Insurance - Diversified",
+    "sector": "Financial Services",
+    "ts": 1787011540
+  },
   "BRKR": {
     "industry": "Medical Devices",
     "sector": "Healthcare",
@@ -507,7 +522,7 @@
   "CB": {
     "industry": "Insurance - Property & Casualty",
     "sector": "Financial Services",
-    "ts": 1780114451
+    "ts": 1787011541
   },
   "CBSH": {
     "industry": "Banks - Regional",
@@ -557,7 +572,7 @@
   "CHD": {
     "industry": "Household & Personal Products",
     "sector": "Consumer Defensive",
-    "ts": 1782135720
+    "ts": 1787011541
   },
   "CHRD": {
     "industry": "Oil & Gas E&P",
@@ -822,7 +837,7 @@
   "DE": {
     "industry": "Farm & Heavy Construction Machinery",
     "sector": "Industrials",
-    "ts": 1783728176
+    "ts": 1787011541
   },
   "DECK": {
     "industry": "Footwear & Accessories",
@@ -918,6 +933,11 @@
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
     "ts": 1782345778
+  },
+  "ECL": {
+    "industry": "Specialty Chemicals",
+    "sector": "Basic Materials",
+    "ts": 1787011540
   },
   "ED": {
     "industry": "Utilities - Regulated Electric",
@@ -1154,6 +1174,11 @@
     "sector": "Technology",
     "ts": 1784764989
   },
+  "FTV": {
+    "industry": "Scientific & Technical Instruments",
+    "sector": "Technology",
+    "ts": 1787011541
+  },
   "GBCI": {
     "industry": "Banks - Regional",
     "sector": "Financial Services",
@@ -1217,7 +1242,7 @@
   "GM": {
     "industry": "Auto Manufacturers",
     "sector": "Consumer Cyclical",
-    "ts": 1782777789
+    "ts": 1787011540
   },
   "GOOG": {
     "industry": "Internet Content & Information",
@@ -1382,7 +1407,7 @@
   "IFF": {
     "industry": "Specialty Chemicals",
     "sector": "Basic Materials",
-    "ts": 1783728176
+    "ts": 1787011540
   },
   "ILMN": {
     "industry": "Diagnostics & Research",
@@ -1438,6 +1463,11 @@
     "industry": "Banks - Regional",
     "sector": "Financial Services",
     "ts": 1785589371
+  },
+  "ITW": {
+    "industry": "Specialty Industrial Machinery",
+    "sector": "Industrials",
+    "ts": 1787011540
   },
   "IVZ": {
     "industry": "Asset Management",
@@ -1632,7 +1662,7 @@
   "LUV": {
     "industry": "Airlines",
     "sector": "Industrials",
-    "ts": 1784073920
+    "ts": 1787011540
   },
   "LYB": {
     "industry": "Specialty Chemicals",
@@ -1713,6 +1743,11 @@
     "industry": "Scientific & Technical Instruments",
     "sector": "Technology",
     "ts": 1784333210
+  },
+  "MMM": {
+    "industry": "Conglomerates",
+    "sector": "Industrials",
+    "ts": 1787011541
   },
   "MNST": {
     "industry": "Beverages - Non-Alcoholic",
@@ -2142,7 +2177,7 @@
   "PRM": {
     "industry": "Specialty Chemicals",
     "sector": "Basic Materials",
-    "ts": 1782777789
+    "ts": 1787011540
   },
   "PRMB": {
     "industry": "Beverages - Non-Alcoholic",
@@ -2198,6 +2233,11 @@
     "industry": "Specialty Business Services",
     "sector": "Industrials",
     "ts": 1785510645
+  },
+  "RCL": {
+    "industry": "Travel Services",
+    "sector": "Consumer Cyclical",
+    "ts": 1787011541
   },
   "RDN": {
     "industry": "Insurance - Specialty",
@@ -2262,7 +2302,7 @@
   "ROST": {
     "industry": "Apparel Retail",
     "sector": "Consumer Cyclical",
-    "ts": 1782518609
+    "ts": 1787011540
   },
   "RPRX": {
     "industry": "Biotechnology",
@@ -2302,7 +2342,7 @@
   "SAN": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1778771637
+    "ts": 1787011540
   },
   "SANM": {
     "industry": "Electronic Components",
@@ -2353,6 +2393,11 @@
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
     "ts": 1781568272
+  },
+  "SHW": {
+    "industry": "Specialty Chemicals",
+    "sector": "Basic Materials",
+    "ts": 1787011541
   },
   "SIMO": {
     "industry": "Semiconductors",
@@ -2507,7 +2552,7 @@
   "SWK": {
     "industry": "Tools & Accessories",
     "sector": "Industrials",
-    "ts": 1783555398
+    "ts": 1787011540
   },
   "SWKS": {
     "industry": "Semiconductors",
@@ -2517,7 +2562,7 @@
   "SYY": {
     "industry": "Food Distribution",
     "sector": "Consumer Defensive",
-    "ts": 1784160164
+    "ts": 1787011540
   },
   "TAK": {
     "industry": "Drug Manufacturers - Specialty & Generic",
@@ -2582,7 +2627,7 @@
   "TOL": {
     "industry": "Residential Construction",
     "sector": "Consumer Cyclical",
-    "ts": 1783382616
+    "ts": 1787011541
   },
   "TPR": {
     "industry": "Luxury Goods",
@@ -2607,7 +2652,7 @@
   "TRV": {
     "industry": "Insurance - Property & Casualty",
     "sector": "Financial Services",
-    "ts": 1784160164
+    "ts": 1787011540
   },
   "TS": {
     "industry": "Oil & Gas Equipment & Services",
@@ -2802,7 +2847,7 @@
   "VSXY": {
     "industry": "Apparel Retail",
     "sector": "Consumer Cyclical",
-    "ts": 1783037008
+    "ts": 1787011540
   },
   "VTR": {
     "industry": "REIT - Healthcare Facilities",
@@ -2897,12 +2942,17 @@
   "WSM": {
     "industry": "Specialty Retail",
     "sector": "Consumer Cyclical",
-    "ts": 1783382616
+    "ts": 1787011542
   },
   "WULF": {
     "industry": "Capital Markets",
     "sector": "Financial Services",
     "ts": 1782518609
+  },
+  "WY": {
+    "industry": "REIT - Specialty",
+    "sector": "Real Estate",
+    "ts": 1787011540
   },
   "XEL": {
     "industry": "Utilities - Regulated Electric",
