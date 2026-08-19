@@ -109,6 +109,11 @@
     "sector": "Financial Services",
     "ts": 1781654506
   },
+  "BETA": {
+    "industry": "Aerospace & Defense",
+    "sector": "Industrials",
+    "ts": 1787097732
+  },
   "BKNG": {
     "industry": "Travel Services",
     "sector": "Consumer Cyclical",
@@ -248,6 +253,11 @@
     "industry": "Healthcare Plans",
     "sector": "Healthcare",
     "ts": 1780068222
+  },
+  "EMBJ": {
+    "industry": "Aerospace & Defense",
+    "sector": "Industrials",
+    "ts": 1787097732
   },
   "ERAS": {
     "industry": "Biotechnology",
@@ -638,6 +648,11 @@
     "industry": "Capital Markets",
     "sector": "Financial Services",
     "ts": 1782744225
+  },
+  "RTX": {
+    "industry": "Aerospace & Defense",
+    "sector": "Industrials",
+    "ts": 1787097732
   },
   "RVMD": {
     "industry": "Biotechnology",

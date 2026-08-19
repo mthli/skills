@@ -117,7 +117,7 @@
   "ATI": {
     "industry": "Metal Fabrication",
     "sector": "Industrials",
-    "ts": 1783382562
+    "ts": 1787097824
   },
   "AUB": {
     "industry": "Banks - Regional",
@@ -297,7 +297,7 @@
   "CNC": {
     "industry": "Healthcare Plans",
     "sector": "Healthcare",
-    "ts": 1783987440
+    "ts": 1787097824
   },
   "CNI": {
     "industry": "Railroads",
@@ -333,6 +333,11 @@
     "industry": "Software - Infrastructure",
     "sector": "Technology",
     "ts": 1781654569
+  },
+  "CRNX": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1787097824
   },
   "CROX": {
     "industry": "Footwear & Accessories",

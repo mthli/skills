@@ -117,7 +117,7 @@
   "ALAB": {
     "industry": "Semiconductors",
     "sector": "Technology",
-    "ts": 1784160163
+    "ts": 1787097898
   },
   "ALB": {
     "industry": "Specialty Chemicals",
@@ -127,7 +127,7 @@
   "ALGM": {
     "industry": "Semiconductors",
     "sector": "Technology",
-    "ts": 1784333210
+    "ts": 1787097899
   },
   "ALGN": {
     "industry": "Medical Instruments & Supplies",
@@ -224,6 +224,11 @@
     "sector": "Technology",
     "ts": 1785589365
   },
+  "AON": {
+    "industry": "Insurance Brokers",
+    "sector": "Financial Services",
+    "ts": 1787097901
+  },
   "APA": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
@@ -252,7 +257,7 @@
   "ARM": {
     "industry": "Semiconductors",
     "sector": "Technology",
-    "ts": 1784160163
+    "ts": 1787097898
   },
   "ARMK": {
     "industry": "Specialty Business Services",
@@ -302,7 +307,7 @@
   "AUR": {
     "industry": "Auto Parts",
     "sector": "Consumer Cyclical",
-    "ts": 1780849076
+    "ts": 1787097898
   },
   "AVB": {
     "industry": "REIT - Residential",
@@ -322,12 +327,17 @@
   "AXTA": {
     "industry": "Specialty Chemicals",
     "sector": "Basic Materials",
-    "ts": 1783728176
+    "ts": 1787097899
   },
   "AXTI": {
     "industry": "Semiconductor Equipment & Materials",
     "sector": "Technology",
     "ts": 1780114450
+  },
+  "BA": {
+    "industry": "Aerospace & Defense",
+    "sector": "Industrials",
+    "ts": 1787097900
   },
   "BAC": {
     "industry": "Banks - Diversified",
@@ -377,7 +387,7 @@
   "BE": {
     "industry": "Electrical Equipment & Parts",
     "sector": "Industrials",
-    "ts": 1783987530
+    "ts": 1787097898
   },
   "BEN": {
     "industry": "Asset Management",
@@ -502,7 +512,7 @@
   "CARR": {
     "industry": "Building Products & Equipment",
     "sector": "Industrials",
-    "ts": 1783382616
+    "ts": 1787097898
   },
   "CART": {
     "industry": "Internet Retail",
@@ -827,7 +837,7 @@
   "DD": {
     "industry": "Specialty Chemicals",
     "sector": "Basic Materials",
-    "ts": 1782777789
+    "ts": 1787097900
   },
   "DDOG": {
     "industry": "Software - Application",
@@ -1254,6 +1264,11 @@
     "sector": "Communication Services",
     "ts": 1782518609
   },
+  "GPC": {
+    "industry": "Auto Parts",
+    "sector": "Consumer Cyclical",
+    "ts": 1787097900
+  },
   "GS": {
     "industry": "Capital Markets",
     "sector": "Financial Services",
@@ -1489,10 +1504,15 @@
     "sector": "Industrials",
     "ts": 1785589371
   },
+  "JEF": {
+    "industry": "Capital Markets",
+    "sector": "Financial Services",
+    "ts": 1787097900
+  },
   "JHX": {
     "industry": "Building Materials",
     "sector": "Basic Materials",
-    "ts": 1783555398
+    "ts": 1787097899
   },
   "JNJ": {
     "industry": "Drug Manufacturers - General",
@@ -1622,7 +1642,7 @@
   "LNTH": {
     "industry": "Drug Manufacturers - Specialty & Generic",
     "sector": "Healthcare",
-    "ts": 1780452119
+    "ts": 1787097899
   },
   "LOGI": {
     "industry": "Computer Hardware",
@@ -1669,6 +1689,11 @@
     "sector": "Basic Materials",
     "ts": 1782135719
   },
+  "LYG": {
+    "industry": "Banks - Regional",
+    "sector": "Financial Services",
+    "ts": 1787097900
+  },
   "LYV": {
     "industry": "Entertainment",
     "sector": "Communication Services",
@@ -1692,7 +1717,7 @@
   "MAS": {
     "industry": "Building Products & Equipment",
     "sector": "Industrials",
-    "ts": 1783555398
+    "ts": 1787097900
   },
   "MCHP": {
     "industry": "Semiconductors",
@@ -1802,7 +1827,7 @@
   "MT": {
     "industry": "Steel",
     "sector": "Basic Materials",
-    "ts": 1780963415
+    "ts": 1787097899
   },
   "MTB": {
     "industry": "Banks - Regional",
@@ -1888,6 +1913,11 @@
     "industry": "REIT - Mortgage",
     "sector": "Real Estate",
     "ts": 1785589373
+  },
+  "NMR": {
+    "industry": "Capital Markets",
+    "sector": "Financial Services",
+    "ts": 1787097899
   },
   "NNN": {
     "industry": "REIT - Retail",
@@ -2019,6 +2049,11 @@
     "sector": "Technology",
     "ts": 1785974601
   },
+  "ONB": {
+    "industry": "Banks - Regional",
+    "sector": "Financial Services",
+    "ts": 1787097900
+  },
   "ONTO": {
     "industry": "Semiconductor Equipment & Materials",
     "sector": "Technology",
@@ -2074,6 +2109,11 @@
     "sector": "Technology",
     "ts": 1784764989
   },
+  "PAY": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1787097898
+  },
   "PB": {
     "industry": "Banks - Regional",
     "sector": "Financial Services",
@@ -2098,6 +2138,11 @@
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
     "ts": 1779848102
+  },
+  "PCAR": {
+    "industry": "Farm & Heavy Construction Machinery",
+    "sector": "Industrials",
+    "ts": 1787097898
   },
   "PCG": {
     "industry": "Utilities - Regulated Electric",
@@ -2128,6 +2173,11 @@
     "industry": "Food Distribution",
     "sector": "Consumer Defensive",
     "ts": 1784160164
+  },
+  "PHM": {
+    "industry": "Residential Construction",
+    "sector": "Consumer Cyclical",
+    "ts": 1787097900
   },
   "PL": {
     "industry": "Aerospace & Defense",
@@ -2257,7 +2307,7 @@
   "REYN": {
     "industry": "Packaging & Containers",
     "sector": "Consumer Cyclical",
-    "ts": 1783555398
+    "ts": 1787097900
   },
   "RHHBY": {
     "industry": "Drug Manufacturers - General",
@@ -2389,6 +2439,11 @@
     "sector": "Consumer Cyclical",
     "ts": 1785510935
   },
+  "SHC": {
+    "industry": "Diagnostics & Research",
+    "sector": "Healthcare",
+    "ts": 1787097900
+  },
   "SHEL": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
@@ -2512,7 +2567,7 @@
   "ST": {
     "industry": "Scientific & Technical Instruments",
     "sector": "Technology",
-    "ts": 1781136248
+    "ts": 1787097899
   },
   "STAG": {
     "industry": "REIT - Industrial",
@@ -2717,7 +2772,12 @@
   "UAL": {
     "industry": "Airlines",
     "sector": "Industrials",
-    "ts": 1783468998
+    "ts": 1787097899
+  },
+  "UBS": {
+    "industry": "Banks - Diversified",
+    "sector": "Financial Services",
+    "ts": 1787097898
   },
   "UDR": {
     "industry": "REIT - Residential",
@@ -2762,7 +2822,7 @@
   "USFD": {
     "industry": "Food Distribution",
     "sector": "Consumer Defensive",
-    "ts": 1784160164
+    "ts": 1787097899
   },
   "VAL": {
     "industry": "Oil & Gas Drilling",
@@ -2809,6 +2869,11 @@
     "sector": "Financial Services",
     "ts": 1784937791
   },
+  "VNO": {
+    "industry": "REIT - Office",
+    "sector": "Real Estate",
+    "ts": 1787097899
+  },
   "VNOM": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
@@ -2837,7 +2902,7 @@
   "VSAT": {
     "industry": "Communication Equipment",
     "sector": "Technology",
-    "ts": 1781049862
+    "ts": 1787097898
   },
   "VSH": {
     "industry": "Semiconductors",
