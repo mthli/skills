@@ -1,0 +1,780 @@
+{
+  "as_of": "2026-08-19T20:05:24.468447-04:00",
+  "today": "2026-08-19",
+  "spark_window": [
+    "2026-08-20",
+    "2026-08-21",
+    "2026-08-24"
+  ],
+  "macro_note": "ForexFactory covers the current week only \u2014 macro sparks beyond Sunday not visible",
+  "regime": {
+    "snapshot": "20260819",
+    "state": "RISK-ON",
+    "score": 8,
+    "vix": 14.9,
+    "spy_vs_200_pct": 9.2,
+    "flags": ""
+  },
+  "mr_run": {
+    "run_id": "20260819",
+    "run_date": "2026-08-19",
+    "stale_days": 0,
+    "rows_in_run": 128,
+    "kegs_after_filter": 31
+  },
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "ALAB",
+      "rank": 1,
+      "score": 63.2,
+      "rsi2": 2.18,
+      "dist_200dma_pct": 32.69,
+      "signal_close": 289.02,
+      "mr_target": 311.4,
+      "mr_stop": 210.81,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "WMT",
+          "date": "2026-08-20",
+          "slot": "BMO",
+          "detail": "WMT ($917B) reports 2026-08-20 BMO"
+        }
+      ],
+      "armed": false,
+      "latest_close": 289.02,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -9.34,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.87,
+      "signal_day_low": 278.17,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-11-04"
+    },
+    {
+      "ticker": "CRWD",
+      "rank": 2,
+      "score": 57.8,
+      "rsi2": 2.52,
+      "dist_200dma_pct": 45.85,
+      "signal_close": 201.63,
+      "mr_target": 214.19,
+      "mr_stop": 178.38,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 2,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "WMT",
+          "date": "2026-08-20",
+          "slot": "BMO",
+          "detail": "WMT ($917B) reports 2026-08-20 BMO"
+        }
+      ],
+      "armed": false,
+      "latest_close": 201.63,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -9.09,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.98,
+      "signal_day_low": 197.25,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-08-27"
+    },
+    {
+      "ticker": "FITB",
+      "rank": 3,
+      "score": 57.1,
+      "rsi2": 1.38,
+      "dist_200dma_pct": 10.81,
+      "signal_close": 54.96,
+      "mr_target": 57.17,
+      "mr_stop": 52.31,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 1,
+      "freq_60d": 0,
+      "sector": "Financial Services",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "WMT",
+          "date": "2026-08-20",
+          "slot": "BMO",
+          "detail": "WMT ($917B) reports 2026-08-20 BMO"
+        }
+      ],
+      "armed": false,
+      "latest_close": 54.96,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -5.26,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 1.09,
+      "signal_day_low": 54.81,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-10-19"
+    },
+    {
+      "ticker": "AME",
+      "rank": 5,
+      "score": 54.6,
+      "rsi2": 1.46,
+      "dist_200dma_pct": 9.04,
+      "signal_close": 243.22,
+      "mr_target": 251.68,
+      "mr_stop": 228.83,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 0,
+      "sector": "Industrials",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "WMT",
+          "date": "2026-08-20",
+          "slot": "BMO",
+          "detail": "WMT ($917B) reports 2026-08-20 BMO"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "DE",
+          "date": "2026-08-20",
+          "slot": "BMO",
+          "detail": "DE (Industrials, $159B) reports 2026-08-20 BMO"
+        }
+      ],
+      "armed": true,
+      "latest_close": 243.22,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -5.92,
+      "down_gaps_5d": 3,
+      "vol_ratio_5d_20d": 1.07,
+      "signal_day_low": 243.1,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "MXL",
+      "rank": 6,
+      "score": 53.8,
+      "rsi2": 10.0,
+      "dist_200dma_pct": 49.01,
+      "signal_close": 66.43,
+      "mr_target": 77.06,
+      "mr_stop": 48.31,
+      "signal": "\ud83d\udfe1",
+      "listing_age_runs": 1,
+      "freq_60d": 2,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "WMT",
+          "date": "2026-08-20",
+          "slot": "BMO",
+          "detail": "WMT ($917B) reports 2026-08-20 BMO"
+        }
+      ],
+      "armed": false,
+      "latest_close": 66.43,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -10.63,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.76,
+      "signal_day_low": 66.15,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-10-23"
+    },
+    {
+      "ticker": "STLD",
+      "rank": 9,
+      "score": 50.4,
+      "rsi2": 2.68,
+      "dist_200dma_pct": 12.83,
+      "signal_close": 231.01,
+      "mr_target": 251.06,
+      "mr_stop": 207.0,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 3,
+      "sector": "Basic Materials",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "WMT",
+          "date": "2026-08-20",
+          "slot": "BMO",
+          "detail": "WMT ($917B) reports 2026-08-20 BMO"
+        }
+      ],
+      "armed": false,
+      "latest_close": 231.01,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -12.22,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.01,
+      "signal_day_low": 223.2,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-10-20"
+    },
+    {
+      "ticker": "MTB",
+      "rank": 10,
+      "score": 49.9,
+      "rsi2": 2.13,
+      "dist_200dma_pct": 13.34,
+      "signal_close": 244.55,
+      "mr_target": 251.25,
+      "mr_stop": 234.83,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 1,
+      "freq_60d": 0,
+      "sector": "Financial Services",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "WMT",
+          "date": "2026-08-20",
+          "slot": "BMO",
+          "detail": "WMT ($917B) reports 2026-08-20 BMO"
+        }
+      ],
+      "armed": false,
+      "latest_close": 244.55,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -3.55,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 0.83,
+      "signal_day_low": 244.31,
+      "quiet_warning": true,
+      "next_own_earnings": "2026-10-16"
+    },
+    {
+      "ticker": "ING",
+      "rank": 11,
+      "score": 49.8,
+      "rsi2": 2.55,
+      "dist_200dma_pct": 22.15,
+      "signal_close": 34.69,
+      "mr_target": 35.42,
+      "mr_stop": 33.57,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 0,
+      "sector": "Financial Services",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "WMT",
+          "date": "2026-08-20",
+          "slot": "BMO",
+          "detail": "WMT ($917B) reports 2026-08-20 BMO"
+        }
+      ],
+      "armed": false,
+      "latest_close": 34.69,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -2.58,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 0.72,
+      "signal_day_low": 34.58,
+      "quiet_warning": true,
+      "next_own_earnings": "2026-10-29"
+    },
+    {
+      "ticker": "BCS",
+      "rank": 12,
+      "score": 49.6,
+      "rsi2": 2.07,
+      "dist_200dma_pct": 10.87,
+      "signal_close": 26.87,
+      "mr_target": 27.65,
+      "mr_stop": 25.83,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 0,
+      "sector": "Financial Services",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "WMT",
+          "date": "2026-08-20",
+          "slot": "BMO",
+          "detail": "WMT ($917B) reports 2026-08-20 BMO"
+        }
+      ],
+      "armed": false,
+      "latest_close": 26.87,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -4.17,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.62,
+      "signal_day_low": 26.82,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-10-22"
+    },
+    {
+      "ticker": "WBS",
+      "rank": 13,
+      "score": 48.8,
+      "rsi2": 1.6,
+      "dist_200dma_pct": 12.53,
+      "signal_close": 77.57,
+      "mr_target": 78.45,
+      "mr_stop": 75.91,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Financial Services",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "WMT",
+          "date": "2026-08-20",
+          "slot": "BMO",
+          "detail": "WMT ($917B) reports 2026-08-20 BMO"
+        }
+      ],
+      "armed": false,
+      "latest_close": 77.57,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -1.9,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 2.66,
+      "signal_day_low": 77.5,
+      "quiet_warning": true,
+      "next_own_earnings": "2026-10-23"
+    },
+    {
+      "ticker": "DAL",
+      "rank": 15,
+      "score": 47.7,
+      "rsi2": 2.56,
+      "dist_200dma_pct": 14.85,
+      "signal_close": 83.29,
+      "mr_target": 87.45,
+      "mr_stop": 77.47,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "sector": "Industrials",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "WMT",
+          "date": "2026-08-20",
+          "slot": "BMO",
+          "detail": "WMT ($917B) reports 2026-08-20 BMO"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "DE",
+          "date": "2026-08-20",
+          "slot": "BMO",
+          "detail": "DE (Industrials, $159B) reports 2026-08-20 BMO"
+        }
+      ],
+      "armed": true,
+      "latest_close": 83.29,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -7.38,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.88,
+      "signal_day_low": 83.06,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "MUFG",
+      "rank": 16,
+      "score": 47.1,
+      "rsi2": 3.06,
+      "dist_200dma_pct": 17.05,
+      "signal_close": 21.56,
+      "mr_target": 22.69,
+      "mr_stop": 20.33,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "sector": "Financial Services",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "WMT",
+          "date": "2026-08-20",
+          "slot": "BMO",
+          "detail": "WMT ($917B) reports 2026-08-20 BMO"
+        }
+      ],
+      "armed": false,
+      "latest_close": 21.56,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -5.27,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 1.03,
+      "signal_day_low": 21.49,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-11-13"
+    },
+    {
+      "ticker": "SMFG",
+      "rank": 17,
+      "score": 47.0,
+      "rsi2": 3.11,
+      "dist_200dma_pct": 13.99,
+      "signal_close": 24.57,
+      "mr_target": 25.85,
+      "mr_stop": 23.11,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 0,
+      "sector": "Financial Services",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "WMT",
+          "date": "2026-08-20",
+          "slot": "BMO",
+          "detail": "WMT ($917B) reports 2026-08-20 BMO"
+        }
+      ],
+      "armed": false,
+      "latest_close": 24.57,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -5.68,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.7,
+      "signal_day_low": 24.57,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-11-13"
+    },
+    {
+      "ticker": "UAL",
+      "rank": 18,
+      "score": 46.2,
+      "rsi2": 2.11,
+      "dist_200dma_pct": 7.87,
+      "signal_close": 115.78,
+      "mr_target": 121.69,
+      "mr_stop": 105.71,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 3,
+      "sector": "Industrials",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "WMT",
+          "date": "2026-08-20",
+          "slot": "BMO",
+          "detail": "WMT ($917B) reports 2026-08-20 BMO"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "DE",
+          "date": "2026-08-20",
+          "slot": "BMO",
+          "detail": "DE (Industrials, $159B) reports 2026-08-20 BMO"
+        }
+      ],
+      "armed": true,
+      "latest_close": 115.78,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -7.46,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.83,
+      "signal_day_low": 115.69,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "CROX",
+      "rank": 19,
+      "score": 44.8,
+      "rsi2": 3.37,
+      "dist_200dma_pct": 24.85,
+      "signal_close": 125.73,
+      "mr_target": 129.73,
+      "mr_stop": 111.95,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Consumer Cyclical",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "WMT",
+          "date": "2026-08-20",
+          "slot": "BMO",
+          "detail": "WMT ($917B) reports 2026-08-20 BMO"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "BABA",
+          "date": "2026-08-20",
+          "slot": "BMO",
+          "detail": "BABA (Consumer Cyclical, $299B) reports 2026-08-20 BMO"
+        }
+      ],
+      "armed": true,
+      "latest_close": 125.73,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -3.74,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 0.83,
+      "signal_day_low": 124.78,
+      "quiet_warning": true
+    },
+    {
+      "ticker": "ONB",
+      "rank": 21,
+      "score": 44.4,
+      "rsi2": 2.5,
+      "dist_200dma_pct": 9.69,
+      "signal_close": 25.91,
+      "mr_target": 26.78,
+      "mr_stop": 24.78,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Financial Services",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "WMT",
+          "date": "2026-08-20",
+          "slot": "BMO",
+          "detail": "WMT ($917B) reports 2026-08-20 BMO"
+        }
+      ],
+      "armed": false,
+      "latest_close": 25.91,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -4.32,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 0.74,
+      "signal_day_low": 25.85,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-10-21"
+    },
+    {
+      "ticker": "LYG",
+      "rank": 22,
+      "score": 44.4,
+      "rsi2": 2.74,
+      "dist_200dma_pct": 11.48,
+      "signal_close": 5.94,
+      "mr_target": 6.11,
+      "mr_stop": 5.69,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 0,
+      "sector": "Financial Services",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "WMT",
+          "date": "2026-08-20",
+          "slot": "BMO",
+          "detail": "WMT ($917B) reports 2026-08-20 BMO"
+        }
+      ],
+      "armed": false,
+      "latest_close": 5.94,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -4.04,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.66,
+      "signal_day_low": 5.93,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-10-29"
+    },
+    {
+      "ticker": "DELL",
+      "rank": 23,
+      "score": 43.8,
+      "rsi2": 4.98,
+      "dist_200dma_pct": 87.31,
+      "signal_close": 437.55,
+      "mr_target": 474.27,
+      "mr_stop": 354.81,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "WMT",
+          "date": "2026-08-20",
+          "slot": "BMO",
+          "detail": "WMT ($917B) reports 2026-08-20 BMO"
+        }
+      ],
+      "armed": false,
+      "latest_close": 437.55,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -9.69,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.01,
+      "signal_day_low": 427.54,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-09-02"
+    },
+    {
+      "ticker": "MFG",
+      "rank": 24,
+      "score": 43.3,
+      "rsi2": 3.58,
+      "dist_200dma_pct": 16.97,
+      "signal_close": 10.14,
+      "mr_target": 10.7,
+      "mr_stop": 9.51,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "sector": "Financial Services",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "WMT",
+          "date": "2026-08-20",
+          "slot": "BMO",
+          "detail": "WMT ($917B) reports 2026-08-20 BMO"
+        }
+      ],
+      "armed": false,
+      "latest_close": 10.14,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -6.2,
+      "down_gaps_5d": 4,
+      "vol_ratio_5d_20d": 0.92,
+      "signal_day_low": 10.1,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-11-13"
+    },
+    {
+      "ticker": "TSEM",
+      "rank": 25,
+      "score": 43.3,
+      "rsi2": 7.13,
+      "dist_200dma_pct": 26.61,
+      "signal_close": 226.46,
+      "mr_target": 249.83,
+      "mr_stop": 167.54,
+      "signal": "\ud83d\udfe1",
+      "listing_age_runs": 1,
+      "freq_60d": 2,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "WMT",
+          "date": "2026-08-20",
+          "slot": "BMO",
+          "detail": "WMT ($917B) reports 2026-08-20 BMO"
+        }
+      ],
+      "armed": false,
+      "latest_close": 226.46,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -13.0,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.68,
+      "signal_day_low": 225.24,
+      "quiet_warning": false,
+      "next_own_earnings": null
+    }
+  ],
+  "macro_calendar": [],
+  "prior_run_review": {
+    "source": "snapback:2026-08-18",
+    "n": 12,
+    "pct_positive": 58.3,
+    "avg_pct": 0.51,
+    "median_pct": 0.76,
+    "best": [
+      {
+        "ticker": "VSXY",
+        "since_pct": 5.58
+      },
+      {
+        "ticker": "PAY",
+        "since_pct": 3.26
+      },
+      {
+        "ticker": "TIGO",
+        "since_pct": 1.79
+      }
+    ],
+    "worst": [
+      {
+        "ticker": "AVGO",
+        "since_pct": -4.61
+      },
+      {
+        "ticker": "LUV",
+        "since_pct": -2.52
+      },
+      {
+        "ticker": "DE",
+        "since_pct": -1.37
+      }
+    ],
+    "armed_subset": {
+      "n": 12,
+      "pct_positive": 58.3,
+      "avg_pct": 0.51,
+      "median_pct": 0.76
+    }
+  },
+  "errors": []
+}

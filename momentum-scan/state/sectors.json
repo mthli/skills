@@ -44,6 +44,11 @@
     "sector": "Technology",
     "ts": 1784246492
   },
+  "AMGN": {
+    "industry": "Drug Manufacturers - General",
+    "sector": "Healthcare",
+    "ts": 1787184138
+  },
   "AMRX": {
     "industry": "Drug Manufacturers - Specialty & Generic",
     "sector": "Healthcare",
@@ -118,6 +123,11 @@
     "industry": "Travel Services",
     "sector": "Consumer Cyclical",
     "ts": 1786406504
+  },
+  "BMRN": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1787184138
   },
   "BRKR": {
     "industry": "Medical Devices",
@@ -483,6 +493,11 @@
     "industry": "Oil & Gas Refining & Marketing",
     "sector": "Energy",
     "ts": 1784332986
+  },
+  "MRK": {
+    "industry": "Drug Manufacturers - General",
+    "sector": "Healthcare",
+    "ts": 1787184138
   },
   "MRNA": {
     "industry": "Biotechnology",

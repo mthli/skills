@@ -62,7 +62,7 @@
   "AMRX": {
     "industry": "Drug Manufacturers - Specialty & Generic",
     "sector": "Healthcare",
-    "ts": 1784592126
+    "ts": 1787184231
   },
   "AMX": {
     "industry": "Telecom Services",
@@ -528,6 +528,11 @@
     "industry": "Biotechnology",
     "sector": "Healthcare",
     "ts": 1785801774
+  },
+  "EXPD": {
+    "industry": "Integrated Freight & Logistics",
+    "sector": "Industrials",
+    "ts": 1787184231
   },
   "F": {
     "industry": "Auto Manufacturers",
@@ -1238,6 +1243,11 @@
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
     "ts": 1778771445
+  },
+  "SW": {
+    "industry": "Packaging & Containers",
+    "sector": "Consumer Cyclical",
+    "ts": 1787184232
   },
   "SWK": {
     "industry": "Tools & Accessories",
