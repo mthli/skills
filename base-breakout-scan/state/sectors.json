@@ -249,6 +249,11 @@
     "sector": "Basic Materials",
     "ts": 1778771444
   },
+  "CF": {
+    "industry": "Agricultural Inputs",
+    "sector": "Basic Materials",
+    "ts": 1787270632
+  },
   "CFG": {
     "industry": "Banks - Regional",
     "sector": "Financial Services",
@@ -607,7 +612,7 @@
   "GKOS": {
     "industry": "Medical Devices",
     "sector": "Healthcare",
-    "ts": 1784678546
+    "ts": 1787270632
   },
   "GLNG": {
     "industry": "Oil & Gas Midstream",
@@ -737,7 +742,7 @@
   "JHX": {
     "industry": "Building Materials",
     "sector": "Basic Materials",
-    "ts": 1784246534
+    "ts": 1787270632
   },
   "JNJ": {
     "industry": "Drug Manufacturers - General",
@@ -994,6 +999,11 @@
     "sector": "Industrials",
     "ts": 1785589359
   },
+  "OII": {
+    "industry": "Oil & Gas Equipment & Services",
+    "sector": "Energy",
+    "ts": 1787270632
+  },
   "OKE": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
@@ -1058,6 +1068,11 @@
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
     "ts": 1785589359
+  },
+  "PCVX": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1787270632
   },
   "PFG": {
     "industry": "Asset Management",
@@ -1147,7 +1162,7 @@
   "SAN": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1784160121
+    "ts": 1787270632
   },
   "SCCO": {
     "industry": "Copper",
@@ -1217,7 +1232,7 @@
   "SSL": {
     "industry": "Specialty Chemicals",
     "sector": "Basic Materials",
-    "ts": 1778771445
+    "ts": 1787270632
   },
   "ST": {
     "industry": "Scientific & Technical Instruments",
@@ -1369,6 +1384,11 @@
     "sector": "Healthcare",
     "ts": 1783987440
   },
+  "UNP": {
+    "industry": "Railroads",
+    "sector": "Industrials",
+    "ts": 1787270632
+  },
   "USB": {
     "industry": "Banks - Regional",
     "sector": "Financial Services",
@@ -1488,6 +1508,11 @@
     "industry": "Trucking",
     "sector": "Industrials",
     "ts": 1787011455
+  },
+  "XYZ": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1787270632
   },
   "YOU": {
     "industry": "Software - Application",

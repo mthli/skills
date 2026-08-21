@@ -372,7 +372,7 @@
   "ILMN": {
     "industry": "Diagnostics & Research",
     "sector": "Healthcare",
-    "ts": 1784678502
+    "ts": 1787270540
   },
   "INTC": {
     "industry": "Semiconductors",
@@ -412,7 +412,7 @@
   "KMX": {
     "industry": "Auto & Truck Dealerships",
     "sector": "Consumer Cyclical",
-    "ts": 1784678502
+    "ts": 1787270540
   },
   "KXIAY": {
     "industry": "Semiconductors",
@@ -492,7 +492,7 @@
   "MPC": {
     "industry": "Oil & Gas Refining & Marketing",
     "sector": "Energy",
-    "ts": 1784332986
+    "ts": 1787270540
   },
   "MRK": {
     "industry": "Drug Manufacturers - General",
@@ -608,6 +608,11 @@
     "industry": "Software - Application",
     "sector": "Technology",
     "ts": 1785196917
+  },
+  "PBF": {
+    "industry": "Oil & Gas Refining & Marketing",
+    "sector": "Energy",
+    "ts": 1787270540
   },
   "PFGC": {
     "industry": "Food Distribution",
@@ -842,7 +847,7 @@
   "TXG": {
     "industry": "Health Information Services",
     "sector": "Healthcare",
-    "ts": 1784678502
+    "ts": 1787270540
   },
   "UBS": {
     "industry": "Banks - Diversified",

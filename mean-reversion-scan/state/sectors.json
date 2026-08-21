@@ -157,7 +157,7 @@
   "ALLY": {
     "industry": "Credit Services",
     "sector": "Financial Services",
-    "ts": 1784678594
+    "ts": 1787270704
   },
   "ALM": {
     "industry": "Other Industrial Metals & Mining",
@@ -679,6 +679,11 @@
     "sector": "Energy",
     "ts": 1785974601
   },
+  "COF": {
+    "industry": "Credit Services",
+    "sector": "Financial Services",
+    "ts": 1787270704
+  },
   "COGT": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
@@ -752,7 +757,7 @@
   "CRWD": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1784678594
+    "ts": 1787270703
   },
   "CRWV": {
     "industry": "Software - Infrastructure",
@@ -849,6 +854,11 @@
     "sector": "Consumer Defensive",
     "ts": 1785283361
   },
+  "DB": {
+    "industry": "Banks - Regional",
+    "sector": "Financial Services",
+    "ts": 1787270703
+  },
   "DD": {
     "industry": "Specialty Chemicals",
     "sector": "Basic Materials",
@@ -902,7 +912,7 @@
   "DOCN": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1782259384
+    "ts": 1787270703
   },
   "DOV": {
     "industry": "Specialty Industrial Machinery",
@@ -1422,7 +1432,7 @@
   "HWM": {
     "industry": "Aerospace & Defense",
     "sector": "Industrials",
-    "ts": 1782777789
+    "ts": 1787270704
   },
   "HXL": {
     "industry": "Aerospace & Defense",
@@ -1587,7 +1597,7 @@
   "KLIC": {
     "industry": "Semiconductor Equipment & Materials",
     "sector": "Technology",
-    "ts": 1784333210
+    "ts": 1787270703
   },
   "KMI": {
     "industry": "Oil & Gas Midstream",
@@ -1887,7 +1897,7 @@
   "MTSI": {
     "industry": "Semiconductors",
     "sector": "Technology",
-    "ts": 1783037008
+    "ts": 1787270703
   },
   "MTZ": {
     "industry": "Engineering & Construction",
@@ -2112,7 +2122,7 @@
   "ORKA": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1783382616
+    "ts": 1787270703
   },
   "OSCR": {
     "industry": "Healthcare Plans",
@@ -2138,6 +2148,11 @@
     "industry": "Banks - Regional",
     "sector": "Financial Services",
     "ts": 1785589374
+  },
+  "P": {
+    "industry": "Computer Hardware",
+    "sector": "Technology",
+    "ts": 1787270703
   },
   "PAA": {
     "industry": "Oil & Gas Midstream",
@@ -2212,7 +2227,7 @@
   "PFG": {
     "industry": "Asset Management",
     "sector": "Financial Services",
-    "ts": 1784678594
+    "ts": 1787270704
   },
   "PFGC": {
     "industry": "Food Distribution",
@@ -2339,6 +2354,11 @@
     "sector": "Industrials",
     "ts": 1785510645
   },
+  "RBRK": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1787270704
+  },
   "RCL": {
     "industry": "Travel Services",
     "sector": "Consumer Cyclical",
@@ -2438,6 +2458,11 @@
     "industry": "Specialty Business Services",
     "sector": "Industrials",
     "ts": 1778771637
+  },
+  "RTX": {
+    "industry": "Aerospace & Defense",
+    "sector": "Industrials",
+    "ts": 1787270704
   },
   "RVMD": {
     "industry": "Biotechnology",
@@ -2572,7 +2597,7 @@
   "SN": {
     "industry": "Furnishings, Fixtures & Appliances",
     "sector": "Consumer Cyclical",
-    "ts": 1784678594
+    "ts": 1787270703
   },
   "SNDK": {
     "industry": "Computer Hardware",
@@ -2588,6 +2613,11 @@
     "industry": "Capital Markets",
     "sector": "Financial Services",
     "ts": 1785589375
+  },
+  "SNOW": {
+    "industry": "Software - Application",
+    "sector": "Technology",
+    "ts": 1787270704
   },
   "SO": {
     "industry": "Utilities - Regulated Electric",
@@ -2657,7 +2687,7 @@
   "STM": {
     "industry": "Semiconductors",
     "sector": "Technology",
-    "ts": 1784246577
+    "ts": 1787270704
   },
   "STT": {
     "industry": "Asset Management",
@@ -2688,6 +2718,11 @@
     "industry": "Semiconductors",
     "sector": "Technology",
     "ts": 1782777789
+  },
+  "SYF": {
+    "industry": "Credit Services",
+    "sector": "Financial Services",
+    "ts": 1787270703
   },
   "SYY": {
     "industry": "Food Distribution",
@@ -2872,7 +2907,7 @@
   "UMC": {
     "industry": "Semiconductors",
     "sector": "Technology",
-    "ts": 1784592170
+    "ts": 1787270704
   },
   "UNH": {
     "industry": "Healthcare Plans",
@@ -2893,6 +2928,11 @@
     "industry": "Integrated Freight & Logistics",
     "sector": "Industrials",
     "ts": 1785589376
+  },
+  "URBN": {
+    "industry": "Apparel Retail",
+    "sector": "Consumer Cyclical",
+    "ts": 1787270704
   },
   "USAR": {
     "industry": "Other Industrial Metals & Mining",
@@ -3152,7 +3192,7 @@
   "ZION": {
     "industry": "Banks - Regional",
     "sector": "Financial Services",
-    "ts": 1784678594
+    "ts": 1787270703
   },
   "ZM": {
     "industry": "Software - Application",
