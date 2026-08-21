@@ -250,6 +250,19 @@ This is the section that can do harm if written lazily, so frame it honestly:
   adds*. They are graded differently and they fail differently: on 08-13 only
   the first was true, and XLRE closed the 2nd-best sector with the stood-down
   REITs inside it. Say which one is doing the work, every time.
+- **Execution is the binding constraint — the playbook leads with the ledger
+  (08-19, 08-20; promoted on 2nd instance).** Two consecutive graded sessions
+  the calls resolved on mapped branches while **zero** fired sells filled
+  (XE idle 8 sessions through a −7.9% day that *opened at the prescribed
+  fill*), and the only executions were counter-plan buys (SPCX add-lot 08-17;
+  COIN bought during "add nothing" 08-20, then again premarket 08-21 ~8%
+  higher into a +5% gap). Doctrine: ③ opens with an **overdue-execution
+  ledger** — each fired line, its fired date, sessions overdue, and cumulative
+  cost since firing — ranked above any new decision; a fired instruction
+  repeats verbatim until filled or explicitly re-written as a new trade with
+  its own thesis; and a **counter-plan fill is named in the ① dashboard and
+  handed a written two-sided line the same day** — an unplanned position is
+  still a position, and leaving it lineless is how one bad fill becomes two.
 - **⭐ MR pocket has zero day-1 edge on broad risk-on days (08-03, 08-04).**
   08-03 the pocket lost 2.4pp to SPY on a broad green day; 08-04 it matched
   SPY to the basis point. Its validated KPI is 5-day expectancy (score≥40 +
