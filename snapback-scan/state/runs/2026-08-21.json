@@ -1,0 +1,172 @@
+{
+  "as_of": "2026-08-21T20:05:04.533460-04:00",
+  "today": "2026-08-21",
+  "spark_window": [
+    "2026-08-24",
+    "2026-08-25",
+    "2026-08-26"
+  ],
+  "macro_note": "ForexFactory covers the current week only \u2014 macro sparks beyond Sunday not visible",
+  "regime": {
+    "snapshot": "20260821",
+    "state": "RISK-ON",
+    "score": 8,
+    "vix": 15.1,
+    "spy_vs_200_pct": 8.6,
+    "flags": ""
+  },
+  "mr_run": {
+    "run_id": "20260821",
+    "run_date": "2026-08-21",
+    "stale_days": 0,
+    "rows_in_run": 68,
+    "kegs_after_filter": 3
+  },
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "D",
+      "rank": 9,
+      "score": 45.1,
+      "rsi2": 1.38,
+      "dist_200dma_pct": 5.58,
+      "signal_close": 66.6,
+      "mr_target": 67.95,
+      "mr_stop": 63.61,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 3,
+      "sector": "Utilities",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "NVDA",
+          "date": "2026-08-26",
+          "slot": "AMC",
+          "detail": "NVDA ($5248B) reports 2026-08-26 AMC"
+        }
+      ],
+      "armed": false,
+      "latest_close": 66.6,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -3.16,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.91,
+      "signal_day_low": 66.59,
+      "quiet_warning": true,
+      "next_own_earnings": "2026-10-30"
+    },
+    {
+      "ticker": "PNW",
+      "rank": 11,
+      "score": 43.8,
+      "rsi2": 1.48,
+      "dist_200dma_pct": 0.92,
+      "signal_close": 97.36,
+      "mr_target": 99.35,
+      "mr_stop": 92.73,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 1,
+      "freq_60d": 2,
+      "sector": "Utilities",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "NVDA",
+          "date": "2026-08-26",
+          "slot": "AMC",
+          "detail": "NVDA ($5248B) reports 2026-08-26 AMC"
+        }
+      ],
+      "armed": false,
+      "latest_close": 97.36,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -4.06,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.84,
+      "signal_day_low": 97.11,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-11-03"
+    },
+    {
+      "ticker": "NBIS",
+      "rank": 14,
+      "score": 40.6,
+      "rsi2": 9.37,
+      "dist_200dma_pct": 46.82,
+      "signal_close": 219.13,
+      "mr_target": 236.08,
+      "mr_stop": 160.87,
+      "signal": "\ud83d\udfe1",
+      "listing_age_runs": 1,
+      "freq_60d": 2,
+      "sector": "Communication Services",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "NVDA",
+          "date": "2026-08-26",
+          "slot": "AMC",
+          "detail": "NVDA ($5248B) reports 2026-08-26 AMC"
+        }
+      ],
+      "armed": false,
+      "latest_close": 219.13,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -21.09,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.98,
+      "signal_day_low": 217.85,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-11-10"
+    }
+  ],
+  "macro_calendar": [],
+  "prior_run_review": {
+    "source": "snapback:2026-08-20",
+    "n": 20,
+    "pct_positive": 85.0,
+    "avg_pct": 1.3,
+    "median_pct": 0.91,
+    "best": [
+      {
+        "ticker": "NET",
+        "since_pct": 5.1
+      },
+      {
+        "ticker": "STLD",
+        "since_pct": 4.42
+      },
+      {
+        "ticker": "ERAS",
+        "since_pct": 3.22
+      }
+    ],
+    "worst": [
+      {
+        "ticker": "BB",
+        "since_pct": -1.23
+      },
+      {
+        "ticker": "RAL",
+        "since_pct": -0.5
+      },
+      {
+        "ticker": "AEG",
+        "since_pct": -0.22
+      }
+    ]
+  },
+  "errors": []
+}

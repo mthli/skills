@@ -9,6 +9,11 @@
     "sector": "Consumer Cyclical",
     "ts": 1786492889
   },
+  "ABT": {
+    "industry": "Medical Devices",
+    "sector": "Healthcare",
+    "ts": 1787356926
+  },
   "ACMR": {
     "industry": "Semiconductor Equipment & Materials",
     "sector": "Technology",
@@ -167,7 +172,7 @@
   "CORT": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1784764900
+    "ts": 1787356926
   },
   "CRBG": {
     "industry": "Asset Management",
@@ -659,6 +664,11 @@
     "sector": "Communication Services",
     "ts": 1780944612
   },
+  "REGN": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1787356926
+  },
   "RGEN": {
     "industry": "Medical Instruments & Supplies",
     "sector": "Healthcare",
@@ -798,6 +808,11 @@
     "industry": "Biotechnology",
     "sector": "Healthcare",
     "ts": 1785456073
+  },
+  "THC": {
+    "industry": "Medical Care Facilities",
+    "sector": "Healthcare",
+    "ts": 1787356926
   },
   "TMO": {
     "industry": "Diagnostics & Research",

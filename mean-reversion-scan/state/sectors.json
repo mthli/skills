@@ -427,7 +427,7 @@
   "BKR": {
     "industry": "Oil & Gas Equipment & Services",
     "sector": "Energy",
-    "ts": 1781747799
+    "ts": 1787357092
   },
   "BMY": {
     "industry": "Drug Manufacturers - General",
@@ -1232,12 +1232,12 @@
   "GBCI": {
     "industry": "Banks - Regional",
     "sector": "Financial Services",
-    "ts": 1784764989
+    "ts": 1787357092
   },
   "GD": {
     "industry": "Aerospace & Defense",
     "sector": "Industrials",
-    "ts": 1784160163
+    "ts": 1787357093
   },
   "GE": {
     "industry": "Aerospace & Defense",
@@ -1247,7 +1247,7 @@
   "GEV": {
     "industry": "Specialty Industrial Machinery",
     "sector": "Industrials",
-    "ts": 1784764989
+    "ts": 1787357092
   },
   "GFS": {
     "industry": "Semiconductors",
@@ -1268,6 +1268,11 @@
     "industry": "Diagnostics & Research",
     "sector": "Healthcare",
     "ts": 1784592170
+  },
+  "GLBE": {
+    "industry": "Internet Retail",
+    "sector": "Consumer Cyclical",
+    "ts": 1787357092
   },
   "GLNG": {
     "industry": "Oil & Gas Midstream",
@@ -1559,6 +1564,11 @@
     "sector": "Healthcare",
     "ts": 1784160164
   },
+  "JPM": {
+    "industry": "Banks - Diversified",
+    "sector": "Financial Services",
+    "ts": 1787357093
+  },
   "KDP": {
     "industry": "Beverages - Non-Alcoholic",
     "sector": "Consumer Defensive",
@@ -1602,7 +1612,7 @@
   "KMI": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
-    "ts": 1780114451
+    "ts": 1787357093
   },
   "KMX": {
     "industry": "Auto & Truck Dealerships",
@@ -1664,6 +1674,11 @@
     "sector": "Healthcare",
     "ts": 1784073920
   },
+  "LMT": {
+    "industry": "Aerospace & Defense",
+    "sector": "Industrials",
+    "ts": 1787357093
+  },
   "LNC": {
     "industry": "Insurance - Life",
     "sector": "Financial Services",
@@ -1692,7 +1707,7 @@
   "LQDA": {
     "industry": "Drug Manufacturers - Specialty & Generic",
     "sector": "Healthcare",
-    "ts": 1783987530
+    "ts": 1787357092
   },
   "LRCX": {
     "industry": "Semiconductor Equipment & Materials",
@@ -1812,7 +1827,7 @@
   "MKSI": {
     "industry": "Scientific & Technical Instruments",
     "sector": "Technology",
-    "ts": 1784333210
+    "ts": 1787357092
   },
   "MLI": {
     "industry": "Metal Fabrication",
@@ -2112,7 +2127,7 @@
   "ONTO": {
     "industry": "Semiconductor Equipment & Materials",
     "sector": "Technology",
-    "ts": 1783468998
+    "ts": 1787357093
   },
   "ORI": {
     "industry": "Insurance - Property & Casualty",
@@ -2327,7 +2342,7 @@
   "PWR": {
     "industry": "Engineering & Construction",
     "sector": "Industrials",
-    "ts": 1783987531
+    "ts": 1787357092
   },
   "QCOM": {
     "industry": "Semiconductors",
@@ -2492,7 +2507,7 @@
   "SANM": {
     "industry": "Electronic Components",
     "sector": "Technology",
-    "ts": 1783382616
+    "ts": 1787357093
   },
   "SATS": {
     "industry": "Telecom Services",
@@ -2872,7 +2887,7 @@
   "TXN": {
     "industry": "Semiconductors",
     "sector": "Technology",
-    "ts": 1784333210
+    "ts": 1787357092
   },
   "TXNM": {
     "industry": "Utilities - Regulated Electric",

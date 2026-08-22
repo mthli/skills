@@ -499,6 +499,11 @@
     "sector": "Healthcare",
     "ts": 1783382561
   },
+  "EMBJ": {
+    "industry": "Aerospace & Defense",
+    "sector": "Industrials",
+    "ts": 1787357018
+  },
   "EOG": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
@@ -618,6 +623,11 @@
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
     "ts": 1778771444
+  },
+  "GM": {
+    "industry": "Auto Manufacturers",
+    "sector": "Consumer Cyclical",
+    "ts": 1787357018
   },
   "GOOGL": {
     "industry": "Internet Content & Information",
@@ -802,7 +812,7 @@
   "LTH": {
     "industry": "Leisure",
     "sector": "Consumer Cyclical",
-    "ts": 1784764945
+    "ts": 1787357018
   },
   "LUV": {
     "industry": "Airlines",
@@ -862,7 +872,7 @@
   "MGA": {
     "industry": "Auto Parts",
     "sector": "Consumer Cyclical",
-    "ts": 1784764945
+    "ts": 1787357018
   },
   "MGM": {
     "industry": "Resorts & Casinos",
