@@ -92,7 +92,7 @@
   "AVTR": {
     "industry": "Medical Instruments & Supplies",
     "sector": "Healthcare",
-    "ts": 1784851303
+    "ts": 1787616144
   },
   "BAX": {
     "industry": "Medical Instruments & Supplies",
@@ -324,6 +324,11 @@
     "sector": "Healthcare",
     "ts": 1783728075
   },
+  "GKOS": {
+    "industry": "Medical Devices",
+    "sector": "Healthcare",
+    "ts": 1787616144
+  },
   "GLW": {
     "industry": "Electronic Components",
     "sector": "Technology",
@@ -458,6 +463,11 @@
     "industry": "Leisure",
     "sector": "Consumer Cyclical",
     "ts": 1787011354
+  },
+  "LW": {
+    "industry": "Packaged Foods",
+    "sector": "Consumer Defensive",
+    "ts": 1787616144
   },
   "MAC": {
     "industry": "REIT - Retail",

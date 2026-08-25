@@ -1,0 +1,567 @@
+{
+  "as_of": "2026-08-24T20:06:21.112683-04:00",
+  "today": "2026-08-24",
+  "spark_window": [
+    "2026-08-25",
+    "2026-08-26",
+    "2026-08-27"
+  ],
+  "macro_note": "",
+  "regime": {
+    "snapshot": "20260824",
+    "state": "RISK-ON",
+    "score": 8,
+    "vix": 15.9,
+    "spy_vs_200_pct": 8.2,
+    "flags": ""
+  },
+  "mr_run": {
+    "run_id": "20260824",
+    "run_date": "2026-08-24",
+    "stale_days": 0,
+    "rows_in_run": 60,
+    "kegs_after_filter": 8
+  },
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "ALAB",
+      "rank": 11,
+      "score": 44.7,
+      "rsi2": 3.24,
+      "dist_200dma_pct": 26.56,
+      "signal_close": 277.53,
+      "mr_target": 289.1,
+      "mr_stop": 214.39,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 3,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "NVDA",
+          "date": "2026-08-26",
+          "slot": "AMC",
+          "detail": "NVDA (Technology, $5196B) reports 2026-08-26 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "CRWD",
+          "date": "2026-08-26",
+          "slot": "AMC",
+          "detail": "CRWD (Technology, $195B) reports 2026-08-26 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "CRM",
+          "date": "2026-08-26",
+          "slot": "AMC",
+          "detail": "CRM (Technology, $171B) reports 2026-08-26 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-26",
+          "detail": "Core PCE Price Index m/m 2026-08-26 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-26",
+          "detail": "Prelim GDP q/q 2026-08-26 08:30 ET"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "MRVL",
+          "date": "2026-08-27",
+          "slot": "AMC",
+          "detail": "MRVL (Technology, $208B) reports 2026-08-27 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 277.53,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -13.32,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.79,
+      "signal_day_low": 266.31,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "NBIS",
+      "rank": 12,
+      "score": 44.6,
+      "rsi2": 4.22,
+      "dist_200dma_pct": 40.84,
+      "signal_close": 210.91,
+      "mr_target": 224.5,
+      "mr_stop": 152.59,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "sector": "Communication Services",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "NVDA",
+          "date": "2026-08-26",
+          "slot": "AMC",
+          "detail": "NVDA ($5196B) reports 2026-08-26 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-26",
+          "detail": "Core PCE Price Index m/m 2026-08-26 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-26",
+          "detail": "Prelim GDP q/q 2026-08-26 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 210.91,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 6,
+      "ret_5d_pct": -21.55,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.96,
+      "signal_day_low": 201.89,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "GLBE",
+      "rank": 14,
+      "score": 44.1,
+      "rsi2": 2.45,
+      "dist_200dma_pct": 12.37,
+      "signal_close": 39.86,
+      "mr_target": 40.75,
+      "mr_stop": 36.01,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Consumer Cyclical",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "NVDA",
+          "date": "2026-08-26",
+          "slot": "AMC",
+          "detail": "NVDA ($5196B) reports 2026-08-26 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-26",
+          "detail": "Core PCE Price Index m/m 2026-08-26 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-26",
+          "detail": "Prelim GDP q/q 2026-08-26 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 39.86,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -3.21,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.59,
+      "signal_day_low": 39.69,
+      "quiet_warning": true
+    },
+    {
+      "ticker": "ENTG",
+      "rank": 15,
+      "score": 43.5,
+      "rsi2": 2.74,
+      "dist_200dma_pct": 11.84,
+      "signal_close": 138.25,
+      "mr_target": 144.22,
+      "mr_stop": 117.11,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "NVDA",
+          "date": "2026-08-26",
+          "slot": "AMC",
+          "detail": "NVDA (Technology, $5196B) reports 2026-08-26 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "CRWD",
+          "date": "2026-08-26",
+          "slot": "AMC",
+          "detail": "CRWD (Technology, $195B) reports 2026-08-26 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "CRM",
+          "date": "2026-08-26",
+          "slot": "AMC",
+          "detail": "CRM (Technology, $171B) reports 2026-08-26 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-26",
+          "detail": "Core PCE Price Index m/m 2026-08-26 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-26",
+          "detail": "Prelim GDP q/q 2026-08-26 08:30 ET"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "MRVL",
+          "date": "2026-08-27",
+          "slot": "AMC",
+          "detail": "MRVL (Technology, $208B) reports 2026-08-27 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 138.25,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -15.23,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.87,
+      "signal_day_low": 134.53,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "TXN",
+      "rank": 16,
+      "score": 43.2,
+      "rsi2": 2.57,
+      "dist_200dma_pct": 11.16,
+      "signal_close": 258.94,
+      "mr_target": 265.72,
+      "mr_stop": 236.51,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "NVDA",
+          "date": "2026-08-26",
+          "slot": "AMC",
+          "detail": "NVDA (Technology, $5196B) reports 2026-08-26 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "CRWD",
+          "date": "2026-08-26",
+          "slot": "AMC",
+          "detail": "CRWD (Technology, $195B) reports 2026-08-26 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "CRM",
+          "date": "2026-08-26",
+          "slot": "AMC",
+          "detail": "CRM (Technology, $171B) reports 2026-08-26 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-26",
+          "detail": "Core PCE Price Index m/m 2026-08-26 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-26",
+          "detail": "Prelim GDP q/q 2026-08-26 08:30 ET"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "MRVL",
+          "date": "2026-08-27",
+          "slot": "AMC",
+          "detail": "MRVL (Technology, $208B) reports 2026-08-27 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 258.94,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -8.47,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.93,
+      "signal_day_low": 255.22,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "AAOI",
+      "rank": 17,
+      "score": 43.2,
+      "rsi2": 9.13,
+      "dist_200dma_pct": 10.04,
+      "signal_close": 107.63,
+      "mr_target": 123.03,
+      "mr_stop": 65.6,
+      "signal": "\ud83d\udfe1",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "NVDA",
+          "date": "2026-08-26",
+          "slot": "AMC",
+          "detail": "NVDA (Technology, $5196B) reports 2026-08-26 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "CRWD",
+          "date": "2026-08-26",
+          "slot": "AMC",
+          "detail": "CRWD (Technology, $195B) reports 2026-08-26 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "CRM",
+          "date": "2026-08-26",
+          "slot": "AMC",
+          "detail": "CRM (Technology, $171B) reports 2026-08-26 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-26",
+          "detail": "Core PCE Price Index m/m 2026-08-26 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-26",
+          "detail": "Prelim GDP q/q 2026-08-26 08:30 ET"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "MRVL",
+          "date": "2026-08-27",
+          "slot": "AMC",
+          "detail": "MRVL (Technology, $208B) reports 2026-08-27 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 107.63,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -30.51,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.89,
+      "signal_day_low": 102.1,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "ONTO",
+      "rank": 20,
+      "score": 40.7,
+      "rsi2": 4.11,
+      "dist_200dma_pct": 20.48,
+      "signal_close": 282.91,
+      "mr_target": 298.0,
+      "mr_stop": 223.06,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "NVDA",
+          "date": "2026-08-26",
+          "slot": "AMC",
+          "detail": "NVDA (Technology, $5196B) reports 2026-08-26 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "CRWD",
+          "date": "2026-08-26",
+          "slot": "AMC",
+          "detail": "CRWD (Technology, $195B) reports 2026-08-26 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "CRM",
+          "date": "2026-08-26",
+          "slot": "AMC",
+          "detail": "CRM (Technology, $171B) reports 2026-08-26 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-26",
+          "detail": "Core PCE Price Index m/m 2026-08-26 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-26",
+          "detail": "Prelim GDP q/q 2026-08-26 08:30 ET"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "MRVL",
+          "date": "2026-08-27",
+          "slot": "AMC",
+          "detail": "MRVL (Technology, $208B) reports 2026-08-27 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 282.91,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -19.44,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.75,
+      "signal_day_low": 274.66,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "STX",
+      "rank": 21,
+      "score": 40.3,
+      "rsi2": 8.5,
+      "dist_200dma_pct": 39.92,
+      "signal_close": 794.65,
+      "mr_target": 846.23,
+      "mr_stop": 630.02,
+      "signal": "\ud83d\udfe1",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "NVDA",
+          "date": "2026-08-26",
+          "slot": "AMC",
+          "detail": "NVDA (Technology, $5196B) reports 2026-08-26 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "CRWD",
+          "date": "2026-08-26",
+          "slot": "AMC",
+          "detail": "CRWD (Technology, $195B) reports 2026-08-26 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "CRM",
+          "date": "2026-08-26",
+          "slot": "AMC",
+          "detail": "CRM (Technology, $171B) reports 2026-08-26 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-26",
+          "detail": "Core PCE Price Index m/m 2026-08-26 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-26",
+          "detail": "Prelim GDP q/q 2026-08-26 08:30 ET"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "MRVL",
+          "date": "2026-08-27",
+          "slot": "AMC",
+          "detail": "MRVL (Technology, $208B) reports 2026-08-27 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 794.65,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -20.12,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.76,
+      "signal_day_low": 774.0,
+      "quiet_warning": false
+    }
+  ],
+  "macro_calendar": [
+    {
+      "date": "2026-08-26",
+      "time_et": "08:30",
+      "title": "Core PCE Price Index m/m"
+    },
+    {
+      "date": "2026-08-26",
+      "time_et": "08:30",
+      "title": "Prelim GDP q/q"
+    }
+  ],
+  "prior_run_review": {
+    "source": "snapback:2026-08-21",
+    "n": 3,
+    "pct_positive": 66.7,
+    "avg_pct": -1.12,
+    "median_pct": 0.02,
+    "best": [
+      {
+        "ticker": "PNW",
+        "since_pct": 0.36
+      },
+      {
+        "ticker": "D",
+        "since_pct": 0.02
+      },
+      {
+        "ticker": "NBIS",
+        "since_pct": -3.75
+      }
+    ],
+    "worst": [
+      {
+        "ticker": "NBIS",
+        "since_pct": -3.75
+      },
+      {
+        "ticker": "D",
+        "since_pct": 0.02
+      },
+      {
+        "ticker": "PNW",
+        "since_pct": 0.36
+      }
+    ]
+  },
+  "errors": []
+}

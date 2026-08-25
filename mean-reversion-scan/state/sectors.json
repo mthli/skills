@@ -12,7 +12,7 @@
   "AAOI": {
     "industry": "Communication Equipment",
     "sector": "Technology",
-    "ts": 1783037008
+    "ts": 1787616367
   },
   "AAON": {
     "industry": "Building Products & Equipment",
@@ -177,7 +177,7 @@
   "AMAT": {
     "industry": "Semiconductor Equipment & Materials",
     "sector": "Technology",
-    "ts": 1783468998
+    "ts": 1787616367
   },
   "AMCR": {
     "industry": "Packaging & Containers",
@@ -612,7 +612,7 @@
   "CIEN": {
     "industry": "Communication Equipment",
     "sector": "Technology",
-    "ts": 1784160163
+    "ts": 1787616368
   },
   "CIFR": {
     "industry": "Information Technology Services",
@@ -692,12 +692,12 @@
   "COHR": {
     "industry": "Scientific & Technical Instruments",
     "sector": "Technology",
-    "ts": 1783037008
+    "ts": 1787616368
   },
   "COLB": {
     "industry": "Banks - Regional",
     "sector": "Financial Services",
-    "ts": 1784937791
+    "ts": 1787616368
   },
   "COMP": {
     "industry": "Real Estate Services",
@@ -742,7 +742,7 @@
   "CRDO": {
     "industry": "Semiconductors",
     "sector": "Technology",
-    "ts": 1782518609
+    "ts": 1787616367
   },
   "CRNX": {
     "industry": "Biotechnology",
@@ -1187,7 +1187,7 @@
   "FORM": {
     "industry": "Semiconductor Equipment & Materials",
     "sector": "Technology",
-    "ts": 1783468998
+    "ts": 1787616367
   },
   "FR": {
     "industry": "REIT - Industrial",
@@ -1277,7 +1277,7 @@
   "GLNG": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
-    "ts": 1779543663
+    "ts": 1787616367
   },
   "GLPI": {
     "industry": "REIT - Specialty",
@@ -1287,7 +1287,7 @@
   "GLW": {
     "industry": "Electronic Components",
     "sector": "Technology",
-    "ts": 1783468998
+    "ts": 1787616368
   },
   "GLXY": {
     "industry": "Capital Markets",
@@ -1997,7 +1997,7 @@
   "NOKBF": {
     "industry": "Communication Equipment",
     "sector": "Technology",
-    "ts": 1784160163
+    "ts": 1787616368
   },
   "NOV": {
     "industry": "Oil & Gas Equipment & Services",
@@ -2107,7 +2107,7 @@
   "OKTA": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1784764989
+    "ts": 1787616367
   },
   "OMF": {
     "industry": "Credit Services",
@@ -2712,7 +2712,7 @@
   "STX": {
     "industry": "Computer Hardware",
     "sector": "Technology",
-    "ts": 1783123379
+    "ts": 1787616367
   },
   "SU": {
     "industry": "Oil & Gas Integrated",
@@ -2982,7 +2982,7 @@
   "VIAV": {
     "industry": "Communication Equipment",
     "sector": "Technology",
-    "ts": 1783037008
+    "ts": 1787616367
   },
   "VIK": {
     "industry": "Travel Services",
@@ -3007,7 +3007,7 @@
   "VLY": {
     "industry": "Banks - Regional",
     "sector": "Financial Services",
-    "ts": 1784937791
+    "ts": 1787616368
   },
   "VNO": {
     "industry": "REIT - Office",

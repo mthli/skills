@@ -144,6 +144,11 @@
     "sector": "Financial Services",
     "ts": 1786406564
   },
+  "BAX": {
+    "industry": "Medical Instruments & Supplies",
+    "sector": "Healthcare",
+    "ts": 1787616281
+  },
   "BAYRY": {
     "industry": "Drug Manufacturers - General",
     "sector": "Healthcare",
@@ -614,6 +619,11 @@
     "sector": "Basic Materials",
     "ts": 1786406564
   },
+  "GH": {
+    "industry": "Diagnostics & Research",
+    "sector": "Healthcare",
+    "ts": 1787616281
+  },
   "GKOS": {
     "industry": "Medical Devices",
     "sector": "Healthcare",
@@ -682,7 +692,7 @@
   "HUM": {
     "industry": "Healthcare Plans",
     "sector": "Healthcare",
-    "ts": 1784764945
+    "ts": 1787616281
   },
   "HWM": {
     "industry": "Aerospace & Defense",
@@ -792,7 +802,7 @@
   "LLY": {
     "industry": "Drug Manufacturers - General",
     "sector": "Healthcare",
-    "ts": 1784937741
+    "ts": 1787616281
   },
   "LNTH": {
     "industry": "Drug Manufacturers - Specialty & Generic",
@@ -1132,7 +1142,7 @@
   "ROIV": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1784851353
+    "ts": 1787616281
   },
   "ROKU": {
     "industry": "Entertainment",
@@ -1152,7 +1162,7 @@
   "RVMD": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1784937741
+    "ts": 1787616281
   },
   "RVTY": {
     "industry": "Diagnostics & Research",
