@@ -160,7 +160,12 @@ This is the section that can do harm if written lazily, so frame it honestly:
   participation is a real signal; the same close carried by one megacap is a
   weak one. 07-31 passed both tests while **RSP closed −0.17% against SPY
   +0.72%** with 6 of 11 sectors red and AMZN alone inside it — the level held,
-  the "capex board bid underneath" attribution was false.
+  the "capex board bid underneath" attribution was false. **The check attaches
+  to BOTH sides of the exam (08-18, 08-24):** a bear branch written as
+  "spreading" without its own breadth test mislabels a contained rotation —
+  08-24's QQQ floor-break landed on an 8/11-green, defensives-led board
+  (contained-rotation shape, 07-02), and the distinction governs whether the
+  non-epicenter half of the book stays adds-eligible.
 - **Grade catalyst claims by % of gap kept at the close, per name.** > 70%
   kept = the catalyst is real for that name; < 30% = it traded like sympathy
   (07-20 SIMO inverted inside the catalyst bucket; 07-30 FTNT kept 10% of its
