@@ -1,0 +1,177 @@
+{
+  "as_of": "2026-08-25T20:05:54.346046-04:00",
+  "today": "2026-08-25",
+  "spark_window": [
+    "2026-08-26",
+    "2026-08-27",
+    "2026-08-28"
+  ],
+  "macro_note": "",
+  "regime": {
+    "snapshot": "20260825",
+    "state": "RISK-ON",
+    "score": 6,
+    "vix": 15.4,
+    "spy_vs_200_pct": 8.5,
+    "flags": "Narrowing rally: only megacaps lifting the index (RSP/SPY -1.5%/20d)"
+  },
+  "mr_run": {
+    "run_id": "20260825",
+    "run_date": "2026-08-25",
+    "stale_days": 0,
+    "rows_in_run": 55,
+    "kegs_after_filter": 2
+  },
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "EC",
+      "rank": 4,
+      "score": 51.7,
+      "rsi2": 3.11,
+      "dist_200dma_pct": 28.35,
+      "signal_close": 16.79,
+      "mr_target": 17.44,
+      "mr_stop": 15.39,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 0,
+      "sector": "Energy",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "NVDA",
+          "date": "2026-08-26",
+          "slot": "AMC",
+          "detail": "NVDA ($5045B) reports 2026-08-26 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-26",
+          "detail": "Core PCE Price Index m/m 2026-08-26 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-26",
+          "detail": "Prelim GDP q/q 2026-08-26 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 16.79,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -5.03,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.79,
+      "signal_day_low": 16.77,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "REYN",
+      "rank": 10,
+      "score": 44.9,
+      "rsi2": 2.22,
+      "dist_200dma_pct": 6.25,
+      "signal_close": 24.56,
+      "mr_target": 25.38,
+      "mr_stop": 23.22,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "sector": "Consumer Cyclical",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "NVDA",
+          "date": "2026-08-26",
+          "slot": "AMC",
+          "detail": "NVDA ($5045B) reports 2026-08-26 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-26",
+          "detail": "Core PCE Price Index m/m 2026-08-26 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-08-26",
+          "detail": "Prelim GDP q/q 2026-08-26 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 24.56,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -4.66,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.91,
+      "signal_day_low": 24.4,
+      "quiet_warning": false
+    }
+  ],
+  "macro_calendar": [
+    {
+      "date": "2026-08-26",
+      "time_et": "08:30",
+      "title": "Core PCE Price Index m/m"
+    },
+    {
+      "date": "2026-08-26",
+      "time_et": "08:30",
+      "title": "Prelim GDP q/q"
+    }
+  ],
+  "prior_run_review": {
+    "source": "snapback:2026-08-24",
+    "n": 8,
+    "pct_positive": 87.5,
+    "avg_pct": 2.31,
+    "median_pct": 2.46,
+    "best": [
+      {
+        "ticker": "NBIS",
+        "since_pct": 5.24
+      },
+      {
+        "ticker": "AAOI",
+        "since_pct": 5.13
+      },
+      {
+        "ticker": "STX",
+        "since_pct": 3.4
+      }
+    ],
+    "worst": [
+      {
+        "ticker": "GLBE",
+        "since_pct": -1.08
+      },
+      {
+        "ticker": "TXN",
+        "since_pct": 0.43
+      },
+      {
+        "ticker": "ENTG",
+        "since_pct": 0.45
+      }
+    ],
+    "armed_subset": {
+      "n": 8,
+      "pct_positive": 87.5,
+      "avg_pct": 2.31,
+      "median_pct": 2.46
+    }
+  },
+  "errors": []
+}

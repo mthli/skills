@@ -162,12 +162,17 @@
   "BBVA": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1784160121
+    "ts": 1787702664
   },
   "BCS": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
     "ts": 1787011455
+  },
+  "BDX": {
+    "industry": "Medical Instruments & Supplies",
+    "sector": "Healthcare",
+    "ts": 1787702664
   },
   "BEN": {
     "industry": "Asset Management",
@@ -238,6 +243,11 @@
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
     "ts": 1787011455
+  },
+  "CAH": {
+    "industry": "Medical Distribution",
+    "sector": "Healthcare",
+    "ts": 1787702664
   },
   "CARR": {
     "industry": "Building Products & Equipment",
@@ -728,6 +738,11 @@
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
     "ts": 1787011455
+  },
+  "INGM": {
+    "industry": "Information Technology Services",
+    "sector": "Technology",
+    "ts": 1787702664
   },
   "IRDM": {
     "industry": "Telecom Services",

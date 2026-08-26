@@ -14,6 +14,11 @@
     "sector": "Healthcare",
     "ts": 1787356926
   },
+  "ACAD": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1787702535
+  },
   "ACMR": {
     "industry": "Semiconductor Equipment & Materials",
     "sector": "Technology",
@@ -713,6 +718,11 @@
     "industry": "Insurance - Specialty",
     "sector": "Financial Services",
     "ts": 1785508599
+  },
+  "SCHW": {
+    "industry": "Capital Markets",
+    "sector": "Financial Services",
+    "ts": 1787702535
   },
   "SFTBY": {
     "industry": "Telecom Services",

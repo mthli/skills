@@ -172,7 +172,7 @@
   "AM": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
-    "ts": 1783382616
+    "ts": 1787702743
   },
   "AMAT": {
     "industry": "Semiconductor Equipment & Materials",
@@ -867,7 +867,7 @@
   "DDOG": {
     "industry": "Software - Application",
     "sector": "Technology",
-    "ts": 1784764989
+    "ts": 1787702742
   },
   "DE": {
     "industry": "Farm & Heavy Construction Machinery",
@@ -972,7 +972,7 @@
   "EC": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
-    "ts": 1782345778
+    "ts": 1787702742
   },
   "ECL": {
     "industry": "Specialty Chemicals",
@@ -1357,7 +1357,7 @@
   "HBAN": {
     "industry": "Banks - Regional",
     "sector": "Financial Services",
-    "ts": 1784937791
+    "ts": 1787702743
   },
   "HBM": {
     "industry": "Copper",
@@ -1742,7 +1742,7 @@
   "LYB": {
     "industry": "Specialty Chemicals",
     "sector": "Basic Materials",
-    "ts": 1782135719
+    "ts": 1787702742
   },
   "LYG": {
     "industry": "Banks - Regional",
@@ -1907,7 +1907,7 @@
   "MTDR": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1779848102
+    "ts": 1787702742
   },
   "MTSI": {
     "industry": "Semiconductors",
@@ -2099,10 +2099,15 @@
     "sector": "Real Estate",
     "ts": 1785801823
   },
+  "OII": {
+    "industry": "Oil & Gas Equipment & Services",
+    "sector": "Energy",
+    "ts": 1787702742
+  },
   "OKE": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
-    "ts": 1780114451
+    "ts": 1787702742
   },
   "OKTA": {
     "industry": "Software - Infrastructure",
@@ -2352,7 +2357,7 @@
   "QRVO": {
     "industry": "Semiconductors",
     "sector": "Technology",
-    "ts": 1782777789
+    "ts": 1787702743
   },
   "QSR": {
     "industry": "Restaurants",
@@ -2499,6 +2504,11 @@
     "sector": "Industrials",
     "ts": 1781225311
   },
+  "S": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1787702742
+  },
   "SAN": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
@@ -2617,7 +2627,7 @@
   "SNDK": {
     "industry": "Computer Hardware",
     "sector": "Technology",
-    "ts": 1783468998
+    "ts": 1787702742
   },
   "SNDR": {
     "industry": "Trucking",
@@ -2898,6 +2908,11 @@
     "industry": "Restaurants",
     "sector": "Consumer Cyclical",
     "ts": 1785589376
+  },
+  "U": {
+    "industry": "Software - Application",
+    "sector": "Technology",
+    "ts": 1787702742
   },
   "UAL": {
     "industry": "Airlines",
@@ -3212,7 +3227,7 @@
   "ZM": {
     "industry": "Software - Application",
     "sector": "Technology",
-    "ts": 1784678594
+    "ts": 1787702742
   },
   "ZTO": {
     "industry": "Integrated Freight & Logistics",
