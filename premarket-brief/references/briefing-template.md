@@ -180,6 +180,25 @@ This is the section that can do harm if written lazily, so frame it honestly:
   name what it means (usually: the thesis is intact but unconfirmed — hold
   size, no adds, the far line still governs). A middle branch that only says
   "regrade tomorrow" is half-written.
+- **A knife-edge deferral needs a terminal condition (08-24, 08-25).** The
+  0.2%-band protocol is 5-for-5 at what it was built for — refusing false
+  verdicts (three OpEx closes 08-21, COIN 08-24, SOXX 08-25 all carried
+  cleanly). But a line that pins *twice* has stopped discriminating, and a
+  deferral that only ever says "next session decides" is the half-written
+  middle branch above wearing a protocol's clothes. So: a **2nd knife-edge on
+  the same line**, or **any knife-edge whose next grading session sits behind
+  a scheduled binary** (an own-earnings print, a sector-defining verdict, a
+  FOMC/CPI-class macro release), converts the deferral into a **forced
+  decision before that event** — the minimum fired action executes on
+  schedule and the escalation resolves pre-print, never post. Deferring
+  through a binary is not a plan; it's an unowned position with a countdown.
+- **A guidance-driven single-name earnings gap is a floor, not the move
+  (08-25; negative twin of gap-is-half-the-move).** DKS gapped −20.6% and
+  closed −30.7% on the low, keeping 149% of its gap. Containment and
+  magnitude are two separate claims — "one retailer's problem" grades whether
+  it *spread* (DKS didn't: XLY −0.30%) and says nothing about how far the
+  name itself travels. Name which one you're claiming, and never quote the
+  premarket gap as the damage.
 - **Premarket single-stock prints are thin.** Weight the futures gap, Europe,
   and sector ETFs over individual moves; respect the gappers' volume floor,
   and treat pre-8:00 ET thin prints as noise.
