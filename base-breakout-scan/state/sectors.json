@@ -282,7 +282,7 @@
   "CGON": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1785196974
+    "ts": 1787789008
   },
   "CHRD": {
     "industry": "Oil & Gas E&P",
@@ -533,6 +533,11 @@
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
     "ts": 1785589356
+  },
+  "ERAS": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1787789008
   },
   "ESI": {
     "industry": "Specialty Chemicals",
@@ -1302,7 +1307,7 @@
   "SWK": {
     "industry": "Tools & Accessories",
     "sector": "Industrials",
-    "ts": 1783382562
+    "ts": 1787789008
   },
   "SYRE": {
     "industry": "Biotechnology",

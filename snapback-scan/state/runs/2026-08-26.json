@@ -1,0 +1,153 @@
+{
+  "as_of": "2026-08-26T20:04:44.018612-04:00",
+  "today": "2026-08-26",
+  "spark_window": [
+    "2026-08-27",
+    "2026-08-28",
+    "2026-08-31"
+  ],
+  "macro_note": "ForexFactory covers the current week only \u2014 macro sparks beyond Sunday not visible",
+  "regime": {
+    "snapshot": "20260826",
+    "state": "RISK-ON",
+    "score": 6,
+    "vix": 15.2,
+    "spy_vs_200_pct": 8.4,
+    "flags": "Narrowing rally: only megacaps lifting the index (RSP/SPY -2.0%/20d)"
+  },
+  "mr_run": {
+    "run_id": "20260826",
+    "run_date": "2026-08-26",
+    "stale_days": 0,
+    "rows_in_run": 36,
+    "kegs_after_filter": 3
+  },
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "SYRE",
+      "rank": 1,
+      "score": 63.3,
+      "rsi2": 3.42,
+      "dist_200dma_pct": 56.87,
+      "signal_close": 93.61,
+      "mr_target": 104.38,
+      "mr_stop": 79.65,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 0,
+      "sector": "Healthcare",
+      "sparks": [],
+      "armed": false,
+      "latest_close": 93.61,
+      "since_signal_pct": -0.01,
+      "ignited": false,
+      "down_streak": 1,
+      "ret_5d_pct": -14.06,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.39,
+      "signal_day_low": 90.6,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-11-04"
+    },
+    {
+      "ticker": "EC",
+      "rank": 2,
+      "score": 59.4,
+      "rsi2": 1.78,
+      "dist_200dma_pct": 25.93,
+      "signal_close": 16.52,
+      "mr_target": 17.16,
+      "mr_stop": 15.25,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Energy",
+      "sparks": [],
+      "armed": false,
+      "latest_close": 16.52,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -7.66,
+      "down_gaps_5d": 3,
+      "vol_ratio_5d_20d": 0.8,
+      "signal_day_low": 16.46,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-11-13"
+    },
+    {
+      "ticker": "ZM",
+      "rank": 4,
+      "score": 49.8,
+      "rsi2": 2.37,
+      "dist_200dma_pct": 4.34,
+      "signal_close": 93.83,
+      "mr_target": 102.66,
+      "mr_stop": 83.76,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 3,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "MRVL",
+          "date": "2026-08-27",
+          "slot": "AMC",
+          "detail": "MRVL (Technology, $211B) reports 2026-08-27 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 93.83,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -12.69,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.39,
+      "signal_day_low": 92.72,
+      "quiet_warning": false
+    }
+  ],
+  "macro_calendar": [],
+  "prior_run_review": {
+    "source": "snapback:2026-08-25",
+    "n": 2,
+    "pct_positive": 50.0,
+    "avg_pct": -0.71,
+    "median_pct": -0.71,
+    "best": [
+      {
+        "ticker": "REYN",
+        "since_pct": 0.2
+      },
+      {
+        "ticker": "EC",
+        "since_pct": -1.61
+      }
+    ],
+    "worst": [
+      {
+        "ticker": "EC",
+        "since_pct": -1.61
+      },
+      {
+        "ticker": "REYN",
+        "since_pct": 0.2
+      }
+    ],
+    "armed_subset": {
+      "n": 2,
+      "pct_positive": 50.0,
+      "avg_pct": -0.71,
+      "median_pct": -0.71
+    }
+  },
+  "errors": []
+}

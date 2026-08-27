@@ -1197,7 +1197,7 @@
   "FRO": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
-    "ts": 1780659418
+    "ts": 1787789077
   },
   "FROG": {
     "industry": "Software - Application",
@@ -1672,7 +1672,7 @@
   "LLY": {
     "industry": "Drug Manufacturers - General",
     "sector": "Healthcare",
-    "ts": 1784073920
+    "ts": 1787789077
   },
   "LMT": {
     "industry": "Aerospace & Defense",
@@ -1952,7 +1952,7 @@
   "NE": {
     "industry": "Oil & Gas Drilling",
     "sector": "Energy",
-    "ts": 1782135719
+    "ts": 1787789077
   },
   "NEE": {
     "industry": "Utilities - Regulated Electric",
@@ -2567,7 +2567,7 @@
   "SHEL": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
-    "ts": 1781568272
+    "ts": 1787789077
   },
   "SHW": {
     "industry": "Specialty Chemicals",
@@ -2749,6 +2749,11 @@
     "sector": "Financial Services",
     "ts": 1787270703
   },
+  "SYRE": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1787789077
+  },
   "SYY": {
     "industry": "Food Distribution",
     "sector": "Consumer Defensive",
@@ -2877,7 +2882,7 @@
   "TTE": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
-    "ts": 1782518609
+    "ts": 1787789077
   },
   "TTMI": {
     "industry": "Electronic Components",
@@ -2982,7 +2987,7 @@
   "VAL": {
     "industry": "Oil & Gas Drilling",
     "sector": "Energy",
-    "ts": 1779848101
+    "ts": 1787789077
   },
   "VALE": {
     "industry": "Other Industrial Metals & Mining",

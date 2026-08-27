@@ -627,7 +627,7 @@
   "PAYX": {
     "industry": "Software - Application",
     "sector": "Technology",
-    "ts": 1785196917
+    "ts": 1787788925
   },
   "PBF": {
     "industry": "Oil & Gas Refining & Marketing",
@@ -908,6 +908,11 @@
     "industry": "Travel Services",
     "sector": "Consumer Cyclical",
     "ts": 1785801705
+  },
+  "VLO": {
+    "industry": "Oil & Gas Refining & Marketing",
+    "sector": "Energy",
+    "ts": 1787788925
   },
   "VNO": {
     "industry": "REIT - Office",
