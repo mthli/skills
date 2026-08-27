@@ -179,7 +179,15 @@ This is the section that can do harm if written lazily, so frame it honestly:
   gap-keep test the 30–70% band is the *modal* outcome, not an edge case, so
   name what it means (usually: the thesis is intact but unconfirmed — hold
   size, no adds, the far line still governs). A middle branch that only says
-  "regrade tomorrow" is half-written.
+  "regrade tomorrow" is half-written. **Two-variable extension (08-26; 1st
+  instance — watch):** the three branches cover the *primary* variable's
+  middle and say nothing about a *secondary* condition inverting. Both of
+  08-26's misses were that cell — QQQ's exam demanded `RSP green AND most
+  sectors green` and got one of two, and CIBR's demanded "green on a **red**
+  XLK" while XLK closed green, so no branch existed at all. So: write a
+  **relative** test as a **spread** ("CIBR minus XLK, positive = the cyber bid
+  is real"), and let a secondary variable *describe* a branch, never *define*
+  one.
 - **A knife-edge deferral needs a terminal condition (08-24, 08-25).** The
   0.2%-band protocol is 5-for-5 at what it was built for — refusing false
   verdicts (three OpEx closes 08-21, COIN 08-24, SOXX 08-25 all carried
@@ -256,6 +264,16 @@ This is the section that can do harm if written lazily, so frame it honestly:
   "a catalyst without a move" — and led the entire board at +1.26% by the
   close. A flat premarket does not veto a catalyst-owned sector; it means
   the grading clock hasn't run yet, same as a sympathy gap on a name.
+  **Promotion picks WHICH sector to grade, never WHICH WAY it goes (08-17,
+  08-26; promoted on 2nd instance).** Both graded promotions closed *opposite*
+  to their premarket sign — XLE +0.1% premkt → **+1.26%, board leader**; XLK
+  −0.79% premkt → **+0.61%, 2nd-best of eleven** on the day a software wreck
+  supposedly owned it. So write the promotion as "this is the one sector whose
+  close is a real read", never as "this sector is today's drag/leader". And
+  weigh the catalyst's *scope*: a sector-wide catalyst (tariffs, a ceasefire,
+  a rate move) genuinely owns a sector; three companies' prints own three
+  companies — 08-26's epicenter names kept 26–34% of their gaps while the
+  sector went green.
 - **Containment beats the event — the posture must follow the brief's own
   evidence (08-03, 08-13).** When an overnight negative is loud but the
   dashboard says it was *contained* (the group didn't follow it down, a
