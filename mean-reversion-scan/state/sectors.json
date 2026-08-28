@@ -27,7 +27,7 @@
   "ABBV": {
     "industry": "Drug Manufacturers - General",
     "sector": "Healthcare",
-    "ts": 1783728176
+    "ts": 1787875400
   },
   "ABEV": {
     "industry": "Beverages - Brewers",
@@ -399,6 +399,11 @@
     "sector": "Financial Services",
     "ts": 1783987530
   },
+  "BF-B": {
+    "industry": "Beverages - Wineries & Distilleries",
+    "sector": "Consumer Defensive",
+    "ts": 1787875400
+  },
   "BG": {
     "industry": "Farm Products",
     "sector": "Consumer Defensive",
@@ -423,6 +428,11 @@
     "industry": "Utilities - Regulated Gas",
     "sector": "Utilities",
     "ts": 1783382616
+  },
+  "BKNG": {
+    "industry": "Travel Services",
+    "sector": "Consumer Cyclical",
+    "ts": 1787875400
   },
   "BKR": {
     "industry": "Oil & Gas Equipment & Services",
@@ -712,7 +722,7 @@
   "CORT": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1783987530
+    "ts": 1787875400
   },
   "CORZ": {
     "industry": "Software - Infrastructure",
@@ -852,7 +862,7 @@
   "DAR": {
     "industry": "Packaged Foods",
     "sector": "Consumer Defensive",
-    "ts": 1785283361
+    "ts": 1787875400
   },
   "DB": {
     "industry": "Banks - Regional",
@@ -988,6 +998,11 @@
     "industry": "Utilities - Regulated Electric",
     "sector": "Utilities",
     "ts": 1785510645
+  },
+  "ELS": {
+    "industry": "REIT - Residential",
+    "sector": "Real Estate",
+    "ts": 1787875400
   },
   "ELV": {
     "industry": "Healthcare Plans",
@@ -1627,7 +1642,7 @@
   "KO": {
     "industry": "Beverages - Non-Alcoholic",
     "sector": "Consumer Defensive",
-    "ts": 1782135720
+    "ts": 1787875400
   },
   "KRG": {
     "industry": "REIT - Retail",
@@ -2252,7 +2267,7 @@
   "PFGC": {
     "industry": "Food Distribution",
     "sector": "Consumer Defensive",
-    "ts": 1784160164
+    "ts": 1787875400
   },
   "PHM": {
     "industry": "Residential Construction",
@@ -2543,6 +2558,11 @@
     "industry": "Copper",
     "sector": "Basic Materials",
     "ts": 1780944731
+  },
+  "SCHW": {
+    "industry": "Capital Markets",
+    "sector": "Financial Services",
+    "ts": 1787875400
   },
   "SFD": {
     "industry": "Packaged Foods",

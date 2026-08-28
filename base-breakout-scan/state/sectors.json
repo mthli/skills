@@ -114,6 +114,11 @@
     "sector": "Technology",
     "ts": 1783555347
   },
+  "ASX": {
+    "industry": "Semiconductors",
+    "sector": "Technology",
+    "ts": 1787875355
+  },
   "ATI": {
     "industry": "Metal Fabrication",
     "sector": "Industrials",
@@ -177,7 +182,7 @@
   "BEN": {
     "industry": "Asset Management",
     "sector": "Financial Services",
-    "ts": 1785283319
+    "ts": 1787875355
   },
   "BHP": {
     "industry": "Other Industrial Metals & Mining",
@@ -202,7 +207,7 @@
   "BNS": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1785283320
+    "ts": 1787875355
   },
   "BNY": {
     "industry": "Banks - Diversified",
@@ -547,7 +552,7 @@
   "ETSY": {
     "industry": "Internet Retail",
     "sector": "Consumer Cyclical",
-    "ts": 1785283319
+    "ts": 1787875355
   },
   "EWBC": {
     "industry": "Banks - Regional",
@@ -678,6 +683,11 @@
     "industry": "Oil & Gas Equipment & Services",
     "sector": "Energy",
     "ts": 1785589357
+  },
+  "HNGE": {
+    "industry": "Health Information Services",
+    "sector": "Healthcare",
+    "ts": 1787875355
   },
   "HPE": {
     "industry": "Communication Equipment",
@@ -1372,7 +1382,7 @@
   "TSM": {
     "industry": "Semiconductors",
     "sector": "Technology",
-    "ts": 1782777740
+    "ts": 1787875355
   },
   "TTE": {
     "industry": "Oil & Gas Integrated",
@@ -1423,6 +1433,11 @@
     "industry": "Healthcare Plans",
     "sector": "Healthcare",
     "ts": 1783987440
+  },
+  "UNM": {
+    "industry": "Insurance - Life",
+    "sector": "Financial Services",
+    "ts": 1787875355
   },
   "UNP": {
     "industry": "Railroads",

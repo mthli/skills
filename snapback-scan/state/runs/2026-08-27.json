@@ -1,0 +1,220 @@
+{
+  "as_of": "2026-08-27T20:03:27.845241-04:00",
+  "today": "2026-08-27",
+  "spark_window": [
+    "2026-08-28",
+    "2026-08-31",
+    "2026-09-01"
+  ],
+  "macro_note": "ForexFactory covers the current week only \u2014 macro sparks beyond Sunday not visible",
+  "regime": {
+    "snapshot": "20260827",
+    "state": "RISK-ON",
+    "score": 6,
+    "vix": 14.5,
+    "spy_vs_200_pct": 9.1,
+    "flags": "Narrowing rally: only megacaps lifting the index (RSP/SPY -1.1%/20d)"
+  },
+  "mr_run": {
+    "run_id": "20260827",
+    "run_date": "2026-08-27",
+    "stale_days": 0,
+    "rows_in_run": 50,
+    "kegs_after_filter": 5
+  },
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "SYRE",
+      "rank": 1,
+      "score": 55.3,
+      "rsi2": 3.56,
+      "dist_200dma_pct": 55.96,
+      "signal_close": 93.61,
+      "mr_target": 101.54,
+      "mr_stop": 79.58,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Healthcare",
+      "sparks": [],
+      "armed": false,
+      "latest_close": 93.61,
+      "since_signal_pct": 0.01,
+      "ignited": false,
+      "down_streak": 0,
+      "ret_5d_pct": -13.15,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.47,
+      "signal_day_low": 91.25,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-11-04"
+    },
+    {
+      "ticker": "PAY",
+      "rank": 3,
+      "score": 52.2,
+      "rsi2": 3.94,
+      "dist_200dma_pct": 23.9,
+      "signal_close": 35.61,
+      "mr_target": 38.86,
+      "mr_stop": 30.8,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 0,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "DELL",
+          "date": "2026-09-01",
+          "slot": "AMC",
+          "detail": "DELL (Technology, $301B) reports 2026-09-01 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "PANW",
+          "date": "2026-09-01",
+          "slot": "AMC",
+          "detail": "PANW (Technology, $277B) reports 2026-09-01 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 35.61,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 1,
+      "ret_5d_pct": -7.31,
+      "down_gaps_5d": 3,
+      "vol_ratio_5d_20d": 0.96,
+      "signal_day_low": 35.36,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "ORKA",
+      "rank": 5,
+      "score": 48.3,
+      "rsi2": 3.96,
+      "dist_200dma_pct": 71.56,
+      "signal_close": 96.54,
+      "mr_target": 101.64,
+      "mr_stop": 82.11,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 0,
+      "sector": "Healthcare",
+      "sparks": [],
+      "armed": false,
+      "latest_close": 96.54,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -7.93,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 1.11,
+      "signal_day_low": 96.16,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-11-11"
+    },
+    {
+      "ticker": "OC",
+      "rank": 6,
+      "score": 46.6,
+      "rsi2": 2.31,
+      "dist_200dma_pct": 17.07,
+      "signal_close": 143.68,
+      "mr_target": 146.21,
+      "mr_stop": 132.99,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Industrials",
+      "sparks": [],
+      "armed": false,
+      "latest_close": 143.68,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -2.36,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.9,
+      "signal_day_low": 142.05,
+      "quiet_warning": true,
+      "next_own_earnings": "2026-11-04"
+    },
+    {
+      "ticker": "MAC",
+      "rank": 7,
+      "score": 46.0,
+      "rsi2": 2.1,
+      "dist_200dma_pct": 14.48,
+      "signal_close": 23.92,
+      "mr_target": 24.22,
+      "mr_stop": 22.84,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Real Estate",
+      "sparks": [],
+      "armed": false,
+      "latest_close": 23.92,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 6,
+      "ret_5d_pct": -3.12,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 0.54,
+      "signal_day_low": 23.86,
+      "quiet_warning": true,
+      "next_own_earnings": "2026-11-04"
+    }
+  ],
+  "macro_calendar": [],
+  "prior_run_review": {
+    "source": "snapback:2026-08-26",
+    "n": 3,
+    "pct_positive": 100.0,
+    "avg_pct": 2.37,
+    "median_pct": 0.24,
+    "best": [
+      {
+        "ticker": "ZM",
+        "since_pct": 6.86
+      },
+      {
+        "ticker": "EC",
+        "since_pct": 0.24
+      },
+      {
+        "ticker": "SYRE",
+        "since_pct": 0.01
+      }
+    ],
+    "worst": [
+      {
+        "ticker": "SYRE",
+        "since_pct": 0.01
+      },
+      {
+        "ticker": "EC",
+        "since_pct": 0.24
+      },
+      {
+        "ticker": "ZM",
+        "since_pct": 6.86
+      }
+    ],
+    "armed_subset": {
+      "n": 1,
+      "pct_positive": 100.0,
+      "avg_pct": 6.86,
+      "median_pct": 6.86
+    }
+  },
+  "errors": []
+}
