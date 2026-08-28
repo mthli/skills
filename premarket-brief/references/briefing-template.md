@@ -154,6 +154,9 @@ This is the section that can do harm if written lazily, so frame it honestly:
   to apply to.** A raise-wall on a name printing *flat* premarket is the
   pullback the rule tells you to stalk, not a name to avoid: FTNT −0.16%
   premarket → **+4.99%** close on the day the brief filed it under avoid.
+  **Second boundary (08-27): it does not apply to a name gapping on its own
+  guidance** — that is the gap-is-a-floor rule below, and applying raise-wall
+  to four earnings gaps got the direction wrong on all four.
 - **Grade index-level tests with breadth attached (07-30, 07-31).** A
   close-graded level test answers *did it hold*, not *on what*. Pair every
   verdict with RSP-vs-SPY and the green-sector count: a level held on
@@ -179,15 +182,20 @@ This is the section that can do harm if written lazily, so frame it honestly:
   gap-keep test the 30–70% band is the *modal* outcome, not an edge case, so
   name what it means (usually: the thesis is intact but unconfirmed — hold
   size, no adds, the far line still governs). A middle branch that only says
-  "regrade tomorrow" is half-written. **Two-variable extension (08-26; 1st
-  instance — watch):** the three branches cover the *primary* variable's
-  middle and say nothing about a *secondary* condition inverting. Both of
-  08-26's misses were that cell — QQQ's exam demanded `RSP green AND most
-  sectors green` and got one of two, and CIBR's demanded "green on a **red**
-  XLK" while XLK closed green, so no branch existed at all. So: write a
-  **relative** test as a **spread** ("CIBR minus XLK, positive = the cyber bid
-  is real"), and let a secondary variable *describe* a branch, never *define*
-  one.
+  "regrade tomorrow" is half-written. **Every relative test ships as a SPREAD
+  with a numeric threshold (08-26, 08-27; promoted on 2nd instance).** Three
+  branches cover the *primary* variable's middle and say nothing about a
+  *secondary* condition inverting — both of 08-26's misses were that cell
+  (QQQ's exam demanded `RSP green AND most sectors green` and got one of two;
+  CIBR's demanded "green on a **red** XLK" while XLK closed green, so no
+  branch existed at all). Rewritten as spreads the same morning, **both landed
+  on mapped branches within one session**: QQQ cleared its shelf by 1.2% while
+  **RSP trailed SPY by 0.96pp**, past the ~0.5pp threshold → the "warning
+  dressed as a rally, no adds" branch, on a board that would again have been
+  unmapped by signs (RSP red, 1 of 11 sectors green); **CIBR minus XLK =
+  +4.45pp** → cyber bid idiosyncratic, sleeve rides. So: name the two legs,
+  subtract, and set a number. A secondary variable may *describe* a branch,
+  never *define* one.
 - **A knife-edge deferral needs a terminal condition (08-24, 08-25).** The
   0.2%-band protocol is 5-for-5 at what it was built for — refusing false
   verdicts (three OpEx closes 08-21, COIN 08-24, SOXX 08-25 all carried
@@ -200,13 +208,20 @@ This is the section that can do harm if written lazily, so frame it honestly:
   decision before that event** — the minimum fired action executes on
   schedule and the escalation resolves pre-print, never post. Deferring
   through a binary is not a plan; it's an unowned position with a countdown.
-- **A guidance-driven single-name earnings gap is a floor, not the move
-  (08-25; negative twin of gap-is-half-the-move).** DKS gapped −20.6% and
-  closed −30.7% on the low, keeping 149% of its gap. Containment and
-  magnitude are two separate claims — "one retailer's problem" grades whether
-  it *spread* (DKS didn't: XLY −0.30%) and says nothing about how far the
-  name itself travels. Name which one you're claiming, and never quote the
-  premarket gap as the damage.
+- **A guidance-driven single-name earnings gap is a floor, not the move — in
+  BOTH directions (08-25, 08-27; promoted on 2nd instance).** DKS gapped
+  −20.6% and closed −30.7% on the low, keeping **149%**. The positive twin
+  printed four-wide on 08-27: **CRWD 203% · CRM 190% · NVDA 139% · OKTA 121%
+  of gap kept**, all closing at or near their highs. Expect >100% kept and
+  frame the premarket print as the day's floor, never as the damage or the
+  exit price. Containment and magnitude stay two separate claims — "one
+  retailer's problem" grades whether it *spread* (DKS didn't: XLY −0.30%) and
+  says nothing about how far the name itself travels; name which one you're
+  claiming. **Boundary against raise-wall (08-27):** raise-wall is scoped to
+  *sympathy / crowding* gaps — a wall of PT nudges stacked on a name that did
+  not itself report. A name gapping on **its own guidance** is this rule's
+  territory, not raise-wall's; 08-27 filed all four earnings gaps under
+  "don't chase" and every one of them ran.
 - **Premarket single-stock prints are thin.** Weight the futures gap, Europe,
   and sector ETFs over individual moves; respect the gappers' volume floor,
   and treat pre-8:00 ET thin prints as noise.
@@ -273,7 +288,10 @@ This is the section that can do harm if written lazily, so frame it honestly:
   weigh the catalyst's *scope*: a sector-wide catalyst (tariffs, a ceasefire,
   a rate move) genuinely owns a sector; three companies' prints own three
   companies — 08-26's epicenter names kept 26–34% of their gaps while the
-  sector went green.
+  sector went green. **First non-inverting instance (08-27) confirms the scope
+  clause:** XLK +1.89% premkt → **+3.16%, the only green sector of eleven**,
+  owned by four beats spanning chips, software and cyber — a genuinely
+  sector-wide catalyst, and the one promotion of three that did not flip.
 - **Containment beats the event — the posture must follow the brief's own
   evidence (08-03, 08-13).** When an overnight negative is loud but the
   dashboard says it was *contained* (the group didn't follow it down, a
@@ -305,6 +323,20 @@ This is the section that can do harm if written lazily, so frame it honestly:
   its own thesis; and a **counter-plan fill is named in the ① dashboard and
   handed a written two-sided line the same day** — an unplanned position is
   still a position, and leaving it lineless is how one bad fill becomes two.
+  **Escalation (08-27): the clause extends verbatim to a NEW position, not
+  just an add.** On the day the brief called the best exit tape in weeks and
+  wrote "add nothing", zero of three sells filled while two buys did,
+  mid-session, twenty minutes apart — a third add to a name whose line said
+  "riding, not building", and a **brand-new position in the one sector the
+  brief had named as carrying the day's only dated risk**. The gap is no
+  longer passive but *funded*: the capital three fired lines said should leave
+  is what opens the unplanned ones. Corollary on timing: **a ledger line's
+  cost-since-firing mean-reverts, so the session it nearly closes is the
+  session to fill** — SOXX's trim went ≈−0.9% (its best mark in eight
+  sessions, named as such in the brief), unfilled, then ≈−3.8% and back under
+  its exit line one session later, and **every prescribed fill printed for
+  three consecutive sessions** (SPCX 137.00 to the cent 08-26, XE 19.10 and
+  18.58, SPCX 139.99 to 0.06%). The fills are not the constraint.
 - **⭐ MR pocket has zero day-1 edge on broad risk-on days (08-03, 08-04).**
   08-03 the pocket lost 2.4pp to SPY on a broad green day; 08-04 it matched
   SPY to the basis point. Its validated KPI is 5-day expectancy (score≥40 +
