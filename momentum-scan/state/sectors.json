@@ -119,6 +119,11 @@
     "sector": "Consumer Cyclical",
     "ts": 1784937692
   },
+  "BDX": {
+    "industry": "Medical Instruments & Supplies",
+    "sector": "Healthcare",
+    "ts": 1787961685
+  },
   "BEN": {
     "industry": "Asset Management",
     "sector": "Financial Services",
@@ -338,6 +343,16 @@
     "industry": "Electronic Components",
     "sector": "Technology",
     "ts": 1782786282
+  },
+  "GMAB": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1787961685
+  },
+  "GPC": {
+    "industry": "Auto Parts",
+    "sector": "Consumer Cyclical",
+    "ts": 1787961685
   },
   "GTX": {
     "industry": "Auto Parts",
@@ -823,6 +838,11 @@
     "industry": "Biotechnology",
     "sector": "Healthcare",
     "ts": 1786147298
+  },
+  "TGOPY": {
+    "industry": "Asset Management",
+    "sector": "Financial Services",
+    "ts": 1787961685
   },
   "TGTX": {
     "industry": "Biotechnology",

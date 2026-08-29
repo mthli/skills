@@ -1,0 +1,272 @@
+{
+  "as_of": "2026-08-28T20:03:20.254148-04:00",
+  "today": "2026-08-28",
+  "spark_window": [
+    "2026-08-31",
+    "2026-09-01",
+    "2026-09-02"
+  ],
+  "macro_note": "ForexFactory covers the current week only \u2014 macro sparks beyond Sunday not visible",
+  "regime": {
+    "snapshot": "20260828",
+    "state": "RISK-ON",
+    "score": 8,
+    "vix": 14.4,
+    "spy_vs_200_pct": 8.8,
+    "flags": ""
+  },
+  "mr_run": {
+    "run_id": "20260828",
+    "run_date": "2026-08-28",
+    "stale_days": 0,
+    "rows_in_run": 77,
+    "kegs_after_filter": 5
+  },
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "CORT",
+      "rank": 6,
+      "score": 50.1,
+      "rsi2": 3.43,
+      "dist_200dma_pct": 72.74,
+      "signal_close": 113.88,
+      "mr_target": 119.48,
+      "mr_stop": 104.0,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AVGO",
+          "date": "2026-09-02",
+          "slot": "AMC",
+          "detail": "AVGO ($1768B) reports 2026-09-02 AMC"
+        }
+      ],
+      "armed": false,
+      "latest_close": 113.88,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -6.85,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.03,
+      "signal_day_low": 112.98,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-11-05"
+    },
+    {
+      "ticker": "MRVL",
+      "rank": 10,
+      "score": 43.4,
+      "rsi2": 9.72,
+      "dist_200dma_pct": 45.79,
+      "signal_close": 216.62,
+      "mr_target": 234.57,
+      "mr_stop": 175.3,
+      "signal": "\ud83d\udfe1",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "PANW",
+          "date": "2026-09-01",
+          "slot": "AMC",
+          "detail": "PANW (Technology, $312B) reports 2026-09-01 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "DELL",
+          "date": "2026-09-01",
+          "slot": "AMC",
+          "detail": "DELL (Technology, $306B) reports 2026-09-01 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "AVGO",
+          "date": "2026-09-02",
+          "slot": "AMC",
+          "detail": "AVGO (Technology, $1768B) reports 2026-09-02 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 216.62,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -8.61,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 1.18,
+      "signal_day_low": 215.55,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "IMVT",
+      "rank": 11,
+      "score": 42.0,
+      "rsi2": 4.62,
+      "dist_200dma_pct": 36.64,
+      "signal_close": 41.2,
+      "mr_target": 43.15,
+      "mr_stop": 37.26,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 0,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AVGO",
+          "date": "2026-09-02",
+          "slot": "AMC",
+          "detail": "AVGO ($1768B) reports 2026-09-02 AMC"
+        }
+      ],
+      "armed": false,
+      "latest_close": 41.2,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -7.14,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.94,
+      "signal_day_low": 41.08,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-11-09"
+    },
+    {
+      "ticker": "ASML",
+      "rank": 12,
+      "score": 41.9,
+      "rsi2": 2.93,
+      "dist_200dma_pct": 16.15,
+      "signal_close": 1696.16,
+      "mr_target": 1732.22,
+      "mr_stop": 1573.37,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "PANW",
+          "date": "2026-09-01",
+          "slot": "AMC",
+          "detail": "PANW (Technology, $312B) reports 2026-09-01 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "DELL",
+          "date": "2026-09-01",
+          "slot": "AMC",
+          "detail": "DELL (Technology, $306B) reports 2026-09-01 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "AVGO",
+          "date": "2026-09-02",
+          "slot": "AMC",
+          "detail": "AVGO (Technology, $1768B) reports 2026-09-02 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 1696.16,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -3.83,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 0.87,
+      "signal_day_low": 1692.88,
+      "quiet_warning": true
+    },
+    {
+      "ticker": "DFTX",
+      "rank": 13,
+      "score": 40.8,
+      "rsi2": 6.58,
+      "dist_200dma_pct": 68.94,
+      "signal_close": 40.98,
+      "mr_target": 43.33,
+      "mr_stop": 33.95,
+      "signal": "\ud83d\udfe1",
+      "listing_age_runs": 1,
+      "freq_60d": 0,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AVGO",
+          "date": "2026-09-02",
+          "slot": "AMC",
+          "detail": "AVGO ($1768B) reports 2026-09-02 AMC"
+        }
+      ],
+      "armed": false,
+      "latest_close": 40.98,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 1,
+      "ret_5d_pct": -8.75,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.71,
+      "signal_day_low": 40.85,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-11-06"
+    }
+  ],
+  "macro_calendar": [],
+  "prior_run_review": {
+    "source": "snapback:2026-08-27",
+    "n": 5,
+    "pct_positive": 20.0,
+    "avg_pct": -1.82,
+    "median_pct": -0.71,
+    "best": [
+      {
+        "ticker": "PAY",
+        "since_pct": 1.07
+      },
+      {
+        "ticker": "OC",
+        "since_pct": -0.38
+      },
+      {
+        "ticker": "MAC",
+        "since_pct": -0.71
+      }
+    ],
+    "worst": [
+      {
+        "ticker": "ORKA",
+        "since_pct": -5.59
+      },
+      {
+        "ticker": "SYRE",
+        "since_pct": -3.47
+      },
+      {
+        "ticker": "MAC",
+        "since_pct": -0.71
+      }
+    ],
+    "armed_subset": {
+      "n": 1,
+      "pct_positive": 100.0,
+      "avg_pct": 1.07,
+      "median_pct": 1.07
+    }
+  },
+  "errors": []
+}

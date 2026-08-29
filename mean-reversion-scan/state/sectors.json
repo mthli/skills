@@ -147,7 +147,7 @@
   "ALKS": {
     "industry": "Drug Manufacturers - Specialty & Generic",
     "sector": "Healthcare",
-    "ts": 1783728176
+    "ts": 1787961792
   },
   "ALL": {
     "industry": "Insurance - Property & Casualty",
@@ -197,7 +197,7 @@
   "AMGN": {
     "industry": "Drug Manufacturers - General",
     "sector": "Healthcare",
-    "ts": 1784073920
+    "ts": 1787961793
   },
   "AMH": {
     "industry": "REIT - Residential",
@@ -277,7 +277,7 @@
   "ARWR": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1783728176
+    "ts": 1787961792
   },
   "ASB": {
     "industry": "Banks - Regional",
@@ -287,7 +287,7 @@
   "ASML": {
     "industry": "Semiconductor Equipment & Materials",
     "sector": "Technology",
-    "ts": 1785197029
+    "ts": 1787961792
   },
   "ASTS": {
     "industry": "Communication Equipment",
@@ -597,7 +597,7 @@
   "CGON": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1779848102
+    "ts": 1787961792
   },
   "CHD": {
     "industry": "Household & Personal Products",
@@ -712,7 +712,7 @@
   "COMP": {
     "industry": "Real Estate Services",
     "sector": "Real Estate",
-    "ts": 1784764989
+    "ts": 1787961793
   },
   "COP": {
     "industry": "Oil & Gas E&P",
@@ -842,7 +842,7 @@
   "CYTK": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1783987531
+    "ts": 1787961793
   },
   "CZR": {
     "industry": "Resorts & Casinos",
@@ -912,7 +912,7 @@
   "DLR": {
     "industry": "REIT - Specialty",
     "sector": "Real Estate",
-    "ts": 1782864173
+    "ts": 1787961793
   },
   "DOC": {
     "industry": "REIT - Healthcare Facilities",
@@ -969,6 +969,11 @@
     "sector": "Communication Services",
     "ts": 1778771638
   },
+  "EAT": {
+    "industry": "Restaurants",
+    "sector": "Consumer Cyclical",
+    "ts": 1787961792
+  },
   "EBAY": {
     "industry": "Internet Retail",
     "sector": "Consumer Cyclical",
@@ -1008,6 +1013,11 @@
     "industry": "Healthcare Plans",
     "sector": "Healthcare",
     "ts": 1784160164
+  },
+  "EMBJ": {
+    "industry": "Aerospace & Defense",
+    "sector": "Industrials",
+    "ts": 1787961793
   },
   "EMN": {
     "industry": "Specialty Chemicals",
@@ -1174,6 +1184,11 @@
     "sector": "Financial Services",
     "ts": 1787184308
   },
+  "FIVE": {
+    "industry": "Specialty Retail",
+    "sector": "Consumer Cyclical",
+    "ts": 1787961792
+  },
   "FLEX": {
     "industry": "Electronic Components",
     "sector": "Technology",
@@ -1243,6 +1258,11 @@
     "industry": "Scientific & Technical Instruments",
     "sector": "Technology",
     "ts": 1787011541
+  },
+  "FWONK": {
+    "industry": "Entertainment",
+    "sector": "Communication Services",
+    "ts": 1787961793
   },
   "GBCI": {
     "industry": "Banks - Regional",
@@ -1329,6 +1349,11 @@
     "sector": "Consumer Cyclical",
     "ts": 1787097900
   },
+  "GPN": {
+    "industry": "Specialty Business Services",
+    "sector": "Industrials",
+    "ts": 1787961793
+  },
   "GS": {
     "industry": "Capital Markets",
     "sector": "Financial Services",
@@ -1358,6 +1383,11 @@
     "industry": "Oil & Gas Equipment & Services",
     "sector": "Energy",
     "ts": 1784678594
+  },
+  "HALO": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1787961792
   },
   "HAS": {
     "industry": "Leisure",
@@ -1492,7 +1522,7 @@
   "IMVT": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1780452118
+    "ts": 1787961792
   },
   "INCY": {
     "industry": "Biotechnology",
@@ -1737,7 +1767,7 @@
   "LTH": {
     "industry": "Leisure",
     "sector": "Consumer Cyclical",
-    "ts": 1779543663
+    "ts": 1787961792
   },
   "LUMN": {
     "industry": "Telecom Services",
@@ -1827,7 +1857,7 @@
   "MGM": {
     "industry": "Resorts & Casinos",
     "sector": "Consumer Cyclical",
-    "ts": 1784851399
+    "ts": 1787961793
   },
   "MGY": {
     "industry": "Oil & Gas E&P",
@@ -1897,7 +1927,7 @@
   "MRVL": {
     "industry": "Semiconductors",
     "sector": "Technology",
-    "ts": 1784246577
+    "ts": 1787961792
   },
   "MS": {
     "industry": "Capital Markets",
@@ -2167,7 +2197,7 @@
   "OUT": {
     "industry": "REIT - Specialty",
     "sector": "Real Estate",
-    "ts": 1784678594
+    "ts": 1787961793
   },
   "OVV": {
     "industry": "Oil & Gas E&P",
@@ -2427,7 +2457,7 @@
   "RHHBY": {
     "industry": "Drug Manufacturers - General",
     "sector": "Healthcare",
-    "ts": 1780452119
+    "ts": 1787961793
   },
   "RIG": {
     "industry": "Oil & Gas Drilling",
