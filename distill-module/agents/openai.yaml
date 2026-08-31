@@ -1,0 +1,7 @@
+interface:
+  display_name: "Distill Module Decisions"
+  short_description: "Distill Git decisions into Codex snapshots"
+  default_prompt: "Use $distill-module to consolidate a registered module’s Git Decision history into its current Codex snapshot."
+
+policy:
+  allow_implicit_invocation: false

@@ -1,155 +1,97 @@
 ---
 name: distill-module
-description: >
-  Roll up `MODULE: <id>` Decision blocks from `git log` into a per-module
-  `.claude/decisions/<id>.md` snapshot — the current-consensus view that complements the
-  immutable commit history. Use this skill whenever the user says "/distill-module",
-  "distill module decisions", "refresh the decisions file", or asks to consolidate a
-  module's recent decisions. This skill should NOT auto-trigger — only invoke it when the
-  user explicitly requests it.
+description: "Consolidate structured MODULE Decision blocks from Git commit bodies into stable per-module snapshots under `.codex/decisions/`. Use only when the user explicitly invokes `$distill-module` or directly asks to distill, consolidate, or refresh a module's decision history; do not invoke implicitly."
 ---
 
 # Distill Module
 
-Convert the stream of `MODULE: <id>` Decision blocks scattered across `git log` commit bodies
-into a single, current-consensus `.claude/decisions/<id>.md` for one module. Future readers
-(and future Claude sessions reading the `Knowledge Loop Conventions` block in `CLAUDE.md`)
-read this snapshot before touching the module, instead of paging through 50 commits.
+Distill immutable Decision records from `git log` into one reviewable snapshot for a registered module. Treat Git history as the source of truth and `.codex/decisions/<id>.md` as a derived view.
 
-This skill is the **Layer 1 → Layer 2** step in the knowledge loop:
+Never amend, rebase, delete, or otherwise rewrite commits. Record corrections in new commits with `SUPERSEDES`.
 
-- **Layer 1** (immutable history): structured Decision blocks inside `git log` commit bodies,
-  written by `/commit-context`.
-- **Layer 2** (current consensus): `.claude/decisions/<id>.md` per module — an active doc that
-  gets re-distilled on a weekly-ish cadence.
+## Identify the module
 
-`git log` is the **source of truth**. `.claude/decisions/<id>.md` is a derived, regenerable
-view. This skill must never modify, amend, rebase, or `git commit --amend` existing commits —
-the fix for a wrong decision is always a **new** commit that `SUPERSEDES` the old one.
+1. Run from the repository root.
+2. Read `.codex/MODULES.md`.
+   - Do not silently create the registry when it is missing.
+   - Stop and tell the user to use `$commit-context` to create the registry.
+3. Resolve the target:
+   - Use an exact registered ID when the user supplied one.
+   - If the ID is unknown, list the registered IDs and ask the user to choose.
+   - If no target was supplied, ask for one instead of guessing.
+   - For requests such as "the next due module," calculate pending Decision counts and let the user choose from the candidates.
+4. Map the ID to `.codex/decisions/<id>.md`, preserving `/` as a subdirectory separator. For example, map `native/jni` to `.codex/decisions/native/jni.md`.
+5. Read the existing destination before mining history. Preserve its `D<n>` identifiers and manual annotations.
 
-## When to run this
+## Mine Decision blocks
 
-Pull, don't push. Run only when the user asks. Reasonable triggers:
-
-- A module has accumulated 5+ new Decision blocks since the last distill (check the
-  `Last distilled` line at the top of an existing `.claude/decisions/<id>.md`, or count
-  `git log --grep="MODULE: <id>" --since="<date>"`).
-- The user shipped a coherent chunk of work and wants the snapshot refreshed.
-- A new contributor is joining the module and needs the digest.
-
-If the user invokes the skill without a target module, ask. Don't guess.
-
-## Workflow
-
-### 1. Identify the target module
-
-1. **Read the registry**: `.claude/MODULES.md` at the repo root.
-   - **Missing** → tell the user "this repo has no module registry yet — run `/commit-context`
-     once to bootstrap one", then stop. Don't create the registry from here; module-set
-     mutations belong to a single workflow.
-2. **Pick the target module**:
-   - If the user named one, look it up in the registry. If it isn't there, list the available
-     IDs and ask. Don't auto-create IDs.
-   - If the user said "the next due module" or similar, list candidates with their
-     pending-Decision counts (see step 2's grep) and let them choose.
-3. **Resolve the destination path**: always `.claude/decisions/<id>.md` at the repo root, with
-   `/` in the module ID preserved as a subdirectory separator (e.g., `module/key` →
-   `.claude/decisions/module/key.md`, `native/jni` → `.claude/decisions/native/jni.md`,
-   `tracking` → `.claude/decisions/tracking.md`). Create intermediate directories as needed.
-   Both structural and cross-cutting modules live here — one fixed location keeps the
-   `CLAUDE.md` read-rule simple and avoids `.md` files sprinkled through the source tree.
-4. **Read the existing destination if any**. If `.claude/decisions/<id>.md` exists from a
-   prior distill, read it now and keep it in working memory — its `D<n>` IDs drive ID reuse
-   (step 4) and its content drives the diff-against-existing draft (step 5). A fresh distill
-   without this read will silently renumber IDs that other commits may already reference via
-   `SUPERSEDES:`.
-
-### 2. Mine the commits
-
-Pull every commit body that tagged this module. **Don't pre-filter by path** — the
-`MODULE: <id>` tag is the authoritative index, paths are noisy (a `tracking` decision can land
-in any file; structural-module decisions sometimes get tagged from sibling dirs during refactors).
+Collect every commit whose body mentions the target tag. Do not pre-filter by changed path because `MODULE` is the authoritative index.
 
 ```bash
-git log --all --grep="MODULE: <id>" \
+git log --all --fixed-strings --grep="MODULE: <id>" \
   --pretty=format:'===%H===%n%aI%n%an%n--BODY--%n%B%n--END--%n'
 ```
 
-Why this format string (not `--pretty=fuller`): `--pretty=fuller` indents commit bodies by
-4 spaces, which silently turns every `## Decision` heading into a Markdown code block and
-breaks naive parsers. The format above emits the body raw (`%B`) with explicit `===<sha>===`
-and `--BODY--` / `--END--` sentinels you can split on without surprise.
+Use `--all` by default. If branch-only work appears suspicious, note that the user can request a specific integration branch instead. Use the explicit sentinels rather than `--pretty=fuller`, which indents bodies and can obscure Markdown headings.
 
-- `--all` covers all refs, not just the current branch — picks up decisions that lived on
-  feature branches that already merged. **Caveat**: it *also* picks up un-merged feature
-  branches with WIP decisions that aren't shipped on main. If the user wants strict
-  "what's in main", swap `--all` for the relevant branch name (e.g., `git log main --grep=...`).
-  Default to `--all` and mention the alternative if you spot suspicious-looking branch-only
-  decisions during review.
-- `%aI` is ISO 8601 strict (timezone-aware), good for sorting chronologically.
+For each commit:
 
-For each commit, extract the body (everything after the subject line) and find `## Decision`
-H2 blocks. Each block has these fields (per `/commit-context`'s schema):
+1. Split the record on the sentinels.
+2. Find each `## Decision` block.
+3. Parse these fields:
 
-| Field | Required? | Notes |
+| Field | Requirement | Purpose |
 | --- | --- | --- |
-| `MODULE` | yes | match against `<id>`; skip blocks tagged for other modules in the same commit |
-| `WHY` | yes | motivation |
-| `ALTERNATIVES` | yes | options considered (used at distill review time, not in the final snapshot) |
-| `CHOSEN` | yes | what was picked |
-| `TRADEOFFS` | yes | costs of CHOSEN |
-| `RISKS` | yes | what could go wrong / what to watch |
-| `SUPERSEDES` | optional | summary or `D<n>` ID of the prior decision being overridden |
+| `MODULE` | Required | Match exactly to the target ID |
+| `WHY` | Required | Capture motivation |
+| `ALTERNATIVES` | Required | Inform review; omit from the snapshot |
+| `CHOSEN` | Required | Capture the selected approach |
+| `TRADEOFFS` | Required | Capture accepted costs |
+| `RISKS` | Required | Capture monitoring concerns |
+| `SUPERSEDES` | Optional | Link to a replaced decision |
 
-If a commit body has **malformed** Decision blocks (missing required fields, wrong nesting,
-unparseable formatting), surface them as **warnings** in the user-review step (step 6). Don't
-silently skip — the user may want to know their commit data has gaps and fix the next
-distillation's input by writing better commits going forward.
+Skip well-formed blocks for other modules in the same commit. Retain malformed target blocks as warnings with their commit hashes; never discard them silently.
 
-### 3. Resolve SUPERSEDES chains
+If no matching decisions remain, report that result and stop without writing. Suggest:
 
-Sort the parsed decisions by **commit date ascending**. Walk forward:
+```bash
+git log --all --fixed-strings --grep="MODULE:" --pretty=format:'%h %s'
+```
 
-- If decision D has `SUPERSEDES: X`, try to resolve X against:
-  1. A `D<n>` ID from an existing `.claude/decisions/<id>.md` at the destination (most common
-     — the prior distill assigned the ID).
-  2. A previous decision's `CHOSEN` summary (substring or fuzzy match).
-- On match, mark the prior decision as superseded by D.
-- A decision can be superseded multiple times across iterations — only the latest in the chain
-  is "Active". The earlier ones live in the `Superseded` section.
-- **Ambiguous SUPERSEDES** (matches multiple candidates): surface as a warning, let the user
-  pick at review time.
-- **Unresolvable SUPERSEDES** (matches nothing): surface as a warning. Don't fail the
-  distillation; the user may want to accept the gap or edit the draft.
+## Resolve supersession
 
-### 4. Cluster and assign IDs
+Sort parsed decisions by author date ascending. Walk forward and resolve each `SUPERSEDES` value against:
 
-Group active (non-superseded) decisions by topic. Heuristics, in order of strength:
+1. A `D<n>` entry from the existing snapshot.
+2. A prior decision's `CHOSEN` text using conservative substring or semantic matching.
 
-1. Same SUPERSEDES chain → already collapsed in step 3.
-2. Substantial overlap in `CHOSEN` / `WHY` text — probably the same decision restated. No
-   strict threshold; "substantial" is a judgment call. When you're unsure, leave them as
-   separate clusters and surface the candidate-merge as a warning in step 6 so the user can
-   decide.
-3. Same files repeatedly modified across the source commits (`git show --name-only <sha>`).
+Mark a matched predecessor as superseded. Keep only the latest member of a supersession chain active.
 
-Within each cluster, the **latest** commit's decision wins for the "What/Why/Tradeoffs/Watch
-out" content; all contributing commits go in `Source`.
+Do not guess when multiple targets match or no target matches. Preserve the decision as unresolved and add a warning for user review.
 
-Assign stable IDs `D1`, `D2`, …:
+## Cluster decisions and preserve IDs
 
-- **Existing destination file** (already read in step 1.4): **reuse its IDs**, matching by
-  SUPERSEDES chain or content similarity. This is non-negotiable — IDs are referenced by
-  `SUPERSEDES:` in future commits, so they must not shift across re-distills.
-- **New file**: assign `D1, D2, …` by **topic-first-seen order** — the topic whose *earliest
-  contributing commit* is oldest becomes `D1`, the next-earliest topic is `D2`, and so on.
-  (Not strict commit-first-seen — that would interleave topics and make the document
-  unreadable. Cluster first, then sort the clusters by their oldest member.)
-- **Newly-added decisions** (re-distill case): get the next free ID after the existing ones.
+Group active decisions by topic using these signals in order:
 
-### 5. Draft the snapshot
+1. Membership in the same supersession chain.
+2. Strong overlap in `CHOSEN` and `WHY`.
+3. Repeatedly modified files from `git show --name-only <sha>`.
 
-Template — fill in placeholders, don't include the `<>` brackets:
+When uncertain, keep decisions separate and report the possible merge as a warning. Deduplicate cherry-picked or repeated blocks by content while retaining every source hash.
+
+Use the latest decision in a cluster for `What`, `Why`, `Tradeoffs`, and `Watch out`. List every contributing commit under `Source`.
+
+Assign stable IDs:
+
+- Reuse matching `D<n>` IDs from an existing snapshot.
+- Treat IDs in both the constraint index and `Active` as existing decisions when resolving `SUPERSEDES` and reusing IDs.
+- Never renumber an existing ID.
+- For a new snapshot, order clusters by their earliest contributing commit and assign `D1`, `D2`, and so on.
+- For new clusters in an existing snapshot, continue after the highest assigned ID.
+
+## Draft the snapshot
+
+Use this shape:
 
 ```markdown
 # <Module display name> Decisions
@@ -159,162 +101,76 @@ Template — fill in placeholders, don't include the `<>` brackets:
 
 ## Active
 
-### D1: <short title — paraphrase the CHOSEN, under ~60 chars>
-- **What**: <one tight sentence — how we do it now>
-- **Why**: <one tight sentence — the WHY from the latest contributing commit>
-- **Tradeoffs**: <one tight sentence — from TRADEOFFS>
-- **Watch out**: <one tight sentence — from RISKS>
-- **Source**: <abbrev-sha-1>, <abbrev-sha-2>, …
+### D1: <short paraphrased title>
 
-### D2: …
+- **What**: <current approach in one sentence>
+- **Why**: <motivation in one sentence>
+- **Tradeoffs**: <accepted costs in one sentence>
+- **Watch out**: <risks in one sentence>
+- **Source**: <abbrev-sha-1>, <abbrev-sha-2>
 
 ## Superseded
 
-- ~~<short title of old decision>~~ → replaced by **D1** in <abbrev-sha> (<YYYY-MM-DD>)
-- ~~<…>~~ → replaced by **D3** in <abbrev-sha> (<YYYY-MM-DD>)
+- ~~<old decision>~~ → replaced by **D1** in <abbrev-sha> (<YYYY-MM-DD>)
 ```
 
-Drafting rules:
+Apply these rules:
 
-- **Paraphrase, don't quote**. `What` / `Why` / `Tradeoffs` / `Watch out` are one-sentence
-  digests. Readers want the gist; they can `git show <sha>` for the full commit body.
-- **`ALTERNATIVES` is intentionally dropped from the snapshot**. It mattered when *making* the
-  decision but bloats the *current state* view. The `Source` shas are the escape hatch — anyone
-  curious about alternatives reads the original commit.
-- **List every contributing commit** in `Source`. That's the link back to the immutable
-  history.
-- **Active before Superseded.** Active is what people read; Superseded is the appendix.
-- **Omit Superseded entirely** if empty — don't leave a blank section.
-- **Diff against the existing file** if there is one. Only surface what changed (new Active
-  entries, newly-Superseded entries, edited existing entries). Don't rewrite unchanged sections.
+- Paraphrase instead of quoting commit bodies.
+- Keep active fields to one concise sentence each.
+- Omit `ALTERNATIVES`; preserve access to them through source hashes.
+- List all contributing hashes.
+- Put Active before Superseded.
+- Omit the Superseded section when empty.
+- Preserve non-conflicting manual annotations.
+- For an existing destination, prepare a minimal diff and avoid rewriting unchanged entries.
+- Flag conflicts between manual annotations and newly distilled content.
 
-### 5b. Oversized snapshots — the constraint-index split
+## Compress oversized snapshots
 
-A snapshot that grows past **~30 Active entries** stops being readable as a pre-edit briefing
-(the read-rule in `CLAUDE.md` makes every session pay its full length). The remedy is a split,
-first applied to `app/android.md` on 2026-07-12:
+When a snapshot grows past roughly 30 full `Active` entries, or is otherwise too long to serve as a practical pre-edit briefing, propose a constraint-index split during review:
 
-- `## Constraint index (compressed decisions)` sits ABOVE `## Active`: one bullet per settled
-  decision — `- **D<n>** — <the surviving constraint/trap/contract in one sentence> (<sha>)` —
-  distilled mostly from the entry's `Watch out`/`Tradeoffs`. IDs keep their numbers; nothing is
-  renumbered.
-- The full six-field text of compressed entries stays reachable through **git only** — pin the
-  pre-split snapshot in the index preamble (`git show <sha>:<path>`, where `<sha>` is any commit
-  still containing the last full version), and each index line already ends with its source
-  commit. Don't create a sibling archive file: it's never updated, so its stale full text
-  doubles every future grep hit while adding nothing git doesn't hold.
-- `## Active` keeps only full entries still governing in-flight work (dormant gates with
-  re-enable instructions, architecture the next features build on, the last distill round or
-  two).
+- Insert `## Constraint index (compressed decisions)` before `## Active`. Move settled decisions there as one-line bullets shaped like `- **D<n>** — <surviving constraint, trap, or contract> (<source-sha>)`.
+- Keep IDs unchanged. Indexed decisions remain current decisions and continue to participate in ID reuse and `SUPERSEDES` resolution; `Active` contains the recent, in-flight, or nuanced entries that still need full detail.
+- Do not compress an entry when an actionable qualification or manual annotation cannot be preserved safely in one sentence.
+- Keep each compressed batch recoverable from Git. Record a batch-specific reference in the index preamble, such as `D1–D20: git show <full-sha>:.codex/decisions/<id>.md`, and retain earlier references on later rounds.
+- Before proposing compression, verify that the referenced reachable commit contains the full text of every entry in that batch. If it does not, leave those entries uncompressed and warn the user.
+- Do not create a sibling archive file. The pinned snapshot and per-entry source commits provide the detailed history without duplicating stale text in the working tree.
 
-When re-distilling a file that already has this structure:
+When re-distilling an already split snapshot, append new decisions to `Active` and move them to the index only after they settle. Keep only the latest `Last distilled` line, and propose another compression round if the full-detail section becomes oversized again.
 
-- **Respect it.** New decisions append to `## Active` as usual; when an arc settles, demote its
-  entries to one-liners in the constraint index — the demoted full text remains in the snapshot
-  file's own git history. Each demotion round gets its **own** pinned sha appended to the
-  preamble (`D<a>–D<b>: git show <sha>:<path>`): no single commit holds full text for more than
-  one generation, so never *replace* the existing pin — the old generation's full text at the
-  new pin is already one-liners. Per-line source commits remain the ultimate fallback.
-- Keep the `Last distilled` header line to the **latest** distill only — prior deltas live in
-  git history of the snapshot file itself, not accumulated in the header.
-- If Active creeps past ~30 again, propose another demotion round at review time.
+## Review before writing
 
-### 6. Show the user
+Show the full draft for a new file or the proposed diff for an update. Include:
 
-Present the draft (or, if the destination exists, the diff against it) for review. Explicitly
-call out:
+- The exact destination and whether it will be created or updated.
+- New active decisions.
+- Decisions moving to Superseded.
+- Decisions moving to the constraint index and the Git references that recover their full text.
+- Malformed blocks and their hashes.
+- Ambiguous or unresolved `SUPERSEDES` values.
+- Uncertain clusters.
 
-- New active decisions added since the previous distill
-- Active decisions that just moved to Superseded
-- **Warnings** collected along the way:
-  - Malformed Decision blocks in commits (with shas)
-  - Ambiguous `SUPERSEDES` targets — ask the user to pick
-  - Unresolvable `SUPERSEDES` — ask the user whether to accept the gap or edit
-  - Clusters the heuristic was unsure about
-- The destination path and whether it's a create or an update
+Ask for explicit approval to write the proposed snapshot. Apply requested edits, show the revised draft or diff, and ask again. If the user declines, discard the draft and leave the workspace unchanged.
 
-Ask: "Write this to `<path>`?"
+## Write the approved snapshot
 
-Three responses to handle:
+Write only the approved content to `.codex/decisions/<id>.md`, creating parent directories when needed. Do not stage, commit, or push.
 
-- **Yes** → proceed to step 7.
-- **Edits** → apply the user's edits to the draft, re-show, ask again.
-- **No / abort** → drop the draft. Don't write anything. Leave the workspace as you found it.
+After writing:
 
-### 7. Write
+1. Show the destination path.
+2. Summarize what changed and repeat any accepted warnings.
+3. Tell the user to review the file and commit it when ready, optionally with `$commit-context`.
+4. If the root `AGENTS.md` or `AGENTS.override.md` does not direct Codex to read relevant module
+   maps and decisions, mention that `$commit-context` will propose the canonical knowledge-loop
+   rules when the snapshot is staged for commit. Do not edit instruction files from this skill.
 
-Write the file with the `Write` tool. **Do not** `git add`, `git commit`, or push. The user
-will commit it themselves — most likely via `/commit-context`, which will produce its own
-Decision block tagged with the module being distilled (the distillation *is* about that
-module's current state, so it's the coherent tag — and it's guaranteed to be in
-`.claude/MODULES.md`, unlike speculative tags like `docs`).
+## Guardrails
 
-After writing, surface the path and tell them:
-
-> "Open `<path>` to review, then commit when ready. If your `CLAUDE.md` has the centralized
-> `Knowledge Loop Conventions` read-rule (`.claude/decisions/<module>.md`), future sessions
-> editing this module will load this file before touching code. If your read-rule still
-> points at `<module-dir>/DECISIONS.md` (the pre-centralization shape), update it — or run
-> `/commit-context` once to refresh the bootstrap."
-
-## Things this skill must not do
-
-- **Never modify commits.** No `--amend`, no `rebase -i`, no `commit --fixup`. The git log is
-  the source of truth. If a commit's Decision is wrong, the fix is a **new** commit that
-  `SUPERSEDES` it.
-- **Never delete history.** The `Superseded` section in `.claude/decisions/<id>.md` is a
-  derived view; the raw data still lives in `git log`. Don't try to "clean up" by dropping
-  commits or rewriting their Decision blocks.
-- **Never auto-create module IDs.** If the user names a module not in `.claude/MODULES.md`,
-  send them to `/commit-context` to register it. Module-set mutations live in one place.
-- **Never silently swallow malformed Decision blocks.** Surface them as warnings so the user
-  knows their commit data has gaps.
-- **Never write the file without explicit user approval.** The user-review gate in step 6 is
-  mandatory; this is a destructive write to a tracked file.
-
-## Edge cases
-
-**No commits found for the module.** Tell the user, suggest checking the spelling
-(`git log --grep="MODULE:" --pretty=format:'%h %s' | head -50` shows every tag that's been
-used). Stop without writing.
-
-**Decisions for a different module that touched this module's files.** Expected during
-cross-module refactors. Don't pull them in — they belong in the sibling module's
-`.claude/decisions/<sibling-id>.md`. The `MODULE:` tag is authoritative, not the file paths.
-
-**The same decision verbatim across multiple commits** (cherry-picks, merges, rebases).
-Deduplicate by content similarity in step 4; cite all source commits.
-
-**The destination file was hand-edited.** Use the diff-against-existing approach in step 5
-so you don't clobber manual annotations. If a hand-edited entry conflicts with the freshly
-distilled version, flag it at review time — don't silently overwrite.
-
-**A SUPERSEDES target can't be resolved.** Don't fail. Surface a warning ("D3 supersedes 'old
-auth wrapper' but no prior decision in this module matches") and let the user decide.
-
-**Working tree has uncommitted changes.** Fine — this skill only reads `git log`. The user
-may want the freshly-written `.claude/decisions/<id>.md` to land alongside other in-flight
-work, which is why step 7 doesn't auto-stage anything.
-
-**An older `<module-dir>/DECISIONS.md` exists from before the centralization.** Treat it as
-a hand-edited prior snapshot: read it during step 5, fold its content in, then write the new
-distillation to `.claude/decisions/<id>.md`. Don't delete the old file from this skill — but
-in the user-review step (step 6), mention that they should `git rm <module-dir>/DECISIONS.md`
-in their next commit, since leaving both files alive violates the "one fixed location"
-principle and will confuse future readers about which is canonical.
-
-## Why this format
-
-The 5-field active entry (`What` / `Why` / `Tradeoffs` / `Watch out` / `Source`) is a
-deliberate compression of the 6-field commit Decision. The mapping:
-
-- `CHOSEN` → `What`
-- `WHY` → `Why`
-- `TRADEOFFS` → `Tradeoffs`
-- `RISKS` → `Watch out`
-- All contributing shas → `Source`
-- `ALTERNATIVES` → **dropped**; reachable via `git show <sha>`
-
-`ALTERNATIVES` is load-bearing when *deciding* but noise when *reading current state*. Keeping
-the snapshot short is what makes it readable; the `Source` line preserves the escape hatch to
-the full reasoning.
+- Never modify Git history or create corrective fixup commits.
+- Never create or mutate module IDs or registries.
+- Never use file paths as a substitute for exact `MODULE` tags.
+- Never hide malformed input, ambiguous links, or clustering uncertainty.
+- Never overwrite a snapshot without showing the proposed content and receiving approval.
+- Never stage, commit, or push.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Map Module"
+  short_description: "Create source-verified subsystem architecture maps"
+  default_prompt: "Use $map-module to document how a subsystem works today and verify its claims against source."
