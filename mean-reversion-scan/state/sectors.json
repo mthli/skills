@@ -37,7 +37,7 @@
   "ABNB": {
     "industry": "Travel Services",
     "sector": "Consumer Cyclical",
-    "ts": 1784678594
+    "ts": 1788220998
   },
   "ABVX": {
     "industry": "Biotechnology",
@@ -107,7 +107,7 @@
   "AHR": {
     "industry": "REIT - Healthcare Facilities",
     "sector": "Real Estate",
-    "ts": 1785510935
+    "ts": 1788221000
   },
   "AIG": {
     "industry": "Insurance - Diversified",
@@ -167,7 +167,7 @@
   "ALSN": {
     "industry": "Auto Parts",
     "sector": "Consumer Cyclical",
-    "ts": 1785589364
+    "ts": 1788220998
   },
   "AM": {
     "industry": "Oil & Gas Midstream",
@@ -192,7 +192,7 @@
   "AME": {
     "industry": "Specialty Industrial Machinery",
     "sector": "Industrials",
-    "ts": 1785589364
+    "ts": 1788221000
   },
   "AMGN": {
     "industry": "Drug Manufacturers - General",
@@ -202,7 +202,7 @@
   "AMH": {
     "industry": "REIT - Residential",
     "sector": "Real Estate",
-    "ts": 1785589364
+    "ts": 1788221000
   },
   "AMKR": {
     "industry": "Semiconductor Equipment & Materials",
@@ -267,7 +267,7 @@
   "ARMK": {
     "industry": "Specialty Business Services",
     "sector": "Industrials",
-    "ts": 1784592170
+    "ts": 1788220998
   },
   "AROC": {
     "industry": "Oil & Gas Equipment & Services",
@@ -282,7 +282,7 @@
   "ASB": {
     "industry": "Banks - Regional",
     "sector": "Financial Services",
-    "ts": 1785589365
+    "ts": 1788221000
   },
   "ASML": {
     "industry": "Semiconductor Equipment & Materials",
@@ -372,7 +372,7 @@
   "BBIO": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1785510645
+    "ts": 1788220998
   },
   "BBY": {
     "industry": "Specialty Retail",
@@ -397,7 +397,7 @@
   "BEN": {
     "industry": "Asset Management",
     "sector": "Financial Services",
-    "ts": 1783987530
+    "ts": 1788220998
   },
   "BF-B": {
     "industry": "Beverages - Wineries & Distilleries",
@@ -477,7 +477,7 @@
   "BRX": {
     "industry": "REIT - Retail",
     "sector": "Real Estate",
-    "ts": 1785510645
+    "ts": 1788221000
   },
   "BTI": {
     "industry": "Tobacco",
@@ -563,6 +563,11 @@
     "industry": "Uranium",
     "sector": "Energy",
     "ts": 1778771637
+  },
+  "CCK": {
+    "industry": "Packaging & Containers",
+    "sector": "Consumer Cyclical",
+    "ts": 1788220999
   },
   "CDNS": {
     "industry": "Software - Application",
@@ -677,7 +682,7 @@
   "CNI": {
     "industry": "Railroads",
     "sector": "Industrials",
-    "ts": 1785589368
+    "ts": 1788220999
   },
   "CNP": {
     "industry": "Utilities - Regulated Electric",
@@ -737,7 +742,7 @@
   "CP": {
     "industry": "Railroads",
     "sector": "Industrials",
-    "ts": 1785456162
+    "ts": 1788221000
   },
   "CPT": {
     "industry": "REIT - Residential",
@@ -782,7 +787,7 @@
   "CSX": {
     "industry": "Railroads",
     "sector": "Industrials",
-    "ts": 1785510645
+    "ts": 1788220998
   },
   "CTAS": {
     "industry": "Specialty Business Services",
@@ -807,7 +812,7 @@
   "CUBE": {
     "industry": "REIT - Industrial",
     "sector": "Real Estate",
-    "ts": 1785589368
+    "ts": 1788220998
   },
   "CUZ": {
     "industry": "REIT - Office",
@@ -894,6 +899,11 @@
     "sector": "Technology",
     "ts": 1785369802
   },
+  "DEO": {
+    "industry": "Beverages - Wineries & Distilleries",
+    "sector": "Consumer Defensive",
+    "ts": 1788220999
+  },
   "DFTX": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
@@ -914,10 +924,15 @@
     "sector": "Real Estate",
     "ts": 1787961793
   },
+  "DNTH": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1788220998
+  },
   "DOC": {
     "industry": "REIT - Healthcare Facilities",
     "sector": "Real Estate",
-    "ts": 1785589368
+    "ts": 1788220998
   },
   "DOCN": {
     "industry": "Software - Infrastructure",
@@ -1142,7 +1157,7 @@
   "EXR": {
     "industry": "REIT - Industrial",
     "sector": "Real Estate",
-    "ts": 1785589369
+    "ts": 1788220998
   },
   "F": {
     "industry": "Auto Manufacturers",
@@ -1222,7 +1237,7 @@
   "FR": {
     "industry": "REIT - Industrial",
     "sector": "Real Estate",
-    "ts": 1785589370
+    "ts": 1788221000
   },
   "FRO": {
     "industry": "Oil & Gas Midstream",
@@ -1337,12 +1352,12 @@
   "GOOG": {
     "industry": "Internet Content & Information",
     "sector": "Communication Services",
-    "ts": 1782518609
+    "ts": 1788221001
   },
   "GOOGL": {
     "industry": "Internet Content & Information",
     "sector": "Communication Services",
-    "ts": 1782518609
+    "ts": 1788221001
   },
   "GPC": {
     "industry": "Auto Parts",
@@ -1447,7 +1462,12 @@
   "HR": {
     "industry": "REIT - Healthcare Facilities",
     "sector": "Real Estate",
-    "ts": 1785510935
+    "ts": 1788221001
+  },
+  "HRB": {
+    "industry": "Personal Services",
+    "sector": "Consumer Cyclical",
+    "ts": 1788220998
   },
   "HRL": {
     "industry": "Packaged Foods",
@@ -1527,7 +1547,7 @@
   "INCY": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1785589371
+    "ts": 1788220998
   },
   "ING": {
     "industry": "Banks - Diversified",
@@ -1547,7 +1567,7 @@
   "INVH": {
     "industry": "REIT - Residential",
     "sector": "Real Estate",
-    "ts": 1785589371
+    "ts": 1788221000
   },
   "IRDM": {
     "industry": "Telecom Services",
@@ -1642,7 +1662,7 @@
   "KIM": {
     "industry": "REIT - Retail",
     "sector": "Real Estate",
-    "ts": 1785456162
+    "ts": 1788221000
   },
   "KLAC": {
     "industry": "Semiconductor Equipment & Materials",
@@ -1677,7 +1697,7 @@
   "KRG": {
     "industry": "REIT - Retail",
     "sector": "Real Estate",
-    "ts": 1785589371
+    "ts": 1788221001
   },
   "KVUE": {
     "industry": "Household & Personal Products",
@@ -1832,7 +1852,7 @@
   "MDLZ": {
     "industry": "Confectioners",
     "sector": "Consumer Defensive",
-    "ts": 1785589372
+    "ts": 1788221000
   },
   "MET": {
     "industry": "Insurance - Life",
@@ -1852,7 +1872,7 @@
   "MGA": {
     "industry": "Auto Parts",
     "sector": "Consumer Cyclical",
-    "ts": 1785589372
+    "ts": 1788220999
   },
   "MGM": {
     "industry": "Resorts & Casinos",
@@ -1942,7 +1962,7 @@
   "MTB": {
     "industry": "Banks - Regional",
     "sector": "Financial Services",
-    "ts": 1785589372
+    "ts": 1788221000
   },
   "MTCH": {
     "industry": "Internet Content & Information",
@@ -1953,6 +1973,11 @@
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
     "ts": 1787702742
+  },
+  "MTG": {
+    "industry": "Insurance - Specialty",
+    "sector": "Financial Services",
+    "ts": 1788220999
   },
   "MTSI": {
     "industry": "Semiconductors",
@@ -2032,7 +2057,7 @@
   "NNN": {
     "industry": "REIT - Retail",
     "sector": "Real Estate",
-    "ts": 1785510645
+    "ts": 1788221000
   },
   "NOK": {
     "industry": "Communication Equipment",
@@ -2052,7 +2077,7 @@
   "NSC": {
     "industry": "Railroads",
     "sector": "Industrials",
-    "ts": 1785589373
+    "ts": 1788220999
   },
   "NTAP": {
     "industry": "Software - Infrastructure",
@@ -2087,7 +2112,7 @@
   "NVS": {
     "industry": "Drug Manufacturers - General",
     "sector": "Healthcare",
-    "ts": 1784073920
+    "ts": 1788221000
   },
   "NVT": {
     "industry": "Electrical Equipment & Parts",
@@ -2102,7 +2127,7 @@
   "NWG": {
     "industry": "Banks - Regional",
     "sector": "Financial Services",
-    "ts": 1785589373
+    "ts": 1788220999
   },
   "NXPI": {
     "industry": "Semiconductors",
@@ -2122,12 +2147,12 @@
   "O": {
     "industry": "REIT - Retail",
     "sector": "Real Estate",
-    "ts": 1785510645
+    "ts": 1788221000
   },
   "OC": {
     "industry": "Building Products & Equipment",
     "sector": "Industrials",
-    "ts": 1785589373
+    "ts": 1788220998
   },
   "ODFL": {
     "industry": "Trucking",
@@ -2372,7 +2397,7 @@
   "PSA": {
     "industry": "REIT - Industrial",
     "sector": "Real Estate",
-    "ts": 1785589374
+    "ts": 1788220998
   },
   "PSO": {
     "industry": "Publishing",
@@ -2407,7 +2432,7 @@
   "QSR": {
     "industry": "Restaurants",
     "sector": "Consumer Cyclical",
-    "ts": 1785589375
+    "ts": 1788220999
   },
   "RAL": {
     "industry": "Electronic Components",
@@ -2642,7 +2667,7 @@
   "SKM": {
     "industry": "Telecom Services",
     "sector": "Communication Services",
-    "ts": 1782135719
+    "ts": 1788220998
   },
   "SLB": {
     "industry": "Oil & Gas Equipment & Services",
@@ -2712,7 +2737,7 @@
   "SON": {
     "industry": "Packaging & Containers",
     "sector": "Consumer Cyclical",
-    "ts": 1785589375
+    "ts": 1788220998
   },
   "SPG": {
     "industry": "REIT - Retail",
@@ -2782,7 +2807,7 @@
   "SW": {
     "industry": "Packaging & Containers",
     "sector": "Consumer Cyclical",
-    "ts": 1785589376
+    "ts": 1788220998
   },
   "SWK": {
     "industry": "Tools & Accessories",
@@ -2837,12 +2862,12 @@
   "TEVA": {
     "industry": "Drug Manufacturers - Specialty & Generic",
     "sector": "Healthcare",
-    "ts": 1783987530
+    "ts": 1788220999
   },
   "TEX": {
     "industry": "Farm & Heavy Construction Machinery",
     "sector": "Industrials",
-    "ts": 1785456162
+    "ts": 1788221000
   },
   "TFC": {
     "industry": "Banks - Regional",
@@ -2892,7 +2917,7 @@
   "TROW": {
     "industry": "Asset Management",
     "sector": "Financial Services",
-    "ts": 1785510645
+    "ts": 1788221000
   },
   "TRP": {
     "industry": "Oil & Gas Midstream",
@@ -2962,7 +2987,7 @@
   "TXRH": {
     "industry": "Restaurants",
     "sector": "Consumer Cyclical",
-    "ts": 1785589376
+    "ts": 1788220998
   },
   "U": {
     "industry": "Software - Application",
@@ -3007,7 +3032,7 @@
   "UNP": {
     "industry": "Railroads",
     "sector": "Industrials",
-    "ts": 1785456162
+    "ts": 1788220998
   },
   "UPS": {
     "industry": "Integrated Freight & Logistics",
@@ -3127,7 +3152,7 @@
   "VTR": {
     "industry": "REIT - Healthcare Facilities",
     "sector": "Real Estate",
-    "ts": 1785456162
+    "ts": 1788220999
   },
   "VTRS": {
     "industry": "Drug Manufacturers - Specialty & Generic",
@@ -3177,7 +3202,7 @@
   "WELL": {
     "industry": "REIT - Healthcare Facilities",
     "sector": "Real Estate",
-    "ts": 1785456162
+    "ts": 1788220999
   },
   "WES": {
     "industry": "Oil & Gas Midstream",
@@ -3212,7 +3237,7 @@
   "WPC": {
     "industry": "REIT - Diversified",
     "sector": "Real Estate",
-    "ts": 1785510645
+    "ts": 1788221000
   },
   "WSC": {
     "industry": "Rental & Leasing Services",

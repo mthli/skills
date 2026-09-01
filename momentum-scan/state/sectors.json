@@ -159,6 +159,11 @@
     "sector": "Consumer Cyclical",
     "ts": 1785974488
   },
+  "CGON": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1788220892
+  },
   "CHYM": {
     "industry": "Software - Application",
     "sector": "Technology",
@@ -412,7 +417,7 @@
   "IQV": {
     "industry": "Diagnostics & Research",
     "sector": "Healthcare",
-    "ts": 1785283277
+    "ts": 1788220892
   },
   "JEF": {
     "industry": "Capital Markets",
@@ -512,7 +517,7 @@
   "MMED": {
     "industry": "Medical Instruments & Supplies",
     "sector": "Healthcare",
-    "ts": 1785508599
+    "ts": 1788220892
   },
   "MNST": {
     "industry": "Beverages - Non-Alcoholic",
@@ -717,7 +722,7 @@
   "RVMD": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1783468901
+    "ts": 1788220892
   },
   "RVTY": {
     "industry": "Diagnostics & Research",

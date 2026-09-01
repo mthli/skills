@@ -37,7 +37,7 @@
   "ALL": {
     "industry": "Insurance - Property & Casualty",
     "sector": "Financial Services",
-    "ts": 1785589355
+    "ts": 1788220951
   },
   "AM": {
     "industry": "Oil & Gas Midstream",
@@ -77,7 +77,7 @@
   "ANET": {
     "industry": "Computer Hardware",
     "sector": "Technology",
-    "ts": 1785589355
+    "ts": 1788220951
   },
   "APGE": {
     "industry": "Biotechnology",
@@ -397,7 +397,7 @@
   "CVE": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
-    "ts": 1785589356
+    "ts": 1788220951
   },
   "CVS": {
     "industry": "Healthcare Plans",
@@ -537,7 +537,7 @@
   "EQNR": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
-    "ts": 1785589356
+    "ts": 1788220950
   },
   "ERAS": {
     "industry": "Biotechnology",
@@ -672,7 +672,7 @@
   "GSAT": {
     "industry": "Telecom Services",
     "sector": "Communication Services",
-    "ts": 1785509849
+    "ts": 1788220950
   },
   "GTX": {
     "industry": "Auto Parts",
@@ -747,7 +747,7 @@
   "INCY": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1785589357
+    "ts": 1788220951
   },
   "ING": {
     "industry": "Banks - Diversified",
@@ -807,7 +807,7 @@
   "KMX": {
     "industry": "Auto & Truck Dealerships",
     "sector": "Consumer Cyclical",
-    "ts": 1785589357
+    "ts": 1788220950
   },
   "KNX": {
     "industry": "Trucking",
@@ -897,7 +897,7 @@
   "MET": {
     "industry": "Insurance - Life",
     "sector": "Financial Services",
-    "ts": 1785589358
+    "ts": 1788220950
   },
   "MFC": {
     "industry": "Insurance - Life",
@@ -957,7 +957,7 @@
   "MT": {
     "industry": "Steel",
     "sector": "Basic Materials",
-    "ts": 1785589358
+    "ts": 1788220951
   },
   "MTB": {
     "industry": "Banks - Regional",
@@ -1002,7 +1002,7 @@
   "NMR": {
     "industry": "Capital Markets",
     "sector": "Financial Services",
-    "ts": 1785589358
+    "ts": 1788220950
   },
   "NOV": {
     "industry": "Oil & Gas Equipment & Services",
@@ -1102,7 +1102,7 @@
   "PANW": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1785589359
+    "ts": 1788220951
   },
   "PBA": {
     "industry": "Oil & Gas Midstream",
@@ -1182,7 +1182,7 @@
   "RPRX": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1785509849
+    "ts": 1788220950
   },
   "RRX": {
     "industry": "Specialty Industrial Machinery",
@@ -1207,7 +1207,7 @@
   "RYCEY": {
     "industry": "Aerospace & Defense",
     "sector": "Industrials",
-    "ts": 1785456117
+    "ts": 1788220950
   },
   "SAN": {
     "industry": "Banks - Diversified",
@@ -1242,7 +1242,7 @@
   "SM": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1785589360
+    "ts": 1788220951
   },
   "SMFG": {
     "industry": "Banks - Diversified",
@@ -1422,7 +1422,7 @@
   "UBS": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1785369754
+    "ts": 1788220950
   },
   "UGP": {
     "industry": "Oil & Gas Refining & Marketing",
@@ -1502,7 +1502,7 @@
   "VOYA": {
     "industry": "Financial Conglomerates",
     "sector": "Financial Services",
-    "ts": 1785456117
+    "ts": 1788220950
   },
   "VSXY": {
     "industry": "Apparel Retail",
@@ -1523,6 +1523,11 @@
     "industry": "Banks - Regional",
     "sector": "Financial Services",
     "ts": 1785542537
+  },
+  "WELL": {
+    "industry": "REIT - Healthcare Facilities",
+    "sector": "Real Estate",
+    "ts": 1788220951
   },
   "WFRD": {
     "industry": "Oil & Gas Equipment & Services",

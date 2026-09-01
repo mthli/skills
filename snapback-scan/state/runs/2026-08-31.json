@@ -1,0 +1,553 @@
+{
+  "as_of": "2026-08-31T20:03:29.876007-04:00",
+  "today": "2026-08-31",
+  "spark_window": [
+    "2026-09-01",
+    "2026-09-02",
+    "2026-09-03"
+  ],
+  "macro_note": "",
+  "regime": {
+    "snapshot": "20260831",
+    "state": "RISK-ON",
+    "score": 6,
+    "vix": 14.9,
+    "spy_vs_200_pct": 8.4,
+    "flags": "Narrowing rally: only megacaps lifting the index (RSP/SPY -0.6%/20d)"
+  },
+  "mr_run": {
+    "run_id": "20260831",
+    "run_date": "2026-08-31",
+    "stale_days": 0,
+    "rows_in_run": 123,
+    "kegs_after_filter": 11
+  },
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "EXR",
+      "rank": 10,
+      "score": 53.1,
+      "rsi2": 0.33,
+      "dist_200dma_pct": 1.36,
+      "signal_close": 141.1,
+      "mr_target": 143.82,
+      "mr_stop": 135.34,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 1,
+      "freq_60d": 2,
+      "sector": "Real Estate",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-01",
+          "detail": "ISM Manufacturing PMI 2026-09-01 10:00 ET"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AVGO",
+          "date": "2026-09-02",
+          "slot": "AMC",
+          "detail": "AVGO ($1755B) reports 2026-09-02 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 141.1,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 7,
+      "ret_5d_pct": -3.89,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 1.05,
+      "signal_day_low": 139.88,
+      "quiet_warning": true
+    },
+    {
+      "ticker": "IMVT",
+      "rank": 14,
+      "score": 47.8,
+      "rsi2": 4.08,
+      "dist_200dma_pct": 35.39,
+      "signal_close": 40.82,
+      "mr_target": 43.07,
+      "mr_stop": 36.67,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 0,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-01",
+          "detail": "ISM Manufacturing PMI 2026-09-01 10:00 ET"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AVGO",
+          "date": "2026-09-02",
+          "slot": "AMC",
+          "detail": "AVGO ($1755B) reports 2026-09-02 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 40.82,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -8.0,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.97,
+      "signal_day_low": 39.92,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "LTH",
+      "rank": 15,
+      "score": 47.3,
+      "rsi2": 4.12,
+      "dist_200dma_pct": 31.41,
+      "signal_close": 42.02,
+      "mr_target": 44.29,
+      "mr_stop": 39.11,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 0,
+      "sector": "Consumer Cyclical",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-01",
+          "detail": "ISM Manufacturing PMI 2026-09-01 10:00 ET"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AVGO",
+          "date": "2026-09-02",
+          "slot": "AMC",
+          "detail": "AVGO ($1755B) reports 2026-09-02 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 42.02,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -6.85,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.95,
+      "signal_day_low": 41.92,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "DFTX",
+      "rank": 16,
+      "score": 47.0,
+      "rsi2": 4.82,
+      "dist_200dma_pct": 63.78,
+      "signal_close": 39.72,
+      "mr_target": 43.08,
+      "mr_stop": 32.39,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 0,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-01",
+          "detail": "ISM Manufacturing PMI 2026-09-01 10:00 ET"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AVGO",
+          "date": "2026-09-02",
+          "slot": "AMC",
+          "detail": "AVGO ($1755B) reports 2026-09-02 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 39.72,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 1,
+      "ret_5d_pct": -11.56,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.77,
+      "signal_day_low": 39.16,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "CUBE",
+      "rank": 17,
+      "score": 46.9,
+      "rsi2": 0.93,
+      "dist_200dma_pct": 3.76,
+      "signal_close": 39.72,
+      "mr_target": 40.34,
+      "mr_stop": 37.97,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 1,
+      "freq_60d": 3,
+      "sector": "Real Estate",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-01",
+          "detail": "ISM Manufacturing PMI 2026-09-01 10:00 ET"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AVGO",
+          "date": "2026-09-02",
+          "slot": "AMC",
+          "detail": "AVGO ($1755B) reports 2026-09-02 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 39.72,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -2.86,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 1.15,
+      "signal_day_low": 39.26,
+      "quiet_warning": true
+    },
+    {
+      "ticker": "MRVL",
+      "rank": 18,
+      "score": 46.9,
+      "rsi2": 8.37,
+      "dist_200dma_pct": 42.48,
+      "signal_close": 211.66,
+      "mr_target": 233.58,
+      "mr_stop": 169.27,
+      "signal": "\ud83d\udfe1",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "PANW",
+          "date": "2026-09-01",
+          "slot": "AMC",
+          "detail": "PANW (Technology, $303B) reports 2026-09-01 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "DELL",
+          "date": "2026-09-01",
+          "slot": "AMC",
+          "detail": "DELL (Technology, $296B) reports 2026-09-01 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-01",
+          "detail": "ISM Manufacturing PMI 2026-09-01 10:00 ET"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "AVGO",
+          "date": "2026-09-02",
+          "slot": "AMC",
+          "detail": "AVGO (Technology, $1755B) reports 2026-09-02 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 211.66,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -10.71,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 1.03,
+      "signal_day_low": 209.53,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "PSA",
+      "rank": 19,
+      "score": 46.3,
+      "rsi2": 1.9,
+      "dist_200dma_pct": 4.59,
+      "signal_close": 306.99,
+      "mr_target": 316.64,
+      "mr_stop": 293.91,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "sector": "Real Estate",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-01",
+          "detail": "ISM Manufacturing PMI 2026-09-01 10:00 ET"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AVGO",
+          "date": "2026-09-02",
+          "slot": "AMC",
+          "detail": "AVGO ($1755B) reports 2026-09-02 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 306.99,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -4.81,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 1.13,
+      "signal_day_low": 305.39,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "PAY",
+      "rank": 20,
+      "score": 46.3,
+      "rsi2": 3.92,
+      "dist_200dma_pct": 23.91,
+      "signal_close": 35.6,
+      "mr_target": 37.98,
+      "mr_stop": 30.86,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "PANW",
+          "date": "2026-09-01",
+          "slot": "AMC",
+          "detail": "PANW (Technology, $303B) reports 2026-09-01 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "DELL",
+          "date": "2026-09-01",
+          "slot": "AMC",
+          "detail": "DELL (Technology, $296B) reports 2026-09-01 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-01",
+          "detail": "ISM Manufacturing PMI 2026-09-01 10:00 ET"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "AVGO",
+          "date": "2026-09-02",
+          "slot": "AMC",
+          "detail": "AVGO (Technology, $1755B) reports 2026-09-02 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 35.6,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -11.0,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.91,
+      "signal_day_low": 34.86,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "ASML",
+      "rank": 23,
+      "score": 42.0,
+      "rsi2": 2.92,
+      "dist_200dma_pct": 16.14,
+      "signal_close": 1696.01,
+      "mr_target": 1732.19,
+      "mr_stop": 1571.69,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "PANW",
+          "date": "2026-09-01",
+          "slot": "AMC",
+          "detail": "PANW (Technology, $303B) reports 2026-09-01 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "DELL",
+          "date": "2026-09-01",
+          "slot": "AMC",
+          "detail": "DELL (Technology, $296B) reports 2026-09-01 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-01",
+          "detail": "ISM Manufacturing PMI 2026-09-01 10:00 ET"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "AVGO",
+          "date": "2026-09-02",
+          "slot": "AMC",
+          "detail": "AVGO (Technology, $1755B) reports 2026-09-02 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 1696.01,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -3.84,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.86,
+      "signal_day_low": 1679.33,
+      "quiet_warning": true
+    },
+    {
+      "ticker": "EBC",
+      "rank": 25,
+      "score": 40.6,
+      "rsi2": 2.52,
+      "dist_200dma_pct": 8.34,
+      "signal_close": 21.96,
+      "mr_target": 22.35,
+      "mr_stop": 20.72,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Financial Services",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-01",
+          "detail": "ISM Manufacturing PMI 2026-09-01 10:00 ET"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AVGO",
+          "date": "2026-09-02",
+          "slot": "AMC",
+          "detail": "AVGO ($1755B) reports 2026-09-02 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 21.96,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 1,
+      "ret_5d_pct": -3.43,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 0.89,
+      "signal_day_low": 21.28,
+      "quiet_warning": true
+    },
+    {
+      "ticker": "EAT",
+      "rank": 26,
+      "score": 40.4,
+      "rsi2": 7.52,
+      "dist_200dma_pct": 42.08,
+      "signal_close": 228.5,
+      "mr_target": 241.06,
+      "mr_stop": 198.52,
+      "signal": "\ud83d\udfe1",
+      "listing_age_runs": 2,
+      "freq_60d": 0,
+      "sector": "Consumer Cyclical",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-01",
+          "detail": "ISM Manufacturing PMI 2026-09-01 10:00 ET"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AVGO",
+          "date": "2026-09-02",
+          "slot": "AMC",
+          "detail": "AVGO ($1755B) reports 2026-09-02 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 228.5,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -7.14,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.81,
+      "signal_day_low": 225.33,
+      "quiet_warning": false
+    }
+  ],
+  "macro_calendar": [
+    {
+      "date": "2026-09-01",
+      "time_et": "10:00",
+      "title": "ISM Manufacturing PMI"
+    }
+  ],
+  "prior_run_review": {
+    "source": "snapback:2026-08-28",
+    "n": 5,
+    "pct_positive": 0.0,
+    "avg_pct": -1.35,
+    "median_pct": -0.92,
+    "best": [
+      {
+        "ticker": "ASML",
+        "since_pct": -0.01
+      },
+      {
+        "ticker": "CORT",
+        "since_pct": -0.47
+      },
+      {
+        "ticker": "IMVT",
+        "since_pct": -0.92
+      }
+    ],
+    "worst": [
+      {
+        "ticker": "DFTX",
+        "since_pct": -3.07
+      },
+      {
+        "ticker": "MRVL",
+        "since_pct": -2.29
+      },
+      {
+        "ticker": "IMVT",
+        "since_pct": -0.92
+      }
+    ],
+    "armed_subset": {
+      "n": 2,
+      "pct_positive": 0.0,
+      "avg_pct": -1.15,
+      "median_pct": -1.15
+    }
+  },
+  "errors": []
+}
