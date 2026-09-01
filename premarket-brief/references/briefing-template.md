@@ -292,6 +292,16 @@ This is the section that can do harm if written lazily, so frame it honestly:
   clause:** XLK +1.89% premkt → **+3.16%, the only green sector of eleven**,
   owned by four beats spanning chips, software and cyber — a genuinely
   sector-wide catalyst, and the one promotion of three that did not flip.
+  **Second consecutive non-inverting instance (08-31) hardens the scope
+  clause into the load-bearing part of this rule:** XLE, owned by a shooting
+  conflict over an oil chokepoint, ran +1.79% premarket → **+2.04% close vs
+  SPY −0.30% = a +2.34pp spread**, past its own ≥+1.5pp branch and keeping
+  >100% of the gap. So the inversion risk tracks the catalyst's *scope*, not
+  the promotion mechanism: sector-wide catalysts (a war, a tariff, a rate
+  move) have now promoted cleanly twice running, while the three inversions
+  on record were all sectors "owned" by a handful of single-name prints.
+  Check scope first; if you cannot name a catalyst that hits the whole
+  sector, do not promote it at all.
 - **Containment beats the event — the posture must follow the brief's own
   evidence (08-03, 08-13).** When an overnight negative is loud but the
   dashboard says it was *contained* (the group didn't follow it down, a
