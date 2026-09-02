@@ -64,6 +64,11 @@
     "sector": "Healthcare",
     "ts": 1786406504
   },
+  "ANF": {
+    "industry": "Apparel Retail",
+    "sector": "Consumer Cyclical",
+    "ts": 1788307314
+  },
   "APGE": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
@@ -148,6 +153,11 @@
     "industry": "Medical Devices",
     "sector": "Healthcare",
     "ts": 1784851303
+  },
+  "BRO": {
+    "industry": "Insurance Brokers",
+    "sector": "Financial Services",
+    "ts": 1788307314
   },
   "BTSG": {
     "industry": "Health Information Services",
@@ -358,6 +368,11 @@
     "industry": "Auto Parts",
     "sector": "Consumer Cyclical",
     "ts": 1787961685
+  },
+  "GPN": {
+    "industry": "Specialty Business Services",
+    "sector": "Industrials",
+    "ts": 1788307314
   },
   "GTX": {
     "industry": "Auto Parts",
@@ -918,6 +933,11 @@
     "industry": "Semiconductor Equipment & Materials",
     "sector": "Technology",
     "ts": 1782751347
+  },
+  "UGP": {
+    "industry": "Oil & Gas Refining & Marketing",
+    "sector": "Energy",
+    "ts": 1788307314
   },
   "UMC": {
     "industry": "Semiconductors",

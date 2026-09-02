@@ -12,7 +12,7 @@
   "ABBV": {
     "industry": "Drug Manufacturers - General",
     "sector": "Healthcare",
-    "ts": 1785589355
+    "ts": 1788307378
   },
   "ABEV": {
     "industry": "Beverages - Brewers",
@@ -23,6 +23,11 @@
     "industry": "Semiconductors",
     "sector": "Technology",
     "ts": 1782135679
+  },
+  "ADM": {
+    "industry": "Farm Products",
+    "sector": "Consumer Defensive",
+    "ts": 1788307378
   },
   "AEG": {
     "industry": "Insurance - Diversified",
@@ -53,6 +58,11 @@
     "industry": "Semiconductors",
     "sector": "Technology",
     "ts": 1782135679
+  },
+  "AMGN": {
+    "industry": "Drug Manufacturers - General",
+    "sector": "Healthcare",
+    "ts": 1788307378
   },
   "AMKR": {
     "industry": "Semiconductor Equipment & Materials",
@@ -694,6 +704,11 @@
     "sector": "Technology",
     "ts": 1785589357
   },
+  "HPQ": {
+    "industry": "Computer Hardware",
+    "sector": "Technology",
+    "ts": 1788307378
+  },
   "HR": {
     "industry": "REIT - Healthcare Facilities",
     "sector": "Real Estate",
@@ -733,6 +748,11 @@
     "industry": "Capital Markets",
     "sector": "Financial Services",
     "ts": 1787011455
+  },
+  "IFF": {
+    "industry": "Specialty Chemicals",
+    "sector": "Basic Materials",
+    "ts": 1788307378
   },
   "ILMN": {
     "industry": "Diagnostics & Research",
@@ -1037,7 +1057,7 @@
   "NWG": {
     "industry": "Banks - Regional",
     "sector": "Financial Services",
-    "ts": 1785589359
+    "ts": 1788307378
   },
   "OC": {
     "industry": "Building Products & Equipment",
@@ -1464,6 +1484,11 @@
     "sector": "Basic Materials",
     "ts": 1779848040
   },
+  "VG": {
+    "industry": "Oil & Gas Midstream",
+    "sector": "Energy",
+    "ts": 1788307378
+  },
   "VIK": {
     "industry": "Travel Services",
     "sector": "Consumer Cyclical",
@@ -1497,7 +1522,7 @@
   "VOD": {
     "industry": "Telecom Services",
     "sector": "Communication Services",
-    "ts": 1781225233
+    "ts": 1788307378
   },
   "VOYA": {
     "industry": "Financial Conglomerates",

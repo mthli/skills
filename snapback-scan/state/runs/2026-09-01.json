@@ -1,0 +1,987 @@
+{
+  "as_of": "2026-09-01T20:04:14.751492-04:00",
+  "today": "2026-09-01",
+  "spark_window": [
+    "2026-09-02",
+    "2026-09-03",
+    "2026-09-04"
+  ],
+  "macro_note": "",
+  "regime": {
+    "snapshot": "20260901",
+    "state": "CAUTION",
+    "score": 4,
+    "vix": 16.3,
+    "spy_vs_200_pct": 7.6,
+    "flags": "Breadth divergence: SPY -2.1% from high but only 47% of names above 50DMA ; Defensive rotation: deepening, defensives +0.9pp over offensives / 20d, +5.0pp more than 5 sessions ago"
+  },
+  "mr_run": {
+    "run_id": "20260901",
+    "run_date": "2026-09-01",
+    "stale_days": 0,
+    "rows_in_run": 176,
+    "kegs_after_filter": 27
+  },
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "JHX",
+      "rank": 6,
+      "score": 61.7,
+      "rsi2": 1.42,
+      "dist_200dma_pct": 24.56,
+      "signal_close": 28.57,
+      "mr_target": 29.71,
+      "mr_stop": 26.47,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "sector": "Basic Materials",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AVGO",
+          "date": "2026-09-02",
+          "slot": "AMC",
+          "detail": "AVGO ($1762B) reports 2026-09-02 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Non-Farm Employment Change 2026-09-04 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Unemployment Rate 2026-09-04 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 28.57,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -5.4,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 1.08,
+      "signal_day_low": 28.38,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "BEN",
+      "rank": 8,
+      "score": 59.7,
+      "rsi2": 1.48,
+      "dist_200dma_pct": 18.47,
+      "signal_close": 33.1,
+      "mr_target": 34.35,
+      "mr_stop": 31.44,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 0,
+      "sector": "Financial Services",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AVGO",
+          "date": "2026-09-02",
+          "slot": "AMC",
+          "detail": "AVGO ($1762B) reports 2026-09-02 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Non-Farm Employment Change 2026-09-04 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Unemployment Rate 2026-09-04 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 33.1,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -4.39,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.82,
+      "signal_day_low": 33.04,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "HRB",
+      "rank": 10,
+      "score": 56.5,
+      "rsi2": 1.82,
+      "dist_200dma_pct": 33.69,
+      "signal_close": 50.92,
+      "mr_target": 52.19,
+      "mr_stop": 44.67,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "sector": "Consumer Cyclical",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AVGO",
+          "date": "2026-09-02",
+          "slot": "AMC",
+          "detail": "AVGO ($1762B) reports 2026-09-02 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Non-Farm Employment Change 2026-09-04 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Unemployment Rate 2026-09-04 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 50.92,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -5.14,
+      "down_gaps_5d": 3,
+      "vol_ratio_5d_20d": 0.54,
+      "signal_day_low": 50.87,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "UNP",
+      "rank": 15,
+      "score": 54.5,
+      "rsi2": 1.95,
+      "dist_200dma_pct": 12.89,
+      "signal_close": 290.62,
+      "mr_target": 303.83,
+      "mr_stop": 274.11,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 0,
+      "sector": "Industrials",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AVGO",
+          "date": "2026-09-02",
+          "slot": "AMC",
+          "detail": "AVGO ($1762B) reports 2026-09-02 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Non-Farm Employment Change 2026-09-04 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Unemployment Rate 2026-09-04 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 290.62,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -6.21,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 1.09,
+      "signal_day_low": 288.67,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "CSX",
+      "rank": 17,
+      "score": 53.9,
+      "rsi2": 2.04,
+      "dist_200dma_pct": 13.97,
+      "signal_close": 48.7,
+      "mr_target": 50.8,
+      "mr_stop": 46.21,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 0,
+      "sector": "Industrials",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AVGO",
+          "date": "2026-09-02",
+          "slot": "AMC",
+          "detail": "AVGO ($1762B) reports 2026-09-02 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Non-Farm Employment Change 2026-09-04 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Unemployment Rate 2026-09-04 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 48.7,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -5.33,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 1.0,
+      "signal_day_low": 47.83,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "SON",
+      "rank": 18,
+      "score": 53.8,
+      "rsi2": 1.26,
+      "dist_200dma_pct": 7.83,
+      "signal_close": 54.09,
+      "mr_target": 55.99,
+      "mr_stop": 50.45,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Consumer Cyclical",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AVGO",
+          "date": "2026-09-02",
+          "slot": "AMC",
+          "detail": "AVGO ($1762B) reports 2026-09-02 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Non-Farm Employment Change 2026-09-04 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Unemployment Rate 2026-09-04 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 54.09,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -5.91,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.21,
+      "signal_day_low": 53.88,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "EXR",
+      "rank": 19,
+      "score": 53.5,
+      "rsi2": 0.19,
+      "dist_200dma_pct": 0.62,
+      "signal_close": 140.12,
+      "mr_target": 142.59,
+      "mr_stop": 134.18,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "sector": "Real Estate",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AVGO",
+          "date": "2026-09-02",
+          "slot": "AMC",
+          "detail": "AVGO ($1762B) reports 2026-09-02 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Non-Farm Employment Change 2026-09-04 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Unemployment Rate 2026-09-04 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 140.12,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 8,
+      "ret_5d_pct": -4.19,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.24,
+      "signal_day_low": 138.95,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "CNI",
+      "rank": 20,
+      "score": 53.4,
+      "rsi2": 1.54,
+      "dist_200dma_pct": 9.75,
+      "signal_close": 120.42,
+      "mr_target": 125.26,
+      "mr_stop": 114.96,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Industrials",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AVGO",
+          "date": "2026-09-02",
+          "slot": "AMC",
+          "detail": "AVGO ($1762B) reports 2026-09-02 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Non-Farm Employment Change 2026-09-04 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Unemployment Rate 2026-09-04 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 120.42,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -5.48,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.87,
+      "signal_day_low": 119.62,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "ASB",
+      "rank": 21,
+      "score": 53.1,
+      "rsi2": 0.84,
+      "dist_200dma_pct": 8.03,
+      "signal_close": 29.9,
+      "mr_target": 30.6,
+      "mr_stop": 28.61,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "sector": "Financial Services",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AVGO",
+          "date": "2026-09-02",
+          "slot": "AMC",
+          "detail": "AVGO ($1762B) reports 2026-09-02 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Non-Farm Employment Change 2026-09-04 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Unemployment Rate 2026-09-04 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 29.9,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -3.24,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 1.1,
+      "signal_day_low": 29.77,
+      "quiet_warning": true
+    },
+    {
+      "ticker": "PSA",
+      "rank": 22,
+      "score": 52.7,
+      "rsi2": 1.0,
+      "dist_200dma_pct": 3.12,
+      "signal_close": 302.86,
+      "mr_target": 312.22,
+      "mr_stop": 289.36,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Real Estate",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AVGO",
+          "date": "2026-09-02",
+          "slot": "AMC",
+          "detail": "AVGO ($1762B) reports 2026-09-02 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Non-Farm Employment Change 2026-09-04 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Unemployment Rate 2026-09-04 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 302.86,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -6.8,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 1.26,
+      "signal_day_low": 300.92,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "RYCEY",
+      "rank": 24,
+      "score": 51.6,
+      "rsi2": 2.35,
+      "dist_200dma_pct": 14.31,
+      "signal_close": 19.62,
+      "mr_target": 20.46,
+      "mr_stop": 18.64,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 1,
+      "freq_60d": 0,
+      "sector": "Industrials",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AVGO",
+          "date": "2026-09-02",
+          "slot": "AMC",
+          "detail": "AVGO ($1762B) reports 2026-09-02 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Non-Farm Employment Change 2026-09-04 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Unemployment Rate 2026-09-04 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 19.62,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -3.96,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.63,
+      "signal_day_low": 19.6,
+      "quiet_warning": true
+    },
+    {
+      "ticker": "SW",
+      "rank": 26,
+      "score": 51.4,
+      "rsi2": 1.8,
+      "dist_200dma_pct": 9.46,
+      "signal_close": 45.43,
+      "mr_target": 47.76,
+      "mr_stop": 42.09,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "sector": "Consumer Cyclical",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AVGO",
+          "date": "2026-09-02",
+          "slot": "AMC",
+          "detail": "AVGO ($1762B) reports 2026-09-02 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Non-Farm Employment Change 2026-09-04 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Unemployment Rate 2026-09-04 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 45.43,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -6.7,
+      "down_gaps_5d": 3,
+      "vol_ratio_5d_20d": 1.08,
+      "signal_day_low": 45.35,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "SKM",
+      "rank": 27,
+      "score": 49.5,
+      "rsi2": 2.15,
+      "dist_200dma_pct": 22.41,
+      "signal_close": 37.76,
+      "mr_target": 38.95,
+      "mr_stop": 34.38,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 3,
+      "sector": "Communication Services",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AVGO",
+          "date": "2026-09-02",
+          "slot": "AMC",
+          "detail": "AVGO ($1762B) reports 2026-09-02 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Non-Farm Employment Change 2026-09-04 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Unemployment Rate 2026-09-04 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 37.76,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -5.6,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.85,
+      "signal_day_low": 37.59,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "MGA",
+      "rank": 30,
+      "score": 49.1,
+      "rsi2": 1.9,
+      "dist_200dma_pct": 7.65,
+      "signal_close": 63.63,
+      "mr_target": 65.41,
+      "mr_stop": 58.66,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 0,
+      "sector": "Consumer Cyclical",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AVGO",
+          "date": "2026-09-02",
+          "slot": "AMC",
+          "detail": "AVGO ($1762B) reports 2026-09-02 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Non-Farm Employment Change 2026-09-04 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Unemployment Rate 2026-09-04 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 63.63,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 6,
+      "ret_5d_pct": -6.15,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 1.16,
+      "signal_day_low": 62.97,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "W",
+      "rank": 31,
+      "score": 48.7,
+      "rsi2": 2.52,
+      "dist_200dma_pct": 6.38,
+      "signal_close": 93.88,
+      "mr_target": 101.18,
+      "mr_stop": 82.57,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 2,
+      "sector": "Consumer Cyclical",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AVGO",
+          "date": "2026-09-02",
+          "slot": "AMC",
+          "detail": "AVGO ($1762B) reports 2026-09-02 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Non-Farm Employment Change 2026-09-04 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Unemployment Rate 2026-09-04 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 93.88,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -9.02,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.68,
+      "signal_day_low": 93.0,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "EXPE",
+      "rank": 32,
+      "score": 48.7,
+      "rsi2": 3.09,
+      "dist_200dma_pct": 18.47,
+      "signal_close": 304.23,
+      "mr_target": 322.14,
+      "mr_stop": 274.96,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "sector": "Consumer Cyclical",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AVGO",
+          "date": "2026-09-02",
+          "slot": "AMC",
+          "detail": "AVGO ($1762B) reports 2026-09-02 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Non-Farm Employment Change 2026-09-04 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Unemployment Rate 2026-09-04 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 304.23,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -10.29,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.95,
+      "signal_day_low": 302.86,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "RF",
+      "rank": 38,
+      "score": 45.4,
+      "rsi2": 1.97,
+      "dist_200dma_pct": 4.37,
+      "signal_close": 29.29,
+      "mr_target": 30.18,
+      "mr_stop": 27.95,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Financial Services",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AVGO",
+          "date": "2026-09-02",
+          "slot": "AMC",
+          "detail": "AVGO ($1762B) reports 2026-09-02 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Non-Farm Employment Change 2026-09-04 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Unemployment Rate 2026-09-04 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 29.29,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -4.37,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.95,
+      "signal_day_low": 29.25,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "CP",
+      "rank": 39,
+      "score": 45.4,
+      "rsi2": 2.26,
+      "dist_200dma_pct": 7.64,
+      "signal_close": 88.97,
+      "mr_target": 92.87,
+      "mr_stop": 84.27,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "sector": "Industrials",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AVGO",
+          "date": "2026-09-02",
+          "slot": "AMC",
+          "detail": "AVGO ($1762B) reports 2026-09-02 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Non-Farm Employment Change 2026-09-04 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Unemployment Rate 2026-09-04 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 88.97,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -6.03,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 0.72,
+      "signal_day_low": 88.53,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "NSC",
+      "rank": 40,
+      "score": 45.2,
+      "rsi2": 2.65,
+      "dist_200dma_pct": 8.8,
+      "signal_close": 332.96,
+      "mr_target": 345.01,
+      "mr_stop": 315.81,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 0,
+      "sector": "Industrials",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AVGO",
+          "date": "2026-09-02",
+          "slot": "AMC",
+          "detail": "AVGO ($1762B) reports 2026-09-02 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Non-Farm Employment Change 2026-09-04 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Unemployment Rate 2026-09-04 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 332.96,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -5.67,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.86,
+      "signal_day_low": 330.63,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "BAM",
+      "rank": 41,
+      "score": 44.8,
+      "rsi2": 1.75,
+      "dist_200dma_pct": 3.17,
+      "signal_close": 49.66,
+      "mr_target": 51.17,
+      "mr_stop": 46.57,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 1,
+      "freq_60d": 2,
+      "sector": "Financial Services",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AVGO",
+          "date": "2026-09-02",
+          "slot": "AMC",
+          "detail": "AVGO ($1762B) reports 2026-09-02 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Non-Farm Employment Change 2026-09-04 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Unemployment Rate 2026-09-04 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 49.66,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -5.07,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.64,
+      "signal_day_low": 49.43,
+      "quiet_warning": false
+    }
+  ],
+  "macro_calendar": [
+    {
+      "date": "2026-09-04",
+      "time_et": "08:30",
+      "title": "Non-Farm Employment Change"
+    },
+    {
+      "date": "2026-09-04",
+      "time_et": "08:30",
+      "title": "Unemployment Rate"
+    }
+  ],
+  "prior_run_review": {
+    "source": "snapback:2026-08-31",
+    "n": 11,
+    "pct_positive": 18.2,
+    "avg_pct": -1.02,
+    "median_pct": -1.32,
+    "best": [
+      {
+        "ticker": "EAT",
+        "since_pct": 2.4
+      },
+      {
+        "ticker": "CUBE",
+        "since_pct": 0.03
+      },
+      {
+        "ticker": "LTH",
+        "since_pct": -0.45
+      }
+    ],
+    "worst": [
+      {
+        "ticker": "DFTX",
+        "since_pct": -3.07
+      },
+      {
+        "ticker": "IMVT",
+        "since_pct": -2.25
+      },
+      {
+        "ticker": "EBC",
+        "since_pct": -2.09
+      }
+    ],
+    "armed_subset": {
+      "n": 11,
+      "pct_positive": 18.2,
+      "avg_pct": -1.02,
+      "median_pct": -1.32
+    }
+  },
+  "errors": []
+}
