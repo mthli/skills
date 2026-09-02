@@ -1,7 +1,7 @@
 ---
 name: map-module
 description: |
-  Create, fully refresh, or incrementally maintain a source-verified subsystem architecture map under `.codex/maps/`. Use when the user invokes `$map-module` or `/map-module`, asks to map, document, understand, or refresh a subsystem, or project instructions require targeted maintenance after implementation changes invalidate mapped facts. Do not use for a single-file question that leaves the existing map accurate. Authorizes bounded, read-only explorer subagents for research and verification.
+  Create, fully refresh, or incrementally maintain a source-verified subsystem architecture map under `.codex/maps/`. Use when the user explicitly invokes `$map-module`, asks to map or document a subsystem's current architecture, or project instructions require targeted maintenance after implementation changes invalidate mapped facts. Do not use for ad hoc code explanation, a single-file question, or changes that leave the existing map accurate. Authorizes bounded, read-only explorer subagents for research and verification.
 ---
 
 # Map Module
@@ -20,6 +20,21 @@ report contracts and final map template.
   change and only a limited set of mapped claims may have changed.
 - If a targeted assessment proves that all mapped claims remain accurate, leave the map unchanged
   and report that no refresh was needed.
+
+## Load context progressively
+
+- Start with repository and module inventories, heading outlines, symbol searches, and file sizes
+  to establish the likely boundary before opening broad source files.
+- Read the selected module's current map and paired decision file separately and to completion,
+  chunking large files when needed. Do not concatenate them with large source files in one command.
+- Inspect exact definitions, registration points, direct callers, direct callees, and relevant tests
+  before opening adjacent files or related maps.
+- Expand context only to answer a named unresolved question about a boundary, contract, lifecycle
+  edge, dependency, invariant, or mapped claim. Record the question before expanding.
+- If tool output is truncated, do not treat the file or result as covered; repeat with focused ranges
+  until the required content is read.
+- Stop loading when the subsystem boundary and required claims have enough first-hand evidence for
+  the selected mode. More context is not itself verification.
 
 ## Ownership and collaboration
 
@@ -40,13 +55,14 @@ report contracts and final map template.
 
 1. Resolve `<module-id>` and the subsystem root. Derive them from the request and repository when
    safe; ask only if different interpretations would materially change the map.
-2. Read `.codex/MODULES.md`, the paired decision file if present, the current map if refreshing,
-   and directly related maps.
+2. Read `.codex/MODULES.md`, the paired decision file if present, and the current map if refreshing.
+   Read a related map only when an identified boundary or unresolved question crosses into it.
 3. Confirm that the root exists at the current `HEAD`. If it is missing, inspect Git history and
    symbol moves to distinguish a deleted historical subsystem from a renamed successor. Do not map
    a historical commit or switch module ids without user confirmation.
-4. Inspect the root with `rg --files`, class declarations, constructors or registration points,
-   public entry points, core state fields, and file sizes. Skim key files to confirm boundaries.
+4. Inspect the root with `rg --files` when available, or an equivalent file inventory tool, then
+   inspect class declarations, constructors or registration points, public entry points, core state
+   fields, and file sizes. Skim key files to confirm boundaries.
 5. Choose full mapping or targeted refresh using the criteria above. If the current task's change
    boundary cannot be separated from unrelated working-tree changes, do not guess; use full mapping
    or report the unresolved boundary.

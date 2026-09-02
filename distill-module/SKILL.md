@@ -1,6 +1,6 @@
 ---
 name: distill-module
-description: "Consolidate structured MODULE Decision blocks from Git commit bodies into stable per-module snapshots under `.codex/decisions/`. Use only when the user explicitly invokes `$distill-module` or directly asks to distill, consolidate, or refresh a module's decision history; do not invoke implicitly."
+description: "Distill structured `MODULE` Decision blocks from Git history into stable snapshots for registered modules under `.codex/decisions/`. Use only when the user explicitly invokes `$distill-module`; do not select it from natural-language requests alone."
 ---
 
 # Distill Module
@@ -84,14 +84,14 @@ Use the latest decision in a cluster for `What`, `Why`, `Tradeoffs`, and `Watch 
 Assign stable IDs:
 
 - Reuse matching `D<n>` IDs from an existing snapshot.
-- Treat IDs in both the constraint index and `Active` as existing decisions when resolving `SUPERSEDES` and reusing IDs.
+- Treat IDs in both `Constraint index (compressed active decisions)` and `Active (full detail)` as current decisions when resolving `SUPERSEDES` and reusing IDs.
 - Never renumber an existing ID.
 - For a new snapshot, order clusters by their earliest contributing commit and assign `D1`, `D2`, and so on.
 - For new clusters in an existing snapshot, continue after the highest assigned ID.
 
 ## Draft the snapshot
 
-Use this shape:
+For an uncompressed snapshot, use this shape:
 
 ```markdown
 # <Module display name> Decisions
@@ -120,7 +120,7 @@ Apply these rules:
 - Keep active fields to one concise sentence each.
 - Omit `ALTERNATIVES`; preserve access to them through source hashes.
 - List all contributing hashes.
-- Put Active before Superseded.
+- Put current decisions before Superseded: when compression is present, place `Constraint index (compressed active decisions)` before `Active (full detail)` so readers see settled constraints before nuanced entries.
 - Omit the Superseded section when empty.
 - Preserve non-conflicting manual annotations.
 - For an existing destination, prepare a minimal diff and avoid rewriting unchanged entries.
@@ -128,16 +128,16 @@ Apply these rules:
 
 ## Compress oversized snapshots
 
-When a snapshot grows past roughly 30 full `Active` entries, or is otherwise too long to serve as a practical pre-edit briefing, propose a constraint-index split during review:
+When a snapshot grows past roughly 30 full-detail active entries, or is otherwise too long to serve as a practical pre-edit briefing, propose a constraint-index split during review:
 
-- Insert `## Constraint index (compressed decisions)` before `## Active`. Move settled decisions there as one-line bullets shaped like `- **D<n>** — <surviving constraint, trap, or contract> (<source-sha>)`.
-- Keep IDs unchanged. Indexed decisions remain current decisions and continue to participate in ID reuse and `SUPERSEDES` resolution; `Active` contains the recent, in-flight, or nuanced entries that still need full detail.
+- Insert `## Constraint index (compressed active decisions)` before `## Active (full detail)`. Move settled decisions there as one-line bullets shaped like `- **D<n>** — <surviving constraint, trap, or contract> (<source-sha>)`.
+- Keep IDs unchanged. Indexed decisions remain active and continue to participate in ID reuse and `SUPERSEDES` resolution; the two sections together are the complete current consensus, while `Active (full detail)` contains the recent, in-flight, or nuanced entries that still need full detail.
 - Do not compress an entry when an actionable qualification or manual annotation cannot be preserved safely in one sentence.
 - Keep each compressed batch recoverable from Git. Record a batch-specific reference in the index preamble, such as `D1–D20: git show <full-sha>:.codex/decisions/<id>.md`, and retain earlier references on later rounds.
 - Before proposing compression, verify that the referenced reachable commit contains the full text of every entry in that batch. If it does not, leave those entries uncompressed and warn the user.
 - Do not create a sibling archive file. The pinned snapshot and per-entry source commits provide the detailed history without duplicating stale text in the working tree.
 
-When re-distilling an already split snapshot, append new decisions to `Active` and move them to the index only after they settle. Keep only the latest `Last distilled` line, and propose another compression round if the full-detail section becomes oversized again.
+When re-distilling an already split snapshot, append new decisions to `Active (full detail)` and move them to the index only after they settle. Keep only the latest `Last distilled` line, and propose another compression round if the full-detail section becomes oversized again.
 
 ## Review before writing
 

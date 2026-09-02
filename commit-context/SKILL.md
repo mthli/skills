@@ -1,6 +1,6 @@
 ---
 name: commit-context
-description: Create a Git commit whose message combines the actual diff with relevant current-conversation context and optional structured module decisions. Use only when the user explicitly invokes $commit-context or directly asks to commit using the current conversation or session context. Do not use for generic commit requests that do not ask for conversation context.
+description: Create a Git commit that records the staged diff, relevant current-conversation context, and optional structured module decisions. Use only when the user explicitly invokes `$commit-context`; do not select it from natural-language commit requests alone.
 ---
 
 # Commit Context
@@ -64,8 +64,9 @@ registry already exists.
 1. Select the root instruction file Codex actually reads:
    - Use `AGENTS.override.md` when a non-empty root-level override exists.
    - Otherwise use root-level `AGENTS.md`, creating it if needed.
-2. If the selected file already contains equivalent rules for reading relevant module maps and
-   decisions before editing and conditionally maintaining maps afterward, do not duplicate them.
+2. If the selected file already contains equivalent rules for resolving affected modules, reading
+   their map and decision files before editing, progressively expanding source context with
+   truncation safeguards, and conditionally maintaining maps afterward, do not duplicate them.
 3. Otherwise, ask separately whether to add or upgrade the block below. Show the exact target file
    and proposed diff.
 4. Write and stage the approved instruction-file change.
@@ -79,10 +80,18 @@ Use this block, translating its prose to match an existing instruction file when
 
 ### Before editing code
 
-1. Resolve every module the change touches through `.codex/MODULES.md`; map `/` in an ID to subdirectories.
-2. Read `.codex/maps/<module>.md` and `.codex/decisions/<module>.md` when present for every affected module. Do not load unrelated module files.
-3. Run `git log --oneline -10 -- <path>` for files about to change.
-4. When recent commits contain `MODULE: <current module>`, inspect those commit bodies with `git show`.
+1. Start with `rg` or `rg --files` when available to locate relevant symbols, callers, tests, and likely paths; otherwise use an equivalent repository search tool. Establish the likely change boundary before opening broad source files.
+2. Resolve only the modules the change touches through `.codex/MODULES.md`; map `/` in an ID to subdirectories.
+3. For every affected module, read `.codex/maps/<module>.md` and `.codex/decisions/<module>.md` when present. Read each required knowledge file separately and to completion, chunking large files when needed. Do not load unrelated module files.
+4. Inspect exact definitions, direct callers, direct callees, and relevant tests first. Expand to adjacent files, modules, or dependency source only to answer a named unresolved question.
+5. Run `git log --oneline -10 -- <path>` for files about to change.
+6. Inspect with `git show` only the recent commits relevant to the current behavior, including matching `MODULE: <current module>` Decision blocks.
+
+Context-loading guardrails:
+
+- Do not concatenate multiple large knowledge or source files into one command.
+- If output is truncated, do not treat the file as read; repeat with focused ranges until the required content is covered.
+- Stop loading context once the behavior, change boundary, constraints, and verification path are established.
 
 ### After finishing a task
 
@@ -174,9 +183,9 @@ Treat token usage as optional metadata. Do not block the commit when it is unava
 4. Derive the session date from the rollout path.
 5. Run:
 
-```bash
-npx ccusage codex session --since <YYYY-MM-DD> --until <YYYY-MM-DD> --json -O --no-color
-```
+   ```bash
+   npx ccusage codex session --since <YYYY-MM-DD> --until <YYYY-MM-DD> --json -O --no-color
+   ```
 
 6. Parse the JSON directly and select the `sessions` entry whose `sessionFile` ends with the current thread ID.
 7. Read `inputTokens`, `outputTokens`, `reasoningOutputTokens`, `cacheReadTokens`, `cacheCreationTokens`, `totalTokens`, and `costUSD`. Read model names from the keys of `models`.
@@ -191,10 +200,10 @@ Omit `# Token Usage` if the thread ID is absent, the rollout file is ambiguous, 
 4. Remove only that temporary directory after the commit attempt.
 5. Run:
 
-```bash
-git log -1 --stat
-git status --short
-```
+   ```bash
+   git log -1 --stat
+   git status --short
+   ```
 
 6. Report the new commit hash and any remaining changes.
 
