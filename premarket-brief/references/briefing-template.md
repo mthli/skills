@@ -168,7 +168,13 @@ This is the section that can do harm if written lazily, so frame it honestly:
   "spreading" without its own breadth test mislabels a contained rotation —
   08-24's QQQ floor-break landed on an 8/11-green, defensives-led board
   (contained-rotation shape, 07-02), and the distinction governs whether the
-  non-epicenter half of the book stays adds-eligible.
+  non-epicenter half of the book stays adds-eligible. **Both gauges, always — RSP−SPY is a
+  *rotation* gauge, not a *breadth* gauge (09-01).** When the average stock and
+  the index fall together it reads ~flat by construction: 09-01 printed
+  **−0.13pp** while the board went 4/11 green, defensives-led, and the regime's
+  own breadth reading fell 51% → 47% above the 50-day on the way to its first
+  CAUTION print since 07-29. A verdict carrying only the spread is
+  under-sampled; carry the green-sector count with it.
 - **Grade catalyst claims by % of gap kept at the close, per name.** > 70%
   kept = the catalyst is real for that name; < 30% = it traded like sympathy
   (07-20 SIMO inverted inside the catalyst bucket; 07-30 FTNT kept 10% of its
@@ -195,7 +201,11 @@ This is the section that can do harm if written lazily, so frame it honestly:
   unmapped by signs (RSP red, 1 of 11 sectors green); **CIBR minus XLK =
   +4.45pp** → cyber bid idiosyncratic, sleeve rides. So: name the two legs,
   subtract, and set a number. A secondary variable may *describe* a branch,
-  never *define* one.
+  never *define* one. **The three-branch requirement applies to the spread leg
+  too (09-01).** A spread shipped as two signed branches ("≥+0.5pp contained /
+  ≤−0.5pp spreading") rebuilds the same unwritten middle one level down the
+  tree, and 09-01 landed in it at **−0.13pp**. Give the spread a named middle
+  band with an action, exactly as the primary level test gets one.
 - **A knife-edge deferral needs a terminal condition (08-24, 08-25).** The
   0.2%-band protocol is 5-for-5 at what it was built for — refusing false
   verdicts (three OpEx closes 08-21, COIN 08-24, SOXX 08-25 all carried
