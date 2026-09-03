@@ -323,7 +323,14 @@ This is the section that can do harm if written lazily, so frame it honestly:
   closed at records through the resistance it had mapped to the tick.** Three
   reporting names blowing up is a fact about those three names until the
   complex confirms it. Ask before filing the call: *does my own dashboard
-  contradict my headline?*
+  contradict my headline?* **4th instance (09-02):** KOSPI −4% / Nikkei −3% with no driver named in
+  any source, US futures and Europe flat → the brief filed containment,
+  explicitly refused to retrofit a driver, and SPY closed +0.44% on 9 of 11
+  sectors green with IWM leading; the likely driver (a BoJ-hawk yen surge,
+  Bloomberg 09-02) surfaced a day later and would have been backward-looking
+  for US risk anyway. Corollary: an unexplained foreign selloff gets no
+  invented cause — the containment test is the read, and a driver that
+  appears later re-grades the *next* session, not this one.
 - **Name which constraint binds (08-13).** "Not an adding day" is two claims
   wearing one coat — *no venue is open* (the scan is stale, the ⭐ pocket's
   listing age can't be verified, the book is full) and *the tape doesn't merit
