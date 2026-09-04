@@ -175,6 +175,16 @@ This is the section that can do harm if written lazily, so frame it honestly:
   own breadth reading fell 51% → 47% above the 50-day on the way to its first
   CAUTION print since 07-29. A verdict carrying only the spread is
   under-sampled; carry the green-sector count with it.
+- **A stale regime cache does not vote; the exam does (09-02, 09-03;
+  promoted on 2nd instance).** When `regime.stale_days > 1`, the index exam's
+  two breadth gauges *are* the day's regime grade — say so in ①, never "the
+  cache confirms tonight". 09-02: the post-close scan rolled back on
+  unfinalized Yahoo bars and never graded the CAUTION flip; 9/11 green graded
+  it a scare. 09-03: the scan re-ran on 09-02 bars (its run_id is SPY's last
+  *finalized* bar) and printed CAUTION **confirmed** off the two sessions
+  *before* an 8/11-green shelf reclaim. Quote `confirmed_state` as the
+  structural backdrop with its data date, name the disagreement when the
+  tape and the instrument point opposite ways, and let the close arbitrate.
 - **Grade catalyst claims by % of gap kept at the close, per name.** > 70%
   kept = the catalyst is real for that name; < 30% = it traded like sympathy
   (07-20 SIMO inverted inside the catalyst bucket; 07-30 FTNT kept 10% of its
@@ -232,6 +242,15 @@ This is the section that can do harm if written lazily, so frame it honestly:
   not itself report. A name gapping on **its own guidance** is this rule's
   territory, not raise-wall's; 08-27 filed all four earnings gaps under
   "don't chase" and every one of them ran.
+  **Size boundary (GTLB 45% 09-02, SNOW 71% 09-03; promoted on 2nd
+  instance): at ≥ +20% the gap IS the move, not the floor.** Expect 45–75%
+  kept and frame the premarket print as the day's *range*, not its start;
+  the >100% floor framing applies to gaps under ~15% (107–230% on the six
+  that size). **Watch (09-03, 1st instance): the negative leg went 0-for-3**
+  on a broad +1% tape with a same-day catalyst-owned bid running under the
+  group (HPE −8.2% open → **+5.0%**, NTAP −10.4% → **+2.6%**, both inverted;
+  AVGO 65–75%, DELL day-2 +4.9%) — scope, not size, may be the boundary:
+  a negative own-guidance gap inside a group being bought is two-sided.
 - **Premarket single-stock prints are thin.** Weight the futures gap, Europe,
   and sector ETFs over individual moves; respect the gappers' volume floor,
   and treat pre-8:00 ET thin prints as noise.
@@ -261,6 +280,14 @@ This is the section that can do harm if written lazily, so frame it honestly:
   its dead low through the trim trigger while XE's mild red closed −8.9%
   through its void. Attach a pre-committed, close-graded price line (trigger
   + void) to every tell; the lines, not the reads, do the work.
+  **Extends to the ① character line (08-31, 09-03; promoted on 2nd
+  instance).** A character claim derived from the premarket *index* board is
+  a tell like any other: 08-31's "zero dispersion" (uniform gap) closed with
+  QQQ +0.05% vs IWM −1.96%; 09-03's "rotation morning" (IWM +0.64% vs QQQ
+  +0.09% at 09:00) closed megacap-led — QQQ +1.19% the leader, IWM +0.40%
+  the laggard, RSP −0.39pp — while every pre-committed branch resolved as
+  written. Write the character as a hypothesis with the exam's branch
+  attached ("if the close is X-led, the day was Y"), never as the verdict.
 - **A fired line is not re-litigated by a green premarket (08-10, 08-11,
   08-12, 08-13; 1-for-4).** Once a close-graded exit or trim has fired, the
   next morning's bounce above that line is a *better fill*, not a reprieve: XE
