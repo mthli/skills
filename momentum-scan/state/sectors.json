@@ -117,7 +117,7 @@
   "BBVA": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1785801705
+    "ts": 1788480083
   },
   "BBY": {
     "industry": "Specialty Retail",
@@ -684,6 +684,11 @@
     "sector": "Financial Services",
     "ts": 1785331040
   },
+  "PSX": {
+    "industry": "Oil & Gas Refining & Marketing",
+    "sector": "Energy",
+    "ts": 1788480083
+  },
   "PTRN": {
     "industry": "Software - Application",
     "sector": "Technology",
@@ -742,7 +747,7 @@
   "RVTY": {
     "industry": "Diagnostics & Research",
     "sector": "Healthcare",
-    "ts": 1785369706
+    "ts": 1788480083
   },
   "RY": {
     "industry": "Banks - Diversified",
@@ -915,9 +920,9 @@
     "ts": 1778771326
   },
   "TWST": {
-    "industry": "Diagnostics & Research",
+    "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1785801705
+    "ts": 1788480083
   },
   "TXG": {
     "industry": "Health Information Services",
@@ -948,6 +953,11 @@
     "industry": "Healthcare Plans",
     "sector": "Healthcare",
     "ts": 1782135476
+  },
+  "VEEV": {
+    "industry": "Health Information Services",
+    "sector": "Healthcare",
+    "ts": 1788480083
   },
   "VIK": {
     "industry": "Travel Services",

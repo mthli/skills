@@ -1,0 +1,633 @@
+{
+  "as_of": "2026-09-03T20:03:19.693493-04:00",
+  "today": "2026-09-03",
+  "spark_window": [
+    "2026-09-04",
+    "2026-09-08",
+    "2026-09-09"
+  ],
+  "macro_note": "ForexFactory covers the current week only \u2014 macro sparks beyond Sunday not visible",
+  "regime": {
+    "snapshot": "20260902",
+    "state": "CAUTION",
+    "score": 5,
+    "vix": 14.3,
+    "spy_vs_200_pct": 8.0,
+    "flags": "Breadth divergence: SPY -1.6% from high but only 49% of names above 50DMA ; Defensive rotation: deepening, defensives +2.1pp over offensives / 20d, +8.0pp more than 5 sessions ago"
+  },
+  "mr_run": {
+    "run_id": "20260903",
+    "run_date": "2026-09-03",
+    "stale_days": 0,
+    "rows_in_run": 71,
+    "kegs_after_filter": 14
+  },
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "OMC",
+      "rank": 5,
+      "score": 59.2,
+      "rsi2": 1.19,
+      "dist_200dma_pct": 6.23,
+      "signal_close": 81.76,
+      "mr_target": 86.31,
+      "mr_stop": 76.33,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 0,
+      "sector": "Communication Services",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Non-Farm Employment Change 2026-09-04 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Unemployment Rate 2026-09-04 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 81.76,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -6.97,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.15,
+      "signal_day_low": 80.54,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "THC",
+      "rank": 6,
+      "score": 59.2,
+      "rsi2": 1.38,
+      "dist_200dma_pct": 24.57,
+      "signal_close": 258.53,
+      "mr_target": 264.97,
+      "mr_stop": 238.6,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Non-Farm Employment Change 2026-09-04 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Unemployment Rate 2026-09-04 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 258.53,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -5.71,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.18,
+      "signal_day_low": 253.51,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "FDX",
+      "rank": 12,
+      "score": 55.3,
+      "rsi2": 1.3,
+      "dist_200dma_pct": 9.42,
+      "signal_close": 316.54,
+      "mr_target": 326.22,
+      "mr_stop": 296.28,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 0,
+      "sector": "Industrials",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Non-Farm Employment Change 2026-09-04 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Unemployment Rate 2026-09-04 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 316.54,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -5.79,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.9,
+      "signal_day_low": 315.87,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "RTX",
+      "rank": 13,
+      "score": 52.9,
+      "rsi2": 1.14,
+      "dist_200dma_pct": 4.83,
+      "signal_close": 200.78,
+      "mr_target": 207.49,
+      "mr_stop": 189.65,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Industrials",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Non-Farm Employment Change 2026-09-04 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Unemployment Rate 2026-09-04 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 200.78,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -5.29,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.85,
+      "signal_day_low": 200.31,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "NDAQ",
+      "rank": 20,
+      "score": 49.2,
+      "rsi2": 1.27,
+      "dist_200dma_pct": 6.46,
+      "signal_close": 95.72,
+      "mr_target": 98.11,
+      "mr_stop": 91.1,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "sector": "Financial Services",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Non-Farm Employment Change 2026-09-04 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Unemployment Rate 2026-09-04 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 95.72,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -3.77,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.22,
+      "signal_day_low": 94.61,
+      "quiet_warning": true
+    },
+    {
+      "ticker": "FAST",
+      "rank": 27,
+      "score": 44.4,
+      "rsi2": 2.02,
+      "dist_200dma_pct": 6.8,
+      "signal_close": 47.93,
+      "mr_target": 49.38,
+      "mr_stop": 45.59,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "sector": "Industrials",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Non-Farm Employment Change 2026-09-04 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Unemployment Rate 2026-09-04 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 47.93,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -6.3,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.97,
+      "signal_day_low": 47.65,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "CTAS",
+      "rank": 28,
+      "score": 43.9,
+      "rsi2": 1.79,
+      "dist_200dma_pct": 6.62,
+      "signal_close": 198.09,
+      "mr_target": 201.76,
+      "mr_stop": 189.9,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "sector": "Industrials",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Non-Farm Employment Change 2026-09-04 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Unemployment Rate 2026-09-04 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 198.09,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -3.74,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.94,
+      "signal_day_low": 197.57,
+      "quiet_warning": true
+    },
+    {
+      "ticker": "JHX",
+      "rank": 30,
+      "score": 43.7,
+      "rsi2": 3.12,
+      "dist_200dma_pct": 23.41,
+      "signal_close": 28.46,
+      "mr_target": 29.29,
+      "mr_stop": 26.41,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "sector": "Basic Materials",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Non-Farm Employment Change 2026-09-04 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Unemployment Rate 2026-09-04 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 28.46,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -5.61,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 1.27,
+      "signal_day_low": 28.16,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "VIRT",
+      "rank": 31,
+      "score": 43.1,
+      "rsi2": 4.12,
+      "dist_200dma_pct": 33.44,
+      "signal_close": 62.69,
+      "mr_target": 65.27,
+      "mr_stop": 53.9,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "sector": "Financial Services",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Non-Farm Employment Change 2026-09-04 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Unemployment Rate 2026-09-04 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 62.69,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -4.64,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.65,
+      "signal_day_low": 62.06,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "TWST",
+      "rank": 32,
+      "score": 41.9,
+      "rsi2": 5.9,
+      "dist_200dma_pct": 105.48,
+      "signal_close": 131.0,
+      "mr_target": 139.31,
+      "mr_stop": 104.34,
+      "signal": "\ud83d\udfe1",
+      "listing_age_runs": 1,
+      "freq_60d": 0,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Non-Farm Employment Change 2026-09-04 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Unemployment Rate 2026-09-04 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 131.0,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -12.7,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.92,
+      "signal_day_low": 126.42,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "DDOG",
+      "rank": 33,
+      "score": 41.7,
+      "rsi2": 4.86,
+      "dist_200dma_pct": 18.84,
+      "signal_close": 209.23,
+      "mr_target": 230.0,
+      "mr_stop": 178.87,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Non-Farm Employment Change 2026-09-04 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Unemployment Rate 2026-09-04 08:30 ET"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "ORCL",
+          "date": "2026-09-08",
+          "slot": "?",
+          "detail": "ORCL (Technology, $420B) reports 2026-09-08 ?"
+        }
+      ],
+      "armed": true,
+      "latest_close": 209.23,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -8.1,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.84,
+      "signal_day_low": 208.22,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "ERAS",
+      "rank": 35,
+      "score": 40.8,
+      "rsi2": 5.59,
+      "dist_200dma_pct": 28.83,
+      "signal_close": 16.37,
+      "mr_target": 17.71,
+      "mr_stop": 13.27,
+      "signal": "\ud83d\udfe1",
+      "listing_age_runs": 1,
+      "freq_60d": 2,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Non-Farm Employment Change 2026-09-04 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Unemployment Rate 2026-09-04 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 16.37,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -14.52,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.36,
+      "signal_day_low": 15.78,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "SNOW",
+      "rank": 36,
+      "score": 40.5,
+      "rsi2": 8.04,
+      "dist_200dma_pct": 40.28,
+      "signal_close": 305.84,
+      "mr_target": 322.84,
+      "mr_stop": 274.13,
+      "signal": "\ud83d\udfe1",
+      "listing_age_runs": 1,
+      "freq_60d": 0,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Non-Farm Employment Change 2026-09-04 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Unemployment Rate 2026-09-04 08:30 ET"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "ORCL",
+          "date": "2026-09-08",
+          "slot": "?",
+          "detail": "ORCL (Technology, $420B) reports 2026-09-08 ?"
+        }
+      ],
+      "armed": true,
+      "latest_close": 305.84,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -3.02,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.26,
+      "signal_day_low": 303.89,
+      "quiet_warning": true
+    },
+    {
+      "ticker": "GD",
+      "rank": 37,
+      "score": 40.2,
+      "rsi2": 1.94,
+      "dist_200dma_pct": 3.41,
+      "signal_close": 364.07,
+      "mr_target": 372.84,
+      "mr_stop": 347.83,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 3,
+      "sector": "Industrials",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Non-Farm Employment Change 2026-09-04 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-04",
+          "detail": "Unemployment Rate 2026-09-04 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 364.07,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -4.7,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.27,
+      "signal_day_low": 362.21,
+      "quiet_warning": false
+    }
+  ],
+  "macro_calendar": [
+    {
+      "date": "2026-09-04",
+      "time_et": "08:30",
+      "title": "Non-Farm Employment Change"
+    },
+    {
+      "date": "2026-09-04",
+      "time_et": "08:30",
+      "title": "Unemployment Rate"
+    }
+  ],
+  "prior_run_review": {
+    "source": "snapback:2026-09-01",
+    "n": 20,
+    "pct_positive": 55.0,
+    "avg_pct": 0.51,
+    "median_pct": 0.05,
+    "best": [
+      {
+        "ticker": "MGA",
+        "since_pct": 3.38
+      },
+      {
+        "ticker": "ASB",
+        "since_pct": 2.27
+      },
+      {
+        "ticker": "RYCEY",
+        "since_pct": 2.24
+      }
+    ],
+    "worst": [
+      {
+        "ticker": "SKM",
+        "since_pct": -1.83
+      },
+      {
+        "ticker": "NSC",
+        "since_pct": -0.87
+      },
+      {
+        "ticker": "PSA",
+        "since_pct": -0.51
+      }
+    ],
+    "armed_subset": {
+      "n": 20,
+      "pct_positive": 55.0,
+      "avg_pct": 0.51,
+      "median_pct": 0.05
+    }
+  },
+  "errors": []
+}

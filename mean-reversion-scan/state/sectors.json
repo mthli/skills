@@ -232,7 +232,7 @@
   "ANET": {
     "industry": "Computer Hardware",
     "sector": "Technology",
-    "ts": 1785589365
+    "ts": 1788480190
   },
   "AON": {
     "industry": "Insurance Brokers",
@@ -1117,7 +1117,7 @@
   "ERAS": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1785283361
+    "ts": 1788480190
   },
   "ERIC": {
     "industry": "Communication Equipment",
@@ -1177,7 +1177,7 @@
   "EXPD": {
     "industry": "Integrated Freight & Logistics",
     "sector": "Industrials",
-    "ts": 1785197029
+    "ts": 1788480190
   },
   "EXPE": {
     "industry": "Travel Services",
@@ -1604,6 +1604,11 @@
     "sector": "Real Estate",
     "ts": 1788221000
   },
+  "IOT": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1788480190
+  },
   "IQV": {
     "industry": "Diagnostics & Research",
     "sector": "Healthcare",
@@ -1637,7 +1642,7 @@
   "IVZ": {
     "industry": "Asset Management",
     "sector": "Financial Services",
-    "ts": 1785589371
+    "ts": 1788480191
   },
   "JBHT": {
     "industry": "Integrated Freight & Logistics",
@@ -1752,7 +1757,7 @@
   "LAUR": {
     "industry": "Education & Training Services",
     "sector": "Consumer Defensive",
-    "ts": 1784160163
+    "ts": 1788480190
   },
   "LBRT": {
     "industry": "Oil & Gas Equipment & Services",
@@ -1898,6 +1903,11 @@
     "industry": "Financial Data & Stock Exchanges",
     "sector": "Financial Services",
     "ts": 1786061003
+  },
+  "MDB": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1788480191
   },
   "MDLZ": {
     "industry": "Confectioners",
@@ -2122,7 +2132,7 @@
   "NOK": {
     "industry": "Communication Equipment",
     "sector": "Technology",
-    "ts": 1784160163
+    "ts": 1788480191
   },
   "NOKBF": {
     "industry": "Communication Equipment",
@@ -2333,6 +2343,11 @@
     "industry": "Software - Infrastructure",
     "sector": "Technology",
     "ts": 1787097898
+  },
+  "PAYX": {
+    "industry": "Software - Application",
+    "sector": "Technology",
+    "ts": 1788480191
   },
   "PB": {
     "industry": "Banks - Regional",
@@ -2587,7 +2602,7 @@
   "ROIV": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1780452120
+    "ts": 1788480191
   },
   "ROKU": {
     "industry": "Entertainment",
@@ -2792,7 +2807,7 @@
   "SNEX": {
     "industry": "Capital Markets",
     "sector": "Financial Services",
-    "ts": 1785589375
+    "ts": 1788480191
   },
   "SNOW": {
     "industry": "Software - Application",
@@ -2964,6 +2979,11 @@
     "sector": "Healthcare",
     "ts": 1784764989
   },
+  "THC": {
+    "industry": "Medical Care Facilities",
+    "sector": "Healthcare",
+    "ts": 1788480190
+  },
   "TIGO": {
     "industry": "Telecom Services",
     "sector": "Communication Services",
@@ -3008,6 +3028,11 @@
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
     "ts": 1785801823
+  },
+  "TRU": {
+    "industry": "Financial Data & Stock Exchanges",
+    "sector": "Financial Services",
+    "ts": 1788480191
   },
   "TRV": {
     "industry": "Insurance - Property & Casualty",
@@ -3055,9 +3080,9 @@
     "ts": 1784592170
   },
   "TWST": {
-    "industry": "Diagnostics & Research",
+    "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1783555398
+    "ts": 1788480190
   },
   "TXG": {
     "industry": "Health Information Services",
@@ -3182,7 +3207,7 @@
   "VIRT": {
     "industry": "Capital Markets",
     "sector": "Financial Services",
-    "ts": 1782777789
+    "ts": 1788480190
   },
   "VIST": {
     "industry": "Oil & Gas E&P",

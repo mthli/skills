@@ -32,7 +32,7 @@
   "AEG": {
     "industry": "Insurance - Diversified",
     "sector": "Financial Services",
-    "ts": 1785589355
+    "ts": 1788480144
   },
   "ALKS": {
     "industry": "Drug Manufacturers - Specialty & Generic",
@@ -179,6 +179,11 @@
     "sector": "Financial Services",
     "ts": 1787702664
   },
+  "BBY": {
+    "industry": "Specialty Retail",
+    "sector": "Consumer Cyclical",
+    "ts": 1788480144
+  },
   "BCS": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
@@ -222,7 +227,7 @@
   "BNY": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1785801774
+    "ts": 1788480144
   },
   "BP": {
     "industry": "Oil & Gas Integrated",
@@ -512,7 +517,7 @@
   "EC": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
-    "ts": 1785801774
+    "ts": 1788480144
   },
   "EIX": {
     "industry": "Utilities - Regulated Electric",
@@ -717,12 +722,12 @@
   "HSBC": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1785769691
+    "ts": 1788480144
   },
   "HSIC": {
     "industry": "Medical Distribution",
     "sector": "Healthcare",
-    "ts": 1785801774
+    "ts": 1788480144
   },
   "HST": {
     "industry": "REIT - Hotel & Motel",
@@ -887,7 +892,7 @@
   "LYG": {
     "industry": "Banks - Regional",
     "sector": "Financial Services",
-    "ts": 1785589358
+    "ts": 1788480144
   },
   "LYV": {
     "industry": "Entertainment",
@@ -927,7 +932,7 @@
   "MFG": {
     "industry": "Banks - Regional",
     "sector": "Financial Services",
-    "ts": 1785801774
+    "ts": 1788480144
   },
   "MGA": {
     "industry": "Auto Parts",
@@ -992,7 +997,7 @@
   "MUFG": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1785801774
+    "ts": 1788480144
   },
   "MUR": {
     "industry": "Oil & Gas E&P",
@@ -1042,7 +1047,7 @@
   "NTRS": {
     "industry": "Asset Management",
     "sector": "Financial Services",
-    "ts": 1785801774
+    "ts": 1788480144
   },
   "NUE": {
     "industry": "Steel",
@@ -1128,6 +1133,11 @@
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
     "ts": 1779329298
+  },
+  "PBF": {
+    "industry": "Oil & Gas Refining & Marketing",
+    "sector": "Energy",
+    "ts": 1788480144
   },
   "PBR": {
     "industry": "Oil & Gas Integrated",
@@ -1247,7 +1257,12 @@
   "SIRI": {
     "industry": "Entertainment",
     "sector": "Communication Services",
-    "ts": 1785196974
+    "ts": 1788480144
+  },
+  "SJM": {
+    "industry": "Packaged Foods",
+    "sector": "Consumer Defensive",
+    "ts": 1788480144
   },
   "SKM": {
     "industry": "Telecom Services",
@@ -1267,7 +1282,7 @@
   "SMFG": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1785801774
+    "ts": 1788480144
   },
   "SN": {
     "industry": "Furnishings, Fixtures & Appliances",
@@ -1317,7 +1332,7 @@
   "STT": {
     "industry": "Asset Management",
     "sector": "Financial Services",
-    "ts": 1785801774
+    "ts": 1788480144
   },
   "STX": {
     "industry": "Computer Hardware",
@@ -1347,7 +1362,7 @@
   "TD": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1785801774
+    "ts": 1788480144
   },
   "TECK": {
     "industry": "Copper",
@@ -1357,7 +1372,7 @@
   "TEVA": {
     "industry": "Drug Manufacturers - Specialty & Generic",
     "sector": "Healthcare",
-    "ts": 1785589360
+    "ts": 1788480144
   },
   "TGT": {
     "industry": "Discount Stores",
@@ -1507,7 +1522,7 @@
   "VLO": {
     "industry": "Oil & Gas Refining & Marketing",
     "sector": "Energy",
-    "ts": 1785801774
+    "ts": 1788480144
   },
   "VLY": {
     "industry": "Banks - Regional",
@@ -1537,7 +1552,7 @@
   "VTRS": {
     "industry": "Drug Manufacturers - Specialty & Generic",
     "sector": "Healthcare",
-    "ts": 1783728124
+    "ts": 1788480144
   },
   "WBD": {
     "industry": "Entertainment",
