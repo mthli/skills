@@ -89,6 +89,11 @@
     "sector": "Technology",
     "ts": 1788220951
   },
+  "APA": {
+    "industry": "Oil & Gas E&P",
+    "sector": "Energy",
+    "ts": 1788566554
+  },
   "APGE": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
@@ -237,7 +242,7 @@
   "BRKR": {
     "industry": "Medical Devices",
     "sector": "Healthcare",
-    "ts": 1783728124
+    "ts": 1788566554
   },
   "BROS": {
     "industry": "Restaurants",
@@ -477,7 +482,7 @@
   "DNTH": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1785888158
+    "ts": 1788566553
   },
   "DOC": {
     "industry": "REIT - Healthcare Facilities",
@@ -532,7 +537,7 @@
   "ELV": {
     "industry": "Healthcare Plans",
     "sector": "Healthcare",
-    "ts": 1783382561
+    "ts": 1788566553
   },
   "EMBJ": {
     "industry": "Aerospace & Defense",
@@ -608,6 +613,11 @@
     "industry": "Banks - Regional",
     "sector": "Financial Services",
     "ts": 1785589357
+  },
+  "FIVE": {
+    "industry": "Specialty Retail",
+    "sector": "Consumer Cyclical",
+    "ts": 1788566554
   },
   "FLS": {
     "industry": "Specialty Industrial Machinery",
@@ -762,7 +772,7 @@
   "ILMN": {
     "industry": "Diagnostics & Research",
     "sector": "Healthcare",
-    "ts": 1784764945
+    "ts": 1788566553
   },
   "IMVT": {
     "industry": "Biotechnology",
@@ -977,7 +987,7 @@
   "MS": {
     "industry": "Capital Markets",
     "sector": "Financial Services",
-    "ts": 1785888158
+    "ts": 1788566553
   },
   "MT": {
     "industry": "Steel",
@@ -1097,7 +1107,7 @@
   "OSCR": {
     "industry": "Healthcare Plans",
     "sector": "Healthcare",
-    "ts": 1784592126
+    "ts": 1788566553
   },
   "OUT": {
     "industry": "REIT - Specialty",
@@ -1192,7 +1202,7 @@
   "RELY": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1785888158
+    "ts": 1788566554
   },
   "RIO": {
     "industry": "Other Industrial Metals & Mining",
@@ -1232,7 +1242,7 @@
   "RY": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1785369754
+    "ts": 1788566553
   },
   "RYCEY": {
     "industry": "Aerospace & Defense",
@@ -1367,7 +1377,7 @@
   "TECK": {
     "industry": "Copper",
     "sector": "Basic Materials",
-    "ts": 1785589360
+    "ts": 1788566553
   },
   "TEVA": {
     "industry": "Drug Manufacturers - Specialty & Generic",
@@ -1383,6 +1393,11 @@
     "industry": "Biotechnology",
     "sector": "Healthcare",
     "ts": 1785589360
+  },
+  "THC": {
+    "industry": "Medical Care Facilities",
+    "sector": "Healthcare",
+    "ts": 1788566553
   },
   "TIGO": {
     "industry": "Telecom Services",

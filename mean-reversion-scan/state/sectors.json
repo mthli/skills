@@ -807,7 +807,7 @@
   "CSCO": {
     "industry": "Communication Equipment",
     "sector": "Technology",
-    "ts": 1782518609
+    "ts": 1788566599
   },
   "CSX": {
     "industry": "Railroads",
@@ -1468,6 +1468,11 @@
     "industry": "Insurance - Diversified",
     "sector": "Financial Services",
     "ts": 1786493002
+  },
+  "HLN": {
+    "industry": "Drug Manufacturers - Specialty & Generic",
+    "sector": "Healthcare",
+    "ts": 1788566599
   },
   "HLT": {
     "industry": "Lodging",
@@ -2472,7 +2477,7 @@
   "PRMB": {
     "industry": "Beverages - Non-Alcoholic",
     "sector": "Consumer Defensive",
-    "ts": 1783555398
+    "ts": 1788566599
   },
   "PRU": {
     "industry": "Insurance - Life",
@@ -2757,7 +2762,7 @@
   "SJM": {
     "industry": "Packaged Foods",
     "sector": "Consumer Defensive",
-    "ts": 1785589375
+    "ts": 1788566599
   },
   "SKM": {
     "industry": "Telecom Services",

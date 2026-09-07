@@ -1,0 +1,213 @@
+{
+  "as_of": "2026-09-04T20:03:28.902532-04:00",
+  "today": "2026-09-04",
+  "spark_window": [
+    "2026-09-08",
+    "2026-09-09",
+    "2026-09-10"
+  ],
+  "macro_note": "ForexFactory covers the current week only \u2014 macro sparks beyond Sunday not visible",
+  "regime": {
+    "snapshot": "20260903",
+    "state": "RISK-ON",
+    "score": 6,
+    "vix": 14.5,
+    "spy_vs_200_pct": 9.0,
+    "flags": "Defensive rotation: deepening, defensives +1.3pp over offensives / 20d, +5.9pp more than 5 sessions ago"
+  },
+  "mr_run": {
+    "run_id": "20260904",
+    "run_date": "2026-09-04",
+    "stale_days": 0,
+    "rows_in_run": 26,
+    "kegs_after_filter": 5
+  },
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "VSXY",
+      "rank": 2,
+      "score": 59.8,
+      "rsi2": 3.12,
+      "dist_200dma_pct": 17.48,
+      "signal_close": 73.64,
+      "mr_target": 83.18,
+      "mr_stop": 62.26,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "sector": "Consumer Cyclical",
+      "sparks": [],
+      "armed": false,
+      "latest_close": 73.64,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 1,
+      "ret_5d_pct": -17.91,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 1.73,
+      "signal_day_low": 71.97,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-12-03"
+    },
+    {
+      "ticker": "TWST",
+      "rank": 10,
+      "score": 49.8,
+      "rsi2": 3.59,
+      "dist_200dma_pct": 100.29,
+      "signal_close": 128.71,
+      "mr_target": 134.43,
+      "mr_stop": 102.11,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 0,
+      "sector": "Healthcare",
+      "sparks": [],
+      "armed": false,
+      "latest_close": 128.71,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -15.93,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.92,
+      "signal_day_low": 127.42,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-11-16"
+    },
+    {
+      "ticker": "MNST",
+      "rank": 13,
+      "score": 47.3,
+      "rsi2": 1.5,
+      "dist_200dma_pct": 5.59,
+      "signal_close": 44.08,
+      "mr_target": 45.25,
+      "mr_stop": 41.23,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 1,
+      "freq_60d": 2,
+      "sector": "Consumer Defensive",
+      "sparks": [],
+      "armed": false,
+      "latest_close": 44.08,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -5.61,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 0.88,
+      "signal_day_low": 43.97,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-11-06"
+    },
+    {
+      "ticker": "STX",
+      "rank": 14,
+      "score": 45.3,
+      "rsi2": 3.39,
+      "dist_200dma_pct": 35.39,
+      "signal_close": 798.61,
+      "mr_target": 816.39,
+      "mr_stop": 677.5,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "ORCL",
+          "date": "2026-09-10",
+          "slot": "AMC",
+          "detail": "ORCL (Technology, $444B) reports 2026-09-10 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 798.61,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -5.74,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 0.75,
+      "signal_day_low": 763.52,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "LAUR",
+      "rank": 15,
+      "score": 40.6,
+      "rsi2": 2.39,
+      "dist_200dma_pct": 4.04,
+      "signal_close": 35.95,
+      "mr_target": 37.14,
+      "mr_stop": 33.51,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "sector": "Consumer Defensive",
+      "sparks": [],
+      "armed": false,
+      "latest_close": 35.95,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -7.91,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.33,
+      "signal_day_low": 35.49,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-10-29"
+    }
+  ],
+  "macro_calendar": [],
+  "prior_run_review": {
+    "source": "snapback:2026-09-03",
+    "n": 14,
+    "pct_positive": 85.7,
+    "avg_pct": 2.84,
+    "median_pct": 2.42,
+    "best": [
+      {
+        "ticker": "SNOW",
+        "since_pct": 16.55
+      },
+      {
+        "ticker": "JHX",
+        "since_pct": 4.11
+      },
+      {
+        "ticker": "OMC",
+        "since_pct": 3.63
+      }
+    ],
+    "worst": [
+      {
+        "ticker": "TWST",
+        "since_pct": -1.75
+      },
+      {
+        "ticker": "ERAS",
+        "since_pct": -0.67
+      },
+      {
+        "ticker": "GD",
+        "since_pct": 0.49
+      }
+    ],
+    "armed_subset": {
+      "n": 14,
+      "pct_positive": 85.7,
+      "avg_pct": 2.84,
+      "median_pct": 2.42
+    }
+  },
+  "errors": []
+}
