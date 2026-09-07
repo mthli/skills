@@ -246,11 +246,18 @@ This is the section that can do harm if written lazily, so frame it honestly:
   instance): at ≥ +20% the gap IS the move, not the floor.** Expect 45–75%
   kept and frame the premarket print as the day's *range*, not its start;
   the >100% floor framing applies to gaps under ~15% (107–230% on the six
-  that size). **Watch (09-03, 1st instance): the negative leg went 0-for-3**
-  on a broad +1% tape with a same-day catalyst-owned bid running under the
-  group (HPE −8.2% open → **+5.0%**, NTAP −10.4% → **+2.6%**, both inverted;
-  AVGO 65–75%, DELL day-2 +4.9%) — scope, not size, may be the boundary:
-  a negative own-guidance gap inside a group being bought is two-sided.
+  that size); the edge is soft (LULU −19.4% kept 90% on 09-04).
+  **Scope boundary (09-03, 09-04; promoted on 2nd instance): the floor holds
+  only for the leg that agrees with the group's close that day.** 09-03: the
+  negative leg went 0-for-3 on a broad +1% tape with a catalyst-owned bid
+  running under the group (HPE −8.2% open → **+5.0%**, NTAP −10.4% →
+  **+2.6%**, both inverted; AVGO 65–75%, DELL day-2 +4.9%). 09-04, the
+  mirror: on a day software was sold into chips, the negative leg kept
+  **59–153%** (PATH 153, ASAN 95, LULU 90, ZS 69, TRU 59) while the positive
+  leg went 0-for-2 (**IOT +15.9% open → +3.7%, 24%; PL +7.0% → −1.3%,
+  inverted**). So before writing ">100% kept", name the group's tape: a gap
+  aligned with it is a floor; a gap against it is two-sided and keeps < 30%
+  or inverts — grade it, never presume it.
 - **Premarket single-stock prints are thin.** Weight the futures gap, Europe,
   and sector ETFs over individual moves; respect the gappers' volume floor,
   and treat pre-8:00 ET thin prints as noise.
