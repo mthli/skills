@@ -167,7 +167,7 @@
   "CAKE": {
     "industry": "Restaurants",
     "sector": "Consumer Cyclical",
-    "ts": 1785974488
+    "ts": 1788825682
   },
   "CGON": {
     "industry": "Biotechnology",
@@ -177,7 +177,7 @@
   "CHYM": {
     "industry": "Software - Application",
     "sector": "Technology",
-    "ts": 1786060896
+    "ts": 1788825682
   },
   "CIEN": {
     "industry": "Communication Equipment",
@@ -277,7 +277,7 @@
   "EAT": {
     "industry": "Restaurants",
     "sector": "Consumer Cyclical",
-    "ts": 1786060896
+    "ts": 1788825682
   },
   "EBAY": {
     "industry": "Internet Retail",
@@ -339,6 +339,11 @@
     "sector": "Technology",
     "ts": 1784246492
   },
+  "FUTU": {
+    "industry": "Capital Markets",
+    "sector": "Financial Services",
+    "ts": 1788825682
+  },
   "GFS": {
     "industry": "Semiconductors",
     "sector": "Technology",
@@ -382,7 +387,7 @@
   "HALO": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1786147298
+    "ts": 1788825682
   },
   "HNGE": {
     "industry": "Health Information Services",
@@ -617,7 +622,7 @@
   "NTRA": {
     "industry": "Diagnostics & Research",
     "sector": "Healthcare",
-    "ts": 1786147298
+    "ts": 1788825682
   },
   "NUE": {
     "industry": "Steel",
@@ -802,7 +807,7 @@
   "SN": {
     "industry": "Furnishings, Fixtures & Appliances",
     "sector": "Consumer Cyclical",
-    "ts": 1785974488
+    "ts": 1788825682
   },
   "SNDK": {
     "industry": "Computer Hardware",

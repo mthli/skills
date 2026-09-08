@@ -19,6 +19,11 @@
     "sector": "Consumer Defensive",
     "ts": 1782518534
   },
+  "ABNB": {
+    "industry": "Travel Services",
+    "sector": "Consumer Cyclical",
+    "ts": 1788825728
+  },
   "ADI": {
     "industry": "Semiconductors",
     "sector": "Technology",
@@ -43,6 +48,11 @@
     "industry": "Insurance - Property & Casualty",
     "sector": "Financial Services",
     "ts": 1788220951
+  },
+  "ALSN": {
+    "industry": "Auto Parts",
+    "sector": "Consumer Cyclical",
+    "ts": 1788825728
   },
   "AM": {
     "industry": "Oil & Gas Midstream",
@@ -102,7 +112,7 @@
   "APH": {
     "industry": "Electronic Components",
     "sector": "Technology",
-    "ts": 1786147365
+    "ts": 1788825728
   },
   "APLS": {
     "industry": "Biotechnology",
@@ -224,6 +234,11 @@
     "sector": "Energy",
     "ts": 1780589170
   },
+  "BMY": {
+    "industry": "Drug Manufacturers - General",
+    "sector": "Healthcare",
+    "ts": 1788825729
+  },
   "BNS": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
@@ -262,7 +277,7 @@
   "BWA": {
     "industry": "Auto Parts",
     "sector": "Consumer Cyclical",
-    "ts": 1786147365
+    "ts": 1788825728
   },
   "C": {
     "industry": "Banks - Diversified",
@@ -373,6 +388,11 @@
     "industry": "Real Estate Services",
     "sector": "Real Estate",
     "ts": 1785801774
+  },
+  "COP": {
+    "industry": "Oil & Gas E&P",
+    "sector": "Energy",
+    "ts": 1788825728
   },
   "CORZ": {
     "industry": "Software - Infrastructure",
@@ -507,7 +527,7 @@
   "EAT": {
     "industry": "Restaurants",
     "sector": "Consumer Cyclical",
-    "ts": 1785589356
+    "ts": 1788825728
   },
   "EBAY": {
     "industry": "Internet Retail",
@@ -619,6 +639,11 @@
     "sector": "Consumer Cyclical",
     "ts": 1788566554
   },
+  "FLR": {
+    "industry": "Engineering & Construction",
+    "sector": "Industrials",
+    "ts": 1788825729
+  },
   "FLS": {
     "industry": "Specialty Industrial Machinery",
     "sector": "Industrials",
@@ -637,7 +662,7 @@
   "FTI": {
     "industry": "Oil & Gas Equipment & Services",
     "sector": "Energy",
-    "ts": 1779157116
+    "ts": 1788825728
   },
   "FTNT": {
     "industry": "Software - Infrastructure",
@@ -1064,6 +1089,11 @@
     "sector": "Basic Materials",
     "ts": 1779285544
   },
+  "NVDA": {
+    "industry": "Semiconductors",
+    "sector": "Technology",
+    "ts": 1788825728
+  },
   "NVT": {
     "industry": "Electrical Equipment & Parts",
     "sector": "Industrials",
@@ -1117,7 +1147,7 @@
   "OVV": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1780589170
+    "ts": 1788825728
   },
   "OXY": {
     "industry": "Oil & Gas E&P",
@@ -1402,7 +1432,7 @@
   "TIGO": {
     "industry": "Telecom Services",
     "sector": "Communication Services",
-    "ts": 1785801774
+    "ts": 1788825729
   },
   "TKR": {
     "industry": "Tools & Accessories",
@@ -1422,7 +1452,7 @@
   "TRV": {
     "industry": "Insurance - Property & Casualty",
     "sector": "Financial Services",
-    "ts": 1786147365
+    "ts": 1788825728
   },
   "TS": {
     "industry": "Oil & Gas Equipment & Services",

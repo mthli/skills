@@ -667,7 +667,7 @@
   "CL": {
     "industry": "Household & Personal Products",
     "sector": "Consumer Defensive",
-    "ts": 1785589366
+    "ts": 1788825775
   },
   "CLS": {
     "industry": "Electronic Components",
@@ -1002,7 +1002,7 @@
   "DXCM": {
     "industry": "Medical Devices",
     "sector": "Healthcare",
-    "ts": 1784764989
+    "ts": 1788825775
   },
   "EA": {
     "industry": "Electronic Gaming & Multimedia",
@@ -1152,7 +1152,7 @@
   "ETSY": {
     "industry": "Internet Retail",
     "sector": "Consumer Cyclical",
-    "ts": 1784764989
+    "ts": 1788825775
   },
   "EVRG": {
     "industry": "Utilities - Regulated Electric",
@@ -1282,7 +1282,7 @@
   "FROG": {
     "industry": "Software - Application",
     "sector": "Technology",
-    "ts": 1784764989
+    "ts": 1788825775
   },
   "FSLR": {
     "industry": "Solar",
@@ -1442,7 +1442,7 @@
   "HAS": {
     "industry": "Leisure",
     "sector": "Consumer Cyclical",
-    "ts": 1785589370
+    "ts": 1788825775
   },
   "HASI": {
     "industry": "Asset Management",
@@ -1777,7 +1777,7 @@
   "LIN": {
     "industry": "Specialty Chemicals",
     "sector": "Basic Materials",
-    "ts": 1784678594
+    "ts": 1788825775
   },
   "LINE": {
     "industry": "REIT - Industrial",
@@ -1972,7 +1972,7 @@
   "MNST": {
     "industry": "Beverages - Non-Alcoholic",
     "sector": "Consumer Defensive",
-    "ts": 1786147413
+    "ts": 1788825775
   },
   "MO": {
     "industry": "Tobacco",
@@ -2023,6 +2023,11 @@
     "industry": "Capital Markets",
     "sector": "Financial Services",
     "ts": 1787184310
+  },
+  "MSI": {
+    "industry": "Communication Equipment",
+    "sector": "Technology",
+    "ts": 1788825775
   },
   "MT": {
     "industry": "Steel",
@@ -2344,6 +2349,11 @@
     "sector": "Technology",
     "ts": 1784764989
   },
+  "PATH": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1788825775
+  },
   "PAY": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
@@ -2437,7 +2447,7 @@
   "PM": {
     "industry": "Tobacco",
     "sector": "Consumer Defensive",
-    "ts": 1785589374
+    "ts": 1788825775
   },
   "PNC": {
     "industry": "Banks - Regional",
@@ -2857,7 +2867,7 @@
   "SRRK": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1784764989
+    "ts": 1788825775
   },
   "SSL": {
     "industry": "Specialty Chemicals",
@@ -3428,6 +3438,11 @@
     "industry": "Restaurants",
     "sector": "Consumer Cyclical",
     "ts": 1785589377
+  },
+  "ZBH": {
+    "industry": "Medical Devices",
+    "sector": "Healthcare",
+    "ts": 1788825775
   },
   "ZETA": {
     "industry": "Software - Infrastructure",

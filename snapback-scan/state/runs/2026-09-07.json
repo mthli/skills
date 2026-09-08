@@ -1,0 +1,284 @@
+{
+  "as_of": "2026-09-07T20:03:02.563059-04:00",
+  "today": "2026-09-07",
+  "spark_window": [
+    "2026-09-08",
+    "2026-09-09",
+    "2026-09-10"
+  ],
+  "macro_note": "",
+  "regime": {
+    "snapshot": "20260903",
+    "state": "RISK-ON",
+    "score": 6,
+    "vix": 14.5,
+    "spy_vs_200_pct": 9.0,
+    "flags": "Defensive rotation: deepening, defensives +1.3pp over offensives / 20d, +5.9pp more than 5 sessions ago"
+  },
+  "mr_run": {
+    "run_id": "20260904",
+    "run_date": "2026-09-04",
+    "stale_days": 3,
+    "rows_in_run": 26,
+    "kegs_after_filter": 5
+  },
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "VSXY",
+      "rank": 2,
+      "score": 59.8,
+      "rsi2": 3.12,
+      "dist_200dma_pct": 17.48,
+      "signal_close": 73.64,
+      "mr_target": 83.18,
+      "mr_stop": 62.26,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "sector": "Consumer Cyclical",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "Core PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "PPI m/m 2026-09-10 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 75.56,
+      "since_signal_pct": 2.61,
+      "ignited": false,
+      "down_streak": 0,
+      "ret_5d_pct": -13.99,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 1.88,
+      "signal_day_low": 73.04,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "TWST",
+      "rank": 10,
+      "score": 49.8,
+      "rsi2": 3.59,
+      "dist_200dma_pct": 100.29,
+      "signal_close": 128.71,
+      "mr_target": 134.43,
+      "mr_stop": 102.11,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 0,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "Core PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "PPI m/m 2026-09-10 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 124.72,
+      "since_signal_pct": -3.1,
+      "ignited": false,
+      "down_streak": 6,
+      "ret_5d_pct": -11.78,
+      "down_gaps_5d": 3,
+      "vol_ratio_5d_20d": 0.88,
+      "signal_day_low": 123.75,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "MNST",
+      "rank": 13,
+      "score": 47.3,
+      "rsi2": 1.5,
+      "dist_200dma_pct": 5.59,
+      "signal_close": 44.08,
+      "mr_target": 45.25,
+      "mr_stop": 41.23,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 1,
+      "freq_60d": 2,
+      "sector": "Consumer Defensive",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "Core PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "PPI m/m 2026-09-10 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 43.82,
+      "since_signal_pct": -0.59,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -6.49,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.04,
+      "signal_day_low": 43.65,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "STX",
+      "rank": 14,
+      "score": 45.3,
+      "rsi2": 3.39,
+      "dist_200dma_pct": 35.39,
+      "signal_close": 798.61,
+      "mr_target": 816.39,
+      "mr_stop": 677.5,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "ORCL",
+          "date": "2026-09-10",
+          "slot": "AMC",
+          "detail": "ORCL (Technology, $444B) reports 2026-09-10 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "Core PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "PPI m/m 2026-09-10 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 849.28,
+      "since_signal_pct": 6.34,
+      "ignited": false,
+      "down_streak": 0,
+      "ret_5d_pct": 2.35,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 0.78,
+      "signal_day_low": 805.01,
+      "quiet_warning": true
+    },
+    {
+      "ticker": "LAUR",
+      "rank": 15,
+      "score": 40.6,
+      "rsi2": 2.39,
+      "dist_200dma_pct": 4.04,
+      "signal_close": 35.95,
+      "mr_target": 37.14,
+      "mr_stop": 33.51,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "sector": "Consumer Defensive",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "Core PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "PPI m/m 2026-09-10 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 36.76,
+      "since_signal_pct": 2.25,
+      "ignited": false,
+      "down_streak": 0,
+      "ret_5d_pct": -5.26,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.38,
+      "signal_day_low": 35.54,
+      "quiet_warning": false
+    }
+  ],
+  "macro_calendar": [
+    {
+      "date": "2026-09-10",
+      "time_et": "08:30",
+      "title": "Core PPI m/m"
+    },
+    {
+      "date": "2026-09-10",
+      "time_et": "08:30",
+      "title": "PPI m/m"
+    }
+  ],
+  "prior_run_review": {
+    "source": "snapback:2026-09-04",
+    "n": 5,
+    "pct_positive": 60.0,
+    "avg_pct": 1.5,
+    "median_pct": 2.25,
+    "best": [
+      {
+        "ticker": "STX",
+        "since_pct": 6.34
+      },
+      {
+        "ticker": "VSXY",
+        "since_pct": 2.61
+      },
+      {
+        "ticker": "LAUR",
+        "since_pct": 2.25
+      }
+    ],
+    "worst": [
+      {
+        "ticker": "TWST",
+        "since_pct": -3.1
+      },
+      {
+        "ticker": "MNST",
+        "since_pct": -0.59
+      },
+      {
+        "ticker": "LAUR",
+        "since_pct": 2.25
+      }
+    ],
+    "armed_subset": {
+      "n": 1,
+      "pct_positive": 100.0,
+      "avg_pct": 6.34,
+      "median_pct": 6.34
+    }
+  },
+  "errors": []
+}
