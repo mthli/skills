@@ -188,7 +188,11 @@ This is the section that can do harm if written lazily, so frame it honestly:
 - **Grade catalyst claims by % of gap kept at the close, per name.** > 70%
   kept = the catalyst is real for that name; < 30% = it traded like sympathy
   (07-20 SIMO inverted inside the catalyst bucket; 07-30 FTNT kept 10% of its
-  own print's gap).
+  own print's gap). **Watch (09-08, 1st instance): the "< 30% = sympathy"
+  reading predates the scope boundary below and lost to it** — driverless
+  names inside a *bought* group kept like the aligned leg (quantum trio 34 /
+  51 / 97%, INTC 173% on a +1.6% SOXX day). Grade a sympathy gap against its
+  group's close, the same way as an earnings gap.
 - **Every close-graded test ships three branches, and the middle prescribes an
   action (07-17, 07-20, 08-11 SPCX, 08-12 SOXX).** Two-branch tests keep
   landing in their own gap: 08-11 SPCX fell −3.9% into an unwritten middle,
@@ -397,7 +401,12 @@ This is the section that can do harm if written lazily, so frame it honestly:
   sessions, named as such in the brief), unfilled, then ≈−3.8% and back under
   its exit line one session later, and **every prescribed fill printed for
   three consecutive sessions** (SPCX 137.00 to the cent 08-26, XE 19.10 and
-  18.58, SPCX 139.99 to 0.06%). The fills are not the constraint.
+  18.58, SPCX 139.99 to 0.06%). The fills are not the constraint. **3rd
+  instance (09-08):** SOXX's trim cost closed to +0.9% at the open (its first
+  positive mark since firing), went unfilled, and was back under the line the
+  next morning; the session's only fills were a lineless new TSLA position and
+  an add to SPCX on the day its 20-session-overdue trim printed +13% ahead.
+  The corollary is now 3-for-3: fill the session the cost closes.
 - **⭐ MR pocket has zero day-1 edge on broad risk-on days (08-03, 08-04).**
   08-03 the pocket lost 2.4pp to SPY on a broad green day; 08-04 it matched
   SPY to the basis point. Its validated KPI is 5-day expectancy (score≥40 +
