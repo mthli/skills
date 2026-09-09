@@ -379,6 +379,11 @@
     "sector": "Industrials",
     "ts": 1788307314
   },
+  "GTLB": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1788912099
+  },
   "GTX": {
     "industry": "Auto Parts",
     "sector": "Consumer Cyclical",
@@ -428,6 +433,11 @@
     "industry": "Diagnostics & Research",
     "sector": "Healthcare",
     "ts": 1787270540
+  },
+  "ING": {
+    "industry": "Banks - Diversified",
+    "sector": "Financial Services",
+    "ts": 1788912099
   },
   "INTC": {
     "industry": "Semiconductors",
@@ -619,6 +629,11 @@
     "sector": "Technology",
     "ts": 1785508599
   },
+  "NTNX": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1788912099
+  },
   "NTRA": {
     "industry": "Diagnostics & Research",
     "sector": "Healthcare",
@@ -744,6 +759,11 @@
     "sector": "Technology",
     "ts": 1788566484
   },
+  "ROKU": {
+    "industry": "Entertainment",
+    "sector": "Communication Services",
+    "ts": 1788912099
+  },
   "RTX": {
     "industry": "Aerospace & Defense",
     "sector": "Industrials",
@@ -868,6 +888,11 @@
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
     "ts": 1782405186
+  },
+  "TEAM": {
+    "industry": "Software - Application",
+    "sector": "Technology",
+    "ts": 1788912099
   },
   "TECH": {
     "industry": "Biotechnology",

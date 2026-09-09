@@ -1,0 +1,431 @@
+{
+  "as_of": "2026-09-08T20:04:03.980094-04:00",
+  "today": "2026-09-08",
+  "spark_window": [
+    "2026-09-09",
+    "2026-09-10",
+    "2026-09-11"
+  ],
+  "macro_note": "",
+  "regime": {
+    "snapshot": "20260904",
+    "state": "CAUTION",
+    "score": 5,
+    "vix": 15.7,
+    "spy_vs_200_pct": 8.5,
+    "flags": "Breadth divergence: SPY -1.0% from high but only 48% of names above 50DMA ; Defensive rotation: deepening, defensives +1.8pp over offensives / 20d, +4.9pp more than 5 sessions ago"
+  },
+  "mr_run": {
+    "run_id": "20260908",
+    "run_date": "2026-09-08",
+    "stale_days": 0,
+    "rows_in_run": 29,
+    "kegs_after_filter": 5
+  },
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "PATH",
+      "rank": 4,
+      "score": 49.8,
+      "rsi2": 5.25,
+      "dist_200dma_pct": 17.83,
+      "signal_close": 15.19,
+      "mr_target": 17.64,
+      "mr_stop": 12.79,
+      "signal": "\ud83d\udfe1",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "ORCL",
+          "date": "2026-09-10",
+          "slot": "AMC",
+          "detail": "ORCL (Technology, $457B) reports 2026-09-10 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "Core PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "Core CPI m/m 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "Core CPI y/y 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "CPI m/m 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "CPI y/y 2026-09-11 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 15.19,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 1,
+      "ret_5d_pct": -16.31,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.03,
+      "signal_day_low": 14.77,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "MNST",
+      "rank": 5,
+      "score": 49.4,
+      "rsi2": 1.0,
+      "dist_200dma_pct": 4.87,
+      "signal_close": 43.82,
+      "mr_target": 44.65,
+      "mr_stop": 41.15,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "sector": "Consumer Defensive",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "Core PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "Core CPI m/m 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "Core CPI y/y 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "CPI m/m 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "CPI y/y 2026-09-11 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 43.82,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -6.49,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.04,
+      "signal_day_low": 43.65,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "SJM",
+      "rank": 6,
+      "score": 46.1,
+      "rsi2": 2.84,
+      "dist_200dma_pct": 20.13,
+      "signal_close": 126.08,
+      "mr_target": 129.72,
+      "mr_stop": 116.89,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Consumer Defensive",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "Core PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "Core CPI m/m 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "Core CPI y/y 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "CPI m/m 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "CPI y/y 2026-09-11 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 126.08,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -4.73,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.97,
+      "signal_day_low": 126.01,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "ETSY",
+      "rank": 7,
+      "score": 40.4,
+      "rsi2": 4.35,
+      "dist_200dma_pct": 19.68,
+      "signal_close": 76.51,
+      "mr_target": 80.67,
+      "mr_stop": 68.09,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 0,
+      "sector": "Consumer Cyclical",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "Core PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "Core CPI m/m 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "Core CPI y/y 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "CPI m/m 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "CPI y/y 2026-09-11 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 76.51,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 1,
+      "ret_5d_pct": -8.47,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.9,
+      "signal_day_low": 76.31,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "FROG",
+      "rank": 8,
+      "score": 40.3,
+      "rsi2": 5.65,
+      "dist_200dma_pct": 33.37,
+      "signal_close": 87.6,
+      "mr_target": 92.36,
+      "mr_stop": 72.64,
+      "signal": "\ud83d\udfe1",
+      "listing_age_runs": 1,
+      "freq_60d": 0,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "ORCL",
+          "date": "2026-09-10",
+          "slot": "AMC",
+          "detail": "ORCL (Technology, $457B) reports 2026-09-10 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "Core PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "Core CPI m/m 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "Core CPI y/y 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "CPI m/m 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "CPI y/y 2026-09-11 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 87.6,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -11.28,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.09,
+      "signal_day_low": 86.95,
+      "quiet_warning": false
+    }
+  ],
+  "macro_calendar": [
+    {
+      "date": "2026-09-10",
+      "time_et": "08:30",
+      "title": "Core PPI m/m"
+    },
+    {
+      "date": "2026-09-10",
+      "time_et": "08:30",
+      "title": "PPI m/m"
+    },
+    {
+      "date": "2026-09-11",
+      "time_et": "08:30",
+      "title": "Core CPI m/m"
+    },
+    {
+      "date": "2026-09-11",
+      "time_et": "08:30",
+      "title": "Core CPI y/y"
+    },
+    {
+      "date": "2026-09-11",
+      "time_et": "08:30",
+      "title": "CPI m/m"
+    },
+    {
+      "date": "2026-09-11",
+      "time_et": "08:30",
+      "title": "CPI y/y"
+    }
+  ],
+  "prior_run_review": {
+    "source": "snapback:2026-09-07",
+    "n": 5,
+    "pct_positive": 0.0,
+    "avg_pct": 0.0,
+    "median_pct": -0.0,
+    "best": [
+      {
+        "ticker": "VSXY",
+        "since_pct": -0.0
+      },
+      {
+        "ticker": "TWST",
+        "since_pct": 0.0
+      },
+      {
+        "ticker": "MNST",
+        "since_pct": -0.0
+      }
+    ],
+    "worst": [
+      {
+        "ticker": "LAUR",
+        "since_pct": -0.0
+      },
+      {
+        "ticker": "STX",
+        "since_pct": 0.0
+      },
+      {
+        "ticker": "MNST",
+        "since_pct": -0.0
+      }
+    ],
+    "armed_subset": {
+      "n": 5,
+      "pct_positive": 0.0,
+      "avg_pct": 0.0,
+      "median_pct": -0.0
+    }
+  },
+  "errors": []
+}
