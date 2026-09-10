@@ -172,7 +172,7 @@
   "BAC": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1786406564
+    "ts": 1788998573
   },
   "BAX": {
     "industry": "Medical Instruments & Supplies",
@@ -394,6 +394,11 @@
     "sector": "Energy",
     "ts": 1788825728
   },
+  "CORT": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1788998573
+  },
   "CORZ": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
@@ -588,6 +593,11 @@
     "industry": "Specialty Chemicals",
     "sector": "Basic Materials",
     "ts": 1780452058
+  },
+  "ET": {
+    "industry": "Oil & Gas Midstream",
+    "sector": "Energy",
+    "ts": 1788998573
   },
   "ETSY": {
     "industry": "Internet Retail",
@@ -1067,7 +1077,7 @@
   "NOV": {
     "industry": "Oil & Gas Equipment & Services",
     "sector": "Energy",
-    "ts": 1786406564
+    "ts": 1788998573
   },
   "NTAP": {
     "industry": "Software - Infrastructure",
@@ -1122,7 +1132,7 @@
   "OKE": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
-    "ts": 1785589359
+    "ts": 1788998573
   },
   "OKTA": {
     "industry": "Software - Infrastructure",
@@ -1197,7 +1207,7 @@
   "PFG": {
     "industry": "Asset Management",
     "sector": "Financial Services",
-    "ts": 1786406564
+    "ts": 1788998573
   },
   "PL": {
     "industry": "Aerospace & Defense",
@@ -1327,7 +1337,7 @@
   "SN": {
     "industry": "Furnishings, Fixtures & Appliances",
     "sector": "Consumer Cyclical",
-    "ts": 1786406564
+    "ts": 1788998573
   },
   "SNDR": {
     "industry": "Trucking",
@@ -1382,7 +1392,7 @@
   "SU": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
-    "ts": 1778771445
+    "ts": 1788998573
   },
   "SW": {
     "industry": "Packaging & Containers",
@@ -1649,6 +1659,11 @@
     "sector": "Healthcare",
     "ts": 1786492951
   },
+  "XOM": {
+    "industry": "Oil & Gas Integrated",
+    "sector": "Energy",
+    "ts": 1788998573
+  },
   "XPO": {
     "industry": "Trucking",
     "sector": "Industrials",
@@ -1667,7 +1682,7 @@
   "YPF": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
-    "ts": 1786406564
+    "ts": 1788998573
   },
   "ZETA": {
     "industry": "Software - Infrastructure",

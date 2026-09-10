@@ -69,6 +69,11 @@
     "sector": "Consumer Defensive",
     "ts": 1785511111
   },
+  "ADP": {
+    "industry": "Software - Application",
+    "sector": "Technology",
+    "ts": 1788998617
+  },
   "AEE": {
     "industry": "Utilities - Regulated Electric",
     "sector": "Utilities",
@@ -118,6 +123,11 @@
     "industry": "Insurance - Diversified",
     "sector": "Financial Services",
     "ts": 1786406609
+  },
+  "AJG": {
+    "industry": "Insurance Brokers",
+    "sector": "Financial Services",
+    "ts": 1788998618
   },
   "AKAM": {
     "industry": "Software - Infrastructure",
@@ -247,7 +257,7 @@
   "APD": {
     "industry": "Specialty Chemicals",
     "sector": "Basic Materials",
-    "ts": 1780114450
+    "ts": 1788998618
   },
   "APH": {
     "industry": "Electronic Components",
@@ -263,6 +273,11 @@
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
     "ts": 1785589365
+  },
+  "ARCC": {
+    "industry": "Asset Management",
+    "sector": "Financial Services",
+    "ts": 1788998619
   },
   "ARM": {
     "industry": "Semiconductors",
@@ -414,6 +429,11 @@
     "sector": "Industrials",
     "ts": 1787097898
   },
+  "BEKE": {
+    "industry": "Real Estate Services",
+    "sector": "Real Estate",
+    "ts": 1788998618
+  },
   "BEN": {
     "industry": "Asset Management",
     "sector": "Financial Services",
@@ -462,7 +482,7 @@
   "BMY": {
     "industry": "Drug Manufacturers - General",
     "sector": "Healthcare",
-    "ts": 1785589366
+    "ts": 1788998617
   },
   "BNS": {
     "industry": "Banks - Diversified",
@@ -529,6 +549,11 @@
     "sector": "Industrials",
     "ts": 1785589366
   },
+  "BX": {
+    "industry": "Asset Management",
+    "sector": "Financial Services",
+    "ts": 1788998618
+  },
   "BYD": {
     "industry": "Resorts & Casinos",
     "sector": "Consumer Cyclical",
@@ -552,7 +577,7 @@
   "CART": {
     "industry": "Internet Retail",
     "sector": "Consumer Cyclical",
-    "ts": 1784246577
+    "ts": 1788998617
   },
   "CAT": {
     "industry": "Farm & Heavy Construction Machinery",
@@ -949,6 +974,11 @@
     "sector": "Real Estate",
     "ts": 1787961793
   },
+  "DLTR": {
+    "industry": "Discount Stores",
+    "sector": "Consumer Defensive",
+    "ts": 1788998617
+  },
   "DNTH": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
@@ -1162,7 +1192,7 @@
   "EW": {
     "industry": "Medical Devices",
     "sector": "Healthcare",
-    "ts": 1784160163
+    "ts": 1788998617
   },
   "EXC": {
     "industry": "Utilities - Regulated Electric",
@@ -1757,7 +1787,7 @@
   "KVUE": {
     "industry": "Household & Personal Products",
     "sector": "Consumer Defensive",
-    "ts": 1785801823
+    "ts": 1788998618
   },
   "LAUR": {
     "industry": "Education & Training Services",
@@ -1807,7 +1837,7 @@
   "LNG": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
-    "ts": 1785589371
+    "ts": 1788998617
   },
   "LNT": {
     "industry": "Utilities - Regulated Electric",
@@ -1977,7 +2007,7 @@
   "MO": {
     "industry": "Tobacco",
     "sector": "Consumer Defensive",
-    "ts": 1784073920
+    "ts": 1788998618
   },
   "MOD": {
     "industry": "Auto Parts",
@@ -1987,7 +2017,7 @@
   "MOH": {
     "industry": "Healthcare Plans",
     "sector": "Healthcare",
-    "ts": 1784851399
+    "ts": 1788998618
   },
   "MPC": {
     "industry": "Oil & Gas Refining & Marketing",
@@ -2214,6 +2244,11 @@
     "sector": "Communication Services",
     "ts": 1788307444
   },
+  "NWSA": {
+    "industry": "Entertainment",
+    "sector": "Communication Services",
+    "ts": 1788998618
+  },
   "NXPI": {
     "industry": "Semiconductors",
     "sector": "Technology",
@@ -2233,6 +2268,11 @@
     "industry": "REIT - Retail",
     "sector": "Real Estate",
     "ts": 1788221000
+  },
+  "OBDC": {
+    "industry": "Asset Management",
+    "sector": "Financial Services",
+    "ts": 1788998618
   },
   "OC": {
     "industry": "Building Products & Equipment",
@@ -2317,7 +2357,7 @@
   "OVV": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1785974601
+    "ts": 1788998617
   },
   "OXY": {
     "industry": "Oil & Gas E&P",
@@ -2412,7 +2452,7 @@
   "PFE": {
     "industry": "Drug Manufacturers - General",
     "sector": "Healthcare",
-    "ts": 1785589374
+    "ts": 1788998618
   },
   "PFG": {
     "industry": "Asset Management",
@@ -2567,7 +2607,7 @@
   "RELY": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1784764989
+    "ts": 1788998617
   },
   "REYN": {
     "industry": "Packaging & Containers",
@@ -3267,7 +3307,7 @@
   "VRTX": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1783728176
+    "ts": 1788998617
   },
   "VSAT": {
     "industry": "Communication Equipment",
@@ -3448,6 +3488,11 @@
     "industry": "Software - Infrastructure",
     "sector": "Technology",
     "ts": 1784764989
+  },
+  "ZGN": {
+    "industry": "Apparel Manufacturing",
+    "sector": "Consumer Cyclical",
+    "ts": 1788998617
   },
   "ZION": {
     "industry": "Banks - Regional",

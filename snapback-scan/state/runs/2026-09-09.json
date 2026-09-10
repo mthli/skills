@@ -1,0 +1,927 @@
+{
+  "as_of": "2026-09-09T20:03:47.678772-04:00",
+  "today": "2026-09-09",
+  "spark_window": [
+    "2026-09-10",
+    "2026-09-11",
+    "2026-09-14"
+  ],
+  "macro_note": "ForexFactory covers the current week only \u2014 macro sparks beyond Sunday not visible",
+  "regime": {
+    "snapshot": "20260908",
+    "state": "CAUTION",
+    "score": 2,
+    "vix": 16.5,
+    "spy_vs_200_pct": 7.8,
+    "flags": "Breadth divergence: SPY -1.5% from high but only 43% of names above 50DMA ; Narrowing rally: only megacaps lifting the index (RSP/SPY -0.7%/20d) ; Defensive rotation: deepening, defensives +1.0pp over offensives / 20d, +2.0pp more than 5 sessions ago"
+  },
+  "mr_run": {
+    "run_id": "20260909",
+    "run_date": "2026-09-09",
+    "stale_days": 0,
+    "rows_in_run": 72,
+    "kegs_after_filter": 13
+  },
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "PATH",
+      "rank": 1,
+      "score": 62.9,
+      "rsi2": 3.07,
+      "dist_200dma_pct": 8.66,
+      "signal_close": 14.01,
+      "mr_target": 16.71,
+      "mr_stop": 11.53,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "ORCL",
+          "date": "2026-09-10",
+          "slot": "AMC",
+          "detail": "ORCL (Technology, $468B) reports 2026-09-10 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "Core PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "Core CPI m/m 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "Core CPI y/y 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "CPI m/m 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "CPI y/y 2026-09-11 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 14.01,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -24.96,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.03,
+      "signal_day_low": 13.85,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "DXCM",
+      "rank": 2,
+      "score": 62.3,
+      "rsi2": 0.91,
+      "dist_200dma_pct": 19.02,
+      "signal_close": 84.53,
+      "mr_target": 88.39,
+      "mr_stop": 78.51,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "Core PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "Core CPI m/m 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "Core CPI y/y 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "CPI m/m 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "CPI y/y 2026-09-11 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 84.53,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -7.17,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.8,
+      "signal_day_low": 84.24,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "ETSY",
+      "rank": 3,
+      "score": 60.0,
+      "rsi2": 1.94,
+      "dist_200dma_pct": 13.75,
+      "signal_close": 72.82,
+      "mr_target": 78.97,
+      "mr_stop": 64.05,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Consumer Cyclical",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "Core PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "Core CPI m/m 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "Core CPI y/y 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "CPI m/m 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "CPI y/y 2026-09-11 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 72.82,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -10.46,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 1.08,
+      "signal_day_low": 71.44,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "ZBH",
+      "rank": 4,
+      "score": 57.3,
+      "rsi2": 0.89,
+      "dist_200dma_pct": 3.46,
+      "signal_close": 94.22,
+      "mr_target": 98.02,
+      "mr_stop": 87.26,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 0,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "Core PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "Core CPI m/m 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "Core CPI y/y 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "CPI m/m 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "CPI y/y 2026-09-11 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 94.22,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -5.82,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.01,
+      "signal_day_low": 91.87,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "BDX",
+      "rank": 5,
+      "score": 55.0,
+      "rsi2": 1.39,
+      "dist_200dma_pct": 12.81,
+      "signal_close": 179.1,
+      "mr_target": 185.22,
+      "mr_stop": 168.46,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "Core PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "Core CPI m/m 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "Core CPI y/y 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "CPI m/m 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "CPI y/y 2026-09-11 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 179.1,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -4.79,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.88,
+      "signal_day_low": 178.47,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "EXPE",
+      "rank": 7,
+      "score": 53.8,
+      "rsi2": 2.26,
+      "dist_200dma_pct": 6.43,
+      "signal_close": 274.55,
+      "mr_target": 297.6,
+      "mr_stop": 242.75,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "sector": "Consumer Cyclical",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "Core PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "Core CPI m/m 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "Core CPI y/y 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "CPI m/m 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "CPI y/y 2026-09-11 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 274.55,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -13.42,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.41,
+      "signal_day_low": 271.66,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "AMGN",
+      "rank": 10,
+      "score": 52.8,
+      "rsi2": 2.92,
+      "dist_200dma_pct": 10.91,
+      "signal_close": 393.17,
+      "mr_target": 431.1,
+      "mr_stop": 363.18,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "Core PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "Core CPI m/m 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "Core CPI y/y 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "CPI m/m 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "CPI y/y 2026-09-11 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 393.17,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -8.54,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 1.21,
+      "signal_day_low": 391.17,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "HRB",
+      "rank": 13,
+      "score": 47.8,
+      "rsi2": 3.52,
+      "dist_200dma_pct": 21.02,
+      "signal_close": 45.89,
+      "mr_target": 49.4,
+      "mr_stop": 41.84,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 2,
+      "sector": "Consumer Cyclical",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "Core PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "Core CPI m/m 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "Core CPI y/y 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "CPI m/m 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "CPI y/y 2026-09-11 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 45.89,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -11.15,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 0.75,
+      "signal_day_low": 45.85,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "LLY",
+      "rank": 14,
+      "score": 47.5,
+      "rsi2": 0.72,
+      "dist_200dma_pct": 5.94,
+      "signal_close": 1123.91,
+      "mr_target": 1150.59,
+      "mr_stop": 1037.67,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 5,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "Core PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "Core CPI m/m 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "Core CPI y/y 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "CPI m/m 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "CPI y/y 2026-09-11 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 1123.91,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -2.84,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.98,
+      "signal_day_low": 1113.55,
+      "quiet_warning": true
+    },
+    {
+      "ticker": "VNO",
+      "rank": 15,
+      "score": 46.4,
+      "rsi2": 1.93,
+      "dist_200dma_pct": 5.74,
+      "signal_close": 35.26,
+      "mr_target": 36.32,
+      "mr_stop": 32.48,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "sector": "Real Estate",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "Core PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "Core CPI m/m 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "Core CPI y/y 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "CPI m/m 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "CPI y/y 2026-09-11 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 35.26,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 1,
+      "ret_5d_pct": -5.67,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 1.07,
+      "signal_day_low": 35.14,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "HAS",
+      "rank": 16,
+      "score": 46.3,
+      "rsi2": 1.58,
+      "dist_200dma_pct": 2.17,
+      "signal_close": 90.31,
+      "mr_target": 92.51,
+      "mr_stop": 85.16,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Consumer Cyclical",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "Core PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "Core CPI m/m 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "Core CPI y/y 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "CPI m/m 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "CPI y/y 2026-09-11 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 90.31,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -4.03,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.01,
+      "signal_day_low": 89.21,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "FROG",
+      "rank": 17,
+      "score": 42.9,
+      "rsi2": 4.21,
+      "dist_200dma_pct": 31.75,
+      "signal_close": 86.73,
+      "mr_target": 89.69,
+      "mr_stop": 71.52,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 0,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "ORCL",
+          "date": "2026-09-10",
+          "slot": "AMC",
+          "detail": "ORCL (Technology, $468B) reports 2026-09-10 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "Core PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "Core CPI m/m 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "Core CPI y/y 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "CPI m/m 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "CPI y/y 2026-09-11 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 86.73,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -13.33,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 1.07,
+      "signal_day_low": 81.68,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "SBUX",
+      "rank": 18,
+      "score": 40.5,
+      "rsi2": 2.64,
+      "dist_200dma_pct": 5.45,
+      "signal_close": 102.01,
+      "mr_target": 105.03,
+      "mr_stop": 95.85,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Consumer Cyclical",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "Core PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-10",
+          "detail": "PPI m/m 2026-09-10 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "Core CPI m/m 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "Core CPI y/y 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "CPI m/m 2026-09-11 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-11",
+          "detail": "CPI y/y 2026-09-11 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 102.01,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -3.99,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 0.9,
+      "signal_day_low": 101.75,
+      "quiet_warning": true
+    }
+  ],
+  "macro_calendar": [
+    {
+      "date": "2026-09-10",
+      "time_et": "08:30",
+      "title": "Core PPI m/m"
+    },
+    {
+      "date": "2026-09-10",
+      "time_et": "08:30",
+      "title": "PPI m/m"
+    },
+    {
+      "date": "2026-09-11",
+      "time_et": "08:30",
+      "title": "Core CPI m/m"
+    },
+    {
+      "date": "2026-09-11",
+      "time_et": "08:30",
+      "title": "Core CPI y/y"
+    },
+    {
+      "date": "2026-09-11",
+      "time_et": "08:30",
+      "title": "CPI m/m"
+    },
+    {
+      "date": "2026-09-11",
+      "time_et": "08:30",
+      "title": "CPI y/y"
+    }
+  ],
+  "prior_run_review": {
+    "source": "snapback:2026-09-08",
+    "n": 5,
+    "pct_positive": 0.0,
+    "avg_pct": -3.25,
+    "median_pct": -1.53,
+    "best": [
+      {
+        "ticker": "FROG",
+        "since_pct": -0.99
+      },
+      {
+        "ticker": "SJM",
+        "since_pct": -1.13
+      },
+      {
+        "ticker": "MNST",
+        "since_pct": -1.53
+      }
+    ],
+    "worst": [
+      {
+        "ticker": "PATH",
+        "since_pct": -7.77
+      },
+      {
+        "ticker": "ETSY",
+        "since_pct": -4.82
+      },
+      {
+        "ticker": "MNST",
+        "since_pct": -1.53
+      }
+    ],
+    "armed_subset": {
+      "n": 5,
+      "pct_positive": 0.0,
+      "avg_pct": -3.25,
+      "median_pct": -1.53
+    }
+  },
+  "errors": []
+}

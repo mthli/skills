@@ -264,6 +264,11 @@
     "sector": "Consumer Defensive",
     "ts": 1786147298
   },
+  "DNTH": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1788998498
+  },
   "DOC": {
     "industry": "REIT - Healthcare Facilities",
     "sector": "Real Estate",
