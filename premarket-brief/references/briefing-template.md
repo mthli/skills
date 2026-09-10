@@ -232,6 +232,17 @@ This is the section that can do harm if written lazily, so frame it honestly:
   decision before that event** — the minimum fired action executes on
   schedule and the escalation resolves pre-print, never post. Deferring
   through a binary is not a plan; it's an unowned position with a countdown.
+- **Floor clauses are close-graded with the 0.2% band, like every other
+  line (09-04, 09-08/09-09; promoted on 2nd instance).** An *intraday*
+  "traded through X" clause on a name with 5–8% daily ranges fires on noise:
+  ALAB's 287.01 floor fired on a **$0.04** pierce (09-08) and was opened
+  *under* the next morning (09-09), and the name closed above it both times,
+  +11% and +5% ahead of the unexecuted exit. Write floors as closes ("close
+  < X", 0.2% band, next session decides a pin), never as intraday prints,
+  and size the level to the name's range: a floor inside one average day's
+  range is a coin flip dressed as a line. The held-through pattern's cost
+  stays two-sided (XE 0-for-8 and COIN 0-for-1 lost by holding; ALAB 2-for-2
+  paid), so this fixes the *clause*, not the fired-line doctrine above.
 - **A guidance-driven single-name earnings gap is a floor, not the move — in
   BOTH directions (08-25, 08-27; promoted on 2nd instance).** DKS gapped
   −20.6% and closed −30.7% on the low, keeping **149%**. The positive twin
