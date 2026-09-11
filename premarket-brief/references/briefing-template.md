@@ -261,7 +261,9 @@ This is the section that can do harm if written lazily, so frame it honestly:
   instance): at ≥ +20% the gap IS the move, not the floor.** Expect 45–75%
   kept and frame the premarket print as the day's *range*, not its start;
   the >100% floor framing applies to gaps under ~15% (107–230% on the six
-  that size); the edge is soft (LULU −19.4% kept 90% on 09-04).
+  that size); the edge is soft on the low side — treat the cap as **~18%,
+  not 20%** (LULU −19.4% kept 90% 09-04, TTAN −17.7% kept 169% 09-09, COO
+  −18.3% kept 80% 09-10; promoted on 3rd instance).
   **Scope boundary (09-03, 09-04; promoted on 2nd instance): the floor holds
   only for the leg that agrees with the group's close that day.** 09-03: the
   negative leg went 0-for-3 on a broad +1% tape with a catalyst-owned bid
@@ -272,7 +274,13 @@ This is the section that can do harm if written lazily, so frame it honestly:
   leg went 0-for-2 (**IOT +15.9% open → +3.7%, 24%; PL +7.0% → −1.3%,
   inverted**). So before writing ">100% kept", name the group's tape: a gap
   aligned with it is a floor; a gap against it is two-sided and keeps < 30%
-  or inverts — grade it, never presume it.
+  or inverts — grade it, never presume it. **The "group" is the peer group,
+  never a megacap-dominated sector ETF (09-09, 09-10; promoted on 2nd
+  instance).** XLY is AMZN + TSLA and XLC is META: on 09-09 three own-print
+  legs graded "against" those ETFs ran 114–212%; on 09-10 AEO −13% kept
+  107% on a flat XLY because its retail peers (ANF −6.0, M −4.7) were sold
+  with it. Name 2–3 same-business peers and grade the leg against their
+  close; the sector ETF only describes.
 - **Premarket single-stock prints are thin.** Weight the futures gap, Europe,
   and sector ETFs over individual moves; respect the gappers' volume floor,
   and treat pre-8:00 ET thin prints as noise.
