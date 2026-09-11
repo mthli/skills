@@ -204,6 +204,11 @@
     "sector": "Financial Services",
     "ts": 1786406504
   },
+  "CRM": {
+    "industry": "Software - Application",
+    "sector": "Technology",
+    "ts": 1789084891
+  },
   "CRNX": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
@@ -257,7 +262,7 @@
   "DINO": {
     "industry": "Oil & Gas Refining & Marketing",
     "sector": "Energy",
-    "ts": 1784332986
+    "ts": 1789084891
   },
   "DLTR": {
     "industry": "Discount Stores",
@@ -292,7 +297,7 @@
   "ELF": {
     "industry": "Household & Personal Products",
     "sector": "Consumer Defensive",
-    "ts": 1786406504
+    "ts": 1789084891
   },
   "ELV": {
     "industry": "Healthcare Plans",
@@ -968,6 +973,11 @@
     "industry": "Health Information Services",
     "sector": "Healthcare",
     "ts": 1787270540
+  },
+  "U": {
+    "industry": "Software - Application",
+    "sector": "Technology",
+    "ts": 1789084891
   },
   "UBS": {
     "industry": "Banks - Diversified",

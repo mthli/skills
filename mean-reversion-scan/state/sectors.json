@@ -1,4 +1,9 @@
 {
+  "A": {
+    "industry": "Diagnostics & Research",
+    "sector": "Healthcare",
+    "ts": 1789085009
+  },
   "AA": {
     "industry": "Aluminum",
     "sector": "Basic Materials",
@@ -237,7 +242,7 @@
   "AMZN": {
     "industry": "Internet Retail",
     "sector": "Consumer Cyclical",
-    "ts": 1785589365
+    "ts": 1789085009
   },
   "ANET": {
     "industry": "Computer Hardware",
@@ -462,7 +467,7 @@
   "BIIB": {
     "industry": "Drug Manufacturers - General",
     "sector": "Healthcare",
-    "ts": 1783555398
+    "ts": 1789085008
   },
   "BKH": {
     "industry": "Utilities - Regulated Gas",
@@ -507,7 +512,7 @@
   "BRKR": {
     "industry": "Medical Devices",
     "sector": "Healthcare",
-    "ts": 1783555398
+    "ts": 1789085008
   },
   "BROS": {
     "industry": "Restaurants",
@@ -532,7 +537,7 @@
   "BUD": {
     "industry": "Beverages - Brewers",
     "sector": "Consumer Defensive",
-    "ts": 1786493002
+    "ts": 1789085009
   },
   "BVN": {
     "industry": "Other Precious Metals & Mining",
@@ -554,6 +559,11 @@
     "sector": "Financial Services",
     "ts": 1788998618
   },
+  "BXSL": {
+    "industry": "Asset Management",
+    "sector": "Financial Services",
+    "ts": 1789085009
+  },
   "BYD": {
     "industry": "Resorts & Casinos",
     "sector": "Consumer Cyclical",
@@ -568,6 +578,11 @@
     "industry": "Medical Distribution",
     "sector": "Healthcare",
     "ts": 1784160164
+  },
+  "CAKE": {
+    "industry": "Restaurants",
+    "sector": "Consumer Cyclical",
+    "ts": 1789085008
   },
   "CARR": {
     "industry": "Building Products & Equipment",
@@ -714,6 +729,11 @@
     "sector": "Industrials",
     "ts": 1780944732
   },
+  "CMG": {
+    "industry": "Restaurants",
+    "sector": "Consumer Cyclical",
+    "ts": 1789085009
+  },
   "CMI": {
     "industry": "Specialty Industrial Machinery",
     "sector": "Industrials",
@@ -857,7 +877,7 @@
   "CTVA": {
     "industry": "Agricultural Inputs",
     "sector": "Basic Materials",
-    "ts": 1785510645
+    "ts": 1789085009
   },
   "CUBE": {
     "industry": "REIT - Industrial",
@@ -1007,7 +1027,7 @@
   "DRI": {
     "industry": "Restaurants",
     "sector": "Consumer Cyclical",
-    "ts": 1785589368
+    "ts": 1789085009
   },
   "DRS": {
     "industry": "Aerospace & Defense",
@@ -1073,6 +1093,11 @@
     "industry": "Utilities - Regulated Electric",
     "sector": "Utilities",
     "ts": 1785510645
+  },
+  "ELF": {
+    "industry": "Household & Personal Products",
+    "sector": "Consumer Defensive",
+    "ts": 1789085008
   },
   "ELS": {
     "industry": "REIT - Residential",
@@ -1384,6 +1409,11 @@
     "sector": "Healthcare",
     "ts": 1784592170
   },
+  "GILD": {
+    "industry": "Drug Manufacturers - General",
+    "sector": "Healthcare",
+    "ts": 1789085009
+  },
   "GLBE": {
     "industry": "Internet Retail",
     "sector": "Consumer Cyclical",
@@ -1627,7 +1657,7 @@
   "INGM": {
     "industry": "Information Technology Services",
     "sector": "Technology",
-    "ts": 1785801823
+    "ts": 1789085009
   },
   "INTC": {
     "industry": "Semiconductors",
@@ -2037,7 +2067,7 @@
   "MRNA": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1784333210
+    "ts": 1789085008
   },
   "MRSH": {
     "industry": "Insurance Brokers",
@@ -2442,7 +2472,7 @@
   "PCVX": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1785589374
+    "ts": 1789085008
   },
   "PECO": {
     "industry": "REIT - Retail",
@@ -2662,7 +2692,7 @@
   "ROKU": {
     "industry": "Entertainment",
     "sector": "Communication Services",
-    "ts": 1780659417
+    "ts": 1789085008
   },
   "ROST": {
     "industry": "Apparel Retail",
@@ -2702,7 +2732,7 @@
   "RVTY": {
     "industry": "Diagnostics & Research",
     "sector": "Healthcare",
-    "ts": 1784592170
+    "ts": 1789085008
   },
   "RY": {
     "industry": "Banks - Diversified",
@@ -3027,12 +3057,12 @@
   "TGT": {
     "industry": "Discount Stores",
     "sector": "Consumer Defensive",
-    "ts": 1783382616
+    "ts": 1789085008
   },
   "TGTX": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1784764989
+    "ts": 1789085008
   },
   "THC": {
     "industry": "Medical Care Facilities",
@@ -3447,7 +3477,7 @@
   "XENE": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1785589377
+    "ts": 1789085009
   },
   "XOM": {
     "industry": "Oil & Gas Integrated",
