@@ -107,7 +107,7 @@
   "AFL": {
     "industry": "Insurance - Life",
     "sector": "Financial Services",
-    "ts": 1785888203
+    "ts": 1789171381
   },
   "AFRM": {
     "industry": "Credit Services",
@@ -172,7 +172,7 @@
   "ALL": {
     "industry": "Insurance - Property & Casualty",
     "sector": "Financial Services",
-    "ts": 1785589364
+    "ts": 1789171380
   },
   "ALLY": {
     "industry": "Credit Services",
@@ -273,6 +273,11 @@
     "industry": "Information Technology Services",
     "sector": "Technology",
     "ts": 1780659418
+  },
+  "APO": {
+    "industry": "Asset Management",
+    "sector": "Financial Services",
+    "ts": 1789171380
   },
   "AR": {
     "industry": "Oil & Gas E&P",
@@ -577,7 +582,7 @@
   "CAH": {
     "industry": "Medical Distribution",
     "sector": "Healthcare",
-    "ts": 1784160164
+    "ts": 1789171380
   },
   "CAKE": {
     "industry": "Restaurants",
@@ -609,6 +614,11 @@
     "sector": "Financial Services",
     "ts": 1787011541
   },
+  "CBOE": {
+    "industry": "Financial Data & Stock Exchanges",
+    "sector": "Financial Services",
+    "ts": 1789171381
+  },
   "CBSH": {
     "industry": "Banks - Regional",
     "sector": "Financial Services",
@@ -617,7 +627,7 @@
   "CCEP": {
     "industry": "Beverages - Non-Alcoholic",
     "sector": "Consumer Defensive",
-    "ts": 1785888203
+    "ts": 1789171380
   },
   "CCJ": {
     "industry": "Uranium",
@@ -862,7 +872,7 @@
   "CTAS": {
     "industry": "Specialty Business Services",
     "sector": "Industrials",
-    "ts": 1785974601
+    "ts": 1789171381
   },
   "CTRA": {
     "industry": "Oil & Gas E&P",
@@ -897,7 +907,7 @@
   "CVS": {
     "industry": "Healthcare Plans",
     "sector": "Healthcare",
-    "ts": 1785974601
+    "ts": 1789171380
   },
   "CVX": {
     "industry": "Oil & Gas Integrated",
@@ -1307,7 +1317,7 @@
   "FLR": {
     "industry": "Engineering & Construction",
     "sector": "Industrials",
-    "ts": 1782864173
+    "ts": 1789171380
   },
   "FLS": {
     "industry": "Specialty Industrial Machinery",
@@ -1352,7 +1362,7 @@
   "FTI": {
     "industry": "Oil & Gas Equipment & Services",
     "sector": "Energy",
-    "ts": 1785456162
+    "ts": 1789171379
   },
   "FTNT": {
     "industry": "Software - Infrastructure",
@@ -1443,6 +1453,11 @@
     "industry": "Auto Manufacturers",
     "sector": "Consumer Cyclical",
     "ts": 1787011540
+  },
+  "GMAB": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1789171379
   },
   "GOOG": {
     "industry": "Internet Content & Information",
@@ -1542,7 +1557,7 @@
   "HNGE": {
     "industry": "Health Information Services",
     "sector": "Healthcare",
-    "ts": 1784160163
+    "ts": 1789171379
   },
   "HOMB": {
     "industry": "Banks - Regional",
@@ -1577,7 +1592,7 @@
   "HSBC": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1785589370
+    "ts": 1789171379
   },
   "HSIC": {
     "industry": "Medical Distribution",
@@ -1637,7 +1652,7 @@
   "ILMN": {
     "industry": "Diagnostics & Research",
     "sector": "Healthcare",
-    "ts": 1786147413
+    "ts": 1789171379
   },
   "IMVT": {
     "industry": "Biotechnology",
@@ -1747,7 +1762,7 @@
   "KDP": {
     "industry": "Beverages - Non-Alcoholic",
     "sector": "Consumer Defensive",
-    "ts": 1786147413
+    "ts": 1789171380
   },
   "KEY": {
     "industry": "Banks - Regional",
@@ -1767,7 +1782,7 @@
   "KHC": {
     "industry": "Packaged Foods",
     "sector": "Consumer Defensive",
-    "ts": 1786061003
+    "ts": 1789171381
   },
   "KIM": {
     "industry": "REIT - Retail",
@@ -2062,12 +2077,17 @@
   "MRK": {
     "industry": "Drug Manufacturers - General",
     "sector": "Healthcare",
-    "ts": 1781568272
+    "ts": 1789171379
   },
   "MRNA": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
     "ts": 1789085008
+  },
+  "MRP": {
+    "industry": "REIT - Residential",
+    "sector": "Real Estate",
+    "ts": 1789171380
   },
   "MRSH": {
     "industry": "Insurance Brokers",
@@ -2702,7 +2722,7 @@
   "RPRX": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1785801823
+    "ts": 1789171379
   },
   "RRC": {
     "industry": "Oil & Gas E&P",
@@ -2727,7 +2747,7 @@
   "RVMD": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1783987530
+    "ts": 1789171379
   },
   "RVTY": {
     "industry": "Diagnostics & Research",
@@ -2852,7 +2872,7 @@
   "SLB": {
     "industry": "Oil & Gas Equipment & Services",
     "sector": "Energy",
-    "ts": 1781568272
+    "ts": 1789171380
   },
   "SLM": {
     "industry": "Credit Services",
@@ -2912,7 +2932,7 @@
   "SOLV": {
     "industry": "Medical Instruments & Supplies",
     "sector": "Healthcare",
-    "ts": 1785589375
+    "ts": 1789171379
   },
   "SON": {
     "industry": "Packaging & Containers",
@@ -3362,7 +3382,7 @@
   "VTRS": {
     "industry": "Drug Manufacturers - Specialty & Generic",
     "sector": "Healthcare",
-    "ts": 1786061003
+    "ts": 1789171380
   },
   "VVV": {
     "industry": "Auto & Truck Dealerships",

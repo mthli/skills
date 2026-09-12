@@ -7,7 +7,7 @@
   "AAPL": {
     "industry": "Consumer Electronics",
     "sector": "Technology",
-    "ts": 1785558827
+    "ts": 1789171337
   },
   "ABBV": {
     "industry": "Drug Manufacturers - General",
@@ -67,7 +67,7 @@
   "AMD": {
     "industry": "Semiconductors",
     "sector": "Technology",
-    "ts": 1782135679
+    "ts": 1789171337
   },
   "AMGN": {
     "industry": "Drug Manufacturers - General",
@@ -474,6 +474,11 @@
     "sector": "Consumer Defensive",
     "ts": 1778771444
   },
+  "DBX": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1789171337
+  },
   "DD": {
     "industry": "Specialty Chemicals",
     "sector": "Basic Materials",
@@ -752,7 +757,7 @@
   "HPE": {
     "industry": "Communication Equipment",
     "sector": "Technology",
-    "ts": 1785589357
+    "ts": 1789171337
   },
   "HPQ": {
     "industry": "Computer Hardware",
@@ -1087,7 +1092,7 @@
   "NTRA": {
     "industry": "Diagnostics & Research",
     "sector": "Healthcare",
-    "ts": 1785589358
+    "ts": 1789171337
   },
   "NTRS": {
     "industry": "Asset Management",
@@ -1227,7 +1232,7 @@
   "PSX": {
     "industry": "Oil & Gas Refining & Marketing",
     "sector": "Energy",
-    "ts": 1786060958
+    "ts": 1789171337
   },
   "PWR": {
     "industry": "Engineering & Construction",
