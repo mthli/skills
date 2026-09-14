@@ -281,6 +281,18 @@ This is the section that can do harm if written lazily, so frame it honestly:
   107% on a flat XLY because its retail peers (ANF −6.0, M −4.7) were sold
   with it. Name 2–3 same-business peers and grade the leg against their
   close; the sector ETF only describes.
+- **A gap that inverts against its own favourable driver is a tell for that
+  driver's next session (09-10, 09-11; promoted on 2nd instance).** XLE gapped
+  +1.27% on a +6.7% oil print and closed −0.58%; oil was −3.7% the next
+  morning. ORCL gapped +7.5% on a +30% beat with XLK +1.32% the leading
+  sector and closed −1.74%; its AI-infra peer group (CRWV / NBIS / VRT /
+  LRCX) opened −6 to −9% the next session. Grade the promoted line or
+  gap-keep as written (both mapped modal / inverted), but carry the inversion
+  forward as a read on the driver, not the name: the next brief's hypothesis
+  for that group leans against the driver until a close says otherwise.
+  Corollary (09-11, 1st instance — watch): the peer group has to be **named
+  pre-open with 2–3 tickers**; "software / AI-infra" was two groups, software
+  closed green and AI-infra faded, and ORCL traded with the second.
 - **Premarket single-stock prints are thin.** Weight the futures gap, Europe,
   and sector ETFs over individual moves; respect the gappers' volume floor,
   and treat pre-8:00 ET thin prints as noise.
