@@ -182,7 +182,7 @@
   "ALM": {
     "industry": "Other Industrial Metals & Mining",
     "sector": "Basic Materials",
-    "ts": 1781136248
+    "ts": 1789430588
   },
   "ALSN": {
     "industry": "Auto Parts",
@@ -363,6 +363,11 @@
     "industry": "Medical Instruments & Supplies",
     "sector": "Healthcare",
     "ts": 1788307441
+  },
+  "AWK": {
+    "industry": "Utilities - Regulated Water",
+    "sector": "Utilities",
+    "ts": 1789430588
   },
   "AXTA": {
     "industry": "Specialty Chemicals",
@@ -937,7 +942,7 @@
   "D": {
     "industry": "Utilities - Regulated Electric",
     "sector": "Utilities",
-    "ts": 1785801823
+    "ts": 1789430588
   },
   "DAL": {
     "industry": "Airlines",
@@ -1752,7 +1757,7 @@
   "JNJ": {
     "industry": "Drug Manufacturers - General",
     "sector": "Healthcare",
-    "ts": 1784160164
+    "ts": 1789430588
   },
   "JPM": {
     "industry": "Banks - Diversified",
@@ -1833,6 +1838,11 @@
     "industry": "Household & Personal Products",
     "sector": "Consumer Defensive",
     "ts": 1788998618
+  },
+  "KXIAY": {
+    "industry": "Semiconductors",
+    "sector": "Technology",
+    "ts": 1789430588
   },
   "LAUR": {
     "industry": "Education & Training Services",
@@ -2787,7 +2797,7 @@
   "SBRA": {
     "industry": "REIT - Healthcare Facilities",
     "sector": "Real Estate",
-    "ts": 1785456162
+    "ts": 1789430588
   },
   "SBS": {
     "industry": "Utilities - Regulated Water",
@@ -3242,7 +3252,7 @@
   "UNH": {
     "industry": "Healthcare Plans",
     "sector": "Healthcare",
-    "ts": 1785888203
+    "ts": 1789430588
   },
   "UNM": {
     "industry": "Insurance - Life",
@@ -3478,6 +3488,11 @@
     "industry": "Specialty Retail",
     "sector": "Consumer Cyclical",
     "ts": 1787011542
+  },
+  "WTRG": {
+    "industry": "Utilities - Regulated Water",
+    "sector": "Utilities",
+    "ts": 1789430588
   },
   "WULF": {
     "industry": "Capital Markets",

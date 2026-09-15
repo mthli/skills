@@ -222,7 +222,7 @@
   "BIIB": {
     "industry": "Drug Manufacturers - General",
     "sector": "Healthcare",
-    "ts": 1781747722
+    "ts": 1789430545
   },
   "BK": {
     "industry": "Banks - Diversified",
@@ -1072,7 +1072,7 @@
   "NET": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1785369754
+    "ts": 1789430545
   },
   "NMR": {
     "industry": "Capital Markets",
@@ -1349,6 +1349,11 @@
     "sector": "Industrials",
     "ts": 1785196974
   },
+  "SNOW": {
+    "industry": "Software - Application",
+    "sector": "Technology",
+    "ts": 1789430545
+  },
   "SON": {
     "industry": "Packaging & Containers",
     "sector": "Consumer Cyclical",
@@ -1493,6 +1498,11 @@
     "industry": "Biotechnology",
     "sector": "Healthcare",
     "ts": 1787011454
+  },
+  "TWLO": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1789430545
   },
   "TWST": {
     "industry": "Diagnostics & Research",

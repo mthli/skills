@@ -1,0 +1,441 @@
+{
+  "as_of": "2026-09-14T20:03:18.636619-04:00",
+  "today": "2026-09-14",
+  "spark_window": [
+    "2026-09-15",
+    "2026-09-16",
+    "2026-09-17"
+  ],
+  "macro_note": "",
+  "regime": {
+    "snapshot": "20260911",
+    "state": "CAUTION",
+    "score": 3,
+    "vix": 17.1,
+    "spy_vs_200_pct": 7.3,
+    "flags": "Breadth divergence: SPY -1.7% from high but only 39% of names above 50DMA ; Narrowing rally: only megacaps lifting the index (RSP/SPY -1.8%/20d)"
+  },
+  "mr_run": {
+    "run_id": "20260914",
+    "run_date": "2026-09-14",
+    "stale_days": 0,
+    "rows_in_run": 57,
+    "kegs_after_filter": 7
+  },
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "MRK",
+      "rank": 7,
+      "score": 49.0,
+      "rsi2": 2.38,
+      "dist_200dma_pct": 21.47,
+      "signal_close": 143.93,
+      "mr_target": 146.99,
+      "mr_stop": 135.1,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-16",
+          "detail": "Federal Funds Rate 2026-09-16 14:00 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-16",
+          "detail": "FOMC Economic Projections 2026-09-16 14:00 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-16",
+          "detail": "FOMC Statement 2026-09-16 14:00 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-16",
+          "detail": "FOMC Press Conference 2026-09-16 14:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 143.93,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -5.52,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": null,
+      "signal_day_low": 143.68,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "NLY",
+      "rank": 9,
+      "score": 46.9,
+      "rsi2": 1.18,
+      "dist_200dma_pct": 1.23,
+      "signal_close": 21.9,
+      "mr_target": 22.41,
+      "mr_stop": 21.08,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "sector": "Real Estate",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-16",
+          "detail": "Federal Funds Rate 2026-09-16 14:00 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-16",
+          "detail": "FOMC Economic Projections 2026-09-16 14:00 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-16",
+          "detail": "FOMC Statement 2026-09-16 14:00 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-16",
+          "detail": "FOMC Press Conference 2026-09-16 14:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 21.9,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -4.07,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": null,
+      "signal_day_low": 21.86,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "SOLV",
+      "rank": 12,
+      "score": 44.7,
+      "rsi2": 1.92,
+      "dist_200dma_pct": 12.72,
+      "signal_close": 87.45,
+      "mr_target": 89.39,
+      "mr_stop": 82.37,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 3,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-16",
+          "detail": "Federal Funds Rate 2026-09-16 14:00 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-16",
+          "detail": "FOMC Economic Projections 2026-09-16 14:00 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-16",
+          "detail": "FOMC Statement 2026-09-16 14:00 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-16",
+          "detail": "FOMC Press Conference 2026-09-16 14:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 87.45,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -5.4,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": null,
+      "signal_day_low": 86.65,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "KXIAY",
+      "rank": 13,
+      "score": 43.7,
+      "rsi2": 5.16,
+      "dist_200dma_pct": 32.06,
+      "signal_close": 32.92,
+      "mr_target": 35.71,
+      "mr_stop": 28.37,
+      "signal": "\ud83d\udfe1",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-16",
+          "detail": "Federal Funds Rate 2026-09-16 14:00 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-16",
+          "detail": "FOMC Economic Projections 2026-09-16 14:00 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-16",
+          "detail": "FOMC Statement 2026-09-16 14:00 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-16",
+          "detail": "FOMC Press Conference 2026-09-16 14:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 32.92,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -11.34,
+      "down_gaps_5d": 3,
+      "vol_ratio_5d_20d": 1.29,
+      "signal_day_low": 32.0,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "SN",
+      "rank": 14,
+      "score": 43.6,
+      "rsi2": 3.33,
+      "dist_200dma_pct": 23.91,
+      "signal_close": 160.8,
+      "mr_target": 168.24,
+      "mr_stop": 144.29,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 3,
+      "sector": "Consumer Cyclical",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-16",
+          "detail": "Federal Funds Rate 2026-09-16 14:00 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-16",
+          "detail": "FOMC Economic Projections 2026-09-16 14:00 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-16",
+          "detail": "FOMC Statement 2026-09-16 14:00 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-16",
+          "detail": "FOMC Press Conference 2026-09-16 14:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 160.8,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -8.22,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": null,
+      "signal_day_low": 157.01,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "IMVT",
+      "rank": 18,
+      "score": 41.4,
+      "rsi2": 3.58,
+      "dist_200dma_pct": 21.03,
+      "signal_close": 37.36,
+      "mr_target": 38.61,
+      "mr_stop": 33.52,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-16",
+          "detail": "Federal Funds Rate 2026-09-16 14:00 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-16",
+          "detail": "FOMC Economic Projections 2026-09-16 14:00 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-16",
+          "detail": "FOMC Statement 2026-09-16 14:00 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-16",
+          "detail": "FOMC Press Conference 2026-09-16 14:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 37.36,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -4.5,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": null,
+      "signal_day_low": 37.19,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "VIRT",
+      "rank": 20,
+      "score": 40.0,
+      "rsi2": 3.78,
+      "dist_200dma_pct": 27.17,
+      "signal_close": 60.86,
+      "mr_target": 62.55,
+      "mr_stop": 55.18,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "sector": "Financial Services",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-16",
+          "detail": "Federal Funds Rate 2026-09-16 14:00 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-16",
+          "detail": "FOMC Economic Projections 2026-09-16 14:00 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-16",
+          "detail": "FOMC Statement 2026-09-16 14:00 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-16",
+          "detail": "FOMC Press Conference 2026-09-16 14:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 60.86,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -5.19,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": null,
+      "signal_day_low": 60.81,
+      "quiet_warning": false
+    }
+  ],
+  "macro_calendar": [
+    {
+      "date": "2026-09-16",
+      "time_et": "14:00",
+      "title": "Federal Funds Rate"
+    },
+    {
+      "date": "2026-09-16",
+      "time_et": "14:00",
+      "title": "FOMC Economic Projections"
+    },
+    {
+      "date": "2026-09-16",
+      "time_et": "14:00",
+      "title": "FOMC Statement"
+    },
+    {
+      "date": "2026-09-16",
+      "time_et": "14:30",
+      "title": "FOMC Press Conference"
+    }
+  ],
+  "prior_run_review": {
+    "source": "snapback:2026-09-11",
+    "n": 12,
+    "pct_positive": 58.3,
+    "avg_pct": 0.51,
+    "median_pct": 0.52,
+    "best": [
+      {
+        "ticker": "RVTY",
+        "since_pct": 2.79
+      },
+      {
+        "ticker": "CAKE",
+        "since_pct": 1.52
+      },
+      {
+        "ticker": "ELF",
+        "since_pct": 1.2
+      }
+    ],
+    "worst": [
+      {
+        "ticker": "EAT",
+        "since_pct": -1.02
+      },
+      {
+        "ticker": "MRK",
+        "since_pct": -0.54
+      },
+      {
+        "ticker": "NLY",
+        "since_pct": -0.45
+      }
+    ]
+  },
+  "errors": []
+}
