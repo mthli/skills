@@ -290,9 +290,15 @@ This is the section that can do harm if written lazily, so frame it honestly:
   gap-keep as written (both mapped modal / inverted), but carry the inversion
   forward as a read on the driver, not the name: the next brief's hypothesis
   for that group leans against the driver until a close says otherwise.
-  Corollary (09-11, 1st instance — watch): the peer group has to be **named
-  pre-open with 2–3 tickers**; "software / AI-infra" was two groups, software
-  closed green and AI-infra faded, and ORCL traded with the second.
+  **3rd instance (09-14): XLE sold a +1% Brent close (gap +1.26 → −0.94) and
+  Brent was −5% the next morning; the rule is 3-for-3.**
+  **Corollary (09-11, 09-14; promoted on 2nd instance): the peer group has to
+  be named pre-open with 2–3 tickers.** "software / AI-infra" (09-11) was two
+  groups — software closed green, AI-infra faded, and ORCL traded with the
+  second. Named with tickers on 09-14 (sold NBIS / CRWV / VRT; bought CRWD /
+  PANW / NOW / ZS), both groups graded cleanly: the sold leg kept 61–156%,
+  the bought leg 128–393% with one inversion. A group label without tickers
+  is not a gradeable line.
 - **Premarket single-stock prints are thin.** Weight the futures gap, Europe,
   and sector ETFs over individual moves; respect the gappers' volume floor,
   and treat pre-8:00 ET thin prints as noise.
@@ -437,7 +443,9 @@ This is the section that can do harm if written lazily, so frame it honestly:
   positive mark since firing), went unfilled, and was back under the line the
   next morning; the session's only fills were a lineless new TSLA position and
   an add to SPCX on the day its 20-session-overdue trim printed +13% ahead.
-  The corollary is now 3-for-3: fill the session the cost closes.
+  The corollary is now 3-for-3: fill the session the cost closes. **5-for-5
+  after 09-11 (SOXX +0.1% → −5.6% next morning) and 09-14 (COIN's held-through
+  closed +5.9% over its open fill and gave back 3.6% by the next open).**
 - **⭐ MR pocket has zero day-1 edge on broad risk-on days (08-03, 08-04).**
   08-03 the pocket lost 2.4pp to SPY on a broad green day; 08-04 it matched
   SPY to the basis point. Its validated KPI is 5-day expectancy (score≥40 +
