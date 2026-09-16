@@ -220,6 +220,20 @@ This is the section that can do harm if written lazily, so frame it honestly:
   ≤−0.5pp spreading") rebuilds the same unwritten middle one level down the
   tree, and 09-01 landed in it at **−0.13pp**. Give the spread a named middle
   band with an action, exactly as the primary level test gets one.
+- **Label a branch by its level or spread, never by the story expected to
+  produce it (09-09, 09-15; promoted on 2nd instance).** 09-09's ⭐ gate
+  branch read "> 5.30 = failed auction" and was reached the next morning by
+  an ECB hike after a *clean* auction; 09-15's XLE top branch read "energy
+  bid through an oil drop = the inversion tell" and oil closed **+4.4%** —
+  the premarket oil print it leaned on (Brent −4.7%, printing under WTI) was
+  the one the same brief had tagged ⚠️ two rows earlier. Both times the
+  number mapped and the label was wrong. So: the branch *is* the number
+  ("XLE − SPY ≥ +1.5pp"); the causal read is a question the close answers,
+  written after it, never the branch's name. **Corollary: a ⚠️ on a number
+  propagates to every branch that number names** — a driver flagged suspect
+  in the dashboard cannot define a direction in the playbook; grade the
+  driver at its own close (oil's settle, the auction's tail) before calling
+  anything aligned or inverted against it.
 - **A knife-edge deferral needs a terminal condition (08-24, 08-25).** The
   0.2%-band protocol is 5-for-5 at what it was built for — refusing false
   verdicts (three OpEx closes 08-21, COIN 08-24, SOXX 08-25 all carried
