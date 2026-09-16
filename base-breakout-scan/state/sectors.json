@@ -122,7 +122,7 @@
   "ARMK": {
     "industry": "Specialty Business Services",
     "sector": "Industrials",
-    "ts": 1786406564
+    "ts": 1789516957
   },
   "AROC": {
     "industry": "Oil & Gas Equipment & Services",
@@ -233,6 +233,11 @@
     "industry": "Oil & Gas Equipment & Services",
     "sector": "Energy",
     "ts": 1780589170
+  },
+  "BMRN": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1789516957
   },
   "BMY": {
     "industry": "Drug Manufacturers - General",
@@ -577,7 +582,7 @@
   "EOG": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1785589356
+    "ts": 1789516957
   },
   "EPD": {
     "industry": "Oil & Gas Midstream",
@@ -672,7 +677,7 @@
   "FROG": {
     "industry": "Software - Application",
     "sector": "Technology",
-    "ts": 1782950545
+    "ts": 1789516957
   },
   "FTI": {
     "industry": "Oil & Gas Equipment & Services",
@@ -682,7 +687,7 @@
   "FTNT": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1785801774
+    "ts": 1789516957
   },
   "GE": {
     "industry": "Aerospace & Defense",
@@ -889,6 +894,11 @@
     "sector": "Industrials",
     "ts": 1784246534
   },
+  "KO": {
+    "industry": "Beverages - Non-Alcoholic",
+    "sector": "Consumer Defensive",
+    "ts": 1789516957
+  },
   "LAUR": {
     "industry": "Education & Training Services",
     "sector": "Consumer Defensive",
@@ -1014,6 +1024,11 @@
     "sector": "Consumer Cyclical",
     "ts": 1782172993
   },
+  "MOH": {
+    "industry": "Healthcare Plans",
+    "sector": "Healthcare",
+    "ts": 1789516957
+  },
   "MPC": {
     "industry": "Oil & Gas Refining & Marketing",
     "sector": "Energy",
@@ -1088,6 +1103,11 @@
     "industry": "Software - Infrastructure",
     "sector": "Technology",
     "ts": 1785589358
+  },
+  "NTNX": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1789516957
   },
   "NTRA": {
     "industry": "Diagnostics & Research",

@@ -69,6 +69,11 @@
     "sector": "Consumer Cyclical",
     "ts": 1788307314
   },
+  "APA": {
+    "industry": "Oil & Gas E&P",
+    "sector": "Energy",
+    "ts": 1789516889
+  },
   "APGE": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
@@ -238,6 +243,11 @@
     "industry": "Healthcare Plans",
     "sector": "Healthcare",
     "ts": 1784246492
+  },
+  "DBX": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1789516889
   },
   "DD": {
     "industry": "Specialty Chemicals",
@@ -704,6 +714,11 @@
     "sector": "Energy",
     "ts": 1787270540
   },
+  "PBR-A": {
+    "industry": "Oil & Gas Integrated",
+    "sector": "Energy",
+    "ts": 1789516889
+  },
   "PFGC": {
     "industry": "Food Distribution",
     "sector": "Consumer Defensive",
@@ -1063,6 +1078,11 @@
     "industry": "Internet Retail",
     "sector": "Consumer Cyclical",
     "ts": 1785888092
+  },
+  "WDAY": {
+    "industry": "Software - Application",
+    "sector": "Technology",
+    "ts": 1789516889
   },
   "WDC": {
     "industry": "Computer Hardware",
