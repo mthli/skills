@@ -1,0 +1,232 @@
+{
+  "as_of": "2026-09-16T20:03:33.771878-04:00",
+  "today": "2026-09-16",
+  "spark_window": [
+    "2026-09-17",
+    "2026-09-18",
+    "2026-09-21"
+  ],
+  "macro_note": "ForexFactory covers the current week only \u2014 macro sparks beyond Sunday not visible",
+  "regime": {
+    "snapshot": "20260915",
+    "state": "CAUTION",
+    "score": 0,
+    "vix": 17.7,
+    "spy_vs_200_pct": 6.2,
+    "flags": "Breadth divergence: SPY -2.6% from high but only 36% of names above 50DMA ; Narrowing rally: only megacaps lifting the index (RSP/SPY -1.1%/20d)"
+  },
+  "mr_run": {
+    "run_id": "20260916",
+    "run_date": "2026-09-16",
+    "stale_days": 0,
+    "rows_in_run": 62,
+    "kegs_after_filter": 6
+  },
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "BNY",
+      "rank": 4,
+      "score": 55.4,
+      "rsi2": 1.06,
+      "dist_200dma_pct": 15.67,
+      "signal_close": 154.67,
+      "mr_target": 160.02,
+      "mr_stop": 147.2,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 3,
+      "sector": "Financial Services",
+      "sparks": [],
+      "armed": false,
+      "latest_close": 154.67,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -5.02,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.18,
+      "signal_day_low": 152.54,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-10-15"
+    },
+    {
+      "ticker": "STX",
+      "rank": 8,
+      "score": 45.6,
+      "rsi2": 4.14,
+      "dist_200dma_pct": 26.4,
+      "signal_close": 771.81,
+      "mr_target": 831.16,
+      "mr_stop": 658.93,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "sector": "Technology",
+      "sparks": [],
+      "armed": false,
+      "latest_close": 771.81,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -14.66,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 1.07,
+      "signal_day_low": 758.35,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-10-28"
+    },
+    {
+      "ticker": "RJF",
+      "rank": 9,
+      "score": 43.7,
+      "rsi2": 1.34,
+      "dist_200dma_pct": 5.35,
+      "signal_close": 168.75,
+      "mr_target": 172.4,
+      "mr_stop": 158.7,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 4,
+      "sector": "Financial Services",
+      "sparks": [],
+      "armed": false,
+      "latest_close": 168.75,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 7,
+      "ret_5d_pct": -4.42,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.91,
+      "signal_day_low": 168.36,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-10-29"
+    },
+    {
+      "ticker": "WDC",
+      "rank": 10,
+      "score": 43.0,
+      "rsi2": 3.19,
+      "dist_200dma_pct": 7.93,
+      "signal_close": 411.96,
+      "mr_target": 445.86,
+      "mr_stop": 350.4,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 3,
+      "sector": "Technology",
+      "sparks": [],
+      "armed": false,
+      "latest_close": 411.96,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -13.69,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.98,
+      "signal_day_low": 407.12,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-11-06"
+    },
+    {
+      "ticker": "ALSN",
+      "rank": 12,
+      "score": 41.7,
+      "rsi2": 2.22,
+      "dist_200dma_pct": 5.88,
+      "signal_close": 122.4,
+      "mr_target": 125.7,
+      "mr_stop": 112.11,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "sector": "Consumer Cyclical",
+      "sparks": [],
+      "armed": false,
+      "latest_close": 122.4,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 6,
+      "ret_5d_pct": -6.25,
+      "down_gaps_5d": 3,
+      "vol_ratio_5d_20d": 0.85,
+      "signal_day_low": 122.24,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-10-30"
+    },
+    {
+      "ticker": "SNDK",
+      "rank": 13,
+      "score": 40.8,
+      "rsi2": 5.19,
+      "dist_200dma_pct": 46.24,
+      "signal_close": 1530.9,
+      "mr_target": 1634.6,
+      "mr_stop": 1291.42,
+      "signal": "\ud83d\udfe1",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Technology",
+      "sparks": [],
+      "armed": false,
+      "latest_close": 1530.9,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -11.92,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.78,
+      "signal_day_low": 1509.14,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-11-07"
+    }
+  ],
+  "macro_calendar": [],
+  "prior_run_review": {
+    "source": "snapback:2026-09-15",
+    "n": 7,
+    "pct_positive": 57.1,
+    "avg_pct": -0.07,
+    "median_pct": 0.08,
+    "best": [
+      {
+        "ticker": "NOV",
+        "since_pct": 2.09
+      },
+      {
+        "ticker": "SLB",
+        "since_pct": 1.65
+      },
+      {
+        "ticker": "LITE",
+        "since_pct": 0.47
+      }
+    ],
+    "worst": [
+      {
+        "ticker": "BNY",
+        "since_pct": -1.9
+      },
+      {
+        "ticker": "KXIAY",
+        "since_pct": -1.52
+      },
+      {
+        "ticker": "SNDK",
+        "since_pct": -1.36
+      }
+    ],
+    "armed_subset": {
+      "n": 7,
+      "pct_positive": 57.1,
+      "avg_pct": -0.07,
+      "median_pct": 0.08
+    }
+  },
+  "errors": []
+}

@@ -714,6 +714,11 @@
     "sector": "Healthcare",
     "ts": 1787616281
   },
+  "GILD": {
+    "industry": "Drug Manufacturers - General",
+    "sector": "Healthcare",
+    "ts": 1789603360
+  },
   "GKOS": {
     "industry": "Medical Devices",
     "sector": "Healthcare",
@@ -753,6 +758,11 @@
     "industry": "Oil & Gas Equipment & Services",
     "sector": "Energy",
     "ts": 1785589357
+  },
+  "HALO": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1789603360
   },
   "HNGE": {
     "industry": "Health Information Services",
@@ -1102,12 +1112,17 @@
   "NTAP": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1785589358
+    "ts": 1789603360
   },
   "NTNX": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
     "ts": 1789516957
+  },
+  "NTR": {
+    "industry": "Agricultural Inputs",
+    "sector": "Basic Materials",
+    "ts": 1789603360
   },
   "NTRA": {
     "industry": "Diagnostics & Research",
@@ -1122,7 +1137,7 @@
   "NUE": {
     "industry": "Steel",
     "sector": "Basic Materials",
-    "ts": 1779285544
+    "ts": 1789603360
   },
   "NVDA": {
     "industry": "Semiconductors",
@@ -1273,6 +1288,11 @@
     "industry": "Other Industrial Metals & Mining",
     "sector": "Basic Materials",
     "ts": 1780452058
+  },
+  "RNG": {
+    "industry": "Software - Application",
+    "sector": "Technology",
+    "ts": 1789603360
   },
   "ROIV": {
     "industry": "Biotechnology",
@@ -1438,6 +1458,11 @@
     "industry": "Biotechnology",
     "sector": "Healthcare",
     "ts": 1785509849
+  },
+  "TAK": {
+    "industry": "Drug Manufacturers - Specialty & Generic",
+    "sector": "Healthcare",
+    "ts": 1789603360
   },
   "TD": {
     "industry": "Banks - Diversified",
