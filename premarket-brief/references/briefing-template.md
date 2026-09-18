@@ -188,11 +188,13 @@ This is the section that can do harm if written lazily, so frame it honestly:
 - **Grade catalyst claims by % of gap kept at the close, per name.** > 70%
   kept = the catalyst is real for that name; < 30% = it traded like sympathy
   (07-20 SIMO inverted inside the catalyst bucket; 07-30 FTNT kept 10% of its
-  own print's gap). **Watch (09-08, 1st instance): the "< 30% = sympathy"
-  reading predates the scope boundary below and lost to it** — driverless
-  names inside a *bought* group kept like the aligned leg (quantum trio 34 /
-  51 / 97%, INTC 173% on a +1.6% SOXX day). Grade a sympathy gap against its
-  group's close, the same way as an earnings gap.
+  own print's gap). **Resolved (09-08, 09-16, 09-17; 1-for-3): sympathy
+  names inside a bought group do not keep like the leg.** The quantum trio
+  kept on 09-08 (34 / 51 / 97%), the chip sympathies split 3 kept / 1 modal
+  / 2 inverted on 09-16, and the AI-power miners split 2 / 1 / 2 on 09-17
+  (APLD 147 · WULF 100 · IREN 30 · CORZ 23 · CIFR 17). Grade each sympathy
+  name alone against the group's close, and never write sympathy as one leg
+  with an expected keep.
 - **Every close-graded test ships three branches, and the middle prescribes an
   action (07-17, 07-20, 08-11 SPCX, 08-12 SOXX).** Two-branch tests keep
   landing in their own gap: 08-11 SPCX fell −3.9% into an unwritten middle,
@@ -220,6 +222,17 @@ This is the section that can do harm if written lazily, so frame it honestly:
   ≤−0.5pp spreading") rebuilds the same unwritten middle one level down the
   tree, and 09-01 landed in it at **−0.13pp**. Give the spread a named middle
   band with an action, exactly as the primary level test gets one.
+  **A multi-gauge verdict names every cell (08-26, 09-17; promoted on 2nd
+  instance).** Three-branch gauges do not make the *verdict* gradeable if its
+  labels are conjunctive: 09-17's "shakeout" needed ≥ 8 green *and* RSP ≥
+  −0.5pp, "the CAUTION shape" needed ≤ 3 green, and the close printed **9 of
+  11 green with RSP −0.64pp** — the day's actual shape, unnamed. Write the
+  split cells before the open: count broad + weight lagging = "cap-led, the
+  CAUTION shape carrying the index" (no adds; the instrument's breadth print
+  that night is quoted after the close, never presumed — 09-17's fell 36 →
+  32% on a +1.1% index day); count narrow + weight even = "contained
+  rotation" (07-02 shape). A cell the verdict cannot name is the unwritten
+  middle branch one level up the tree.
 - **Label a branch by its level or spread, never by the story expected to
   produce it (09-09, 09-15; promoted on 2nd instance).** 09-09's ⭐ gate
   branch read "> 5.30 = failed auction" and was reached the next morning by
@@ -312,7 +325,12 @@ This is the section that can do harm if written lazily, so frame it honestly:
   second. Named with tickers on 09-14 (sold NBIS / CRWV / VRT; bought CRWD /
   PANW / NOW / ZS), both groups graded cleanly: the sold leg kept 61–156%,
   the bought leg 128–393% with one inversion. A group label without tickers
-  is not a gradeable line.
+  is not a gradeable line. **And the tickers must share one business (09-11,
+  09-17; promoted on 2nd instance):** "software / cyber" graded as one sold
+  leg split exactly as "software / AI-infra" had — cyber (PANW 6% / S / OKTA
+  inverted, with CRWD +1.8 / ZS +3.1) faded while app software (CRM 121% /
+  RDDT 166%, with NOW −1.0) kept. A label spanning two sub-industries is two
+  lines with two peer sets.
 - **Premarket single-stock prints are thin.** Weight the futures gap, Europe,
   and sector ETFs over individual moves; respect the gappers' volume floor,
   and treat pre-8:00 ET thin prints as noise.
@@ -400,7 +418,13 @@ This is the section that can do harm if written lazily, so frame it honestly:
   move) have now promoted cleanly twice running, while the three inversions
   on record were all sectors "owned" by a handful of single-name prints.
   Check scope first; if you cannot name a catalyst that hits the whole
-  sector, do not promote it at all.
+  sector, do not promote it at all. **Refiners are their own crack-spread
+  group, never the energy sector's aligned leg (09-16, 09-17; promoted on
+  2nd instance):** green on an XLE −2.9% / oil −3.4% day, then +1.6 to +3.6%
+  the next session off a red premarket, premarket sign inverted four
+  sessions running. Grade VLO / PSX / MPC / DINO / PBF against each other,
+  outside the XLE promotion; a PT raise on a red refiner premarket is the
+  07-31 pullback to stalk (PSX +3.6% on 09-17), not a raise-wall.
 - **Containment beats the event — the posture must follow the brief's own
   evidence (08-03, 08-13).** When an overnight negative is loud but the
   dashboard says it was *contained* (the group didn't follow it down, a
