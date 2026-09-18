@@ -352,7 +352,7 @@
   "CMBT": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
-    "ts": 1787011456
+    "ts": 1789689770
   },
   "CMC": {
     "industry": "Metal Fabrication",
@@ -372,7 +372,7 @@
   "CNQ": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1787011455
+    "ts": 1789689770
   },
   "COGT": {
     "industry": "Biotechnology",
@@ -534,10 +534,15 @@
     "sector": "Basic Materials",
     "ts": 1779020942
   },
+  "DT": {
+    "industry": "Software - Application",
+    "sector": "Technology",
+    "ts": 1789689770
+  },
   "DXCM": {
     "industry": "Medical Devices",
     "sector": "Healthcare",
-    "ts": 1787011455
+    "ts": 1789689770
   },
   "EAT": {
     "industry": "Restaurants",
@@ -842,7 +847,7 @@
   "ING": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1787011455
+    "ts": 1789689770
   },
   "INGM": {
     "industry": "Information Technology Services",
@@ -887,7 +892,7 @@
   "JNJ": {
     "industry": "Drug Manufacturers - General",
     "sector": "Healthcare",
-    "ts": 1787011454
+    "ts": 1789689770
   },
   "KEYS": {
     "industry": "Scientific & Technical Instruments",
@@ -923,6 +928,11 @@
     "industry": "REIT - Industrial",
     "sector": "Real Estate",
     "ts": 1782950545
+  },
+  "LITE": {
+    "industry": "Communication Equipment",
+    "sector": "Technology",
+    "ts": 1789689770
   },
   "LLY": {
     "industry": "Drug Manufacturers - General",
@@ -997,7 +1007,7 @@
   "MFC": {
     "industry": "Insurance - Life",
     "sector": "Financial Services",
-    "ts": 1787011455
+    "ts": 1789689770
   },
   "MFG": {
     "industry": "Banks - Regional",
@@ -1092,7 +1102,7 @@
   "NEM": {
     "industry": "Gold",
     "sector": "Basic Materials",
-    "ts": 1778771444
+    "ts": 1789689770
   },
   "NET": {
     "industry": "Software - Infrastructure",
@@ -1259,6 +1269,11 @@
     "sector": "Financial Services",
     "ts": 1785589359
   },
+  "PR": {
+    "industry": "Oil & Gas E&P",
+    "sector": "Energy",
+    "ts": 1789689770
+  },
   "PRM": {
     "industry": "Specialty Chemicals",
     "sector": "Basic Materials",
@@ -1273,6 +1288,11 @@
     "industry": "Engineering & Construction",
     "sector": "Industrials",
     "ts": 1782864123
+  },
+  "QRVO": {
+    "industry": "Semiconductors",
+    "sector": "Technology",
+    "ts": 1789689770
   },
   "RAL": {
     "industry": "Electronic Components",
@@ -1302,7 +1322,7 @@
   "ROKU": {
     "industry": "Entertainment",
     "sector": "Communication Services",
-    "ts": 1787011454
+    "ts": 1789689770
   },
   "RPRX": {
     "industry": "Biotechnology",
@@ -1482,12 +1502,12 @@
   "TGT": {
     "industry": "Discount Stores",
     "sector": "Consumer Defensive",
-    "ts": 1787011455
+    "ts": 1789689770
   },
   "TGTX": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1785589360
+    "ts": 1789689770
   },
   "THC": {
     "industry": "Medical Care Facilities",
@@ -1507,7 +1527,7 @@
   "TRGP": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
-    "ts": 1787011454
+    "ts": 1789689770
   },
   "TRP": {
     "industry": "Oil & Gas Midstream",
@@ -1542,7 +1562,7 @@
   "TVTX": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1787011454
+    "ts": 1789689770
   },
   "TWLO": {
     "industry": "Software - Infrastructure",
@@ -1577,7 +1597,7 @@
   "UGP": {
     "industry": "Oil & Gas Refining & Marketing",
     "sector": "Energy",
-    "ts": 1787011456
+    "ts": 1789689770
   },
   "UNH": {
     "industry": "Healthcare Plans",
@@ -1747,7 +1767,7 @@
   "ZETA": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1785589361
+    "ts": 1789689770
   },
   "ZION": {
     "industry": "Banks - Regional",

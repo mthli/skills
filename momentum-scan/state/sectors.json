@@ -24,6 +24,11 @@
     "sector": "Technology",
     "ts": 1782345684
   },
+  "ACN": {
+    "industry": "Information Technology Services",
+    "sector": "Technology",
+    "ts": 1789689700
+  },
   "ADP": {
     "industry": "Software - Application",
     "sector": "Technology",
@@ -189,6 +194,11 @@
     "sector": "Technology",
     "ts": 1778771326
   },
+  "CLMT": {
+    "industry": "Specialty Chemicals",
+    "sector": "Basic Materials",
+    "ts": 1789689700
+  },
   "CNC": {
     "industry": "Healthcare Plans",
     "sector": "Healthcare",
@@ -238,6 +248,11 @@
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
     "ts": 1778864408
+  },
+  "CVI": {
+    "industry": "Oil & Gas Refining & Marketing",
+    "sector": "Energy",
+    "ts": 1789689700
   },
   "CVS": {
     "industry": "Healthcare Plans",
@@ -323,6 +338,11 @@
     "industry": "Aerospace & Defense",
     "sector": "Industrials",
     "ts": 1787097732
+  },
+  "EQNR": {
+    "industry": "Oil & Gas Integrated",
+    "sector": "Energy",
+    "ts": 1789689700
   },
   "ERAS": {
     "industry": "Biotechnology",
@@ -972,7 +992,7 @@
   "TTEK": {
     "industry": "Engineering & Construction",
     "sector": "Industrials",
-    "ts": 1787011354
+    "ts": 1789689700
   },
   "TVTX": {
     "industry": "Biotechnology",

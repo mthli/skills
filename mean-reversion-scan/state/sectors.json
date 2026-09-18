@@ -72,7 +72,7 @@
   "ADM": {
     "industry": "Farm Products",
     "sector": "Consumer Defensive",
-    "ts": 1785511111
+    "ts": 1789689809
   },
   "ADP": {
     "industry": "Software - Application",
@@ -412,7 +412,7 @@
   "BAX": {
     "industry": "Medical Instruments & Supplies",
     "sector": "Healthcare",
-    "ts": 1787011540
+    "ts": 1789689809
   },
   "BAYRY": {
     "industry": "Drug Manufacturers - General",
@@ -428,6 +428,11 @@
     "industry": "Biotechnology",
     "sector": "Healthcare",
     "ts": 1788220998
+  },
+  "BBVA": {
+    "industry": "Banks - Diversified",
+    "sector": "Financial Services",
+    "ts": 1789689809
   },
   "BBY": {
     "industry": "Specialty Retail",
@@ -472,7 +477,7 @@
   "BG": {
     "industry": "Farm Products",
     "sector": "Consumer Defensive",
-    "ts": 1781654633
+    "ts": 1789689809
   },
   "BGC": {
     "industry": "Capital Markets",
@@ -637,7 +642,7 @@
   "CBSH": {
     "industry": "Banks - Regional",
     "sector": "Financial Services",
-    "ts": 1786406609
+    "ts": 1789689809
   },
   "CCEP": {
     "industry": "Beverages - Non-Alcoholic",
@@ -1172,7 +1177,7 @@
   "EPD": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
-    "ts": 1780114450
+    "ts": 1789689809
   },
   "EPRT": {
     "industry": "REIT - Retail",
@@ -1272,7 +1277,7 @@
   "F": {
     "industry": "Auto Manufacturers",
     "sector": "Consumer Cyclical",
-    "ts": 1785589369
+    "ts": 1789689809
   },
   "FANG": {
     "industry": "Oil & Gas E&P",
@@ -1552,7 +1557,7 @@
   "HESM": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
-    "ts": 1781568272
+    "ts": 1789689809
   },
   "HIG": {
     "industry": "Insurance - Diversified",
@@ -1617,12 +1622,12 @@
   "HST": {
     "industry": "REIT - Hotel & Motel",
     "sector": "Real Estate",
-    "ts": 1786061003
+    "ts": 1789689809
   },
   "HUM": {
     "industry": "Healthcare Plans",
     "sector": "Healthcare",
-    "ts": 1785197029
+    "ts": 1789689809
   },
   "HUT": {
     "industry": "Capital Markets",
@@ -1827,12 +1832,12 @@
   "KMX": {
     "industry": "Auto & Truck Dealerships",
     "sector": "Consumer Cyclical",
-    "ts": 1785510645
+    "ts": 1789689809
   },
   "KNX": {
     "industry": "Trucking",
     "sector": "Industrials",
-    "ts": 1785801823
+    "ts": 1789689809
   },
   "KO": {
     "industry": "Beverages - Non-Alcoholic",
@@ -1897,7 +1902,7 @@
   "LNC": {
     "industry": "Insurance - Life",
     "sector": "Financial Services",
-    "ts": 1786493002
+    "ts": 1789689809
   },
   "LNG": {
     "industry": "Oil & Gas Midstream",
@@ -2452,7 +2457,7 @@
   "PAGP": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
-    "ts": 1785888203
+    "ts": 1789689809
   },
   "PANW": {
     "industry": "Software - Infrastructure",
@@ -2962,7 +2967,7 @@
   "SPG": {
     "industry": "REIT - Retail",
     "sector": "Real Estate",
-    "ts": 1785888203
+    "ts": 1789689809
   },
   "SQM": {
     "industry": "Specialty Chemicals",
@@ -3372,7 +3377,7 @@
   "VOYA": {
     "industry": "Financial Conglomerates",
     "sector": "Financial Services",
-    "ts": 1785589376
+    "ts": 1789689809
   },
   "VRT": {
     "industry": "Electrical Equipment & Parts",
@@ -3482,7 +3487,7 @@
   "WMB": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
-    "ts": 1780114451
+    "ts": 1789689809
   },
   "WMT": {
     "industry": "Discount Stores",
