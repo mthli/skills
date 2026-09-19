@@ -362,7 +362,7 @@
   "CNC": {
     "industry": "Healthcare Plans",
     "sector": "Healthcare",
-    "ts": 1787097824
+    "ts": 1789776146
   },
   "CNI": {
     "industry": "Railroads",
@@ -1217,12 +1217,12 @@
   "PAA": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
-    "ts": 1783468950
+    "ts": 1789776146
   },
   "PAGP": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
-    "ts": 1785589359
+    "ts": 1789776146
   },
   "PANW": {
     "industry": "Software - Infrastructure",

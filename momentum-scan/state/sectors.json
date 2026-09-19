@@ -629,6 +629,11 @@
     "sector": "Financial Services",
     "ts": 1780583126
   },
+  "MSFT": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1789776078
+  },
   "MTSI": {
     "industry": "Semiconductors",
     "sector": "Technology",

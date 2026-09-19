@@ -1,0 +1,122 @@
+{
+  "as_of": "2026-09-18T20:03:15.966376-04:00",
+  "today": "2026-09-18",
+  "spark_window": [
+    "2026-09-21",
+    "2026-09-22",
+    "2026-09-23"
+  ],
+  "macro_note": "ForexFactory covers the current week only \u2014 macro sparks beyond Sunday not visible",
+  "regime": {
+    "snapshot": "20260917",
+    "state": "CAUTION",
+    "score": 3,
+    "vix": 14.8,
+    "spy_vs_200_pct": 6.8,
+    "flags": "Breadth divergence: SPY -2.0% from high but only 32% of names above 50DMA ; Narrowing rally: only megacaps lifting the index (RSP/SPY -3.1%/20d)"
+  },
+  "mr_run": {
+    "run_id": "20260918",
+    "run_date": "2026-09-18",
+    "stale_days": 0,
+    "rows_in_run": 43,
+    "kegs_after_filter": 2
+  },
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "SGHC",
+      "rank": 9,
+      "score": 43.5,
+      "rsi2": 2.78,
+      "dist_200dma_pct": 5.73,
+      "signal_close": 12.8,
+      "mr_target": 13.46,
+      "mr_stop": 11.69,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Consumer Cyclical",
+      "sparks": [],
+      "armed": false,
+      "latest_close": 12.8,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -6.16,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 1.01,
+      "signal_day_low": 12.76,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-11-04"
+    },
+    {
+      "ticker": "VOYA",
+      "rank": 10,
+      "score": 43.1,
+      "rsi2": 3.35,
+      "dist_200dma_pct": 21.26,
+      "signal_close": 99.58,
+      "mr_target": 101.77,
+      "mr_stop": 93.62,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 0,
+      "sector": "Financial Services",
+      "sparks": [],
+      "armed": false,
+      "latest_close": 99.58,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -3.01,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 1.21,
+      "signal_day_low": 98.98,
+      "quiet_warning": true,
+      "next_own_earnings": "2026-11-04"
+    }
+  ],
+  "macro_calendar": [],
+  "prior_run_review": {
+    "source": "snapback:2026-09-17",
+    "n": 8,
+    "pct_positive": 87.5,
+    "avg_pct": 0.39,
+    "median_pct": 0.37,
+    "best": [
+      {
+        "ticker": "BEN",
+        "since_pct": 1.07
+      },
+      {
+        "ticker": "USB",
+        "since_pct": 0.87
+      },
+      {
+        "ticker": "RVMD",
+        "since_pct": 0.52
+      }
+    ],
+    "worst": [
+      {
+        "ticker": "ET",
+        "since_pct": -0.28
+      },
+      {
+        "ticker": "RF",
+        "since_pct": 0.04
+      },
+      {
+        "ticker": "MTB",
+        "since_pct": 0.15
+      }
+    ]
+  },
+  "errors": []
+}

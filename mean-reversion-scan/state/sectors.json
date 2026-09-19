@@ -37,7 +37,7 @@
   "ABEV": {
     "industry": "Beverages - Brewers",
     "sector": "Consumer Defensive",
-    "ts": 1786061003
+    "ts": 1789776186
   },
   "ABNB": {
     "industry": "Travel Services",
@@ -382,7 +382,7 @@
   "AXTA": {
     "industry": "Specialty Chemicals",
     "sector": "Basic Materials",
-    "ts": 1787097899
+    "ts": 1789776186
   },
   "AXTI": {
     "industry": "Semiconductor Equipment & Materials",
@@ -969,6 +969,11 @@
     "sector": "Consumer Defensive",
     "ts": 1787875400
   },
+  "DASH": {
+    "industry": "Internet Retail",
+    "sector": "Consumer Cyclical",
+    "ts": 1789776186
+  },
   "DB": {
     "industry": "Banks - Regional",
     "sector": "Financial Services",
@@ -1112,7 +1117,7 @@
   "ECL": {
     "industry": "Specialty Chemicals",
     "sector": "Basic Materials",
-    "ts": 1787011540
+    "ts": 1789776186
   },
   "ED": {
     "industry": "Utilities - Regulated Electric",
@@ -1767,7 +1772,7 @@
   "JHX": {
     "industry": "Building Materials",
     "sector": "Basic Materials",
-    "ts": 1787097899
+    "ts": 1789776186
   },
   "JNJ": {
     "industry": "Drug Manufacturers - General",
@@ -2412,7 +2417,7 @@
   "ORI": {
     "industry": "Insurance - Property & Casualty",
     "sector": "Financial Services",
-    "ts": 1786147413
+    "ts": 1789776186
   },
   "ORKA": {
     "industry": "Biotechnology",
@@ -2452,7 +2457,7 @@
   "PAA": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
-    "ts": 1785888203
+    "ts": 1789776186
   },
   "PAGP": {
     "industry": "Oil & Gas Midstream",
@@ -3327,7 +3332,7 @@
   "VG": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
-    "ts": 1785974601
+    "ts": 1789776186
   },
   "VIAV": {
     "industry": "Communication Equipment",
@@ -3422,7 +3427,7 @@
   "VZ": {
     "industry": "Telecom Services",
     "sector": "Communication Services",
-    "ts": 1780659418
+    "ts": 1789776186
   },
   "W": {
     "industry": "Internet Retail",
