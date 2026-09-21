@@ -175,6 +175,23 @@ This is the section that can do harm if written lazily, so frame it honestly:
   own breadth reading fell 51% → 47% above the 50-day on the way to its first
   CAUTION print since 07-29. A verdict carrying only the spread is
   under-sampled; carry the green-sector count with it.
+  **A sub-industry third witness (09-14 watch, 09-15, 09-18; promoted on
+  3rd instance).** When the day's story is a sub-industry inside a
+  cap-weighted sector, name 2–3 tickers (cyber: CRWD / PANW / ZS) and grade
+  their sign against the sector ETF's as a third witness: all green on a red
+  ETF = rotation into it; all red on a green ETF = it unwinds; mixed = no
+  witness. 09-18 printed all-red-on-green (XLK +0.82%) on the same close
+  CIBR − XLK hit −2.58pp — the witness and the sleeve's spread are one
+  instrument at two altitudes, and when they agree the core-exit line fires
+  clean. **A rates verdict's destination is a group question, never a
+  duration presumption (09-16 watch, 09-17, 09-18; promoted on 2nd mapped
+  use).** 09-10's rates day landed on tech; 09-16's landed on financials with
+  tech flat. Write the rates leg as a spread between a named duration group
+  (SOXX / ALAB / COHR) and a named rate-sensitive group (XLF: IBKR / SCHW /
+  HOOD), ±1.0pp, three branches, and let the close say which paid: XLF − SOXX
+  read −3.48 / −2.73pp on its first two uses (the hike still being paid by
+  financials while chips ran), which a "long duration pays for a hike"
+  presumption would have called wrong both days.
 - **A stale regime cache does not vote; the exam does (09-02, 09-03;
   promoted on 2nd instance).** When `regime.stale_days > 1`, the index exam's
   two breadth gauges *are* the day's regime grade — say so in ①, never "the
@@ -374,11 +391,12 @@ This is the section that can do harm if written lazily, so frame it honestly:
   bounced over 20.80 three mornings running and closed below it every time —
   08-12's 21.04 open beat the close by 3.3% and the day's low by 7%. Holding
   through a fired line is a **new** trade and needs its own written thesis.
-  **Refinement (08-13; 1-for-2 after 08-14 — watch):** the catalyst
+  **Refinement (08-13; 2-for-3 after 09-18 — watch):** the catalyst
   differentiator (a bounce with a *fresh dated catalyst* is a legitimate
   re-trade, a catalyst-less one is a better fill) held for XE's +154% print
-  (close +11.7%) but failed 08-14, when REMX stuck **without** any catalyst
-  (+3.18% → 78.55, sector-wide and driverless). Second watch (08-14, 1st
+  (close +11.7%), failed 08-14, when REMX stuck **without** any catalyst
+  (+3.18% → 78.55, sector-wide and driverless), and held again 09-18, when
+  XE's catalyst-less +12% (09-17) opened 16.28 and closed 15.77. Second watch (08-14, 1st
   instance): the doctrine's three confirming cases were all *exit* lines on a
   broken post-earnings name — a fired **trim** on an intact-uptrend name may
   not behave the same way. Either way a held-through line gets a **new
