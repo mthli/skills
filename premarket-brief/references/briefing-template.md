@@ -249,7 +249,14 @@ This is the section that can do harm if written lazily, so frame it honestly:
   that night is quoted after the close, never presumed — 09-17's fell 36 →
   32% on a +1.1% index day); count narrow + weight even = "contained
   rotation" (07-02 shape). A cell the verdict cannot name is the unwritten
-  middle branch one level up the tree.
+  middle branch one level up the tree. **3rd instance (09-21): the rule means
+  the full grid.** The count gauge's middle cell (4–7 green) splits by weight
+  exactly as the ≥ 8 cell does — 09-21 closed 7 of 11 green with RSP
+  **−1.37pp**, the cap-led shape by weight, in a cell labelled "mixed, the
+  level governs" (breadth fell 32 → 29% that night). Write all nine count ×
+  weight cells before the open, and give every witness its sign × sign cells
+  (all-green-on-green = beta, no read; 09-21's cyber witness had no such
+  cell).
 - **Label a branch by its level or spread, never by the story expected to
   produce it (09-09, 09-15; promoted on 2nd instance).** 09-09's ⭐ gate
   branch read "> 5.30 = failed auction" and was reached the next morning by
@@ -347,7 +354,10 @@ This is the section that can do harm if written lazily, so frame it honestly:
   leg split exactly as "software / AI-infra" had — cyber (PANW 6% / S / OKTA
   inverted, with CRWD +1.8 / ZS +3.1) faded while app software (CRM 121% /
   RDDT 166%, with NOW −1.0) kept. A label spanning two sub-industries is two
-  lines with two peer sets.
+  lines with two peer sets. **3rd instance (09-21):** a "crypto" leg split by
+  business — exchanges COIN 62 / HOOD 67 / CRCL 43% (modal) against bitcoin
+  treasuries MSTR 137 / BMNR 144 / XXI 133%; an exchange earns fees on
+  volume, a treasury is levered spot. Two legs, every time.
 - **Premarket single-stock prints are thin.** Weight the futures gap, Europe,
   and sector ETFs over individual moves; respect the gappers' volume floor,
   and treat pre-8:00 ET thin prints as noise.
@@ -501,7 +511,16 @@ This is the section that can do harm if written lazily, so frame it honestly:
   an add to SPCX on the day its 20-session-overdue trim printed +13% ahead.
   The corollary is now 3-for-3: fill the session the cost closes. **5-for-5
   after 09-11 (SOXX +0.1% → −5.6% next morning) and 09-14 (COIN's held-through
-  closed +5.9% over its open fill and gave back 3.6% by the next open).**
+  closed +5.9% over its open fill and gave back 3.6% by the next open).** **6-for-8 after 09-21** (COIN's 205.19
+  open gave back to 201.05 and 199.14 the next morning; SOXX's 545.08 and
+  IBKR's 92.50 ran on) — a tendency, not a law; the fill is the action either
+  way. **4th escalation (09-21): the first buy on a name under a fired exit**
+  — six COIN at 207.80, 0.25% under the day's high, on the 10th "execute at
+  the open", −4.2% by the next open; the same session added to ALAB ("no
+  add") and to SPCX against its own fired trim. A counter-plan lot on a name
+  with a fired line gets that line *plus* its own add-lot exit the same
+  morning (bought above a level = the lot exits when that level is lost at
+  the close).
 - **⭐ MR pocket has zero day-1 edge on broad risk-on days (08-03, 08-04).**
   08-03 the pocket lost 2.4pp to SPY on a broad green day; 08-04 it matched
   SPY to the basis point. Its validated KPI is 5-day expectancy (score≥40 +
