@@ -154,6 +154,11 @@
     "sector": "Consumer Cyclical",
     "ts": 1786406504
   },
+  "BMNR": {
+    "industry": "Capital Markets",
+    "sector": "Financial Services",
+    "ts": 1790035272
+  },
   "BMRN": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
@@ -607,7 +612,7 @@
   "MPC": {
     "industry": "Oil & Gas Refining & Marketing",
     "sector": "Energy",
-    "ts": 1787270540
+    "ts": 1790035272
   },
   "MRK": {
     "industry": "Drug Manufacturers - General",
@@ -737,7 +742,7 @@
   "PBF": {
     "industry": "Oil & Gas Refining & Marketing",
     "sector": "Energy",
-    "ts": 1787270540
+    "ts": 1790035272
   },
   "PBR-A": {
     "industry": "Oil & Gas Integrated",
@@ -1015,9 +1020,9 @@
     "ts": 1788480083
   },
   "TXG": {
-    "industry": "Health Information Services",
+    "industry": "Medical Devices",
     "sector": "Healthcare",
-    "ts": 1787270540
+    "ts": 1790035272
   },
   "U": {
     "industry": "Software - Application",

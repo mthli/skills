@@ -214,6 +214,11 @@
     "sector": "Financial Services",
     "ts": 1787875355
   },
+  "BGC": {
+    "industry": "Capital Markets",
+    "sector": "Financial Services",
+    "ts": 1790035435
+  },
   "BHP": {
     "industry": "Other Industrial Metals & Mining",
     "sector": "Basic Materials",
@@ -312,7 +317,7 @@
   "CF": {
     "industry": "Agricultural Inputs",
     "sector": "Basic Materials",
-    "ts": 1787270632
+    "ts": 1790035435
   },
   "CFG": {
     "industry": "Banks - Regional",
@@ -627,12 +632,12 @@
   "EXEL": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1785801774
+    "ts": 1790035435
   },
   "EXPD": {
     "industry": "Integrated Freight & Logistics",
     "sector": "Industrials",
-    "ts": 1787184231
+    "ts": 1790035435
   },
   "F": {
     "industry": "Auto Manufacturers",
@@ -647,7 +652,7 @@
   "FCX": {
     "industry": "Copper",
     "sector": "Basic Materials",
-    "ts": 1785589357
+    "ts": 1790035435
   },
   "FDX": {
     "industry": "Integrated Freight & Logistics",
@@ -1439,6 +1444,11 @@
     "sector": "Basic Materials",
     "ts": 1787270632
   },
+  "SSRM": {
+    "industry": "Gold",
+    "sector": "Basic Materials",
+    "ts": 1790035435
+  },
   "ST": {
     "industry": "Scientific & Technical Instruments",
     "sector": "Technology",
@@ -1718,6 +1728,11 @@
     "industry": "Discount Stores",
     "sector": "Consumer Defensive",
     "ts": 1779157116
+  },
+  "WPM": {
+    "industry": "Gold",
+    "sector": "Basic Materials",
+    "ts": 1790035435
   },
   "WSC": {
     "industry": "Rental & Leasing Services",

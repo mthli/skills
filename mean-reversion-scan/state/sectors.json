@@ -54,6 +54,11 @@
     "sector": "Financial Services",
     "ts": 1786406609
   },
+  "ACIW": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1790035478
+  },
   "ACMR": {
     "industry": "Semiconductor Equipment & Materials",
     "sector": "Technology",
@@ -597,7 +602,7 @@
   "C": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1787184309
+    "ts": 1790035478
   },
   "CAH": {
     "industry": "Medical Distribution",
@@ -858,6 +863,11 @@
     "industry": "Semiconductors",
     "sector": "Technology",
     "ts": 1787616367
+  },
+  "CRM": {
+    "industry": "Software - Application",
+    "sector": "Technology",
+    "ts": 1790035478
   },
   "CRNX": {
     "industry": "Biotechnology",
@@ -1419,6 +1429,11 @@
     "sector": "Industrials",
     "ts": 1788307443
   },
+  "GEN": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1790035478
+  },
   "GEV": {
     "industry": "Specialty Industrial Machinery",
     "sector": "Industrials",
@@ -1497,7 +1512,7 @@
   "GPC": {
     "industry": "Auto Parts",
     "sector": "Consumer Cyclical",
-    "ts": 1787097900
+    "ts": 1790035478
   },
   "GPN": {
     "industry": "Specialty Business Services",
@@ -2487,7 +2502,7 @@
   "PB": {
     "industry": "Banks - Regional",
     "sector": "Financial Services",
-    "ts": 1786147413
+    "ts": 1790035478
   },
   "PBA": {
     "industry": "Oil & Gas Midstream",
@@ -2543,6 +2558,11 @@
     "industry": "Food Distribution",
     "sector": "Consumer Defensive",
     "ts": 1787875400
+  },
+  "PGR": {
+    "industry": "Insurance - Property & Casualty",
+    "sector": "Financial Services",
+    "ts": 1790035478
   },
   "PHM": {
     "industry": "Residential Construction",
@@ -2697,7 +2717,7 @@
   "RF": {
     "industry": "Banks - Regional",
     "sector": "Financial Services",
-    "ts": 1787184308
+    "ts": 1790035478
   },
   "RHHBY": {
     "industry": "Drug Manufacturers - General",
@@ -2763,6 +2783,11 @@
     "industry": "Specialty Industrial Machinery",
     "sector": "Industrials",
     "ts": 1783555398
+  },
+  "RSG": {
+    "industry": "Waste Management",
+    "sector": "Industrials",
+    "ts": 1790035478
   },
   "RTO": {
     "industry": "Specialty Business Services",
@@ -3122,7 +3147,7 @@
   "TIGO": {
     "industry": "Telecom Services",
     "sector": "Communication Services",
-    "ts": 1784937791
+    "ts": 1790035478
   },
   "TJX": {
     "industry": "Apparel Retail",
@@ -3203,6 +3228,11 @@
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
     "ts": 1787789077
+  },
+  "TTEK": {
+    "industry": "Engineering & Construction",
+    "sector": "Industrials",
+    "ts": 1790035478
   },
   "TTMI": {
     "industry": "Electronic Components",
@@ -3377,7 +3407,7 @@
   "VOD": {
     "industry": "Telecom Services",
     "sector": "Communication Services",
-    "ts": 1782135719
+    "ts": 1790035478
   },
   "VOYA": {
     "industry": "Financial Conglomerates",
@@ -3477,7 +3507,7 @@
   "WFC": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1787184312
+    "ts": 1790035478
   },
   "WFRD": {
     "industry": "Oil & Gas Equipment & Services",

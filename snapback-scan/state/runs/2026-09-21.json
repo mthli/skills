@@ -1,0 +1,81 @@
+{
+  "as_of": "2026-09-21T20:04:47.981161-04:00",
+  "today": "2026-09-21",
+  "spark_window": [
+    "2026-09-22",
+    "2026-09-23",
+    "2026-09-24"
+  ],
+  "macro_note": "",
+  "regime": {
+    "snapshot": "20260918",
+    "state": "CAUTION",
+    "score": 2,
+    "vix": 14.9,
+    "spy_vs_200_pct": 6.9,
+    "flags": "Breadth divergence: SPY -1.8% from high but only 29% of names above 50DMA ; Narrowing rally: only megacaps lifting the index (RSP/SPY -3.8%/20d)"
+  },
+  "mr_run": {
+    "run_id": "20260921",
+    "run_date": "2026-09-21",
+    "stale_days": 0,
+    "rows_in_run": 50,
+    "kegs_after_filter": 1
+  },
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "VG",
+      "rank": 7,
+      "score": 46.4,
+      "rsi2": 3.52,
+      "dist_200dma_pct": 20.01,
+      "signal_close": 14.02,
+      "mr_target": 14.72,
+      "mr_stop": 12.37,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 0,
+      "sector": "Energy",
+      "sparks": [],
+      "armed": false,
+      "next_own_earnings": "2026-11-09"
+    }
+  ],
+  "macro_calendar": [],
+  "prior_run_review": {
+    "source": "snapback:2026-09-18",
+    "n": 2,
+    "pct_positive": 50.0,
+    "avg_pct": 0.53,
+    "median_pct": 0.53,
+    "best": [
+      {
+        "ticker": "VOYA",
+        "since_pct": 2.0
+      },
+      {
+        "ticker": "SGHC",
+        "since_pct": -0.94
+      }
+    ],
+    "worst": [
+      {
+        "ticker": "SGHC",
+        "since_pct": -0.94
+      },
+      {
+        "ticker": "VOYA",
+        "since_pct": 2.0
+      }
+    ]
+  },
+  "errors": [
+    "tape/VG: ['Close']"
+  ]
+}
