@@ -314,7 +314,12 @@ This is the section that can do harm if written lazily, so frame it honestly:
   the >100% floor framing applies to gaps under ~15% (107–230% on the six
   that size); the edge is soft on the low side — treat the cap as **~18%,
   not 20%** (LULU −19.4% kept 90% 09-04, TTAN −17.7% kept 169% 09-09, COO
-  −18.3% kept 80% 09-10; promoted on 3rd instance).
+  −18.3% kept 80% 09-10; promoted on 3rd instance). **Scope (09-18, 09-22;
+  promoted on 2nd instance): the ≥ 18% range-class cap is an earnings-gap
+  rule — a clinical-readout gap is floor-class at any size** (XENE −23.2%
+  kept 132%, VKTX +27.7% kept 128%, both closing at or near the extreme):
+  expect > 100% kept and frame the premarket print as the floor, never the
+  range.
   **Scope boundary (09-03, 09-04; promoted on 2nd instance): the floor holds
   only for the leg that agrees with the group's close that day.** 09-03: the
   negative leg went 0-for-3 on a broad +1% tape with a catalyst-owned bid
@@ -514,13 +519,19 @@ This is the section that can do harm if written lazily, so frame it honestly:
   closed +5.9% over its open fill and gave back 3.6% by the next open).** **6-for-8 after 09-21** (COIN's 205.19
   open gave back to 201.05 and 199.14 the next morning; SOXX's 545.08 and
   IBKR's 92.50 ran on) — a tendency, not a law; the fill is the action either
-  way. **4th escalation (09-21): the first buy on a name under a fired exit**
+  way. **9-for-14 after 09-22** (SOXX / SPCX / REMX ran on from the open
+  fill; CIBR / XE / IBKR gave back). **4th escalation (09-21): the first buy on a name under a fired exit**
   — six COIN at 207.80, 0.25% under the day's high, on the 10th "execute at
   the open", −4.2% by the next open; the same session added to ALAB ("no
   add") and to SPCX against its own fired trim. A counter-plan lot on a name
   with a fired line gets that line *plus* its own add-lot exit the same
   morning (bought above a level = the lot exits when that level is lost at
-  the close).
+  the close). **5th escalation (09-22): the same "no adds" name was bought
+  on consecutive sessions** (ALAB +4 @ 324.45 Monday, +3 @ 357.40 Tuesday,
+  both under the day's high) — a "no adds" line added to twice is not being
+  read; ① names the count of consecutive counter-plan sessions on that name,
+  and every lot's add-lot exit is written at the *lot's* level, never the
+  core's.
 - **⭐ MR pocket has zero day-1 edge on broad risk-on days (08-03, 08-04).**
   08-03 the pocket lost 2.4pp to SPY on a broad green day; 08-04 it matched
   SPY to the basis point. Its validated KPI is 5-day expectancy (score≥40 +
