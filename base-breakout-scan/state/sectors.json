@@ -497,7 +497,7 @@
   "DDOG": {
     "industry": "Software - Application",
     "sector": "Technology",
-    "ts": 1785369754
+    "ts": 1790121751
   },
   "DELL": {
     "industry": "Computer Hardware",
@@ -827,7 +827,7 @@
   "IBKR": {
     "industry": "Capital Markets",
     "sector": "Financial Services",
-    "ts": 1787011455
+    "ts": 1790121752
   },
   "IFF": {
     "industry": "Specialty Chemicals",
@@ -862,7 +862,7 @@
   "IRDM": {
     "industry": "Telecom Services",
     "sector": "Communication Services",
-    "ts": 1786147365
+    "ts": 1790121751
   },
   "IRM": {
     "industry": "REIT - Specialty",
@@ -1062,7 +1062,7 @@
   "MRK": {
     "industry": "Drug Manufacturers - General",
     "sector": "Healthcare",
-    "ts": 1786492951
+    "ts": 1790121751
   },
   "MS": {
     "industry": "Capital Markets",
@@ -1083,6 +1083,11 @@
     "industry": "Semiconductors",
     "sector": "Technology",
     "ts": 1785589358
+  },
+  "MU": {
+    "industry": "Semiconductors",
+    "sector": "Technology",
+    "ts": 1790121752
   },
   "MUFG": {
     "industry": "Banks - Diversified",
@@ -1257,7 +1262,7 @@
   "PCVX": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1787270632
+    "ts": 1790121752
   },
   "PFG": {
     "industry": "Asset Management",
@@ -1362,7 +1367,7 @@
   "SAN": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1787270632
+    "ts": 1790121752
   },
   "SCCO": {
     "industry": "Copper",

@@ -639,6 +639,11 @@
     "sector": "Technology",
     "ts": 1789776078
   },
+  "MSTR": {
+    "industry": "Software - Application",
+    "sector": "Technology",
+    "ts": 1790121687
+  },
   "MTSI": {
     "industry": "Semiconductors",
     "sector": "Technology",
@@ -753,6 +758,11 @@
     "industry": "Food Distribution",
     "sector": "Consumer Defensive",
     "ts": 1785283277
+  },
+  "PLTR": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1790121687
   },
   "PLUG": {
     "industry": "Electrical Equipment & Parts",
@@ -902,7 +912,7 @@
   "SNOW": {
     "industry": "Software - Application",
     "sector": "Technology",
-    "ts": 1787011354
+    "ts": 1790121687
   },
   "SSL": {
     "industry": "Specialty Chemicals",

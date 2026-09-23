@@ -1,0 +1,88 @@
+{
+  "as_of": "2026-09-22T20:03:31.833306-04:00",
+  "today": "2026-09-22",
+  "spark_window": [
+    "2026-09-23",
+    "2026-09-24",
+    "2026-09-25"
+  ],
+  "macro_note": "",
+  "regime": {
+    "snapshot": "20260921",
+    "state": "CAUTION",
+    "score": 1,
+    "vix": 14.2,
+    "spy_vs_200_pct": 8.5,
+    "flags": "Breadth divergence: SPY -0.3% from high but only 31% of names above 50DMA ; Narrowing rally: only megacaps lifting the index (RSP/SPY -4.9%/20d) ; Credit weakening: HYG/LQD -0.3%/20d while stocks hold"
+  },
+  "mr_run": {
+    "run_id": "20260922",
+    "run_date": "2026-09-22",
+    "stale_days": 0,
+    "rows_in_run": 63,
+    "kegs_after_filter": 2
+  },
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "ALL",
+      "rank": 4,
+      "score": 51.0,
+      "rsi2": 1.93,
+      "dist_200dma_pct": 9.4,
+      "signal_close": 242.86,
+      "mr_target": 251.39,
+      "mr_stop": 229.68,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 0,
+      "sector": "Financial Services",
+      "sparks": [],
+      "armed": false,
+      "latest_close": 242.86,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -6.04,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 1.27,
+      "signal_day_low": 241.53,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-11-05"
+    },
+    {
+      "ticker": "SM",
+      "rank": 9,
+      "score": 41.9,
+      "rsi2": 5.69,
+      "dist_200dma_pct": 26.86,
+      "signal_close": 34.75,
+      "mr_target": 37.63,
+      "mr_stop": 30.83,
+      "signal": "\ud83d\udfe1",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "sector": "Energy",
+      "sparks": [],
+      "armed": false,
+      "latest_close": 34.75,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 1,
+      "ret_5d_pct": -10.97,
+      "down_gaps_5d": 3,
+      "vol_ratio_5d_20d": 1.45,
+      "signal_day_low": 34.59,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-11-03"
+    }
+  ],
+  "macro_calendar": [],
+  "prior_run_review": null,
+  "errors": []
+}
