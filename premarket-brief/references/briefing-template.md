@@ -192,6 +192,14 @@ This is the section that can do harm if written lazily, so frame it honestly:
   read −3.48 / −2.73pp on its first two uses (the hike still being paid by
   financials while chips ran), which a "long duration pays for a hike"
   presumption would have called wrong both days.
+  **XLF − SOXX alone is not the rates witness (09-22, 09-23; promoted on
+  2nd instance).** 09-22 a non-rate story (Meta's Muse on brokers) owned the
+  XLF leg; 09-23 a +15bp 10-year day (hot PMIs) landed on bond proxies and
+  small caps (XLU −2.24, XLRE −1.76, IWM −1.84) while the pair read +0.76pp,
+  modal. Name three destination legs — bond proxies (XLU / XLRE), financials
+  (XLF), duration-tech (SOXX) — each as a spread vs SPY, and grade the rates
+  day by the 10-year's close plus which leg moved most; when a named non-rate
+  catalyst owns a leg, say so in the line.
 - **A stale regime cache does not vote; the exam does (09-02, 09-03;
   promoted on 2nd instance).** When `regime.stale_days > 1`, the index exam's
   two breadth gauges *are* the day's regime grade — say so in ①, never "the
