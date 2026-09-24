@@ -204,6 +204,11 @@
     "sector": "Basic Materials",
     "ts": 1789689700
   },
+  "CMBT": {
+    "industry": "Oil & Gas Midstream",
+    "sector": "Energy",
+    "ts": 1790208084
+  },
   "CNC": {
     "industry": "Healthcare Plans",
     "sector": "Healthcare",
@@ -243,6 +248,11 @@
     "industry": "Communication Equipment",
     "sector": "Technology",
     "ts": 1778771325
+  },
+  "CTSH": {
+    "industry": "Information Technology Services",
+    "sector": "Technology",
+    "ts": 1790208084
   },
   "CUZ": {
     "industry": "REIT - Office",
