@@ -92,7 +92,7 @@
   "AEG": {
     "industry": "Insurance - Diversified",
     "sector": "Financial Services",
-    "ts": 1787184310
+    "ts": 1790294570
   },
   "AEP": {
     "industry": "Utilities - Regulated Electric",
@@ -514,6 +514,11 @@
     "sector": "Energy",
     "ts": 1787357092
   },
+  "BMRN": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1790294570
+  },
   "BMY": {
     "industry": "Drug Manufacturers - General",
     "sector": "Healthcare",
@@ -687,7 +692,7 @@
   "CFG": {
     "industry": "Banks - Regional",
     "sector": "Financial Services",
-    "ts": 1787184309
+    "ts": 1790294571
   },
   "CGNX": {
     "industry": "Scientific & Technical Instruments",
@@ -782,7 +787,7 @@
   "CNC": {
     "industry": "Healthcare Plans",
     "sector": "Healthcare",
-    "ts": 1785456162
+    "ts": 1790294570
   },
   "CNI": {
     "industry": "Railroads",
@@ -857,7 +862,7 @@
   "CRBG": {
     "industry": "Asset Management",
     "sector": "Financial Services",
-    "ts": 1787184310
+    "ts": 1790294570
   },
   "CRDO": {
     "industry": "Semiconductors",
@@ -932,7 +937,7 @@
   "CVE": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
-    "ts": 1785974601
+    "ts": 1790294570
   },
   "CVS": {
     "industry": "Healthcare Plans",
@@ -987,7 +992,7 @@
   "DB": {
     "industry": "Banks - Regional",
     "sector": "Financial Services",
-    "ts": 1787270703
+    "ts": 1790294570
   },
   "DBX": {
     "industry": "Software - Infrastructure",
@@ -1029,10 +1034,15 @@
     "sector": "Healthcare",
     "ts": 1786493002
   },
+  "DGX": {
+    "industry": "Diagnostics & Research",
+    "sector": "Healthcare",
+    "ts": 1790294570
+  },
   "DINO": {
     "industry": "Oil & Gas Refining & Marketing",
     "sector": "Energy",
-    "ts": 1785589368
+    "ts": 1790294570
   },
   "DKS": {
     "industry": "Specialty Retail",
@@ -1157,7 +1167,7 @@
   "ELV": {
     "industry": "Healthcare Plans",
     "sector": "Healthcare",
-    "ts": 1784160164
+    "ts": 1790294570
   },
   "EMBJ": {
     "industry": "Aerospace & Defense",
@@ -1207,7 +1217,7 @@
   "EQH": {
     "industry": "Asset Management",
     "sector": "Financial Services",
-    "ts": 1787184310
+    "ts": 1790294570
   },
   "EQNR": {
     "industry": "Oil & Gas Integrated",
@@ -1302,7 +1312,7 @@
   "FANG": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1785974601
+    "ts": 1790294571
   },
   "FAST": {
     "industry": "Industrial Distribution",
@@ -1607,7 +1617,7 @@
   "HOMB": {
     "industry": "Banks - Regional",
     "sector": "Financial Services",
-    "ts": 1786406609
+    "ts": 1790294570
   },
   "HON": {
     "industry": "Conglomerates",
@@ -1802,7 +1812,7 @@
   "JPM": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1787357093
+    "ts": 1790294570
   },
   "KDP": {
     "industry": "Beverages - Non-Alcoholic",
@@ -2117,7 +2127,7 @@
   "MPC": {
     "industry": "Oil & Gas Refining & Marketing",
     "sector": "Energy",
-    "ts": 1782135720
+    "ts": 1790294570
   },
   "MPLX": {
     "industry": "Oil & Gas Midstream",
@@ -2172,7 +2182,7 @@
   "MTCH": {
     "industry": "Internet Content & Information",
     "sector": "Communication Services",
-    "ts": 1784764989
+    "ts": 1790294570
   },
   "MTDR": {
     "industry": "Oil & Gas E&P",
@@ -2213,6 +2223,11 @@
     "industry": "Semiconductors",
     "sector": "Technology",
     "ts": 1787184308
+  },
+  "NAVN": {
+    "industry": "Software - Application",
+    "sector": "Technology",
+    "ts": 1790294570
   },
   "NBIS": {
     "industry": "Internet Content & Information",
@@ -2447,7 +2462,7 @@
   "OSCR": {
     "industry": "Healthcare Plans",
     "sector": "Healthcare",
-    "ts": 1785589373
+    "ts": 1790294570
   },
   "OUT": {
     "industry": "REIT - Specialty",
@@ -2517,7 +2532,7 @@
   "PBF": {
     "industry": "Oil & Gas Refining & Marketing",
     "sector": "Energy",
-    "ts": 1785589374
+    "ts": 1790294570
   },
   "PBR": {
     "industry": "Oil & Gas Integrated",
@@ -2897,7 +2912,7 @@
   "SHC": {
     "industry": "Diagnostics & Research",
     "sector": "Healthcare",
-    "ts": 1787097900
+    "ts": 1790294570
   },
   "SHEL": {
     "industry": "Oil & Gas Integrated",
@@ -3292,7 +3307,7 @@
   "UBS": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1787097898
+    "ts": 1790294570
   },
   "UDR": {
     "industry": "REIT - Residential",
@@ -3397,7 +3412,7 @@
   "VLO": {
     "industry": "Oil & Gas Refining & Marketing",
     "sector": "Energy",
-    "ts": 1785589376
+    "ts": 1790294570
   },
   "VLY": {
     "industry": "Banks - Regional",

@@ -112,7 +112,7 @@
   "AVTR": {
     "industry": "Medical Instruments & Supplies",
     "sector": "Healthcare",
-    "ts": 1787616144
+    "ts": 1790294468
   },
   "BAX": {
     "industry": "Medical Instruments & Supplies",
@@ -383,6 +383,11 @@
     "industry": "REIT - Specialty",
     "sector": "Real Estate",
     "ts": 1782786282
+  },
+  "FRO": {
+    "industry": "Oil & Gas Midstream",
+    "sector": "Energy",
+    "ts": 1790294468
   },
   "FROG": {
     "industry": "Software - Application",
@@ -927,7 +932,7 @@
   "SSL": {
     "industry": "Specialty Chemicals",
     "sector": "Basic Materials",
-    "ts": 1778771326
+    "ts": 1790294468
   },
   "ST": {
     "industry": "Scientific & Technical Instruments",
