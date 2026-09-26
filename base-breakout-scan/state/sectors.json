@@ -192,7 +192,7 @@
   "BBVA": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1787702664
+    "ts": 1790380940
   },
   "BBY": {
     "industry": "Specialty Retail",
@@ -207,7 +207,7 @@
   "BDX": {
     "industry": "Medical Instruments & Supplies",
     "sector": "Healthcare",
-    "ts": 1787702664
+    "ts": 1790380940
   },
   "BEN": {
     "industry": "Asset Management",
@@ -942,7 +942,7 @@
   "LLY": {
     "industry": "Drug Manufacturers - General",
     "sector": "Healthcare",
-    "ts": 1787616281
+    "ts": 1790380940
   },
   "LNTH": {
     "industry": "Drug Manufacturers - Specialty & Generic",
@@ -1567,7 +1567,7 @@
   "TTE": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
-    "ts": 1778771444
+    "ts": 1790380940
   },
   "TTMI": {
     "industry": "Electronic Components",

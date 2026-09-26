@@ -1,0 +1,442 @@
+{
+  "as_of": "2026-09-25T20:03:02.131514-04:00",
+  "today": "2026-09-25",
+  "spark_window": [
+    "2026-09-28",
+    "2026-09-29",
+    "2026-09-30"
+  ],
+  "macro_note": "ForexFactory covers the current week only \u2014 macro sparks beyond Sunday not visible",
+  "regime": {
+    "snapshot": "20260924",
+    "state": "CAUTION",
+    "score": 3,
+    "vix": 14.9,
+    "spy_vs_200_pct": 7.4,
+    "flags": "Breadth divergence: SPY -1.1% from high but only 26% of names above 50DMA ; Narrowing rally: only megacaps lifting the index (RSP/SPY -5.4%/20d)"
+  },
+  "mr_run": {
+    "run_id": "20260925",
+    "run_date": "2026-09-25",
+    "stale_days": 0,
+    "rows_in_run": 57,
+    "kegs_after_filter": 11
+  },
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "OSCR",
+      "rank": 1,
+      "score": 72.3,
+      "rsi2": 0.74,
+      "dist_200dma_pct": 34.2,
+      "signal_close": 28.87,
+      "mr_target": 30.7,
+      "mr_stop": 24.05,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "MU",
+          "date": "2026-09-30",
+          "slot": "AMC",
+          "detail": "MU ($1220B) reports 2026-09-30 AMC"
+        }
+      ],
+      "armed": false,
+      "latest_close": 28.87,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -9.72,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.34,
+      "signal_day_low": 28.3,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-11-09"
+    },
+    {
+      "ticker": "ROIV",
+      "rank": 2,
+      "score": 64.1,
+      "rsi2": 0.96,
+      "dist_200dma_pct": 21.53,
+      "signal_close": 36.13,
+      "mr_target": 37.99,
+      "mr_stop": 31.73,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "MU",
+          "date": "2026-09-30",
+          "slot": "AMC",
+          "detail": "MU ($1220B) reports 2026-09-30 AMC"
+        }
+      ],
+      "armed": false,
+      "latest_close": 36.13,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -9.63,
+      "down_gaps_5d": 3,
+      "vol_ratio_5d_20d": 1.1,
+      "signal_day_low": 35.9,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-11-09"
+    },
+    {
+      "ticker": "ADP",
+      "rank": 3,
+      "score": 52.5,
+      "rsi2": 1.01,
+      "dist_200dma_pct": 12.05,
+      "signal_close": 263.11,
+      "mr_target": 267.52,
+      "mr_stop": 249.15,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "MU",
+          "date": "2026-09-30",
+          "slot": "AMC",
+          "detail": "MU (Technology, $1220B) reports 2026-09-30 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 263.11,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 8,
+      "ret_5d_pct": -3.35,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 1.38,
+      "signal_day_low": 261.31,
+      "quiet_warning": true
+    },
+    {
+      "ticker": "ARMK",
+      "rank": 5,
+      "score": 47.7,
+      "rsi2": 1.79,
+      "dist_200dma_pct": 13.85,
+      "signal_close": 54.32,
+      "mr_target": 55.92,
+      "mr_stop": 50.91,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 3,
+      "sector": "Industrials",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "MU",
+          "date": "2026-09-30",
+          "slot": "AMC",
+          "detail": "MU ($1220B) reports 2026-09-30 AMC"
+        }
+      ],
+      "armed": false,
+      "latest_close": 54.32,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -4.52,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 1.1,
+      "signal_day_low": 54.04,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-11-24"
+    },
+    {
+      "ticker": "FLR",
+      "rank": 6,
+      "score": 47.2,
+      "rsi2": 2.1,
+      "dist_200dma_pct": 4.1,
+      "signal_close": 50.63,
+      "mr_target": 53.47,
+      "mr_stop": 45.85,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 1,
+      "freq_60d": 2,
+      "sector": "Industrials",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "MU",
+          "date": "2026-09-30",
+          "slot": "AMC",
+          "detail": "MU ($1220B) reports 2026-09-30 AMC"
+        }
+      ],
+      "armed": false,
+      "latest_close": 50.63,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -7.88,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 1.05,
+      "signal_day_low": 50.61,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-11-06"
+    },
+    {
+      "ticker": "TTEK",
+      "rank": 7,
+      "score": 46.0,
+      "rsi2": 2.09,
+      "dist_200dma_pct": 2.15,
+      "signal_close": 33.64,
+      "mr_target": 35.13,
+      "mr_stop": 31.3,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "sector": "Industrials",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "MU",
+          "date": "2026-09-30",
+          "slot": "AMC",
+          "detail": "MU ($1220B) reports 2026-09-30 AMC"
+        }
+      ],
+      "armed": false,
+      "latest_close": 33.64,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -6.84,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 1.33,
+      "signal_day_low": 33.62,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-11-12"
+    },
+    {
+      "ticker": "BMRN",
+      "rank": 8,
+      "score": 44.8,
+      "rsi2": 2.0,
+      "dist_200dma_pct": 4.89,
+      "signal_close": 61.35,
+      "mr_target": 62.99,
+      "mr_stop": 57.32,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "MU",
+          "date": "2026-09-30",
+          "slot": "AMC",
+          "detail": "MU ($1220B) reports 2026-09-30 AMC"
+        }
+      ],
+      "armed": false,
+      "latest_close": 61.35,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -5.73,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 1.24,
+      "signal_day_low": 61.13,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-10-27"
+    },
+    {
+      "ticker": "MTG",
+      "rank": 9,
+      "score": 44.2,
+      "rsi2": 1.83,
+      "dist_200dma_pct": 3.87,
+      "signal_close": 28.73,
+      "mr_target": 29.29,
+      "mr_stop": 27.0,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Financial Services",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "MU",
+          "date": "2026-09-30",
+          "slot": "AMC",
+          "detail": "MU ($1220B) reports 2026-09-30 AMC"
+        }
+      ],
+      "armed": false,
+      "latest_close": 28.73,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 1,
+      "ret_5d_pct": -3.17,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.23,
+      "signal_day_low": 28.69,
+      "quiet_warning": true,
+      "next_own_earnings": "2026-10-29"
+    },
+    {
+      "ticker": "ELV",
+      "rank": 11,
+      "score": 41.7,
+      "rsi2": 2.18,
+      "dist_200dma_pct": 10.17,
+      "signal_close": 398.25,
+      "mr_target": 403.9,
+      "mr_stop": 371.63,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "MU",
+          "date": "2026-09-30",
+          "slot": "AMC",
+          "detail": "MU ($1220B) reports 2026-09-30 AMC"
+        }
+      ],
+      "armed": false,
+      "latest_close": 398.25,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -3.86,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.1,
+      "signal_day_low": 394.31,
+      "quiet_warning": true,
+      "next_own_earnings": "2026-10-21"
+    },
+    {
+      "ticker": "ORKA",
+      "rank": 12,
+      "score": 41.6,
+      "rsi2": 6.05,
+      "dist_200dma_pct": 37.15,
+      "signal_close": 85.49,
+      "mr_target": 91.66,
+      "mr_stop": 72.15,
+      "signal": "\ud83d\udfe1",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "MU",
+          "date": "2026-09-30",
+          "slot": "AMC",
+          "detail": "MU ($1220B) reports 2026-09-30 AMC"
+        }
+      ],
+      "armed": false,
+      "latest_close": 85.49,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -12.52,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 1.6,
+      "signal_day_low": 82.7,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-11-11"
+    },
+    {
+      "ticker": "NAVN",
+      "rank": 14,
+      "score": 41.1,
+      "rsi2": 3.03,
+      "dist_200dma_pct": 5.63,
+      "signal_close": 19.43,
+      "mr_target": 20.59,
+      "mr_stop": 15.66,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "MU",
+          "date": "2026-09-30",
+          "slot": "AMC",
+          "detail": "MU (Technology, $1220B) reports 2026-09-30 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 19.43,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -12.2,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 1.12,
+      "signal_day_low": 19.1,
+      "quiet_warning": false
+    }
+  ],
+  "macro_calendar": [],
+  "prior_run_review": {
+    "source": "snapback:2026-09-24",
+    "n": 12,
+    "pct_positive": 75.0,
+    "avg_pct": -0.47,
+    "median_pct": 0.62,
+    "best": [
+      {
+        "ticker": "PBF",
+        "since_pct": 2.03
+      },
+      {
+        "ticker": "VLO",
+        "since_pct": 1.87
+      },
+      {
+        "ticker": "ABNB",
+        "since_pct": 1.21
+      }
+    ],
+    "worst": [
+      {
+        "ticker": "GEN",
+        "since_pct": -12.05
+      },
+      {
+        "ticker": "ROIV",
+        "since_pct": -1.87
+      },
+      {
+        "ticker": "ADP",
+        "since_pct": -0.22
+      }
+    ]
+  },
+  "errors": []
+}
