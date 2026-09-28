@@ -183,7 +183,14 @@ This is the section that can do harm if written lazily, so frame it honestly:
   witness. 09-18 printed all-red-on-green (XLK +0.82%) on the same close
   CIBR − XLK hit −2.58pp — the witness and the sleeve's spread are one
   instrument at two altitudes, and when they agree the core-exit line fires
-  clean. **A rates verdict's destination is a group question, never a
+  clean. **Graded as spreads, never signs (09-23 watch, 09-24, 09-25; promoted on
+  2nd instance).** Each witness name is a spread vs its sector ETF at ±1pp
+  with three cells: all ≤ −1pp = the sub-industry unwinds; all ≥ +1pp =
+  rotation into it; anything else = beta, no witness. Signs alone filed
+  09-23's +3 to +5.5pp own bid as "beta"; as spreads the witness read beta
+  (−0.75 / −0.54 / +0.41) beside a modal CIBR − XLK on 09-24 and all ≤ −1pp
+  (−3.70 / −4.69 / −10.86) beside a −2.97pp bottom on 09-25 — the witness
+  and the sleeve's spread agreeing at two altitudes both days. **A rates verdict's destination is a group question, never a
   duration presumption (09-16 watch, 09-17, 09-18; promoted on 2nd mapped
   use).** 09-10's rates day landed on tech; 09-16's landed on financials with
   tech flat. Write the rates leg as a spread between a named duration group
