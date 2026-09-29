@@ -390,6 +390,13 @@ This is the section that can do harm if written lazily, so frame it honestly:
   the regime at its cycle-best score; the brief headlined "day 2 of the
   unwind" and SOXX closed +0.55% / NVDA +2.93% with QQQ the leading index.
   Frame such gaps two-sided and let the close grade them.
+  **Mirror (09-25 watch, 09-28; promoted on 2nd instance): a gap-UP with no
+  driver fed keeps < 30% or inverts off a risk-on tape.** AKAM +12.9% kept
+  25%, ARM +5.4% kept 24% and TSLA +1.8% inverted (09-25); APP +3.6% closed
+  −0.8% (09-28): 4-for-4, both sessions under a CAUTION-confirmed regime.
+  Frame a driverless premarket gap-up as the day's high-water mark, never a
+  floor and never a reason to chase; the >100% floor framing belongs to gaps
+  a named catalyst owns. On a confirmed RISK-ON tape the rule is untested.
 - **Gap-is-half-the-move symmetry (unwind 07-01; risk-on 06-29, 07-30,
   08-04).** In a crowded unwind the premarket gap ≈ half the closing damage;
   on a corroborated catalyst-owned risk-on morning the gap ≈ half the day's
