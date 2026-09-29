@@ -172,7 +172,7 @@
   "ALKS": {
     "industry": "Drug Manufacturers - Specialty & Generic",
     "sector": "Healthcare",
-    "ts": 1787961792
+    "ts": 1790640180
   },
   "ALL": {
     "industry": "Insurance - Property & Casualty",
@@ -799,6 +799,11 @@
     "sector": "Healthcare",
     "ts": 1790294570
   },
+  "CNH": {
+    "industry": "Farm & Heavy Construction Machinery",
+    "sector": "Industrials",
+    "ts": 1790640180
+  },
   "CNI": {
     "industry": "Railroads",
     "sector": "Industrials",
@@ -1067,7 +1072,7 @@
   "DLR": {
     "industry": "REIT - Specialty",
     "sector": "Real Estate",
-    "ts": 1787961793
+    "ts": 1790640180
   },
   "DLTR": {
     "industry": "Discount Stores",
@@ -1367,7 +1372,7 @@
   "FIVE": {
     "industry": "Specialty Retail",
     "sector": "Consumer Cyclical",
-    "ts": 1787961792
+    "ts": 1790640180
   },
   "FLEX": {
     "industry": "Electronic Components",
@@ -1574,6 +1579,11 @@
     "sector": "Industrials",
     "ts": 1785589370
   },
+  "GTLB": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1790640180
+  },
   "GTX": {
     "industry": "Auto Parts",
     "sector": "Consumer Cyclical",
@@ -1737,7 +1747,7 @@
   "IMVT": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1787961792
+    "ts": 1790640180
   },
   "INCY": {
     "industry": "Biotechnology",
@@ -1787,7 +1797,7 @@
   "IRM": {
     "industry": "REIT - Specialty",
     "sector": "Real Estate",
-    "ts": 1787184310
+    "ts": 1790640180
   },
   "ITUB": {
     "industry": "Banks - Regional",
@@ -2272,7 +2282,7 @@
   "NE": {
     "industry": "Oil & Gas Drilling",
     "sector": "Energy",
-    "ts": 1787789077
+    "ts": 1790640180
   },
   "NEE": {
     "industry": "Utilities - Regulated Electric",
@@ -2767,7 +2777,7 @@
   "RHHBY": {
     "industry": "Drug Manufacturers - General",
     "sector": "Healthcare",
-    "ts": 1787961793
+    "ts": 1790640180
   },
   "RIG": {
     "industry": "Oil & Gas Drilling",
@@ -2867,7 +2877,7 @@
   "S": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1787702742
+    "ts": 1790640180
   },
   "SAN": {
     "industry": "Banks - Diversified",
@@ -2907,7 +2917,7 @@
   "SCHW": {
     "industry": "Capital Markets",
     "sector": "Financial Services",
-    "ts": 1787875400
+    "ts": 1790640180
   },
   "SCI": {
     "industry": "Personal Services",
@@ -3127,7 +3137,7 @@
   "SYRE": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1787789077
+    "ts": 1790640180
   },
   "SYY": {
     "industry": "Food Distribution",
@@ -3347,7 +3357,7 @@
   "UGP": {
     "industry": "Oil & Gas Refining & Marketing",
     "sector": "Energy",
-    "ts": 1786493002
+    "ts": 1790640180
   },
   "UMC": {
     "industry": "Semiconductors",
@@ -3642,7 +3652,7 @@
   "YPF": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
-    "ts": 1785974601
+    "ts": 1790640180
   },
   "YUM": {
     "industry": "Restaurants",

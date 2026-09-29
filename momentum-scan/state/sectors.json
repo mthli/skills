@@ -179,6 +179,11 @@
     "sector": "Healthcare",
     "ts": 1784246492
   },
+  "CAI": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1790640068
+  },
   "CAKE": {
     "industry": "Restaurants",
     "sector": "Consumer Cyclical",
@@ -497,7 +502,7 @@
   "ILMN": {
     "industry": "Diagnostics & Research",
     "sector": "Healthcare",
-    "ts": 1787270540
+    "ts": 1790640068
   },
   "ING": {
     "industry": "Banks - Diversified",
@@ -1092,7 +1097,7 @@
   "VLO": {
     "industry": "Oil & Gas Refining & Marketing",
     "sector": "Energy",
-    "ts": 1787788925
+    "ts": 1790640068
   },
   "VNO": {
     "industry": "REIT - Office",

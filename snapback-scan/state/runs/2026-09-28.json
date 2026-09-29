@@ -1,0 +1,312 @@
+{
+  "as_of": "2026-09-28T20:03:08.974955-04:00",
+  "today": "2026-09-28",
+  "spark_window": [
+    "2026-09-29",
+    "2026-09-30",
+    "2026-10-01"
+  ],
+  "macro_note": "",
+  "regime": {
+    "snapshot": "20260925",
+    "state": "CAUTION",
+    "score": 4,
+    "vix": 16.1,
+    "spy_vs_200_pct": 7.9,
+    "flags": "Breadth divergence: SPY -0.6% from high but only 27% of names above 50DMA ; Narrowing rally: only megacaps lifting the index (RSP/SPY -4.6%/20d)"
+  },
+  "mr_run": {
+    "run_id": "20260928",
+    "run_date": "2026-09-28",
+    "stale_days": 0,
+    "rows_in_run": 47,
+    "kegs_after_filter": 5
+  },
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "UGP",
+      "rank": 2,
+      "score": 56.7,
+      "rsi2": 2.79,
+      "dist_200dma_pct": 32.75,
+      "signal_close": 7.1,
+      "mr_target": 7.51,
+      "mr_stop": 6.56,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "sector": "Energy",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "MU",
+          "date": "2026-09-30",
+          "slot": "AMC",
+          "detail": "MU ($1222B) reports 2026-09-30 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-30",
+          "detail": "Core PCE Price Index m/m 2026-09-30 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-30",
+          "detail": "Final GDP q/q 2026-09-30 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 7.1,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -6.33,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": null,
+      "signal_day_low": 6.97,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "CDW",
+      "rank": 7,
+      "score": 49.4,
+      "rsi2": 2.01,
+      "dist_200dma_pct": 3.48,
+      "signal_close": 135.43,
+      "mr_target": 142.98,
+      "mr_stop": 120.75,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "MU",
+          "date": "2026-09-30",
+          "slot": "AMC",
+          "detail": "MU (Technology, $1222B) reports 2026-09-30 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-30",
+          "detail": "Core PCE Price Index m/m 2026-09-30 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-30",
+          "detail": "Final GDP q/q 2026-09-30 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 135.43,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -7.36,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": null,
+      "signal_day_low": 135.33,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "FLR",
+      "rank": 11,
+      "score": 46.8,
+      "rsi2": 1.81,
+      "dist_200dma_pct": 3.51,
+      "signal_close": 50.38,
+      "mr_target": 52.57,
+      "mr_stop": 45.94,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "sector": "Industrials",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "MU",
+          "date": "2026-09-30",
+          "slot": "AMC",
+          "detail": "MU ($1222B) reports 2026-09-30 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-30",
+          "detail": "Core PCE Price Index m/m 2026-09-30 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-30",
+          "detail": "Final GDP q/q 2026-09-30 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 50.38,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 6,
+      "ret_5d_pct": -8.23,
+      "down_gaps_5d": 3,
+      "vol_ratio_5d_20d": null,
+      "signal_day_low": 50.07,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "EPD",
+      "rank": 12,
+      "score": 42.8,
+      "rsi2": 2.24,
+      "dist_200dma_pct": 2.16,
+      "signal_close": 36.75,
+      "mr_target": 37.61,
+      "mr_stop": 35.19,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 0,
+      "sector": "Energy",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "MU",
+          "date": "2026-09-30",
+          "slot": "AMC",
+          "detail": "MU ($1222B) reports 2026-09-30 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-30",
+          "detail": "Core PCE Price Index m/m 2026-09-30 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-30",
+          "detail": "Final GDP q/q 2026-09-30 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 36.75,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -5.5,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": null,
+      "signal_day_low": 36.58,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "ORKA",
+      "rank": 14,
+      "score": 41.4,
+      "rsi2": 4.76,
+      "dist_200dma_pct": 34.92,
+      "signal_close": 84.46,
+      "mr_target": 89.56,
+      "mr_stop": 71.5,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "MU",
+          "date": "2026-09-30",
+          "slot": "AMC",
+          "detail": "MU ($1222B) reports 2026-09-30 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-30",
+          "detail": "Core PCE Price Index m/m 2026-09-30 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-30",
+          "detail": "Final GDP q/q 2026-09-30 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 84.46,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -11.06,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": null,
+      "signal_day_low": 84.0,
+      "quiet_warning": false
+    }
+  ],
+  "macro_calendar": [
+    {
+      "date": "2026-09-30",
+      "time_et": "08:30",
+      "title": "Core PCE Price Index m/m"
+    },
+    {
+      "date": "2026-09-30",
+      "time_et": "08:30",
+      "title": "Final GDP q/q"
+    }
+  ],
+  "prior_run_review": {
+    "source": "snapback:2026-09-25",
+    "n": 11,
+    "pct_positive": 36.4,
+    "avg_pct": -0.11,
+    "median_pct": -0.49,
+    "best": [
+      {
+        "ticker": "OSCR",
+        "since_pct": 2.53
+      },
+      {
+        "ticker": "ARMK",
+        "since_pct": 1.1
+      },
+      {
+        "ticker": "TTEK",
+        "since_pct": 0.8
+      }
+    ],
+    "worst": [
+      {
+        "ticker": "BMRN",
+        "since_pct": -1.78
+      },
+      {
+        "ticker": "ORKA",
+        "since_pct": -1.2
+      },
+      {
+        "ticker": "ROIV",
+        "since_pct": -0.91
+      }
+    ],
+    "armed_subset": {
+      "n": 2,
+      "pct_positive": 50.0,
+      "avg_pct": 0.07,
+      "median_pct": 0.07
+    }
+  },
+  "errors": []
+}

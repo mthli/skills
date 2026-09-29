@@ -142,7 +142,7 @@
   "ASX": {
     "industry": "Semiconductors",
     "sector": "Technology",
-    "ts": 1787875355
+    "ts": 1790640140
   },
   "ATI": {
     "industry": "Metal Fabrication",
@@ -252,7 +252,7 @@
   "BNS": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1787875355
+    "ts": 1790640140
   },
   "BNY": {
     "industry": "Banks - Diversified",
@@ -499,6 +499,11 @@
     "sector": "Technology",
     "ts": 1790121751
   },
+  "DE": {
+    "industry": "Farm & Heavy Construction Machinery",
+    "sector": "Industrials",
+    "ts": 1790640140
+  },
   "DELL": {
     "industry": "Computer Hardware",
     "sector": "Technology",
@@ -722,7 +727,7 @@
   "GH": {
     "industry": "Diagnostics & Research",
     "sector": "Healthcare",
-    "ts": 1787616281
+    "ts": 1790640140
   },
   "GILD": {
     "industry": "Drug Manufacturers - General",
@@ -777,7 +782,7 @@
   "HNGE": {
     "industry": "Health Information Services",
     "sector": "Healthcare",
-    "ts": 1787875355
+    "ts": 1790640140
   },
   "HPE": {
     "industry": "Communication Equipment",
@@ -812,7 +817,7 @@
   "HUM": {
     "industry": "Healthcare Plans",
     "sector": "Healthcare",
-    "ts": 1787616281
+    "ts": 1790640140
   },
   "HWM": {
     "industry": "Aerospace & Defense",
@@ -1057,7 +1062,7 @@
   "MPC": {
     "industry": "Oil & Gas Refining & Marketing",
     "sector": "Energy",
-    "ts": 1785888158
+    "ts": 1790640140
   },
   "MRK": {
     "industry": "Drug Manufacturers - General",
