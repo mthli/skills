@@ -428,12 +428,18 @@ This is the section that can do harm if written lazily, so frame it honestly:
   bounced over 20.80 three mornings running and closed below it every time —
   08-12's 21.04 open beat the close by 3.3% and the day's low by 7%. Holding
   through a fired line is a **new** trade and needs its own written thesis.
-  **Refinement (08-13; 2-for-3 after 09-18 — watch):** the catalyst
+  **Refinement (08-13; resolved against 09-29, 2-for-4):** the catalyst
   differentiator (a bounce with a *fresh dated catalyst* is a legitimate
   re-trade, a catalyst-less one is a better fill) held for XE's +154% print
   (close +11.7%), failed 08-14, when REMX stuck **without** any catalyst
-  (+3.18% → 78.55, sector-wide and driverless), and held again 09-18, when
-  XE's catalyst-less +12% (09-17) opened 16.28 and closed 15.77. Second watch (08-14, 1st
+  (+3.18% → 78.55, sector-wide and driverless), held again 09-18, when
+  XE's catalyst-less +12% (09-17) opened 16.28 and closed 15.77, and failed a
+  2nd time 09-29, when DUOL's driverless +6.2% closed back over its fired
+  141.05 exit the session after firing (the open fill cost 6.1%). Catalyst-less
+  bounces stuck 2 of 3, so the label does not predict whether a bounce holds.
+  It decides only whether a hold can be *written*: a catalyst-backed hold has
+  a thesis for its new line, a catalyst-less one has none. The fill stays the
+  action either way. Second watch (08-14, 1st
   instance): the doctrine's three confirming cases were all *exit* lines on a
   broken post-earnings name — a fired **trim** on an intact-uptrend name may
   not behave the same way. Either way a held-through line gets a **new
