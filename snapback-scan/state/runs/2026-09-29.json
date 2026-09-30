@@ -1,0 +1,268 @@
+{
+  "as_of": "2026-09-29T20:03:07.228159-04:00",
+  "today": "2026-09-29",
+  "spark_window": [
+    "2026-09-30",
+    "2026-10-01",
+    "2026-10-02"
+  ],
+  "macro_note": "",
+  "regime": {
+    "snapshot": "20260928",
+    "state": "CAUTION",
+    "score": 3,
+    "vix": 16.0,
+    "spy_vs_200_pct": 7.0,
+    "flags": "Breadth divergence: SPY -1.3% from high but only 25% of names above 50DMA ; Narrowing rally: only megacaps lifting the index (RSP/SPY -4.4%/20d)"
+  },
+  "mr_run": {
+    "run_id": "20260929",
+    "run_date": "2026-09-29",
+    "stale_days": 0,
+    "rows_in_run": 52,
+    "kegs_after_filter": 3
+  },
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "HRB",
+      "rank": 4,
+      "score": 53.2,
+      "rsi2": 1.17,
+      "dist_200dma_pct": 5.74,
+      "signal_close": 40.34,
+      "mr_target": 42.11,
+      "mr_stop": 36.91,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "sector": "Consumer Cyclical",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "MU",
+          "date": "2026-09-30",
+          "slot": "AMC",
+          "detail": "MU ($1190B) reports 2026-09-30 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-30",
+          "detail": "Core PCE Price Index m/m 2026-09-30 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-30",
+          "detail": "Final GDP q/q 2026-09-30 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-02",
+          "detail": "Non-Farm Employment Change 2026-10-02 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-02",
+          "detail": "Unemployment Rate 2026-10-02 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 40.34,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -9.35,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 1.08,
+      "signal_day_low": 40.1,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "GTLB",
+      "rank": 8,
+      "score": 49.9,
+      "rsi2": 3.16,
+      "dist_200dma_pct": 43.75,
+      "signal_close": 46.21,
+      "mr_target": 47.9,
+      "mr_stop": 41.64,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "MU",
+          "date": "2026-09-30",
+          "slot": "AMC",
+          "detail": "MU (Technology, $1190B) reports 2026-09-30 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-30",
+          "detail": "Core PCE Price Index m/m 2026-09-30 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-30",
+          "detail": "Final GDP q/q 2026-09-30 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-02",
+          "detail": "Non-Farm Employment Change 2026-10-02 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-02",
+          "detail": "Unemployment Rate 2026-10-02 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 46.21,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -7.19,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.73,
+      "signal_day_low": 44.22,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "TEAM",
+      "rank": 12,
+      "score": 40.6,
+      "rsi2": 6.96,
+      "dist_200dma_pct": 59.52,
+      "signal_close": 178.54,
+      "mr_target": 188.52,
+      "mr_stop": 156.83,
+      "signal": "\ud83d\udfe1",
+      "listing_age_runs": 1,
+      "freq_60d": 0,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "MU",
+          "date": "2026-09-30",
+          "slot": "AMC",
+          "detail": "MU (Technology, $1190B) reports 2026-09-30 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-30",
+          "detail": "Core PCE Price Index m/m 2026-09-30 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-09-30",
+          "detail": "Final GDP q/q 2026-09-30 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-02",
+          "detail": "Non-Farm Employment Change 2026-10-02 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-02",
+          "detail": "Unemployment Rate 2026-10-02 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 178.54,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -8.75,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.76,
+      "signal_day_low": 173.5,
+      "quiet_warning": false
+    }
+  ],
+  "macro_calendar": [
+    {
+      "date": "2026-09-30",
+      "time_et": "08:30",
+      "title": "Core PCE Price Index m/m"
+    },
+    {
+      "date": "2026-09-30",
+      "time_et": "08:30",
+      "title": "Final GDP q/q"
+    },
+    {
+      "date": "2026-10-02",
+      "time_et": "08:30",
+      "title": "Non-Farm Employment Change"
+    },
+    {
+      "date": "2026-10-02",
+      "time_et": "08:30",
+      "title": "Unemployment Rate"
+    }
+  ],
+  "prior_run_review": {
+    "source": "snapback:2026-09-28",
+    "n": 5,
+    "pct_positive": 20.0,
+    "avg_pct": -1.25,
+    "median_pct": -0.32,
+    "best": [
+      {
+        "ticker": "UGP",
+        "since_pct": 0.42
+      },
+      {
+        "ticker": "EPD",
+        "since_pct": -0.27
+      },
+      {
+        "ticker": "ORKA",
+        "since_pct": -0.32
+      }
+    ],
+    "worst": [
+      {
+        "ticker": "CDW",
+        "since_pct": -3.77
+      },
+      {
+        "ticker": "FLR",
+        "since_pct": -2.3
+      },
+      {
+        "ticker": "ORKA",
+        "since_pct": -0.32
+      }
+    ],
+    "armed_subset": {
+      "n": 5,
+      "pct_positive": 20.0,
+      "avg_pct": -1.25,
+      "median_pct": -0.32
+    }
+  },
+  "errors": []
+}

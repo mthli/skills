@@ -514,6 +514,11 @@
     "sector": "Healthcare",
     "ts": 1786060958
   },
+  "DGX": {
+    "industry": "Diagnostics & Research",
+    "sector": "Healthcare",
+    "ts": 1790726539
+  },
   "DINO": {
     "industry": "Oil & Gas Refining & Marketing",
     "sector": "Energy",
@@ -593,6 +598,11 @@
     "industry": "Aerospace & Defense",
     "sector": "Industrials",
     "ts": 1787357018
+  },
+  "EMR": {
+    "industry": "Specialty Industrial Machinery",
+    "sector": "Industrials",
+    "ts": 1790726539
   },
   "EOG": {
     "industry": "Oil & Gas E&P",
@@ -892,7 +902,7 @@
   "JCI": {
     "industry": "Building Products & Equipment",
     "sector": "Industrials",
-    "ts": 1782864123
+    "ts": 1790726539
   },
   "JHX": {
     "industry": "Building Materials",
@@ -1257,7 +1267,7 @@
   "PBR": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
-    "ts": 1779157116
+    "ts": 1790726539
   },
   "PBR-A": {
     "industry": "Oil & Gas Integrated",

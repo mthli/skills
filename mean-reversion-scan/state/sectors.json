@@ -359,6 +359,11 @@
     "sector": "Financial Services",
     "ts": 1788307445
   },
+  "AUGO": {
+    "industry": "Gold",
+    "sector": "Basic Materials",
+    "ts": 1790726577
+  },
   "AUR": {
     "industry": "Auto Parts",
     "sector": "Consumer Cyclical",
@@ -492,7 +497,7 @@
   "BGC": {
     "industry": "Capital Markets",
     "sector": "Financial Services",
-    "ts": 1785801823
+    "ts": 1790726578
   },
   "BHP": {
     "industry": "Other Industrial Metals & Mining",
@@ -899,6 +904,11 @@
     "sector": "Consumer Cyclical",
     "ts": 1788307440
   },
+  "CRSP": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1790726578
+  },
   "CRWD": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
@@ -1002,7 +1012,7 @@
   "DAR": {
     "industry": "Packaged Foods",
     "sector": "Consumer Defensive",
-    "ts": 1787875400
+    "ts": 1790726578
   },
   "DASH": {
     "industry": "Internet Retail",
@@ -1168,6 +1178,11 @@
     "industry": "Utilities - Regulated Electric",
     "sector": "Utilities",
     "ts": 1785589369
+  },
+  "EGO": {
+    "industry": "Gold",
+    "sector": "Basic Materials",
+    "ts": 1790726577
   },
   "EIX": {
     "industry": "Utilities - Regulated Electric",
@@ -1512,7 +1527,7 @@
   "GLNG": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
-    "ts": 1787616367
+    "ts": 1790726578
   },
   "GLPI": {
     "industry": "REIT - Specialty",
@@ -1702,7 +1717,7 @@
   "HUT": {
     "industry": "Capital Markets",
     "sector": "Financial Services",
-    "ts": 1785369802
+    "ts": 1790726577
   },
   "HWM": {
     "industry": "Aerospace & Defense",
@@ -2074,6 +2089,11 @@
     "sector": "Technology",
     "ts": 1778771637
   },
+  "MCK": {
+    "industry": "Medical Distribution",
+    "sector": "Healthcare",
+    "ts": 1790726577
+  },
   "MCO": {
     "industry": "Financial Data & Stock Exchanges",
     "sector": "Financial Services",
@@ -2207,7 +2227,7 @@
   "MT": {
     "industry": "Steel",
     "sector": "Basic Materials",
-    "ts": 1787097899
+    "ts": 1790726578
   },
   "MTB": {
     "industry": "Banks - Regional",
@@ -2288,6 +2308,11 @@
     "industry": "Utilities - Regulated Electric",
     "sector": "Utilities",
     "ts": 1785589372
+  },
+  "NEM": {
+    "industry": "Gold",
+    "sector": "Basic Materials",
+    "ts": 1790726577
   },
   "NET": {
     "industry": "Software - Infrastructure",
@@ -3154,6 +3179,11 @@
     "sector": "Financial Services",
     "ts": 1787184310
   },
+  "TEAM": {
+    "industry": "Software - Application",
+    "sector": "Technology",
+    "ts": 1790726577
+  },
   "TECH": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
@@ -3332,7 +3362,7 @@
   "U": {
     "industry": "Software - Application",
     "sector": "Technology",
-    "ts": 1787702742
+    "ts": 1790726577
   },
   "UAL": {
     "industry": "Airlines",
@@ -3487,7 +3517,7 @@
   "VSAT": {
     "industry": "Communication Equipment",
     "sector": "Technology",
-    "ts": 1787097898
+    "ts": 1790726577
   },
   "VSH": {
     "industry": "Semiconductors",
@@ -3594,6 +3624,11 @@
     "sector": "Real Estate",
     "ts": 1788221000
   },
+  "WPM": {
+    "industry": "Gold",
+    "sector": "Basic Materials",
+    "ts": 1790726577
+  },
   "WSC": {
     "industry": "Rental & Leasing Services",
     "sector": "Industrials",
@@ -3667,7 +3702,7 @@
   "ZETA": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1784764989
+    "ts": 1790726577
   },
   "ZGN": {
     "industry": "Apparel Manufacturing",
