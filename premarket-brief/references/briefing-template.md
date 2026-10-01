@@ -139,7 +139,13 @@ This is the section that can do harm if written lazily, so frame it honestly:
   invert the true gap (07-30: NQ +0.99% vs QQQ +1.86% after MSFT/META). On
   those mornings grade gap *size* off index ETFs vs official closes; futures
   keep only the risk-tone vote. Default otherwise: futures are the cleaner
-  overnight read (ETF premarket prints are thin).
+  overnight read (ETF premarket prints are thin). **Except when the packet's
+  futures % and the index ETFs vs official closes disagree (09-28, 09-30;
+  promoted on 2nd instance): the ETFs set the gap's size.** 09-28 the feed
+  read ES +0.07 while the ETF was red and SPY opened −0.39; 09-30 three of
+  four opens landed nearer the ETF (IWM +0.42 = the ETF exactly vs RTY
+  +0.01). The feed's futures prev can be a different settle; flag the split
+  ⚠️ and let the futures vote tone only when they agree.
 - **Lone-VIX-spike trap.** A big VIX % move with futures ±0.3% and Europe flat
   is a thin or stale print: flag it ⚠️, don't headline it. Let the VIX/VIX3M
   *ratio* lead over the level: > 1 (inverted) = acute near-term stress, < 1
@@ -345,7 +351,11 @@ This is the section that can do harm if written lazily, so frame it honestly:
   leg went 0-for-2 (**IOT +15.9% open → +3.7%, 24%; PL +7.0% → −1.3%,
   inverted**). So before writing ">100% kept", name the group's tape: a gap
   aligned with it is a floor; a gap against it is two-sided and keeps < 30%
-  or inverts — grade it, never presume it. **The "group" is the peer group,
+  or inverts — grade it, never presume it. **A flat peer group is the third
+  cell (09-22, 09-30; promoted on 2nd instance):** with the named peers
+  within ±1% at the close, an own-guidance gap keeps 30–70% — ONON 66%
+  (09-22), HPE 56% with ANET +0.36 / CSCO +0.65 (09-30). Aligned = floor,
+  against = two-sided, flat = modal. **The "group" is the peer group,
   never a megacap-dominated sector ETF (09-09, 09-10; promoted on 2nd
   instance).** XLY is AMZN + TSLA and XLC is META: on 09-09 three own-print
   legs graded "against" those ETFs ran 114–212%; on 09-10 AEO −13% kept
