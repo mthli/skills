@@ -1,0 +1,391 @@
+{
+  "as_of": "2026-09-30T20:03:09.893191-04:00",
+  "today": "2026-09-30",
+  "spark_window": [
+    "2026-10-01",
+    "2026-10-02",
+    "2026-10-05"
+  ],
+  "macro_note": "ForexFactory covers the current week only \u2014 macro sparks beyond Sunday not visible",
+  "regime": {
+    "snapshot": "20260929",
+    "state": "CAUTION",
+    "score": 3,
+    "vix": 16.3,
+    "spy_vs_200_pct": 6.8,
+    "flags": "Breadth divergence: SPY -1.5% from high but only 25% of names above 50DMA ; Narrowing rally: only megacaps lifting the index (RSP/SPY -4.0%/20d)"
+  },
+  "mr_run": {
+    "run_id": "20260930",
+    "run_date": "2026-09-30",
+    "stale_days": 0,
+    "rows_in_run": 58,
+    "kegs_after_filter": 8
+  },
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "VSAT",
+      "rank": 2,
+      "score": 58.2,
+      "rsi2": 1.13,
+      "dist_200dma_pct": 14.51,
+      "signal_close": 69.09,
+      "mr_target": 72.23,
+      "mr_stop": 59.58,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-02",
+          "detail": "Non-Farm Employment Change 2026-10-02 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-02",
+          "detail": "Unemployment Rate 2026-10-02 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 69.09,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -7.87,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.77,
+      "signal_day_low": 68.22,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "MT",
+      "rank": 7,
+      "score": 51.2,
+      "rsi2": 1.73,
+      "dist_200dma_pct": 10.27,
+      "signal_close": 67.96,
+      "mr_target": 70.35,
+      "mr_stop": 62.88,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Basic Materials",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-02",
+          "detail": "Non-Farm Employment Change 2026-10-02 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-02",
+          "detail": "Unemployment Rate 2026-10-02 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 67.96,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -7.89,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 1.13,
+      "signal_day_low": 67.56,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "PAGP",
+      "rank": 10,
+      "score": 43.7,
+      "rsi2": 2.11,
+      "dist_200dma_pct": 12.56,
+      "signal_close": 26.13,
+      "mr_target": 26.54,
+      "mr_stop": 24.89,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 1,
+      "freq_60d": 2,
+      "sector": "Energy",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-02",
+          "detail": "Non-Farm Employment Change 2026-10-02 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-02",
+          "detail": "Unemployment Rate 2026-10-02 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 26.13,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 1,
+      "ret_5d_pct": -2.75,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 1.02,
+      "signal_day_low": 25.97,
+      "quiet_warning": true
+    },
+    {
+      "ticker": "FTI",
+      "rank": 12,
+      "score": 42.8,
+      "rsi2": 1.86,
+      "dist_200dma_pct": 3.45,
+      "signal_close": 68.85,
+      "mr_target": 70.53,
+      "mr_stop": 63.19,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 1,
+      "freq_60d": 2,
+      "sector": "Energy",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-02",
+          "detail": "Non-Farm Employment Change 2026-10-02 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-02",
+          "detail": "Unemployment Rate 2026-10-02 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 68.85,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -2.78,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.75,
+      "signal_day_low": 68.3,
+      "quiet_warning": true
+    },
+    {
+      "ticker": "EBAY",
+      "rank": 13,
+      "score": 42.0,
+      "rsi2": 2.46,
+      "dist_200dma_pct": 4.99,
+      "signal_close": 105.21,
+      "mr_target": 107.47,
+      "mr_stop": 97.05,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 1,
+      "freq_60d": 0,
+      "sector": "Consumer Cyclical",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-02",
+          "detail": "Non-Farm Employment Change 2026-10-02 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-02",
+          "detail": "Unemployment Rate 2026-10-02 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 105.21,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -3.72,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 0.69,
+      "signal_day_low": 104.8,
+      "quiet_warning": true
+    },
+    {
+      "ticker": "STLD",
+      "rank": 14,
+      "score": 41.4,
+      "rsi2": 2.65,
+      "dist_200dma_pct": 2.98,
+      "signal_close": 221.9,
+      "mr_target": 231.09,
+      "mr_stop": 203.12,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "sector": "Basic Materials",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-02",
+          "detail": "Non-Farm Employment Change 2026-10-02 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-02",
+          "detail": "Unemployment Rate 2026-10-02 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 221.9,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -5.17,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.78,
+      "signal_day_low": 221.65,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "TEAM",
+      "rank": 16,
+      "score": 40.8,
+      "rsi2": 5.05,
+      "dist_200dma_pct": 57.12,
+      "signal_close": 175.96,
+      "mr_target": 185.99,
+      "mr_stop": 153.51,
+      "signal": "\ud83d\udfe1",
+      "listing_age_runs": 2,
+      "freq_60d": 0,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-02",
+          "detail": "Non-Farm Employment Change 2026-10-02 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-02",
+          "detail": "Unemployment Rate 2026-10-02 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 175.96,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -6.73,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.87,
+      "signal_day_low": 168.05,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "BGC",
+      "rank": 17,
+      "score": 40.3,
+      "rsi2": 3.04,
+      "dist_200dma_pct": 8.87,
+      "signal_close": 11.45,
+      "mr_target": 11.87,
+      "mr_stop": 10.53,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "sector": "Financial Services",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-02",
+          "detail": "Non-Farm Employment Change 2026-10-02 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-02",
+          "detail": "Unemployment Rate 2026-10-02 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 11.45,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -6.68,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.22,
+      "signal_day_low": 11.26,
+      "quiet_warning": false
+    }
+  ],
+  "macro_calendar": [
+    {
+      "date": "2026-10-02",
+      "time_et": "08:30",
+      "title": "Non-Farm Employment Change"
+    },
+    {
+      "date": "2026-10-02",
+      "time_et": "08:30",
+      "title": "Unemployment Rate"
+    }
+  ],
+  "prior_run_review": {
+    "source": "snapback:2026-09-29",
+    "n": 3,
+    "pct_positive": 66.7,
+    "avg_pct": 0.07,
+    "median_pct": 0.59,
+    "best": [
+      {
+        "ticker": "GTLB",
+        "since_pct": 1.08
+      },
+      {
+        "ticker": "HRB",
+        "since_pct": 0.59
+      },
+      {
+        "ticker": "TEAM",
+        "since_pct": -1.45
+      }
+    ],
+    "worst": [
+      {
+        "ticker": "TEAM",
+        "since_pct": -1.45
+      },
+      {
+        "ticker": "HRB",
+        "since_pct": 0.59
+      },
+      {
+        "ticker": "GTLB",
+        "since_pct": 1.08
+      }
+    ],
+    "armed_subset": {
+      "n": 3,
+      "pct_positive": 66.7,
+      "avg_pct": 0.07,
+      "median_pct": 0.59
+    }
+  },
+  "errors": []
+}

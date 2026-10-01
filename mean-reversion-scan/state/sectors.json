@@ -452,7 +452,7 @@
   "BBY": {
     "industry": "Specialty Retail",
     "sector": "Consumer Cyclical",
-    "ts": 1786061003
+    "ts": 1790812980
   },
   "BCE": {
     "industry": "Telecom Services",
@@ -1042,7 +1042,7 @@
   "DE": {
     "industry": "Farm & Heavy Construction Machinery",
     "sector": "Industrials",
-    "ts": 1787011541
+    "ts": 1790812980
   },
   "DECK": {
     "industry": "Footwear & Accessories",
@@ -1102,7 +1102,7 @@
   "DOCN": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1787270703
+    "ts": 1790812980
   },
   "DOV": {
     "industry": "Specialty Industrial Machinery",
@@ -1152,12 +1152,12 @@
   "EAT": {
     "industry": "Restaurants",
     "sector": "Consumer Cyclical",
-    "ts": 1787961792
+    "ts": 1790812980
   },
   "EBAY": {
     "industry": "Internet Retail",
     "sector": "Consumer Cyclical",
-    "ts": 1785801823
+    "ts": 1790812980
   },
   "EBC": {
     "industry": "Banks - Regional",
@@ -1927,7 +1927,7 @@
   "KO": {
     "industry": "Beverages - Non-Alcoholic",
     "sector": "Consumer Defensive",
-    "ts": 1787875400
+    "ts": 1790812981
   },
   "KRG": {
     "industry": "REIT - Retail",
@@ -2387,7 +2387,7 @@
   "NUE": {
     "industry": "Steel",
     "sector": "Basic Materials",
-    "ts": 1787184309
+    "ts": 1790812980
   },
   "NVDA": {
     "industry": "Semiconductors",
@@ -2477,7 +2477,7 @@
   "OKE": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
-    "ts": 1787702742
+    "ts": 1790812980
   },
   "OKTA": {
     "industry": "Software - Infrastructure",
@@ -2834,6 +2834,11 @@
     "sector": "Technology",
     "ts": 1781654633
   },
+  "RNG": {
+    "industry": "Software - Application",
+    "sector": "Technology",
+    "ts": 1790812980
+  },
   "ROIV": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
@@ -3117,7 +3122,7 @@
   "STLD": {
     "industry": "Steel",
     "sector": "Basic Materials",
-    "ts": 1787184308
+    "ts": 1790812981
   },
   "STM": {
     "industry": "Semiconductors",
@@ -3312,7 +3317,7 @@
   "TTE": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
-    "ts": 1787789077
+    "ts": 1790812980
   },
   "TTEK": {
     "industry": "Engineering & Construction",
@@ -3402,7 +3407,7 @@
   "UNM": {
     "industry": "Insurance - Life",
     "sector": "Financial Services",
-    "ts": 1784764989
+    "ts": 1790812981
   },
   "UNP": {
     "industry": "Railroads",

@@ -817,7 +817,7 @@
   "QRVO": {
     "industry": "Semiconductors",
     "sector": "Technology",
-    "ts": 1785382630
+    "ts": 1790812880
   },
   "RAL": {
     "industry": "Electronic Components",
@@ -968,6 +968,11 @@
     "industry": "Computer Hardware",
     "sector": "Technology",
     "ts": 1781568120
+  },
+  "SWKS": {
+    "industry": "Semiconductors",
+    "sector": "Technology",
+    "ts": 1790812880
   },
   "SYRE": {
     "industry": "Biotechnology",
