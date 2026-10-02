@@ -267,7 +267,7 @@
   "APA": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1785974601
+    "ts": 1790899470
   },
   "APD": {
     "industry": "Specialty Chemicals",
@@ -537,7 +537,7 @@
   "BNS": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1785589366
+    "ts": 1790899470
   },
   "BNY": {
     "industry": "Banks - Diversified",
@@ -623,6 +623,11 @@
     "industry": "Medical Distribution",
     "sector": "Healthcare",
     "ts": 1789171380
+  },
+  "CAI": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1790899470
   },
   "CAKE": {
     "industry": "Restaurants",
@@ -872,7 +877,7 @@
   "CP": {
     "industry": "Railroads",
     "sector": "Industrials",
-    "ts": 1788221000
+    "ts": 1790899470
   },
   "CPT": {
     "industry": "REIT - Residential",
@@ -902,7 +907,7 @@
   "CROX": {
     "industry": "Footwear & Accessories",
     "sector": "Consumer Cyclical",
-    "ts": 1788307440
+    "ts": 1790899471
   },
   "CRSP": {
     "industry": "Biotechnology",
@@ -1097,7 +1102,7 @@
   "DOC": {
     "industry": "REIT - Healthcare Facilities",
     "sector": "Real Estate",
-    "ts": 1788220998
+    "ts": 1790899471
   },
   "DOCN": {
     "industry": "Software - Infrastructure",
@@ -1137,7 +1142,7 @@
   "DVN": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1785974602
+    "ts": 1790899470
   },
   "DXCM": {
     "industry": "Medical Devices",
@@ -1352,12 +1357,12 @@
   "FAST": {
     "industry": "Industrial Distribution",
     "sector": "Industrials",
-    "ts": 1788307444
+    "ts": 1790899471
   },
   "FCX": {
     "industry": "Copper",
     "sector": "Basic Materials",
-    "ts": 1788307441
+    "ts": 1790899470
   },
   "FDX": {
     "industry": "Integrated Freight & Logistics",
@@ -1572,7 +1577,7 @@
   "GPN": {
     "industry": "Specialty Business Services",
     "sector": "Industrials",
-    "ts": 1787961793
+    "ts": 1790899470
   },
   "GS": {
     "industry": "Capital Markets",
@@ -1612,7 +1617,7 @@
   "HALO": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1787961792
+    "ts": 1790899470
   },
   "HAS": {
     "industry": "Leisure",
@@ -1702,7 +1707,7 @@
   "HSIC": {
     "industry": "Medical Distribution",
     "sector": "Healthcare",
-    "ts": 1788307444
+    "ts": 1790899471
   },
   "HST": {
     "industry": "REIT - Hotel & Motel",
@@ -1729,10 +1734,15 @@
     "sector": "Industrials",
     "ts": 1785456162
   },
+  "IAG": {
+    "industry": "Gold",
+    "sector": "Basic Materials",
+    "ts": 1790899471
+  },
   "IBKR": {
     "industry": "Capital Markets",
     "sector": "Financial Services",
-    "ts": 1788307442
+    "ts": 1790899470
   },
   "IBRX": {
     "industry": "Biotechnology",
@@ -1752,7 +1762,7 @@
   "IFF": {
     "industry": "Specialty Chemicals",
     "sector": "Basic Materials",
-    "ts": 1787011540
+    "ts": 1790899470
   },
   "ILMN": {
     "industry": "Diagnostics & Research",
@@ -1767,12 +1777,12 @@
   "INCY": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1788220998
+    "ts": 1790899470
   },
   "ING": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1787184308
+    "ts": 1790899470
   },
   "INGM": {
     "industry": "Information Technology Services",
@@ -1977,7 +1987,7 @@
   "LLY": {
     "industry": "Drug Manufacturers - General",
     "sector": "Healthcare",
-    "ts": 1787789077
+    "ts": 1790899471
   },
   "LMT": {
     "industry": "Aerospace & Defense",
@@ -2067,7 +2077,7 @@
   "MA": {
     "industry": "Credit Services",
     "sector": "Financial Services",
-    "ts": 1788307443
+    "ts": 1790899471
   },
   "MAC": {
     "industry": "REIT - Retail",
@@ -2112,12 +2122,12 @@
   "MET": {
     "industry": "Insurance - Life",
     "sector": "Financial Services",
-    "ts": 1787184310
+    "ts": 1790899470
   },
   "MFC": {
     "industry": "Insurance - Life",
     "sector": "Financial Services",
-    "ts": 1786493002
+    "ts": 1790899471
   },
   "MFG": {
     "industry": "Banks - Regional",
@@ -2157,7 +2167,7 @@
   "MMM": {
     "industry": "Conglomerates",
     "sector": "Industrials",
-    "ts": 1787011541
+    "ts": 1790899471
   },
   "MNST": {
     "industry": "Beverages - Non-Alcoholic",
@@ -2382,7 +2392,7 @@
   "NTRS": {
     "industry": "Asset Management",
     "sector": "Financial Services",
-    "ts": 1787184310
+    "ts": 1790899470
   },
   "NUE": {
     "industry": "Steel",
@@ -2632,7 +2642,7 @@
   "PFG": {
     "industry": "Asset Management",
     "sector": "Financial Services",
-    "ts": 1787270704
+    "ts": 1790899470
   },
   "PFGC": {
     "industry": "Food Distribution",
@@ -2712,7 +2722,7 @@
   "PRU": {
     "industry": "Insurance - Life",
     "sector": "Financial Services",
-    "ts": 1787184310
+    "ts": 1790899471
   },
   "PSA": {
     "industry": "REIT - Industrial",
@@ -2757,7 +2767,7 @@
   "RAL": {
     "industry": "Electronic Components",
     "sector": "Technology",
-    "ts": 1785456162
+    "ts": 1790899470
   },
   "RBA": {
     "industry": "Specialty Business Services",
@@ -2897,7 +2907,7 @@
   "RY": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1787184310
+    "ts": 1790899471
   },
   "RYCEY": {
     "industry": "Aerospace & Defense",
@@ -2912,7 +2922,7 @@
   "SAN": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1787011540
+    "ts": 1790899470
   },
   "SANM": {
     "industry": "Electronic Components",
@@ -3132,7 +3142,7 @@
   "STT": {
     "industry": "Asset Management",
     "sector": "Financial Services",
-    "ts": 1788307440
+    "ts": 1790899470
   },
   "STX": {
     "industry": "Computer Hardware",
@@ -3147,7 +3157,7 @@
   "SW": {
     "industry": "Packaging & Containers",
     "sector": "Consumer Cyclical",
-    "ts": 1788220998
+    "ts": 1790899471
   },
   "SWK": {
     "industry": "Tools & Accessories",
@@ -3182,7 +3192,7 @@
   "TD": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1787184310
+    "ts": 1790899471
   },
   "TEAM": {
     "industry": "Software - Application",
@@ -3412,7 +3422,7 @@
   "UNP": {
     "industry": "Railroads",
     "sector": "Industrials",
-    "ts": 1788220998
+    "ts": 1790899471
   },
   "UPS": {
     "industry": "Integrated Freight & Logistics",
@@ -3437,12 +3447,12 @@
   "USFD": {
     "industry": "Food Distribution",
     "sector": "Consumer Defensive",
-    "ts": 1787097899
+    "ts": 1790899471
   },
   "V": {
     "industry": "Credit Services",
     "sector": "Financial Services",
-    "ts": 1788307443
+    "ts": 1790899470
   },
   "VAL": {
     "industry": "Oil & Gas Drilling",
@@ -3537,7 +3547,7 @@
   "VTR": {
     "industry": "REIT - Healthcare Facilities",
     "sector": "Real Estate",
-    "ts": 1788220999
+    "ts": 1790899471
   },
   "VTRS": {
     "industry": "Drug Manufacturers - Specialty & Generic",

@@ -72,7 +72,7 @@
   "ANF": {
     "industry": "Apparel Retail",
     "sector": "Consumer Cyclical",
-    "ts": 1788307314
+    "ts": 1790899328
   },
   "APA": {
     "industry": "Oil & Gas E&P",
@@ -517,7 +517,7 @@
   "IQV": {
     "industry": "Diagnostics & Research",
     "sector": "Healthcare",
-    "ts": 1788220892
+    "ts": 1790899329
   },
   "JEF": {
     "industry": "Capital Markets",
@@ -768,6 +768,11 @@
     "industry": "Oil & Gas Refining & Marketing",
     "sector": "Energy",
     "ts": 1790035272
+  },
+  "PBR": {
+    "industry": "Oil & Gas Integrated",
+    "sector": "Energy",
+    "ts": 1790899329
   },
   "PBR-A": {
     "industry": "Oil & Gas Integrated",

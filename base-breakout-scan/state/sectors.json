@@ -97,7 +97,7 @@
   "ANET": {
     "industry": "Computer Hardware",
     "sector": "Technology",
-    "ts": 1788220951
+    "ts": 1790899417
   },
   "APA": {
     "industry": "Oil & Gas E&P",
@@ -452,7 +452,7 @@
   "CVE": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
-    "ts": 1788220951
+    "ts": 1790899417
   },
   "CVS": {
     "industry": "Healthcare Plans",
@@ -1393,6 +1393,11 @@
     "industry": "Gambling",
     "sector": "Consumer Cyclical",
     "ts": 1785589360
+  },
+  "SHEL": {
+    "industry": "Oil & Gas Integrated",
+    "sector": "Energy",
+    "ts": 1790899417
   },
   "SIRI": {
     "industry": "Entertainment",
