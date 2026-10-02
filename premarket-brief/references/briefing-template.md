@@ -355,7 +355,13 @@ This is the section that can do harm if written lazily, so frame it honestly:
   cell (09-22, 09-30; promoted on 2nd instance):** with the named peers
   within ±1% at the close, an own-guidance gap keeps 30–70% — ONON 66%
   (09-22), HPE 56% with ANET +0.36 / CSCO +0.65 (09-30). Aligned = floor,
-  against = two-sided, flat = modal. **The "group" is the peer group,
+  against = two-sided, flat = modal. **The floor is a *guidance* rule
+  (09-30, 10-01; promoted on 2nd session):** non-earnings own-news gaps,
+  whether a contract (BA +2.3 → −0.9, CEG +3.0 → 65%, RKLB +3.8 → 30%) or a
+  product (HOOD +5.5 → −3.2, GOOGL +2.0 → −1.7), went 0-for-5 over 70% kept,
+  three inverted. Frame them two-sided with no expected keep and the
+  premarket print as the day's high-water mark; the floor framing belongs to
+  own-guidance and clinical-readout gaps. **The "group" is the peer group,
   never a megacap-dominated sector ETF (09-09, 09-10; promoted on 2nd
   instance).** XLY is AMZN + TSLA and XLC is META: on 09-09 three own-print
   legs graded "against" those ETFs ran 114–212%; on 09-10 AEO −13% kept
