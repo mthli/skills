@@ -617,7 +617,7 @@
   "EQNR": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
-    "ts": 1788220950
+    "ts": 1790985735
   },
   "ERAS": {
     "industry": "Biotechnology",
@@ -1367,7 +1367,7 @@
   "RVTY": {
     "industry": "Diagnostics & Research",
     "sector": "Healthcare",
-    "ts": 1785558751
+    "ts": 1790985735
   },
   "RY": {
     "industry": "Banks - Diversified",
@@ -1528,6 +1528,11 @@
     "industry": "Copper",
     "sector": "Basic Materials",
     "ts": 1788566553
+  },
+  "TER": {
+    "industry": "Semiconductor Equipment & Materials",
+    "sector": "Technology",
+    "ts": 1790985735
   },
   "TEVA": {
     "industry": "Drug Manufacturers - Specialty & Generic",
@@ -1767,7 +1772,7 @@
   "WSM": {
     "industry": "Specialty Retail",
     "sector": "Consumer Cyclical",
-    "ts": 1787011455
+    "ts": 1790985735
   },
   "WULF": {
     "industry": "Capital Markets",

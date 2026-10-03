@@ -32,7 +32,7 @@
   "ABBV": {
     "industry": "Drug Manufacturers - General",
     "sector": "Healthcare",
-    "ts": 1787875400
+    "ts": 1790985775
   },
   "ABEV": {
     "industry": "Beverages - Brewers",
@@ -127,7 +127,7 @@
   "AHR": {
     "industry": "REIT - Healthcare Facilities",
     "sector": "Real Estate",
-    "ts": 1788221000
+    "ts": 1790985776
   },
   "AIG": {
     "industry": "Insurance - Diversified",
@@ -467,7 +467,7 @@
   "BDX": {
     "industry": "Medical Instruments & Supplies",
     "sector": "Healthcare",
-    "ts": 1788307443
+    "ts": 1790985775
   },
   "BE": {
     "industry": "Electrical Equipment & Parts",
@@ -817,7 +817,7 @@
   "CNI": {
     "industry": "Railroads",
     "sector": "Industrials",
-    "ts": 1788220999
+    "ts": 1790985776
   },
   "CNP": {
     "industry": "Utilities - Regulated Electric",
@@ -1807,7 +1807,7 @@
   "IQV": {
     "industry": "Diagnostics & Research",
     "sector": "Healthcare",
-    "ts": 1788307442
+    "ts": 1790985775
   },
   "IRDM": {
     "industry": "Telecom Services",
@@ -2067,7 +2067,7 @@
   "LYV": {
     "industry": "Entertainment",
     "sector": "Communication Services",
-    "ts": 1788307443
+    "ts": 1790985776
   },
   "M": {
     "industry": "Department Stores",
@@ -2422,7 +2422,7 @@
   "NWG": {
     "industry": "Banks - Regional",
     "sector": "Financial Services",
-    "ts": 1788220999
+    "ts": 1790985775
   },
   "NWS": {
     "industry": "Entertainment",
@@ -2757,7 +2757,7 @@
   "QRVO": {
     "industry": "Semiconductors",
     "sector": "Technology",
-    "ts": 1787702743
+    "ts": 1790985775
   },
   "QSR": {
     "industry": "Restaurants",
@@ -2808,6 +2808,11 @@
     "industry": "Banks - Regional",
     "sector": "Financial Services",
     "ts": 1790035478
+  },
+  "RGEN": {
+    "industry": "Medical Instruments & Supplies",
+    "sector": "Healthcare",
+    "ts": 1790985775
   },
   "RHHBY": {
     "industry": "Drug Manufacturers - General",
@@ -3167,7 +3172,7 @@
   "SWKS": {
     "industry": "Semiconductors",
     "sector": "Technology",
-    "ts": 1782777789
+    "ts": 1790985775
   },
   "SYF": {
     "industry": "Credit Services",
@@ -3262,7 +3267,7 @@
   "TMO": {
     "industry": "Diagnostics & Research",
     "sector": "Healthcare",
-    "ts": 1788307441
+    "ts": 1790985775
   },
   "TOL": {
     "industry": "Residential Construction",
@@ -3502,7 +3507,7 @@
   "VNO": {
     "industry": "REIT - Office",
     "sector": "Real Estate",
-    "ts": 1787097899
+    "ts": 1790985776
   },
   "VNOM": {
     "industry": "Oil & Gas Midstream",
@@ -3602,7 +3607,7 @@
   "WELL": {
     "industry": "REIT - Healthcare Facilities",
     "sector": "Real Estate",
-    "ts": 1788220999
+    "ts": 1790985775
   },
   "WES": {
     "industry": "Oil & Gas Midstream",
