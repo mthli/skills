@@ -87,21 +87,19 @@ def load_benchmark(path: Path) -> dict | None:
 
 
 def window_benchmark(bench: dict | None, run_ids: list[str],
-                     win_start: int, top_n: int) -> dict | None:
+                     win_start: int) -> dict | None:
     """Align the benchmark curves to the displayed run-days and re-base them.
 
     The curves are computed over every run-day but the charts show only a
     trailing window, so each line is re-based to 100 on the first day all
     three cover — value − 100 is then the cumulative % over exactly the
-    span the reader is looking at."""
+    span the reader is looking at.
+
+    The board curve carries its own size (board_n, the top 10 by default)
+    and the panel labels it with that, not with the page's --top-n: the
+    two differ on purpose. Files written before board_n existed held the
+    whole displayed board, so they fall back to top_n."""
     if not bench:
-        return None
-    if bench.get("top_n") != top_n:
-        # A top-10 page drawn against a top-30 board curve is a wrong
-        # answer that looks right, so refuse instead of rendering it.
-        print(f"WARNING: benchmark.json holds a top-{bench.get('top_n')} "
-              f"board but this page renders top-{top_n}; omitting the panel. "
-              f"Re-run compute_benchmark.py --top-n {top_n}.", file=sys.stderr)
         return None
     at = {d: i for i, d in enumerate(bench["days"])}
     cov_in = bench.get("coverage") or []
@@ -134,6 +132,7 @@ def window_benchmark(bench: dict | None, run_ids: list[str],
               f"Re-run scripts/compute_benchmark.py to extend it.",
               file=sys.stderr)
     out["cov"] = cov
+    out["n"] = bench.get("board_n", bench.get("top_n"))
     return out
 
 
@@ -425,7 +424,7 @@ def build_payload(rows: list[dict], sectors: dict, top_n: int,
         "atrN": (bench or {}).get("atr_period"),
         "days": day_labels[win_start:],
         "window": {"total": len(run_ids), "shown": len(win_ids)},
-        "bench": window_benchmark(bench, run_ids, win_start, top_n),
+        "bench": window_benchmark(bench, run_ids, win_start),
         "series": series,
         "summary": summary,
         "sectors": {"names": top_secs + ["Others"], "perDay": sector_series},
@@ -1262,13 +1261,13 @@ function tipCard(t, { title, aux, color, line, keyClass, sub, kv, kv2, notes }) 
     // Fixed identity slots, board first — legend, right-edge labels and
     // tooltip rows all read in this one order.
     const SER = [
-      {k: "board", lbl: T.benchBoard(N), col: "var(--s1)", w: 2},
+      {k: "board", lbl: T.benchBoard(B.n), col: "var(--s1)", w: 2},
       {k: "spy",   lbl: "SPY",           col: "var(--s2)", w: 1.5},
       {k: "qqq",   lbl: "QQQ",           col: "var(--s3)", w: 1.5},
     ];
     const short = B.cov.filter(c => c && c[0] < c[1]).length;
     document.getElementById("bench-note").textContent =
-      T.benchNote(N) + WIN_TAG + (B.asOf ? T.benchStale(B.asOf) : "")
+      T.benchNote(B.n) + WIN_TAG + (B.asOf ? T.benchStale(B.asOf) : "")
       + (short ? T.benchCovNote(short) : "");
     // 100 = the first shown day, so value − 100 IS the cumulative %.
     const pct = v => v - 100;

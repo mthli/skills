@@ -7,8 +7,8 @@ curves over the recorded run-days and writes them to
 state/benchmark.json, which render_history_html.py draws as-is (that
 script stays stdlib-only and never touches the network).
 
-  - board: equal-weight the displayed top-N, rebalanced every run-day —
-    the daily-portfolio form of the skill's canonical convention (enter
+  - board: equal-weight the top BOARD_N (10) of each run-day's board,
+    rebalanced every run-day — the daily-portfolio form of the skill's canonical convention (enter
     at the listing close, exit at the dropout-observation close, i.e.
     backtest_outcomes.py's default --fills close). Day t's return
     applies day t-1's board to close(t-1) → close(t), so the board being
@@ -19,14 +19,18 @@ Gaps between run-days (weekends, or a scan that didn't run) are HELD,
 not skipped — the return over the gap is the return you'd actually have
 taken, since the last published board is all you had.
 
+The curve holds the top 10, not the whole displayed board, while the
+rest of the page still draws the full top-N, so the two cutoffs are
+separate: --board-n for the curve, --top-n for the price block below.
+
 All three lines are idealized close fills with no costs or slippage —
 but NOT equally idealized, and the difference runs one way. The board
-rebalances every run-day (~4 of 30 names swap daily in the 2026-05→07
-sample, ~13% one-way turnover, plus the equal-weight reset on the rest);
-SPY / QQQ are bought once and held. Free trading is therefore a subsidy
-the board collects and the indices don't — at 10bp round-trip it is
-worth roughly 0.6pp over 51 run-days, against a measured gap of 2.4pp.
-Read the gap rather than any line's level, then discount the gap itself.
+rebalances every run-day (~1.8 of 10 names swap daily over the 91
+run-days to 2026-10-02, ~18% one-way turnover, plus the equal-weight
+reset on the rest); SPY / QQQ are bought once and held. Free trading is
+therefore a subsidy the board collects and the indices don't — at 10bp
+round-trip it is worth roughly 1.7pp over those 91 run-days. Read the
+gap rather than any line's level, then discount the gap itself.
 
 Per-day price coverage is recorded alongside the curves, so a name whose
 series went missing shows up as a hole instead of quietly flattering the
@@ -43,7 +47,7 @@ only the two index series.
 
 Run (before re-rendering the dashboard; ~150 tickers, batched fetch):
   uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy>=1.24,<3' \
-    python compute_benchmark.py [--top-n 30] [--refresh-prices]
+    python compute_benchmark.py [--board-n 10] [--top-n 30] [--refresh-prices]
 """
 
 from __future__ import annotations
@@ -64,6 +68,9 @@ SKILL_DIR = Path(__file__).resolve().parent.parent
 HISTORY_CSV = SKILL_DIR / "state" / "history.csv"
 OUT_JSON = SKILL_DIR / "state" / "benchmark.json"
 INDICES = ("SPY", "QQQ")
+# How many of each day's top names the board curve holds. Deliberately
+# smaller than the displayed board; see the module docstring.
+BOARD_N = 10
 # MUST equal scan.py's ATR_PERIOD_DAYS. The dashboard draws its stop from
 # the ATR computed here, and a stop that disagreed with the one the CLI
 # printed the same morning is the worst kind of wrong — it looks right.
@@ -203,6 +210,9 @@ def build_prices(days: list[str], members: list[str],
          this one — the piece a running peak-since-entry sums from, which
          keeps episode knowledge out of this function
 
+    `members` is every name on the displayed top-N, not just the top
+    BOARD_N the curve holds: the hover cards price every listed cell.
+
     A day with no bar of its own is null in all three, and holds the
     interval open so the next day's `h` still spans the gap. The curves
     resolve such a day to the nearest prior bar within 5 days, which is
@@ -262,20 +272,26 @@ DEFAULT_CACHE = Path(tempfile.gettempdir()) / "momentum_backtest_prices.pkl"
 def refresh(history: Path = HISTORY_CSV, out: Path = OUT_JSON,
             top_n: int = 30, cache: Path = DEFAULT_CACHE,
             refresh_prices: bool = False,
-            start: str | None = None) -> dict | None:
+            start: str | None = None,
+            board_n: int = BOARD_N) -> dict | None:
     """Rebuild the curves from `history` and write them to `out`.
+
+    `board_n` is the curve's cutoff, `top_n` the displayed board whose
+    members get a price block.
 
     Returns the payload, or None when history is too short to draw one
     (the first scan against a fresh history.csv). scan.py calls this
     right after its own history save, so the file is never a day behind
     the board the dashboard would draw."""
-    days, boards = load_boards(history, top_n)
+    days, boards = load_boards(history, board_n)
     if len(days) < 2:
         return None
     start = start or default_start(days[0])
-    members = sorted({t for m in boards.values() for t in m})
-    print(f"history: {len(days)} run-days, {len(members)} board members",
-          file=sys.stderr)
+    _, shown = load_boards(history, top_n)
+    members = sorted({t for m in (*boards.values(), *shown.values())
+                      for t in m})
+    print(f"history: {len(days)} run-days, top-{board_n} curve, "
+          f"{len(members)} top-{top_n} members priced", file=sys.stderr)
 
     prices = fetch_prices(members + list(INDICES), start, cache,
                           refresh_prices)
@@ -301,6 +317,7 @@ def refresh(history: Path = HISTORY_CSV, out: Path = OUT_JSON,
         "generated": datetime.now(timezone.utc).astimezone()
                              .strftime("%Y-%m-%d %H:%M %Z"),
         "top_n": top_n,
+        "board_n": board_n,
         "fills": "close",
         "atr_period": ATR_PERIOD_DAYS,
         **build_curves(days, boards, prices),
@@ -344,8 +361,12 @@ def summarize(payload: dict, out: Path) -> str:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--history", type=Path, default=HISTORY_CSV)
+    ap.add_argument("--board-n", type=int, default=BOARD_N,
+                    help="how many of each day's top names the board curve "
+                         "holds")
     ap.add_argument("--top-n", type=int, default=30,
-                    help="board membership cutoff, matching scan.py's default")
+                    help="displayed board whose members get a price block, "
+                         "matching scan.py's default")
     ap.add_argument("--out", type=Path, default=OUT_JSON)
     ap.add_argument("--cache", type=Path, default=DEFAULT_CACHE,
                     help="shared with backtest_outcomes.py")
@@ -357,7 +378,7 @@ def main() -> None:
 
     try:
         payload = refresh(args.history, args.out, args.top_n, args.cache,
-                          args.refresh_prices, args.start)
+                          args.refresh_prices, args.start, args.board_n)
     except RuntimeError as e:
         raise SystemExit(str(e))
     if payload is None:

@@ -147,6 +147,31 @@ def test_load_boards_keeps_only_the_displayed_top_n(tmp_path):
     assert boards == {"20260701": ["AAA"], "20260702": ["BBB"]}
 
 
+def test_the_curve_holds_the_top_board_n_and_prices_cover_top_n(
+        monkeypatch, tmp_path):
+    csv = tmp_path / "history.csv"
+    csv.write_text("run_id,ticker,rank\n" + "".join(
+        f"{d},{t},{r}\n" for d in DAYS3
+        for t, r in (("TOP", 1), ("MID", 20), ("OUT", 31))))
+    closes = {"TOP": [100.0, 110.0, 121.0], "MID": [100.0, 50.0, 25.0],
+              "OUT": [100.0, 100.0, 100.0], "SPY": [100.0] * 3,
+              "QQQ": [100.0] * 3}
+    asked = []
+    monkeypatch.setattr(cb, "fetch_prices", lambda tickers, *a, **kw:
+                        asked.extend(tickers) or {
+                            t: bars(c).assign(High=c, Low=c)
+                            for t, c in closes.items()})
+    out = tmp_path / "benchmark.json"
+    p = cb.refresh(history=csv, out=out, top_n=30, board_n=10)
+    # MID halved twice, but rank 20 is outside the curve's top 10.
+    assert p["board"] == [100.0, 110.0, 121.0]
+    assert p["coverage"][1:] == [[1, 1], [1, 1]]
+    # The hover cards still need MID's prices; rank 31 never shows.
+    assert set(p["px"]) == {"TOP", "MID"}
+    assert "OUT" not in asked
+    assert (p["top_n"], p["board_n"]) == (30, 10)
+
+
 # --------------------------------------------------- scan.py auto-refresh
 
 def test_scan_refreshes_for_the_board_it_just_displayed(monkeypatch, tmp_path):
@@ -187,8 +212,8 @@ def test_a_missing_index_is_an_error_the_caller_can_catch():
 def test_the_run_leaves_a_differently_sized_board_alone(monkeypatch, tmp_path,
                                                         capsys):
     # benchmark.json is tracked and the nightly job commits what it finds,
-    # so an ad-hoc --top-n 10 scan must not quietly replace the curves the
-    # default dashboard draws.
+    # so an ad-hoc --top-n 10 scan must not quietly shrink the price block
+    # the default top-30 dashboard's hover cards read from.
     f = tmp_path / "benchmark.json"
     f.write_text(json.dumps({"top_n": 30, **bench()}))
     monkeypatch.setattr(scan, "BENCHMARK_FILE", f)
@@ -217,7 +242,7 @@ def bench(days=DAYS3, board=(100.0, 110.0, 121.0), spy=(100.0, 100.0, 100.0),
 def test_window_rebases_every_line_to_the_first_shown_day():
     # Window starts on day 2, where board stands at 110: the panel must
     # read "+10% since then", not "+21% since a day that isn't drawn".
-    out = rh.window_benchmark(bench(), DAYS3, win_start=1, top_n=30)
+    out = rh.window_benchmark(bench(), DAYS3, win_start=1)
     assert out["board"] == [100.0, 110.0]
     assert out["qqq"] == [100.0, 100.0]
     assert out["asOf"] is None
@@ -226,7 +251,7 @@ def test_window_rebases_every_line_to_the_first_shown_day():
 def test_a_stale_file_says_so_on_stderr_too(capsys):
     # The page names the last covered day, but whoever ran the render is
     # looking at a terminal, not the page.
-    rh.window_benchmark(bench(), DAYS3 + ["20260706"], 0, top_n=30)
+    rh.window_benchmark(bench(), DAYS3 + ["20260706"], 0)
     err = capsys.readouterr().err
     assert "20260703" in err and "compute_benchmark.py" in err
 
@@ -235,19 +260,26 @@ def test_days_outside_the_benchmark_become_holes():
     # The scan ran on 07-06 but the benchmark predates it: that day is a
     # hole in every line, and asOf names the last day actually covered.
     run_ids = DAYS3 + ["20260706"]
-    out = rh.window_benchmark(bench(), run_ids, win_start=0, top_n=30)
+    out = rh.window_benchmark(bench(), run_ids, win_start=0)
     assert out["board"] == [100.0, 110.0, 121.0, None]
     assert out["cov"][-1] is None
     assert out["asOf"] == "07-03"
 
 
-def test_top_n_mismatch_omits_the_panel(capsys):
-    assert rh.window_benchmark(bench(top_n=10), DAYS3, 0, top_n=30) is None
-    assert "top-10" in capsys.readouterr().err
+def test_the_panel_names_the_board_the_curve_holds():
+    # A top-10 curve on a top-30 page is the design, not a mismatch: the
+    # label has to come from the file, or it would read "Top-30".
+    b = {**bench(), "board_n": 10}
+    assert rh.window_benchmark(b, DAYS3, 0)["n"] == 10
+
+
+def test_a_file_from_before_board_n_is_labelled_by_its_top_n():
+    # Those files held the whole displayed board.
+    assert rh.window_benchmark(bench(top_n=30), DAYS3, 0)["n"] == 30
 
 
 def test_no_overlap_omits_the_panel(capsys):
-    out = rh.window_benchmark(bench(), ["20260801", "20260804"], 0, top_n=30)
+    out = rh.window_benchmark(bench(), ["20260801", "20260804"], 0)
     assert out is None
     assert "covers none" in capsys.readouterr().err
 

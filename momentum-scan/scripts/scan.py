@@ -1213,9 +1213,11 @@ def refresh_benchmark(top_n: int) -> None:
 
     A run whose --top-n differs from the file's leaves it alone. The file
     is tracked and the nightly job commits whatever is dirty, so a one-off
-    `--top-n 10` scan would otherwise commit a top-10 curve that the
-    default dashboard refuses to draw. compute_benchmark.py --top-n is the
-    deliberate way to switch which board the comparison follows."""
+    `--top-n 10` scan would otherwise commit a price block covering only
+    the top-10's members, and the default top-30 dashboard's hover cards
+    would lose their prices below rank 10. (The curve itself follows
+    compute_benchmark's --board-n, not --top-n.) compute_benchmark.py
+    --top-n is the deliberate way to switch which board gets priced."""
     have = benchmark_top_n()
     if have is not None and have != top_n:
         print(f"Skipping benchmark refresh: this run is top-{top_n} but "
