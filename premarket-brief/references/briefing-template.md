@@ -213,6 +213,12 @@ This is the section that can do harm if written lazily, so frame it honestly:
   (XLF), duration-tech (SOXX) — each as a spread vs SPY, and grade the rates
   day by the 10-year's close plus which leg moved most; when a named non-rate
   catalyst owns a leg, say so in the line.
+  **A soft-data relief in yields is a 10-year claim, graded at its close
+  (09-30, 10-02; promoted on 2nd instance).** Both soft prints reversed by
+  the close: PCE 09-30 (10y −2.7bp at 09:00 → +3.8bp) and jobs 10-02
+  (−4.9bp → +4.0bp). Write a relief hypothesis as 10-year branches and
+  never read it off the print. The equity gap is a separate claim: 10-02
+  QQQ kept 82% of its gap to a record close while the relief failed.
 - **A stale regime cache does not vote; the exam does (09-02, 09-03;
   promoted on 2nd instance).** When `regime.stale_days > 1`, the index exam's
   two breadth gauges *are* the day's regime grade — say so in ①, never "the
@@ -361,7 +367,13 @@ This is the section that can do harm if written lazily, so frame it honestly:
   product (HOOD +5.5 → −3.2, GOOGL +2.0 → −1.7), went 0-for-5 over 70% kept,
   three inverted. Frame them two-sided with no expected keep and the
   premarket print as the day's high-water mark; the floor framing belongs to
-  own-guidance and clinical-readout gaps. **The "group" is the peer group,
+  own-guidance and clinical-readout gaps. **A gap onto a deal price is
+  capped by it (SMMT 09-29, SYNA 10-02; promoted on 2nd instance):** SMMT
+  opened over AstraZeneca's 18.36 and kept 27%; SYNA's +14.6% kept 96% with
+  its high 1% under ON's $123 cash price. The deal price is the day's
+  ceiling: grade the close against the spread (at or over the price = a bid
+  for more; within ~5% under = the spread trades; wider = deal doubt), never
+  against the floor rule. **The "group" is the peer group,
   never a megacap-dominated sector ETF (09-09, 09-10; promoted on 2nd
   instance).** XLY is AMZN + TSLA and XLC is META: on 09-09 three own-print
   legs graded "against" those ETFs ran 114–212%; on 09-10 AEO −13% kept
@@ -438,6 +450,13 @@ This is the section that can do harm if written lazily, so frame it honestly:
   the laggard, RSP −0.39pp — while every pre-committed branch resolved as
   written. Write the character as a hypothesis with the exam's branch
   attached ("if the close is X-led, the day was Y"), never as the verdict.
+  **The weight gauge's modal band is the hypothesis's default (09-30,
+  10-01, 10-02; promoted on 3rd instance).** RSP − SPY closed inside
+  ±0.5pp five sessions running (09-28 +0.09 · 09-29 +0.07 · 09-30 −0.501 ·
+  10-01 +0.29 · 10-02 −0.39), while three hypotheses that named a
+  non-modal weight cell missed it in both directions. Write the ①
+  hypothesis on the count gauge with the weight at ±0.5pp unless a named
+  driver owns the average stock's move.
 - **A fired line is not re-litigated by a green premarket (08-10, 08-11,
   08-12, 08-13; 1-for-4).** Once a close-graded exit or trim has fired, the
   next morning's bounce above that line is a *better fill*, not a reprieve: XE
