@@ -211,7 +211,62 @@ def tape_block(mapping: dict[str, str]) -> dict:
     return out
 
 
-def daily_prev_closes(tickers: list[str], today: date, errors: list) -> dict[str, float]:
+# Since 2026-09-02 Yahoo has often been late with the just-closed session's
+# daily bar (a NaN-Close row, dropped below). On 2026-09-23 the 09-22 bar was
+# still missing at 09:00 ET, and the `< today` filter quietly fell back to
+# Monday's close: every premarket % in that packet was a two-day move and
+# data_quality said nothing. The same session's intraday bars were there.
+INTRADAY_REPAIR_INTERVAL = "30m"
+
+
+def previous_session(today: date) -> date:
+    """The last NYSE session before `today`, the one whose close every
+    premarket gap is measured from."""
+    d = today - timedelta(days=1)
+    while not is_trading_day(d):
+        d -= timedelta(days=1)
+    return d
+
+
+def session_bars_from_intraday(tickers: list[str],
+                               session: date) -> dict[str, dict]:
+    """Unadjusted Open / High / Low / Close for `session` from intraday bars:
+    first open, high / low across the bars, last close. The last 30m close
+    sat a median 0.02% (p90 0.07%) from the official close across 100 names
+    on 2026-10-02. Volume is left out (intraday sums miss the closing
+    auction)."""
+    if not tickers:
+        return {}
+    try:
+        df = yf.download(tickers, start=session.isoformat(),
+                         end=(session + timedelta(days=1)).isoformat(),
+                         interval=INTRADAY_REPAIR_INTERVAL, prepost=False,
+                         auto_adjust=False, progress=False, threads=True,
+                         group_by="ticker")
+    except Exception:
+        return {}
+    if df is None or df.empty:
+        return {}
+    out = {}
+    for tk in tickers:
+        try:
+            sub = df[tk] if isinstance(df.columns, pd.MultiIndex) else df
+            b = sub.dropna(subset=["Close"])
+            idx = b.index.tz_convert(MARKET_TZ) if b.index.tz is not None else b.index
+            b = b[idx.date == session]
+            if b.empty:
+                continue
+            out[tk] = {"Open": float(b["Open"].iloc[0]),
+                       "High": float(b["High"].max()),
+                       "Low": float(b["Low"].min()),
+                       "Close": float(b["Close"].iloc[-1])}
+        except Exception:
+            continue
+    return out
+
+
+def daily_prev_closes(tickers: list[str], today: date, errors: list,
+                      quality: list | None = None) -> dict[str, float]:
     """Official prior-session closes from daily bars — ONE batched call.
 
     This exists because fast_info.previous_close is NOT trustworthy in the
@@ -220,25 +275,54 @@ def daily_prev_closes(tickers: list[str], today: date, errors: list) -> dict[str
     real +11% gap), silently corrupting every premarket pct while `errors`
     stays empty. Daily bars are the canonical close, so every gap % in the
     packet is computed against them; fast_info is only a per-name fallback,
-    recorded via prev_close_source so it can't hide."""
+    recorded via prev_close_source so it can't hide.
+
+    The daily close must also be the RIGHT session's. A name whose last bar
+    before today is older than previous_session(today) gets that session's
+    close rebuilt from intraday bars; one that can't be rebuilt is left out,
+    so it falls through to the fast_info fallback (which flags itself)
+    rather than measure its gap across two sessions. Both outcomes land in
+    `quality` when given."""
     tickers = sorted(set(t for t in tickers if t))
     if not tickers:
         return {}
+    want = previous_session(today)
     try:
         df = yf.download(tickers, period="5d", interval="1d", auto_adjust=False,
                          progress=False, threads=True, group_by="ticker")
     except Exception as e:
         errors.append(f"daily_prev_closes: {e}")
         return {}
-    out = {}
+    out, behind = {}, []
     for tk in tickers:
         try:
             closes = (df[tk]["Close"] if len(tickers) > 1 else df["Close"]).dropna()
             past = closes[closes.index.date < today]
-            if len(past):
-                out[tk] = round(float(past.iloc[-1]), 4)
+            if not len(past):
+                continue
+            if past.index[-1].date() < want:
+                behind.append(tk)
+                continue
+            out[tk] = round(float(past.iloc[-1]), 4)
         except Exception:
             continue
+    if behind:
+        rebuilt = session_bars_from_intraday(behind, want)
+        for tk, bar in rebuilt.items():
+            out[tk] = round(bar["Close"], 4)
+        missing = sorted(set(behind) - set(rebuilt))
+        if quality is not None:
+            if rebuilt:
+                quality.append(
+                    f"prev_close: Yahoo hadn't published the {want} daily bar "
+                    f"for {len(rebuilt)} name(s); their prev closes are "
+                    f"rebuilt from {INTRADAY_REPAIR_INTERVAL} intraday bars "
+                    f"(last-bar close, ~0.02% off the official)")
+            if missing:
+                quality.append(
+                    f"prev_close: no {want} close for {', '.join(missing)} "
+                    f"from daily or intraday bars; they fall back to fast_info "
+                    f"(flagged per name below, if they're movers)")
     return out
 
 
@@ -916,7 +1000,7 @@ def build(today: date, now: datetime | None = None) -> dict:
     data_quality: list = []
     prev_map = daily_prev_closes(
         list(INDEX_PROXIES) + list(SECTOR_ETFS) + list(VIX_TERM)
-        + sorted(watchlist | pos_tickers), today, errors)
+        + sorted(watchlist | pos_tickers), today, errors, data_quality)
     # Batch failure → ONE aggregate flag, not ~55 identical per-ticker ones
     # (a flood would drown the cross-source signal). Per-ticker fallback flags
     # stay reserved for the partial case: only some names missing a daily bar.
@@ -1002,16 +1086,34 @@ def realized_moves(target: date, extra: list[str]) -> dict:
     except Exception as e:
         return {"date": target.isoformat(), "error": str(e), "moves": {}}
     tgt = pd.Timestamp(target)
+
+    def has_target(tk: str) -> bool:
+        try:
+            sub = df[tk] if len(tickers) > 1 else df
+            return tgt in sub["Close"].dropna().index
+        except Exception:
+            return False
+    # Yahoo's late daily bar (see INTRADAY_REPAIR_INTERVAL) used to drop
+    # these names from the grade without a word.
+    rebuilt = session_bars_from_intraday(
+        [tk for tk in tickers if not has_target(tk)], target)
     moves = {}
     for tk in tickers:
         try:
             sub = df[tk] if len(tickers) > 1 else df
             closes = sub["Close"].dropna()
-            if tgt not in closes.index or len(closes.loc[:tgt]) < 2:
+            if tk in rebuilt:
+                bar = pd.Series(rebuilt[tk])
+                closes = pd.concat([closes[closes.index < tgt],
+                                    pd.Series([bar["Close"]], index=[tgt])])
+            elif tgt not in closes.index:
+                continue
+            else:
+                bar = sub.loc[tgt]
+            if len(closes.loc[:tgt]) < 2:
                 continue
             upto = closes.loc[:tgt]
             close, prev = float(upto.iloc[-1]), float(upto.iloc[-2])
-            bar = sub.loc[tgt]
             o = float(bar["Open"])
             moves[tk] = {"close": round(close, 4), "pct": round((close / prev - 1) * 100, 2),
                          "open": round(o, 4), "gap_pct": round((o / prev - 1) * 100, 2),
@@ -1020,7 +1122,13 @@ def realized_moves(target: date, extra: list[str]) -> dict:
                          "label": INDEX_PROXIES.get(tk) or SECTOR_ETFS.get(tk) or tk}
         except Exception:
             continue
-    return {"date": target.isoformat(), "moves": moves}
+    out = {"date": target.isoformat(), "moves": moves}
+    if rebuilt:
+        out["rebuilt_from_intraday"] = sorted(rebuilt)
+    missing = sorted(set(tickers) - set(moves))
+    if missing:
+        out["missing"] = missing
+    return out
 
 
 def main(argv=None) -> int:

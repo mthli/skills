@@ -138,6 +138,14 @@ to not get fooled by them. Check these:
   a cross-source premarket % disagreement (yfinance vs TradingView) or a
   fast_info fallback, marks that number as suspect: verify it against the
   official close before grading it, and carry the caveat into the brief.
+  The daily close also has to be the previous session's: since 2026-09-02
+  Yahoo is often late with that bar (on 09-23 it was still missing at
+  09:00 ET, and every gap % in the packet silently spanned two sessions).
+  A missing previous-session bar is now rebuilt from 30-minute intraday
+  bars and says so in `data_quality`; a name that can't be rebuilt falls
+  to the flagged fast_info fallback. `--actuals` rebuilds a missing
+  target-day bar the same way and lists any name it still couldn't grade
+  under `missing`, so a short grade can't pass for a complete one.
 - **Futures understate AMC-earnings gaps.** A big after-hours print gets
   folded into the 17:00 ET futures settle, so next morning's ES/NQ pct can
   understate, or even invert vs, the true overnight gap (2026-07-30: NQ

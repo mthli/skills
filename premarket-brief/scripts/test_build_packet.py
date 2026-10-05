@@ -202,3 +202,75 @@ def test_redact_positions_leaves_original_untouched():
 def test_redact_positions_empty_book_is_noop():
     packet = {"positions": [], "errors": []}
     assert bp.redact_positions(packet) == {"positions": [], "errors": []}
+
+
+# --------------------------------------------------------------------------- #
+# Yahoo's late daily bar — the 2026-09-23 two-day prev close
+# --------------------------------------------------------------------------- #
+def _intraday_frame(last_by_ticker: dict[str, float], day: str) -> pd.DataFrame:
+    idx = pd.date_range(f"{day} 09:30", f"{day} 15:30", freq="30min",
+                        tz="America/New_York")
+    cols = pd.MultiIndex.from_product([list(last_by_ticker),
+                                       ["Open", "High", "Low", "Close"]])
+    df = pd.DataFrame(index=idx, columns=cols, dtype=float)
+    for tk, last in last_by_ticker.items():
+        df[(tk, "Open")] = last - 1
+        df[(tk, "High")] = last + 1
+        df[(tk, "Low")] = last - 2
+        df[(tk, "Close")] = last
+    return df
+
+
+def _route(daily: pd.DataFrame, intraday: pd.DataFrame):
+    def fake(*a, **k):
+        return intraday if k.get("interval") == bp.INTRADAY_REPAIR_INTERVAL else daily
+    return fake
+
+
+def test_previous_session_skips_weekends_and_holidays():
+    assert bp.previous_session(date(2026, 7, 30)) == date(2026, 7, 29)
+    assert bp.previous_session(date(2026, 8, 3)) == date(2026, 7, 31)  # Monday
+    assert bp.previous_session(date(2026, 7, 6)) == date(2026, 7, 2)   # after Jul 3
+
+
+def test_prev_close_rebuilds_a_missing_session_from_intraday(monkeypatch):
+    # 07-29's daily bar isn't out at 09:00 ET on 07-30: without the check the
+    # prev close quietly became 07-28's.
+    daily = _daily_frame({"SPY": [727.0, None, 733.0], "QQQ": [660.0, 661.73, 668.0]},
+                         ["2026-07-28", "2026-07-29", "2026-07-30"])
+    monkeypatch.setattr(bp.yf, "download",
+                        _route(daily, _intraday_frame({"SPY": 729.5}, "2026-07-29")))
+    quality = []
+    out = bp.daily_prev_closes(["SPY", "QQQ"], TODAY, [], quality)
+    assert out == {"SPY": 729.5, "QQQ": 661.73}
+    assert len(quality) == 1 and "rebuilt" in quality[0]
+
+
+def test_prev_close_left_out_when_the_rebuild_fails_too(monkeypatch):
+    daily = _daily_frame({"SPY": [727.0, None], "QQQ": [660.0, 661.73]},
+                         ["2026-07-28", "2026-07-29"])
+    monkeypatch.setattr(bp.yf, "download", _route(daily, pd.DataFrame()))
+    quality = []
+    out = bp.daily_prev_closes(["SPY", "QQQ"], TODAY, [], quality)
+    assert out == {"QQQ": 661.73}  # SPY falls through to the fast_info fallback
+    assert len(quality) == 1 and "SPY" in quality[0]
+
+
+def test_realized_moves_rebuilds_a_missing_target_bar(monkeypatch):
+    tks = sorted(set(bp.INDEX_PROXIES) | set(bp.SECTOR_ETFS))
+    daily = _daily_frame({tk: [100.0] for tk in tks}, ["2026-07-28"])
+    intraday = _intraday_frame({tk: 101.0 for tk in tks}, "2026-07-29")
+    monkeypatch.setattr(bp.yf, "download", _route(daily, intraday))
+    out = bp.realized_moves(date(2026, 7, 29), [])
+    spy = out["moves"]["SPY"]
+    assert spy["close"] == 101.0 and spy["pct"] == 1.0
+    assert spy["open"] == 100.0 and spy["high"] == 102.0 and spy["low"] == 99.0
+    assert out["rebuilt_from_intraday"] == tks and "missing" not in out
+
+
+def test_realized_moves_names_what_it_could_not_grade(monkeypatch):
+    tks = sorted(set(bp.INDEX_PROXIES) | set(bp.SECTOR_ETFS))
+    daily = _daily_frame({tk: [100.0] for tk in tks}, ["2026-07-28"])
+    monkeypatch.setattr(bp.yf, "download", _route(daily, pd.DataFrame()))
+    out = bp.realized_moves(date(2026, 7, 29), [])
+    assert out["moves"] == {} and out["missing"] == tks
