@@ -78,6 +78,8 @@ The generator dash-normalizes class shares (`BRK.B`→`BRK-B`), prints a per-sec
 
 ## How to read the output
 
+**Data line**: first under the title, it names the session the read reflects. `rebuilt from 30m intraday bars` is the workaround for Yahoo's late daily bar succeeding (^VIX3M ran 0.4% off its settled close in the 2026-10-02 replay, everything else within 0.03%) and needs no mention. A `⚠️ Stale data` warning means the rebuild failed too: the whole read, and the history row it files under the earlier session, is a day old. Lead with that in plain words.
+
 **State banner**: one of three, in escalation order (mirrors the methodology ladder):
 
 - 🟢 **RISK-ON**: trend gate on + layers confirm + ≤1 divergence. *Trend healthy, hold per rules; new money can scale in on pullbacks.*
@@ -126,6 +128,7 @@ First report (2026-07-31, 36 readings; findings about the *signal*, not about re
 ## Known limitations
 
 - **Breadth universe is the S&P 500 (~500 names), a quarterly snapshot**, smaller than the full ~4,000-name market, and it applies *today's* membership to past prices (a mild survivorship bias, standard for a forward-looking gauge; a real backtest would need point-in-time membership). Broad enough to smooth the breadth %, and self-refreshing via `build_universe.py`; edit `state/breadth_universe.txt` to retune.
+- **Yahoo's daily bar can be late**: since 2026-09-02 the just-closed session's bar often isn't out by the evening run. All 21 evening runs from 09-02 to 10-02 were therefore filed under the previous session (rows key on SPY's last bar), honestly labeled but a day late. The scan now rebuilds that session from 30-minute intraday bars, ^VIX and the other indices included, and says so on the Data line.
 - **No intraday / real-time**: the scan uses daily closes. A run during market hours sees a *partial* today-bar in the MAs/breadth (the script warns); the post-close run overwrites that row, since history keys on the data's session date rather than the wall clock.
 - **Votes are mechanical**: thresholds follow convention, without optimization. Treat the output as a structured *dashboard to interpret* rather than a trade signal. The signal compounds across **days of history**; a single run is a snapshot.
 - **Credit via HYG/LQD ETF ratio** is a proxy for the OAS spread: good for direction, coarser than actual HY option-adjusted spreads.
