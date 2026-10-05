@@ -451,14 +451,17 @@ def test_render_sig_strip_counts_and_none():
 
 
 def test_resolved_section_aggregates_wins_and_caps_losses():
+    # Relative to today: the section only shows the last 2 × window days,
+    # so a fixed date ages out of it (this test did, by 2026-08-09).
+    day = pd.Timestamp.now(tz="UTC").strftime("%Y-%m-%d")
     won = [{"ticker": f"W{i}", "outcome": "WON", "result_pct": 1.0 + i * 0.1,
-            "days_to_resolve": 1, "signal_date": "2026-07-30",
+            "days_to_resolve": 1, "signal_date": day,
             "entry_price": 10.0, "target_price": 10.2} for i in range(50)]
     lost = [{"ticker": f"L{i}", "outcome": "LOST", "result_pct": -5.0 - i,
-             "days_to_resolve": 1, "signal_date": "2026-07-30",
+             "days_to_resolve": 1, "signal_date": day,
              "entry_price": 10.0, "stop_price": 9.0} for i in range(12)]
     expired = [{"ticker": "E0", "outcome": "EXPIRED", "result_pct": -0.4,
-                "days_to_resolve": 5, "signal_date": "2026-07-30",
+                "days_to_resolve": 5, "signal_date": day,
                 "entry_price": 10.0}]
     out = "\n".join(scan.render_resolved_section(won + lost + expired, 5))
     assert "**Won** (50): avg" in out          # one line, not 50

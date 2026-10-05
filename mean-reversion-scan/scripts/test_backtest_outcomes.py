@@ -257,3 +257,70 @@ def test_bucket_bounds_are_half_open():
     assert [o.sig.score for o in groups["lo"]] == [10.0]
     assert [o.sig.score for o in groups["mid"]] == [40.0]   # 40 goes up, not down
     assert [o.sig.score for o in groups["hi"]] == [55.0]
+
+
+# ------------------------------------------------- signal bar / publish time
+
+def test_signal_pos_matches_a_lagged_close_to_the_prior_bar():
+    # Run day 07-07 recorded 07-06's close (100); 07-07 moved only 0.8%,
+    # which the old >2% rule left on 07-07, a session late.
+    bars = _bars([100, 100, 100.8, 100.8, 100.8, 100.8, 100.8],
+                 [100, 101, 101, 101, 101, 101, 101],
+                 [99, 99.5, 100, 100, 100, 100, 100],
+                 [100, 100.8, 100.8, 100.8, 100.8, 100.8, 100.8])
+    sig = _sig(run_day="20260707", et_date=pd.Timestamp("2026-07-07"))
+    out, status = resolve_signal(sig, bars, window=5)
+    assert status == "resolved"
+    assert out.result == pytest.approx(0.8)  # EXPIRED drift from 100, not 100.8
+
+
+def test_signal_pos_prefers_data_asof():
+    bars = _bars([100] * 7, [101] * 7, [99] * 7,
+                 [100, 100, 100, 100, 100, 100, 100])
+    sig = _sig(run_day="20260707", et_date=pd.Timestamp("2026-07-07"),
+               data_asof=pd.Timestamp("2026-07-06"))
+    out, status = resolve_signal(sig, bars, window=5)
+    assert status == "resolved" and out.days == 5
+
+
+def test_next_open_waits_for_the_report():
+    # Lagged row: signal bar 07-06, report published 07-07 20:00 ET. The
+    # 07-07 open came before the report, so entry is 07-08's open.
+    bars = _bars([100, 101, 102, 102, 102, 102, 102, 102],
+                 [100, 102.5, 102.5, 102.5, 102.5, 102.5, 102.5, 102.5],
+                 [99, 100, 101, 101, 101, 101, 101, 101],
+                 [100, 102, 102, 102, 102, 102, 102, 102])
+    sig = _sig(run_day="20260707", et_date=pd.Timestamp("2026-07-07"),
+               data_asof=pd.Timestamp("2026-07-06"),
+               published=pd.Timestamp("2026-07-07 20:00", tz="America/New_York"))
+    out, status = resolve_signal(sig, bars, window=5, entry_mode="next-open")
+    assert status == "resolved"
+    assert out.result == pytest.approx((102.0 / 102.0 - 1) * 100)  # EXPIRED flat from 102
+
+
+def test_next_open_after_a_premarket_report_is_that_morning():
+    from backtest_outcomes import first_open_after
+    idx = pd.bdate_range("2026-07-06", periods=3)
+    pre = pd.Timestamp("2026-07-07 09:00", tz="America/New_York")
+    post = pd.Timestamp("2026-07-07 20:00", tz="America/New_York")
+    assert first_open_after(idx, pre) == 1   # 07-07
+    assert first_open_after(idx, post) == 2  # 07-08
+    assert first_open_after(idx, None) == 0
+
+
+def test_signal_pos_ignores_later_dividend_readjustment():
+    # Fresh row on 07-10: closed 100 after a 1% drop, dist_5dma recorded
+    # from the as-seen series. A later 1% dividend rescales every bar by
+    # 0.99, so 07-09's adjusted close (100.0) now matches the recorded close
+    # exactly and 07-10's (99.0) doesn't; dist still names 07-10.
+    seen = [103, 102.5, 102, 101.5, 101.01, 100.0]
+    adj = [round(c * 0.99, 4) for c in seen]
+    bars = _bars(adj + [99] * 5, [a + 1 for a in adj] + [100] * 5,
+                 [a - 1 for a in adj] + [98] * 5, adj + [99] * 5,
+                 start="2026-07-03")
+    sma5 = sum(seen[1:6]) / 5
+    sig = _sig(run_day="20260710", et_date=pd.Timestamp("2026-07-10"),
+               last_close=100.0, dist_5dma=round((100.0 / sma5 - 1) * 100, 2),
+               target=150.0, stop=50.0)
+    from backtest_outcomes import signal_pos
+    assert bars.index[signal_pos(bars["Close"], sig)] == pd.Timestamp("2026-07-10")

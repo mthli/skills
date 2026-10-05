@@ -33,7 +33,7 @@ import json
 import sys
 import time
 import warnings
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -115,6 +115,12 @@ HISTORY_COLS = [
     "run_id", "run_date", "ticker", "rank", "score_rank", "score",
     "rsi2", "dist_5dma_pct", "dist_50dma_pct", "dist_200dma_pct",
     "last_close", "target_price", "stop_price", "signal", "freq_60d",
+    # The session the run's daily bars actually reach (YYYYMMDD), next to
+    # run_id's publication day. Equal on a healthy run; older when Yahoo
+    # hadn't published the last session and the intraday rebuild failed
+    # (see ensure_latest_session). Blank on rows before 2026-10-05, which
+    # signal_bar resolves from last_close instead.
+    "data_asof",
 ]
 
 # Data window: enough for 200DMA computation + 60-day frequency lookback +
@@ -277,6 +283,171 @@ def extract_field(bars: pd.DataFrame, tickers: list[str],
     return out
 
 
+# Daily-bar freshness. Since 2026-09-02 Yahoo has served the just-closed
+# session's daily row with a NaN Close to the 20:00 ET scan (by 09-23 it
+# was still missing at 09:00 ET the next morning; it fills in by the
+# following evening). Nothing downstream noticed: extract_field drops the
+# NaN, so 84% of the rows recorded 2026-09-02..10-02 carry the prior
+# session's close under today's run_id, and the outcome ledger entered them
+# at that close but only started watching for target / stop a session
+# later. The same session's intraday bars were there all along, so the
+# missing bar is rebuilt from them.
+INTRADAY_REPAIR_INTERVAL = "30m"
+# A name with no daily close in this many calendar days is gone (delisted,
+# long halt), not lagging: asking for its intraday bars would only add
+# misses to the warning.
+REPAIR_ALIVE_DAYS = 10
+
+
+def expected_session(now: datetime) -> date:
+    """The latest NYSE session whose 16:00 ET close has passed at `now`.
+
+    Early-close days (13:00) also count from 16:00, which only affects a run
+    in that three-hour gap and errs toward expecting less."""
+    now_et = now.astimezone(MARKET_TZ)
+    d = now_et.date()
+    if is_nyse_trading_day(d) and now_et.hour >= 16:
+        return d
+    d -= timedelta(days=1)
+    while not is_nyse_trading_day(d):
+        d -= timedelta(days=1)
+    return d
+
+
+def session_bars_from_intraday(tickers: list[str],
+                               session: date) -> dict[str, dict]:
+    """Open / High / Low / Close for `session`, aggregated from intraday bars.
+
+    The last bar's close sat a median 0.02% (p90 0.07%) from the official
+    close across 100 names on 2026-10-02. Volume is left out: the intraday
+    bars miss the closing auction and ran a median 19% short, and nothing
+    in this scan reads volume, so the caller leaves it NaN rather than
+    record a wrong number."""
+    if not tickers:
+        return {}
+    try:
+        intr = yf.download(
+            tickers, start=session.isoformat(),
+            end=(session + timedelta(days=1)).isoformat(),
+            interval=INTRADAY_REPAIR_INTERVAL, prepost=False,
+            auto_adjust=True, progress=False, threads=True,
+            group_by="ticker",
+        )
+    except Exception as e:
+        print(f"intraday fetch for {session} failed: {e}", file=sys.stderr)
+        return {}
+    if intr is None or intr.empty:
+        return {}
+    multi = isinstance(intr.columns, pd.MultiIndex)
+    out = {}
+    for t in tickers:
+        if multi:
+            if (t, "Close") not in intr.columns:
+                continue
+            b = intr[t]
+        elif len(tickers) == 1:  # some versions return one ticker flat
+            b = intr
+        else:
+            continue
+        b = b.dropna(subset=["Close"])
+        idx = b.index
+        if idx.tz is not None:
+            idx = idx.tz_convert(MARKET_TZ)
+        b = b[idx.date == session]
+        if b.empty:
+            continue
+        out[t] = {"Open": float(b["Open"].iloc[0]),
+                  "High": float(b["High"].max()),
+                  "Low": float(b["Low"].min()),
+                  "Close": float(b["Close"].iloc[-1])}
+    return out
+
+
+def ensure_latest_session(bars: pd.DataFrame, tickers: list[str],
+                          now: datetime) -> tuple[pd.DataFrame, dict]:
+    """Rebuild the last closed session's bar wherever the daily download
+    lacks it, and report how fresh the data ended up.
+
+    Returns the (possibly extended) frame and a freshness record:
+      expected  the session the data should reach (expected_session)
+      asof      the session most names' daily closes reach after the repair
+      repaired  names whose bar was rebuilt from intraday data
+      missing   names still without it
+
+    A mid-session run reaches past `expected` (today's partial bar), so
+    nothing is missing and nothing is rebuilt."""
+    session = expected_session(now)
+    stamp = pd.Timestamp(session)
+    if bars.index.tz is not None:
+        stamp = stamp.tz_localize(bars.index.tz)
+    alive_since = stamp - pd.Timedelta(days=REPAIR_ALIVE_DAYS)
+
+    def last_dates() -> dict[str, pd.Timestamp]:
+        out = {}
+        for t in tickers:
+            if (t, "Close") not in bars.columns:
+                continue
+            c = bars[(t, "Close")].dropna()
+            if not c.empty and c.index[-1] >= alive_since:
+                out[t] = c.index[-1]
+        return out
+
+    need = [t for t, d in last_dates().items() if d < stamp]
+    repaired = {}
+    if need:
+        print(f"{len(need)} ticker(s) lack a daily bar for {session}; "
+              f"rebuilding it from {INTRADAY_REPAIR_INTERVAL} bars...",
+              file=sys.stderr)
+        repaired = session_bars_from_intraday(need, session)
+    if repaired:
+        if stamp not in bars.index:
+            bars = bars.reindex(bars.index.append(pd.DatetimeIndex([stamp]))
+                                .sort_values())
+        cols, vals = [], []
+        for t, ohlc in repaired.items():
+            for f, v in [*ohlc.items(), ("Volume", np.nan)]:
+                if (t, f) in bars.columns:
+                    cols.append((t, f))
+                    vals.append(v)
+        cols_idx = pd.MultiIndex.from_tuples(cols)
+        # Volume columns can arrive as int64; writing NaN into one would
+        # upcast with a FutureWarning, so make the cast explicit.
+        bars[cols_idx] = bars[cols_idx].astype(float)
+        bars.loc[stamp, cols_idx] = vals
+
+    reached = pd.Series(list(last_dates().values()))
+    asof = reached.mode().iloc[0].date() if not reached.empty else None
+    missing = sorted(t for t in need if t not in repaired)
+    if asof is not None and asof < session:
+        print(f"WARNING: daily bars end {asof}, but the {session} session "
+              f"has closed; this run's signals are a session old "
+              f"({len(missing)} of {len(need)} names couldn't be rebuilt "
+              f"from intraday bars).", file=sys.stderr)
+    return bars, {"expected": session, "asof": asof,
+                  "repaired": sorted(repaired), "missing": missing}
+
+
+def render_data_freshness(freshness: dict) -> str:
+    """One banner line: which session the numbers reflect, and whether it
+    had to be rebuilt or is missing."""
+    expected, asof = freshness["expected"], freshness["asof"]
+    if asof is not None and asof < expected:
+        return (f"\n> ⚠️ **Stale data**: daily bars end {asof}, but the "
+                f"{expected} session has closed. The signals, targets and "
+                f"stops below are a session old: Yahoo hadn't published the "
+                f"session, and {len(freshness['missing'])} names couldn't be "
+                f"rebuilt from intraday bars.")
+    line = f"**Data**: daily bars through {asof or expected}"
+    if asof is not None and asof > expected:
+        line += " (session in progress)"
+    n = len(freshness["repaired"])
+    if n:
+        line += (f" · {expected} rebuilt from {INTRADAY_REPAIR_INTERVAL} "
+                 f"intraday bars for {n} names (Yahoo's daily bar wasn't out "
+                 f"yet)")
+    return line
+
+
 # -----------------------------------------------------------------------
 # Regime gauge — SPY 200DMA + slope, breadth.
 # -----------------------------------------------------------------------
@@ -286,8 +457,13 @@ MA200_SLOPE_LOOKBACK_DAYS = 20
 MA200_SLOPE_RISK_ON_THRESHOLD_PCT = -0.05
 
 
-def compute_regime(closes: dict[str, pd.Series]) -> dict | None:
-    """SPY 200DMA + slope + cohort breadth. Same logic as sister skills."""
+def compute_regime(closes: dict[str, pd.Series],
+                   session: date | None = None) -> dict | None:
+    """SPY 200DMA + slope + cohort breadth. Same logic as sister skills.
+
+    `session` is the last closed session (ensure_latest_session's
+    `expected`): SPY is downloaded on its own, so it needs the same rebuild
+    when Yahoo's daily bar for that session isn't out yet."""
     try:
         spy_df = yf.download("SPY", period=f"{SPY_HISTORY_MONTHS}mo",
                              interval="1d", auto_adjust=True, progress=False)
@@ -300,6 +476,14 @@ def compute_regime(closes: dict[str, pd.Series]) -> dict | None:
     if isinstance(spy_close, pd.DataFrame):
         spy_close = spy_close.iloc[:, 0]
     spy_close = spy_close.dropna()
+    if (session is not None and not spy_close.empty
+            and spy_close.index[-1].date() < session):
+        bar = session_bars_from_intraday(["SPY"], session).get("SPY")
+        if bar is not None:
+            stamp = pd.Timestamp(session)
+            if spy_close.index.tz is not None:
+                stamp = stamp.tz_localize(spy_close.index.tz)
+            spy_close.loc[stamp] = bar["Close"]
     if len(spy_close) < 200 + MA200_SLOPE_LOOKBACK_DAYS:
         return None
 
@@ -851,7 +1035,8 @@ def load_history() -> pd.DataFrame:
 
 
 def append_history(picks: list[dict], run_id: str, run_date: datetime,
-                   allow_same_day: bool = False):
+                   allow_same_day: bool = False,
+                   data_asof: date | None = None):
     """At most one snapshot per ET calendar day. Empty picks = no-op (don't
     wipe a good prior snapshot for the same day). Atomic write."""
     if not picks:
@@ -874,6 +1059,8 @@ def append_history(picks: list[dict], run_id: str, run_date: datetime,
                 "stop_price": p["stop_price"],
                 "signal": p["signal"],
                 "freq_60d": p["freq_60d"],
+                "data_asof": (int(data_asof.strftime("%Y%m%d"))
+                              if data_asof else None),
             }
             for p in picks
         ],
@@ -908,6 +1095,10 @@ def append_history(picks: list[dict], run_id: str, run_date: datetime,
     canonical = HISTORY_COLS + [c for c in combined.columns
                                 if c not in HISTORY_COLS]
     combined = combined.reindex(columns=canonical)
+    # Nullable Int64 so the blank older rows don't turn the stamps into
+    # floats ("20261005.0") when the file is rewritten.
+    combined["data_asof"] = pd.to_numeric(
+        combined["data_asof"], errors="coerce").astype("Int64")
     tmp_path = HISTORY_FILE.with_suffix(".csv.tmp")
     combined.to_csv(tmp_path, index=False)
     tmp_path.replace(HISTORY_FILE)
@@ -1014,6 +1205,53 @@ def enrich_with_persistence(picks: list[dict], history: pd.DataFrame,
 # Outcome resolution — the unique-to-MR piece.
 # -----------------------------------------------------------------------
 
+def dist_5dma_at(closes: pd.Series, pos: int) -> float | None:
+    """dist_5dma_pct as score_tickers computed it on the bar at `pos`."""
+    if pos < SMA_TARGET_PERIOD - 1:
+        return None
+    sma5 = float(closes.iloc[pos - SMA_TARGET_PERIOD + 1:pos + 1].mean())
+    return (float(closes.iloc[pos]) / sma5 - 1) * 100 if sma5 > 0 else None
+
+
+def signal_bar(closes: pd.Series, run_date: pd.Timestamp, last_close: float,
+               data_asof=None, dist_5dma_pct=None) -> pd.Timestamp | None:
+    """Date of the bar whose close a history row's signal was computed from.
+
+    That bar is the entry (the row's last_close), and target / stop are
+    watched from the session after it. Rows written since 2026-10-05 name it
+    in data_asof. Older rows don't, and from 2026-09-02 most of them read
+    the prior session's close under the run's own date (see
+    ensure_latest_session), so both the run day's bar and the one before it
+    are candidates. The row's dist_5dma_pct picks between them: it is a
+    ratio, so the dividend re-adjustment that rescales every older bar
+    since leaves it alone. Matching last_close instead would not: on a down
+    day about the size of a later dividend, the prior bar's re-adjusted
+    close lands nearer the recorded one (796 of 3355 pre-09-02 signals did).
+    last_close is the fallback when the row has no dist."""
+    if closes.empty:
+        return None
+    asof_known = data_asof is not None and not pd.isna(data_asof)
+    if asof_known:
+        day = pd.Timestamp(str(int(data_asof)))
+    else:
+        day = run_date.tz_convert(MARKET_TZ).normalize().tz_localize(None)
+    pos = closes.index.searchsorted(day, side="right") - 1
+    if pos < 0:
+        # The series starts after the signal day: nothing to match against,
+        # so watch from its first bar.
+        return day
+    if not asof_known and pos >= 1:
+        def miss(p: int) -> float:
+            if dist_5dma_pct is not None and not pd.isna(dist_5dma_pct):
+                d = dist_5dma_at(closes, p)
+                if d is not None:
+                    return abs(d - float(dist_5dma_pct))
+            return abs(float(closes.iloc[p]) / last_close - 1) * 100
+        if miss(pos - 1) < miss(pos):
+            pos -= 1
+    return closes.index[pos]
+
+
 def resolve_outcomes(history: pd.DataFrame, bars: pd.DataFrame,
                      target_window_days: int, *, full: bool = False) -> list[dict]:
     """For each prior signal in history, classify outcome by checking the
@@ -1050,7 +1288,7 @@ def resolve_outcomes(history: pd.DataFrame, bars: pd.DataFrame,
         ticker = row["ticker"]
         if (ticker, "Close") not in bars.columns:
             continue
-        # Get the OHLC since the signal date (exclusive — the signal day's
+        # Get the OHLC since the signal bar (exclusive — the signal bar's
         # close was the entry; we measure outcome on the days after).
         signal_date = row["run_date"]
         if pd.isna(signal_date):
@@ -1061,26 +1299,31 @@ def resolve_outcomes(history: pd.DataFrame, bars: pd.DataFrame,
             low_series = bars[(ticker, "Low")].dropna()
         except Exception:
             continue
-        # bars index is tz-naive; convert signal_date to a comparable form.
-        sig_ts = pd.Timestamp(signal_date).tz_convert(
-            None) if signal_date.tz is not None else pd.Timestamp(signal_date)
-        # Align datetime unit to the index's unit — pandas 2.x rejects
-        # searchsorted with a mismatched-precision Timestamp ("Cannot
-        # losslessly convert units"). Daily bars at midnight have no sub-second
-        # precision to lose, so as_unit with default round_ok=True is safe.
-        try:
-            idx_unit = high_series.index.unit
-            sig_ts = sig_ts.as_unit(idx_unit)
-        except (AttributeError, ValueError):
-            sig_ts = pd.Timestamp(sig_ts.date())
-        # Find the index of the signal date in the bars (closest trading day
-        # at or before sig_ts; we use bars indexed AFTER the signal day).
-        # Use searchsorted to find first bar strictly after the signal date.
-        post_idx = high_series.index.searchsorted(sig_ts, side="right")
+        anchor = signal_bar(close_series, pd.Timestamp(signal_date),
+                            float(row["last_close"]), row.get("data_asof"),
+                            row.get("dist_5dma_pct"))
+        if anchor is None:
+            continue
+        # Keyed off the signal bar, not the run timestamp: a row that read
+        # the prior session's close (the 2026-09 lag, or a pre-market run)
+        # used to enter at that close but start watching a session late,
+        # booking the skipped day's move without checking it for a touch.
+        post_idx = high_series.index.searchsorted(anchor, side="right")
         post_high = high_series.iloc[post_idx:post_idx + target_window_days]
         post_low = low_series.iloc[post_idx:post_idx + target_window_days]
         if len(post_high) == 0:
             continue  # OPEN: no post-signal data yet
+        # Watch in the series' units. A dividend since the signal rescales
+        # every bar before its ex-date, so the recorded target / stop drift
+        # off the bars they're compared against; scaling them by the signal
+        # bar's re-adjusted close over the recorded one undoes that. It is
+        # 1.0 on a fresh row, and a >5% gap is a corporate action whose
+        # units can't be trusted, left to its previously stored outcome.
+        entry = float(row["last_close"])
+        ratio = (float(close_series.loc[anchor]) / entry
+                 if anchor in close_series.index else 1.0)
+        if abs(ratio - 1) > 0.05:
+            continue
         target = float(row["target_price"])
         stop = float(row["stop_price"]) if pd.notna(
             row["stop_price"]) else None
@@ -1090,12 +1333,12 @@ def resolve_outcomes(history: pd.DataFrame, bars: pd.DataFrame,
         days_to_resolve = None
         resolve_price = None
         for d, (h, l) in enumerate(zip(post_high.values, post_low.values), 1):
-            if h >= target:
+            if h >= target * ratio:
                 outcome = "WON"
                 days_to_resolve = d
                 resolve_price = target
                 break
-            if stop is not None and l <= stop:
+            if stop is not None and l <= stop * ratio:
                 outcome = "LOST"
                 days_to_resolve = d
                 resolve_price = stop
@@ -1108,11 +1351,11 @@ def resolve_outcomes(history: pd.DataFrame, bars: pd.DataFrame,
                     if len(close_series) > post_idx + target_window_days - 1 else None
                 outcome = "EXPIRED"
                 days_to_resolve = target_window_days
-                resolve_price = last_close
+                # Back into the recorded units, like target and stop.
+                resolve_price = last_close / ratio if last_close else None
             else:
                 continue  # OPEN — skip from output
 
-        entry = float(row["last_close"])
         result_pct = ((resolve_price / entry - 1) *
                       100) if resolve_price else None
         outcomes.append({
@@ -1183,6 +1426,8 @@ def run_single_ticker(args) -> dict:
         result["industry"] = sec_info.get("industry") or ""
 
     bars = fetch_bars([ticker])
+    bars, result["data_freshness"] = ensure_latest_session(
+        bars, [ticker], datetime.now(timezone.utc))
     closes = extract_field(bars, [ticker], "Close")
     if ticker not in closes:
         result["error"] = (f"No data for {ticker}. Possibilities: "
@@ -1746,8 +1991,11 @@ def main() -> bool:
     universe = load_universe(args.min_market_cap, args.min_volume,
                              args.universe_count, args.refresh_universe)
     bars = fetch_bars(universe)
+    now = datetime.now(timezone.utc)
+    bars, freshness = ensure_latest_session(bars, universe, now)
     closes = extract_field(bars, universe, "Close")
-    regime = compute_regime(closes) if args.regime_gate != "off" else None
+    regime = (compute_regime(closes, session=freshness["expected"])
+              if args.regime_gate != "off" else None)
 
     picks = score_tickers(closes, args.rsi2_threshold)
     picks, excluded_vol_collapse = filter_vol_collapse(
@@ -1759,7 +2007,6 @@ def main() -> bool:
     attach_atr_stops_all(picks, bars, args.atr_stop_mult)
 
     history = load_history()
-    now = datetime.now(timezone.utc)
     run_id = make_run_id(now, allow_same_day=args.allow_same_day)
     picks = enrich_with_persistence(picks, history, run_id)
     attach_validated_pocket(picks)
@@ -1797,7 +2044,8 @@ def main() -> bool:
                   f"day. Pass --save-stale to override.", file=sys.stderr)
         else:
             append_history(picks, run_id, now,
-                           allow_same_day=args.allow_same_day)
+                           allow_same_day=args.allow_same_day,
+                           data_asof=freshness["asof"])
 
     suppress_picks = (args.regime_gate == "strict"
                       and regime is not None
@@ -1810,6 +2058,7 @@ def main() -> bool:
             "run_id": run_id,
             "run_date": now.isoformat(),
             "params": vars(args),
+            "data_freshness": freshness,
             "universe_size": len(universe),
             "passed_filter": len(picks),
             "signal_breadth": signal_breadth,
@@ -1841,6 +2090,7 @@ def main() -> bool:
         passed = f"**Passed filter**: {len(picks)}"
     print(f"**Universe**: {len(universe)} tickers · {passed} · "
           f"**Prior runs**: {n_prior}")
+    print(render_data_freshness(freshness))
     # Breadth line — backtest finding #6 promoted from interpretation
     # doctrine to output: the emitted-signal count is itself a signal.
     if signal_breadth["tier"] == "thin":

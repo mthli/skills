@@ -34,18 +34,18 @@ number quoted in SKILL.md's "Backtested outcomes" section reproduces from
 this one script.
 
 --entry next-open replays the realistic execution instead: the scan output
-only exists after the close, so entry is the NEXT session's open (signals
-that gap past their target or stop before entry are skipped), and outcomes
-are measured from that fill. Compare against the default --entry close to
+only exists after the close, so entry is the open of the first session
+after the run's timestamp (signals that gap past their target or stop
+before entry are skipped), and outcomes are measured from that fill. Compare against the default --entry close to
 see how much of the edge survives entry timing.
 
 Prices are fetched with auto_adjust=True. Dividend re-adjustment between the
 scan date and today shifts the recorded price levels out of the series'
 units, so each signal is re-anchored: the recorded close is matched against
-the series' close on the signal day and target/stop are rescaled by that
-ratio; signals whose recorded close disagrees with the series by >5% even
-after trying the prior bar (corporate action, unit break) are dropped and
-reported rather than resolved on mismatched units.
+the series' close on the signal bar (signal_pos) and target/stop are
+rescaled by that ratio; signals whose recorded close disagrees with the
+series by >5% (corporate action, unit break) are dropped and reported
+rather than resolved on mismatched units.
 
 Run:
   uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy>=1.24,<3' \
@@ -95,6 +95,8 @@ class Signal:
     signal: str
     freq_60d: int
     day_of_spell: int = 1   # 1 = first consecutive run-day this name listed
+    data_asof: pd.Timestamp | None = None  # session the bars reached, when recorded
+    published: pd.Timestamp | None = None  # run timestamp, ET
 
 
 def load_signals(history_path: Path) -> tuple[list[Signal], list[str]]:
@@ -111,6 +113,7 @@ def load_signals(history_path: Path) -> tuple[list[Signal], list[str]]:
         # of the run timestamp IS the trading day whose close was recorded.
         et_date = run_date.tz_convert(ET).normalize().tz_localize(None)
         stop_raw = r.get("stop_price", "")
+        asof_raw = (r.get("data_asof") or "").strip()
         signals.append(Signal(
             run_day=r["run_id"],
             et_date=et_date,
@@ -126,6 +129,8 @@ def load_signals(history_path: Path) -> tuple[list[Signal], list[str]]:
             stop=float(stop_raw) if stop_raw not in ("", "None") else None,
             signal=r["signal"].strip(),
             freq_60d=int(float(r["freq_60d"])) if r.get("freq_60d") else 0,
+            data_asof=pd.Timestamp(asof_raw) if asof_raw else None,
+            published=run_date.tz_convert(ET),
         ))
 
     # Day-of-spell: consecutive run-days a ticker keeps appearing. A gap in
@@ -234,36 +239,88 @@ class Outcome:
     fwd_ret: float | None          # close-to-close % over full window, no exits
 
 
+def signal_pos(closes: pd.Series, sig: Signal) -> int | None:
+    """Bar position of the close the signal was computed from: the entry
+    under the canonical convention, with the watch starting one bar later.
+
+    data_asof names it on rows written since 2026-10-05. Older rows only
+    carry the run's ET date, and from 2026-09-02 most of them read the
+    prior session's close under it, as can a pre-market or mid-session
+    run; so the run-day bar and the one before it are both candidates, and
+    the recorded dist_5dma picks between them. It is a ratio, so later
+    dividend re-adjustment leaves it alone, where matching the recorded
+    close does not (on a down day about the size of a later dividend the
+    prior bar's re-adjusted close lands nearer).
+
+    That replaced a ">2% off, try the prior bar" rule, which let the size
+    of the day's move pick the bar: lagged rows that moved less than 2%
+    entered a session late, the bigger movers on time, and under next-open
+    those bigger movers bought an open from before the report existed (22%
+    of the rows from 2026-09-02 to 10-02)."""
+    day = sig.data_asof if sig.data_asof is not None else sig.et_date
+    pos = closes.index.searchsorted(day, side="right") - 1
+    if pos < 0:
+        return None
+    if sig.data_asof is None and pos >= 1:
+        if dist_miss(closes, pos - 1, sig) < dist_miss(closes, pos, sig):
+            pos -= 1
+    return pos
+
+
+def dist_miss(closes: pd.Series, pos: int, sig: Signal) -> float:
+    """How far the bar at `pos` sits from the signal's recorded dist_5dma
+    (in percentage points); the recorded close is the fallback when the
+    window is too short."""
+    if pos >= 4:
+        sma5 = float(closes.iloc[pos - 4:pos + 1].mean())
+        if sma5 > 0:
+            return abs((float(closes.iloc[pos]) / sma5 - 1) * 100
+                       - sig.dist_5dma)
+    return abs(float(closes.iloc[pos]) / sig.last_close - 1) * 100
+
+
+def first_open_after(index: pd.DatetimeIndex,
+                     published: pd.Timestamp | None) -> int:
+    """Position of the first session that opens (09:30 ET) after the scan
+    published. 0 when the publish time is unknown, so it never binds."""
+    if published is None:
+        return 0
+    day = pd.Timestamp(published.date())
+    if (published.hour, published.minute) >= (9, 30):
+        day += pd.Timedelta(days=1)
+    return int(index.searchsorted(day, side="left"))
+
+
 def resolve_signal(sig: Signal, bars: pd.DataFrame, window: int,
                    entry_mode: str = "close") -> tuple[Outcome | None, str]:
     """Returns (outcome, status) where status is one of
     resolved / open / no_bars / unit_mismatch / gap_skip.
 
-    entry_mode "close" is scan.py's convention (entry at the signal-day
-    close). "next-open" is realistic execution: the scan output exists only
-    after the close, so entry is the next session's open; a signal whose
-    next open is already past the target (bounce done overnight) or through
-    the stop (setup busted) is skipped as untradable → gap_skip."""
+    entry_mode "close" is scan.py's convention (entry at the signal bar's
+    close, see signal_pos). "next-open" is realistic execution: entry is the
+    open of the first session after the scan published; a signal whose
+    entry open is already past the target (bounce done overnight) or
+    through the stop (setup busted) is skipped as untradable → gap_skip."""
     closes = bars["Close"]
-    pos = closes.index.searchsorted(sig.et_date, side="right") - 1
-    if pos < 0:
+    pos = signal_pos(closes, sig)
+    if pos is None:
         return None, "no_bars"
 
-    # Re-anchor recorded units onto the (possibly re-adjusted) series. The
-    # scan may also have run mid-session off a partial bar; if the bar at the
-    # ET date disagrees with the recorded close, the prior bar gets a try.
+    # Re-anchor recorded units onto the (possibly re-adjusted) series.
     ratio = float(closes.iloc[pos]) / sig.last_close
-    if abs(ratio - 1) > 0.02 and pos >= 1:
-        alt = float(closes.iloc[pos - 1]) / sig.last_close
-        if abs(alt - 1) < abs(ratio - 1):
-            pos, ratio = pos - 1, alt
     if abs(ratio - 1) > 0.05:
         return None, "unit_mismatch"
 
     target = sig.target * ratio
     stop = sig.stop * ratio if sig.stop is not None else None
 
-    post = bars.iloc[pos + 1:pos + 1 + window]
+    start = pos + 1
+    if entry_mode == "next-open":
+        # The order can't go in before the scan has published. On a run
+        # that read the prior session's close (the 2026-09 lag), the open
+        # after the signal bar came before the report did.
+        start = max(start, first_open_after(bars.index, sig.published))
+    post = bars.iloc[start:start + window]
     if len(post) == 0:
         return None, "open"
 
