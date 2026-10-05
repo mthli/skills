@@ -19,7 +19,7 @@ import json
 import sys
 import time
 import warnings
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -55,6 +55,11 @@ HISTORY_COLS = [
     # deliberately NOT backfilled — it records the price the scan actually
     # saw, which later corporate actions rewrite and delistings erase.
     "close", "vol_ratio_20d", "dollar_vol_20d_m", "dist_days_25d",
+    # The session the run's daily bars actually reach (YYYYMMDD), next to
+    # run_id's publication day. Equal on a healthy run; older when Yahoo
+    # hadn't published the last session and the intraday rebuild failed
+    # (see ensure_latest_session). Blank on rows before 2026-10-05.
+    "data_asof",
 ]
 # `rank` is the display position the user sees (post-vol-collapse, contiguous
 # 1..N). `score_rank` is the canonical pre-filter score-based rank — survives
@@ -266,6 +271,172 @@ def fetch_bars(tickers: list[str], window_months: int,
     )
 
 
+# Daily-bar freshness. Since 2026-09-02 Yahoo has served the just-closed
+# session's daily row with a NaN Close to the 20:00 ET scan (by 09-23 it
+# was still missing at 09:00 ET the next morning; it fills in by the
+# following evening). Nothing downstream noticed: extract_closes drops the
+# NaN, so the board, closes and stops ran a session behind under today's
+# run_id. The same session's intraday bars were there all along, so the
+# missing bar is rebuilt from them.
+INTRADAY_REPAIR_INTERVAL = "30m"
+# A name with no daily close in this many calendar days is gone (delisted,
+# long halt), not lagging: asking for its intraday bars would only add
+# misses to the warning.
+REPAIR_ALIVE_DAYS = 10
+
+
+def expected_session(now: datetime) -> date:
+    """The latest NYSE session whose 16:00 ET close has passed at `now`.
+
+    Early-close days (13:00) also count from 16:00, which only affects a run
+    in that three-hour gap and errs toward expecting less."""
+    now_et = now.astimezone(MARKET_TZ)
+    d = now_et.date()
+    if is_nyse_trading_day(d) and now_et.hour >= 16:
+        return d
+    d -= timedelta(days=1)
+    while not is_nyse_trading_day(d):
+        d -= timedelta(days=1)
+    return d
+
+
+def session_bars_from_intraday(tickers: list[str],
+                               session: date) -> dict[str, dict]:
+    """Open / High / Low / Close for `session`, aggregated from intraday bars.
+
+    Volume is deliberately left out. The intraday bars miss the closing
+    auction and other off-book prints, so their sum ran a median 19% under
+    the settled daily volume (8–35% across 100 names on 2026-10-02), while
+    the last bar's close sat a median 0.02% (p90 0.07%) from the official
+    one. An undercounted volume would make the session read as a quiet day
+    and hide a distribution day, the entry signal the backtest validated,
+    so the caller leaves it NaN, which attach_volume_fields already reads
+    as "can't tell"."""
+    if not tickers:
+        return {}
+    try:
+        intr = yf.download(
+            tickers, start=session.isoformat(),
+            end=(session + timedelta(days=1)).isoformat(),
+            interval=INTRADAY_REPAIR_INTERVAL, prepost=False,
+            auto_adjust=True, progress=False, threads=True,
+            group_by="ticker",
+        )
+    except Exception as e:
+        print(f"intraday fetch for {session} failed: {e}", file=sys.stderr)
+        return {}
+    if intr is None or intr.empty:
+        return {}
+    multi = isinstance(intr.columns, pd.MultiIndex)
+    out = {}
+    for t in tickers:
+        if multi:
+            if (t, "Close") not in intr.columns:
+                continue
+            b = intr[t]
+        elif len(tickers) == 1:  # some versions return one ticker flat
+            b = intr
+        else:
+            continue
+        b = b.dropna(subset=["Close"])
+        idx = b.index
+        if idx.tz is not None:
+            idx = idx.tz_convert(MARKET_TZ)
+        b = b[idx.date == session]
+        if b.empty:
+            continue
+        out[t] = {"Open": float(b["Open"].iloc[0]),
+                  "High": float(b["High"].max()),
+                  "Low": float(b["Low"].min()),
+                  "Close": float(b["Close"].iloc[-1])}
+    return out
+
+
+def ensure_latest_session(bars: pd.DataFrame, tickers: list[str],
+                          now: datetime) -> tuple[pd.DataFrame, dict]:
+    """Rebuild the last closed session's bar wherever the daily download
+    lacks it, and report how fresh the data ended up.
+
+    Returns the (possibly extended) frame and a freshness record:
+      expected  the session the data should reach (expected_session)
+      asof      the session most names' daily closes reach after the repair
+      repaired  names whose bar was rebuilt from intraday data
+      missing   names still without it
+
+    A mid-session run reaches past `expected` (today's partial bar), so
+    nothing is missing and nothing is rebuilt."""
+    session = expected_session(now)
+    stamp = pd.Timestamp(session)
+    if bars.index.tz is not None:
+        stamp = stamp.tz_localize(bars.index.tz)
+    alive_since = stamp - pd.Timedelta(days=REPAIR_ALIVE_DAYS)
+
+    def last_dates() -> dict[str, pd.Timestamp]:
+        out = {}
+        for t in tickers:
+            if (t, "Close") not in bars.columns:
+                continue
+            c = bars[(t, "Close")].dropna()
+            if not c.empty and c.index[-1] >= alive_since:
+                out[t] = c.index[-1]
+        return out
+
+    need = [t for t, d in last_dates().items() if d < stamp]
+    repaired = {}
+    if need:
+        print(f"{len(need)} ticker(s) lack a daily bar for {session}; "
+              f"rebuilding it from {INTRADAY_REPAIR_INTERVAL} bars...",
+              file=sys.stderr)
+        repaired = session_bars_from_intraday(need, session)
+    if repaired:
+        if stamp not in bars.index:
+            bars = bars.reindex(bars.index.append(pd.DatetimeIndex([stamp]))
+                                .sort_values())
+        cols, vals = [], []
+        for t, ohlc in repaired.items():
+            for f, v in [*ohlc.items(), ("Volume", np.nan)]:
+                if (t, f) in bars.columns:
+                    cols.append((t, f))
+                    vals.append(v)
+        cols_idx = pd.MultiIndex.from_tuples(cols)
+        # Volume columns can arrive as int64; writing NaN into one would
+        # upcast with a FutureWarning, so make the cast explicit.
+        bars[cols_idx] = bars[cols_idx].astype(float)
+        bars.loc[stamp, cols_idx] = vals
+
+    reached = pd.Series(list(last_dates().values()))
+    asof = reached.mode().iloc[0].date() if not reached.empty else None
+    missing = sorted(t for t in need if t not in repaired)
+    if asof is not None and asof < session:
+        print(f"WARNING: daily bars end {asof}, but the {session} session "
+              f"has closed; this run's board is a session old "
+              f"({len(missing)} of {len(need)} names couldn't be rebuilt "
+              f"from intraday bars).", file=sys.stderr)
+    return bars, {"expected": session, "asof": asof,
+                  "repaired": sorted(repaired), "missing": missing}
+
+
+def render_data_freshness(freshness: dict) -> str:
+    """One banner line: which session the numbers reflect, and whether it
+    had to be rebuilt or is missing."""
+    expected, asof = freshness["expected"], freshness["asof"]
+    if asof is not None and asof < expected:
+        return (f"\n> ⚠️ **Stale data**: daily bars end {asof}, but the "
+                f"{expected} session has closed. The board, closes and stops "
+                f"below are a session old: Yahoo hadn't published the "
+                f"session, and {len(freshness['missing'])} names couldn't be "
+                f"rebuilt from intraday bars.")
+    line = f"**Data**: daily bars through {asof or expected}"
+    if asof is not None and asof > expected:
+        line += " (session in progress)"
+    n = len(freshness["repaired"])
+    if n:
+        line += (f" · {expected} rebuilt from {INTRADAY_REPAIR_INTERVAL} "
+                 f"intraday bars for {n} names (Yahoo's daily bar wasn't out "
+                 f"yet; volume fields skip that session)")
+    return line
+
+
 def window_trading_days(window_months: int) -> int:
     """Scoring-window size in sessions: ~21 per month, floor of 21. The
     single source of truth for the tail() slice used by score_tickers and
@@ -310,10 +481,16 @@ MA200_SLOPE_LOOKBACK_DAYS = 20  # ~1 trading month — long enough to filter noi
 MA200_SLOPE_RISK_ON_THRESHOLD_PCT = -0.05
 
 
-def compute_regime(prices: pd.DataFrame) -> dict | None:
+def compute_regime(prices: pd.DataFrame,
+                   session: date | None = None) -> dict | None:
     """Compute SPY trend + universe breadth. Returns None if SPY fetch fails
     or has insufficient history; caller renders an 'unavailable' banner and
-    proceeds — regime is informational, not load-bearing for scoring."""
+    proceeds — regime is informational, not load-bearing for scoring.
+
+    `session` is the last closed session (ensure_latest_session's
+    `expected`): SPY is downloaded on its own, so it needs the same rebuild
+    when Yahoo's daily bar for that session isn't out yet, or the trend
+    read would sit a session behind the breadth read beside it."""
     try:
         spy_df = yf.download("SPY", period=f"{SPY_HISTORY_MONTHS}mo",
                              interval="1d", auto_adjust=True, progress=False)
@@ -328,6 +505,14 @@ def compute_regime(prices: pd.DataFrame) -> dict | None:
     if isinstance(spy_close, pd.DataFrame):
         spy_close = spy_close.iloc[:, 0]
     spy_close = spy_close.dropna()
+    if (session is not None and not spy_close.empty
+            and spy_close.index[-1].date() < session):
+        bar = session_bars_from_intraday(["SPY"], session).get("SPY")
+        if bar is not None:
+            stamp = pd.Timestamp(session)
+            if spy_close.index.tz is not None:
+                stamp = stamp.tz_localize(spy_close.index.tz)
+            spy_close.loc[stamp] = bar["Close"]
     if len(spy_close) < 200 + MA200_SLOPE_LOOKBACK_DAYS:
         return None
 
@@ -1241,7 +1426,8 @@ def refresh_benchmark(top_n: int) -> None:
 
 
 def append_history(picks: list[dict], run_id: str, run_date: datetime,
-                   allow_same_day: bool = False):
+                   allow_same_day: bool = False,
+                   data_asof: date | None = None):
     """At most one snapshot per America/New_York calendar day — aligning the
     dedup unit with US market sessions, since that's what the data measures.
     If history already has rows for today's ET date, they're replaced, so
@@ -1277,6 +1463,8 @@ def append_history(picks: list[dict], run_id: str, run_date: datetime,
                 "vol_ratio_20d": p.get("vol_ratio_20d"),
                 "dollar_vol_20d_m": p.get("dollar_vol_20d_m"),
                 "dist_days_25d": p.get("dist_days_25d"),
+                "data_asof": (int(data_asof.strftime("%Y%m%d"))
+                              if data_asof else None),
             }
             for p in picks
         ],
@@ -1323,8 +1511,9 @@ def append_history(picks: list[dict], run_id: str, run_date: datetime,
     combined = combined.reindex(columns=canonical)
     # Nullable Int64 so a row that lacks the field doesn't flip the whole
     # column to float ("3" silently becoming "3.0" in the CSV).
-    combined["dist_days_25d"] = pd.to_numeric(
-        combined["dist_days_25d"], errors="coerce").astype("Int64")
+    for col in ("dist_days_25d", "data_asof"):
+        combined[col] = pd.to_numeric(
+            combined[col], errors="coerce").astype("Int64")
     tmp_path = HISTORY_FILE.with_suffix(".csv.tmp")
     combined.to_csv(tmp_path, index=False)
     tmp_path.replace(HISTORY_FILE)
@@ -1918,9 +2107,12 @@ def main() -> int | None:
     min_period = SPY_HISTORY_MONTHS if args.regime_gate != "off" else 0
     bars = fetch_bars(universe, args.window_months,
                       min_period_months=min_period)
+    now = datetime.now(timezone.utc)
+    bars, freshness = ensure_latest_session(bars, universe, now)
     prices = extract_closes(bars, universe,
                             min_len=min_window_observations(args.window_months))
-    regime = compute_regime(prices) if args.regime_gate != "off" else None
+    regime = (compute_regime(prices, session=freshness["expected"])
+              if args.regime_gate != "off" else None)
     picks = score_tickers(prices, args.window_months,
                           args.min_return_pct, args.max_dd_pct)
     picks, excluded_vol_collapse = filter_vol_collapse(
@@ -1928,7 +2120,6 @@ def main() -> int | None:
     )
     picks = attach_volume_fields(picks, bars)
     history = load_history()
-    now = datetime.now(timezone.utc)
     run_id = make_run_id(now, allow_same_day=args.allow_same_day)
     picks = enrich_with_persistence(picks, history, run_id, args.top_n)
     # Entry-quality tags attach to episode STARTS (streak 1), not just
@@ -1982,7 +2173,9 @@ def main() -> int | None:
                   f"day (weekend or market holiday). Pass --save-stale to "
                   f"override.", file=sys.stderr)
         else:
-            append_history(picks, run_id, now, allow_same_day=args.allow_same_day)
+            append_history(picks, run_id, now,
+                           allow_same_day=args.allow_same_day,
+                           data_asof=freshness["asof"])
             # Deferred to the caller, past every print below: refreshing
             # the benchmark is a side effect of having saved history, and
             # the reader shouldn't wait on a price fetch to see the board.
@@ -2003,6 +2196,7 @@ def main() -> int | None:
             "run_id": run_id,
             "run_date": now.isoformat(),
             "params": vars(args),
+            "data_freshness": freshness,
             "universe_size": len(universe),
             "passed_filter": len(picks),
             "top_n": args.top_n,
@@ -2043,6 +2237,7 @@ def main() -> int | None:
                      f"{passed_segment} · "
                      f"**Prior runs**: {n_prior}")
     print(universe_line)
+    print(render_data_freshness(freshness))
     if args.regime_gate != "off":
         print(render_regime_banner(regime))
         if regime is not None and not regime["risk_on"]:
