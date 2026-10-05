@@ -86,6 +86,170 @@ MR_SECTORS = SKILLS_ROOT / "mean-reversion-scan" / "state" / "sectors.json"
 REGIME_HISTORY = SKILLS_ROOT / "regime-scan" / "state" / "history.csv"
 MARKET_TZ = ZoneInfo("America/New_York")
 
+# Daily-bar freshness. Since 2026-09-02 Yahoo has served the just-closed
+# session's daily row with a NaN Close to the 20:00 ET scan (by 09-23 it
+# was still missing at 09:00 ET the next morning; it fills in by the
+# following evening). tape_check dropped the NaN, so every keg's
+# latest_close, setup metrics and signal_day_low (the invalidation) came
+# from the session before. mean-reversion-scan now rebuilds that session,
+# and a keg list from the fresh session read against stale tape would put
+# the invalidation under the wrong day's low; the tape gets the same
+# rebuild. The same session's intraday bars were there all along.
+INTRADAY_REPAIR_INTERVAL = "30m"
+# A name with no daily close in this many calendar days is gone (delisted,
+# long halt), not lagging: asking for its intraday bars would only add
+# misses to the warning.
+REPAIR_ALIVE_DAYS = 10
+
+
+def expected_session(now: datetime) -> date:
+    """The latest NYSE session whose 16:00 ET close has passed at `now`.
+
+    Early-close days (13:00) also count from 16:00, which only affects a run
+    in that three-hour gap and errs toward expecting less."""
+    now_et = now.astimezone(MARKET_TZ)
+    d = now_et.date()
+    if is_trading_day(d) and now_et.hour >= 16:
+        return d
+    d -= timedelta(days=1)
+    while not is_trading_day(d):
+        d -= timedelta(days=1)
+    return d
+
+
+def session_bars_from_intraday(tickers: list[str],
+                               session: date) -> dict[str, dict]:
+    """Open / High / Low / Close for `session`, aggregated from intraday bars.
+
+    The last bar's close sat a median 0.02% (p90 0.07%) from the official
+    close across 100 names on 2026-10-02. Volume is left out: the intraday
+    bars miss the closing auction and ran a median 19% short, and nothing
+    the vol_ratio_5d_20d mean skips a NaN, so the caller leaves it NaN
+    rather than feed in a short number."""
+    if not tickers:
+        return {}
+    try:
+        intr = yf.download(
+            tickers, start=session.isoformat(),
+            end=(session + timedelta(days=1)).isoformat(),
+            interval=INTRADAY_REPAIR_INTERVAL, prepost=False,
+            auto_adjust=True, progress=False, threads=True,
+            group_by="ticker",
+        )
+    except Exception as e:
+        print(f"intraday fetch for {session} failed: {e}", file=sys.stderr)
+        return {}
+    if intr is None or intr.empty:
+        return {}
+    multi = isinstance(intr.columns, pd.MultiIndex)
+    out = {}
+    for t in tickers:
+        if multi:
+            if (t, "Close") not in intr.columns:
+                continue
+            b = intr[t]
+        elif len(tickers) == 1:  # some versions return one ticker flat
+            b = intr
+        else:
+            continue
+        b = b.dropna(subset=["Close"])
+        idx = b.index
+        if idx.tz is not None:
+            idx = idx.tz_convert(MARKET_TZ)
+        b = b[idx.date == session]
+        if b.empty:
+            continue
+        out[t] = {"Open": float(b["Open"].iloc[0]),
+                  "High": float(b["High"].max()),
+                  "Low": float(b["Low"].min()),
+                  "Close": float(b["Close"].iloc[-1])}
+    return out
+
+
+def ensure_latest_session(bars: pd.DataFrame, tickers: list[str],
+                          now: datetime) -> tuple[pd.DataFrame, dict]:
+    """Rebuild the last closed session's bar wherever the daily download
+    lacks it, and report how fresh the data ended up.
+
+    Returns the (possibly extended) frame and a freshness record:
+      expected  the session the data should reach (expected_session)
+      asof      the session most names' daily closes reach after the repair
+      repaired  names whose bar was rebuilt from intraday data
+      missing   names still without it
+
+    A mid-session run reaches past `expected` (today's partial bar), so
+    nothing is missing and nothing is rebuilt."""
+    session = expected_session(now)
+    stamp = pd.Timestamp(session)
+    if bars.index.tz is not None:
+        stamp = stamp.tz_localize(bars.index.tz)
+    alive_since = stamp - pd.Timedelta(days=REPAIR_ALIVE_DAYS)
+
+    def last_dates() -> dict[str, pd.Timestamp]:
+        out = {}
+        for t in tickers:
+            if (t, "Close") not in bars.columns:
+                continue
+            c = bars[(t, "Close")].dropna()
+            if not c.empty and c.index[-1] >= alive_since:
+                out[t] = c.index[-1]
+        return out
+
+    need = [t for t, d in last_dates().items() if d < stamp]
+    repaired = {}
+    if need:
+        print(f"{len(need)} ticker(s) lack a daily bar for {session}; "
+              f"rebuilding it from {INTRADAY_REPAIR_INTERVAL} bars...",
+              file=sys.stderr)
+        repaired = session_bars_from_intraday(need, session)
+    if repaired:
+        if stamp not in bars.index:
+            bars = bars.reindex(bars.index.append(pd.DatetimeIndex([stamp]))
+                                .sort_values())
+        cols, vals = [], []
+        for t, ohlc in repaired.items():
+            for f, v in [*ohlc.items(), ("Volume", float("nan"))]:
+                if (t, f) in bars.columns:
+                    cols.append((t, f))
+                    vals.append(v)
+        cols_idx = pd.MultiIndex.from_tuples(cols)
+        # Volume columns can arrive as int64; writing NaN into one would
+        # upcast with a FutureWarning, so make the cast explicit.
+        bars[cols_idx] = bars[cols_idx].astype(float)
+        bars.loc[stamp, cols_idx] = vals
+
+    reached = pd.Series(list(last_dates().values()))
+    asof = reached.mode().iloc[0].date() if not reached.empty else None
+    missing = sorted(t for t in need if t not in repaired)
+    if asof is not None and asof < session:
+        print(f"WARNING: daily bars end {asof}, but the {session} session "
+              f"has closed; this run's tape is a session old "
+              f"({len(missing)} of {len(need)} names couldn't be rebuilt "
+              f"from intraday bars).", file=sys.stderr)
+    return bars, {"expected": session, "asof": asof,
+                  "repaired": sorted(repaired), "missing": missing}
+
+
+def render_data_freshness(freshness: dict) -> str:
+    """One banner line: which session the numbers reflect, and whether it
+    had to be rebuilt or is missing."""
+    expected, asof = freshness["expected"], freshness["asof"]
+    if asof is not None and asof < expected:
+        return (f"⚠️ stale tape: daily bars end {asof}, but the {expected} "
+                f"session has closed; latest closes, setup metrics and "
+                f"invalidations are a session old ({len(freshness['missing'])} "
+                f"names couldn't be rebuilt from intraday bars)")
+    line = f"tape: daily bars through {asof or expected}"
+    if asof is not None and asof > expected:
+        line += " (session in progress)"
+    n = len(freshness["repaired"])
+    if n:
+        line += (f" · {expected} rebuilt from {INTRADAY_REPAIR_INTERVAL} "
+                 f"intraday bars for {n} names (Yahoo's daily bar wasn't out "
+                 f"yet)")
+    return line
+
+
 UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
       "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36")
 NASDAQ_EARNINGS = "https://api.nasdaq.com/api/calendar/earnings?date={d}"
@@ -244,7 +408,14 @@ def load_kegs(min_score: float, max_age: int, top_n: int, errors: list,
     # Staleness against the MARKET-tz date (passed in), not the machine's
     # local date — a Beijing machine is a day ahead of ET every evening.
     mr_date = datetime.strptime(latest, "%Y%m%d").date()
+    # The session the MR run's bars reached, when it recorded one
+    # (2026-10-05 on). It, not run_id, is the signal day the tape's setup
+    # metrics must end on.
+    asof = (pd.to_numeric(rows["data_asof"], errors="coerce").dropna()
+            if "data_asof" in rows.columns else pd.Series(dtype=float))
     meta = {"run_id": latest, "run_date": mr_date.isoformat(),
+            "data_asof": (datetime.strptime(str(int(asof.iloc[0])), "%Y%m%d")
+                          .date().isoformat() if not asof.empty else None),
             "stale_days": (today - mr_date).days,
             "rows_in_run": len(rows), "kegs_after_filter": len(kegs)}
     prior = {"run_id": runs[-2], "tickers": sorted(appear.get(runs[-2], set()))} \
@@ -380,7 +551,18 @@ def regime_state(errors: list) -> dict | None:
 # --------------------------------------------------------------------------- #
 # Tape check — forced-seller signature + chase-guard (one batched download)
 # --------------------------------------------------------------------------- #
-def tape_check(kegs: list[dict], signal_date: date | None, errors: list) -> None:
+def as_per_ticker(df: pd.DataFrame, tickers: list[str]) -> pd.DataFrame:
+    """yf.download hands one ticker back with flat columns in some versions;
+    lift it to the (ticker, field) shape so every reader indexes the same
+    way and ensure_latest_session can fill it."""
+    if not isinstance(df.columns, pd.MultiIndex) and len(tickers) == 1:
+        df = df.copy()
+        df.columns = pd.MultiIndex.from_product([tickers, df.columns])
+    return df
+
+
+def tape_check(kegs: list[dict], signal_date: date | None, errors: list,
+               now: datetime | None = None) -> dict | None:
     """Two distinct reads per keg, split at the SIGNAL day:
 
     - The SETUP metrics (down streak, 5d return, down-gaps, volume ratio,
@@ -391,20 +573,24 @@ def tape_check(kegs: list[dict], signal_date: date | None, errors: list) -> None
       full series — they answer "did this keg already blow?", which drives the
       chase-guard: the morning after ignition is historically the WORST entry
       of the cycle (AMD 07-27, TSM 07-17); post-ignition the play is the
-      retest, never the chase."""
+      retest, never the chase.
+
+    Returns ensure_latest_session's freshness record for the tape (None when
+    there was nothing to fetch)."""
     tickers = sorted({k["ticker"] for k in kegs})
     if not tickers:
-        return
+        return None
     try:
         df = yf.download(tickers, period="1mo", interval="1d", auto_adjust=False,
                          progress=False, threads=True, group_by="ticker")
     except Exception as e:
         errors.append(f"tape: batch download failed: {e}")
-        return
+        return None
+    df, freshness = ensure_latest_session(
+        as_per_ticker(df, tickers), tickers, now or datetime.now(MARKET_TZ))
     for k in kegs:
         try:
-            sub = df[k["ticker"]] if len(tickers) > 1 else df
-            bars = sub.dropna(subset=["Close"])
+            bars = df[k["ticker"]].dropna(subset=["Close"])
             last = float(bars["Close"].iloc[-1])
             k["latest_close"] = round(last, 2)
             k["since_signal_pct"] = round((last / k["signal_close"] - 1) * 100, 2)
@@ -438,6 +624,7 @@ def tape_check(kegs: list[dict], signal_date: date | None, errors: list) -> None
                                   or k["ret_5d_pct"] > PANIC_RET5D_PCT)
         except Exception as e:
             errors.append(f"tape/{k['ticker']}: {e}")
+    return freshness
 
 
 def prior_review(prior_mr: dict | None, errors: list, today: date) -> dict | None:
@@ -484,11 +671,14 @@ def prior_review(prior_mr: dict | None, errors: list, today: date) -> dict | Non
     except Exception as e:
         errors.append(f"prior_review/prices: {e}")
         return None
+    # Same rebuild as the tape: a stale last close grades every name a
+    # session short.
+    px, _ = ensure_latest_session(as_per_ticker(px, tks), tks,
+                                  datetime.now(MARKET_TZ))
     rated = []
     for b in base:
         try:
-            sub = px[b["ticker"]] if len(tks) > 1 else px
-            last = float(sub["Close"].dropna().iloc[-1])
+            last = float(px[b["ticker"]]["Close"].dropna().iloc[-1])
             rated.append({**b, "since_pct": round((last / b["base"] - 1) * 100, 2)})
         except Exception:
             continue
@@ -557,9 +747,11 @@ def build(window_days: int, min_score: float, max_age: int, top_n: int) -> dict:
     join_sparks(kegs, by_symbol, verdicts, macro)
 
     sig_date = None
-    if mr_meta.get("run_id"):
+    if mr_meta.get("data_asof"):
+        sig_date = date.fromisoformat(mr_meta["data_asof"])
+    elif mr_meta.get("run_id"):
         sig_date = datetime.strptime(mr_meta["run_id"], "%Y%m%d").date()
-    tape_check(kegs, sig_date, errors)
+    tape = tape_check(kegs, sig_date, errors, now)
     review = prior_review(mr_meta.get("prior_run"), errors, today)
 
     # Window honesty: an unarmed keg means "no spark IN THIS WINDOW", not "no
@@ -586,6 +778,9 @@ def build(window_days: int, min_score: float, max_age: int, top_n: int) -> dict:
         "macro_note": macro_note,
         "regime": regime,
         "mr_run": {k: v for k, v in mr_meta.items() if k != "prior_run"},
+        # Which session latest_close / signal_day_low come from; the
+        # outcome backtest anchors on `asof` when present.
+        "tape_freshness": tape,
         "params": {"min_score": min_score, "max_age_runs": max_age,
                    "chase_threshold_pct": CHASE_THRESHOLD_PCT,
                    "panic_ret5d_pct": PANIC_RET5D_PCT},
@@ -599,7 +794,10 @@ def build(window_days: int, min_score: float, max_age: int, top_n: int) -> dict:
 def as_table(p: dict) -> str:
     lines = [f"snapback-scan {p['today']}  regime={p['regime']['state'] if p['regime'] else '?'}"
              f"  MR run {p['mr_run'].get('run_id')} (stale {p['mr_run'].get('stale_days')}d)"
-             f"  window {p['spark_window'][0]}..{p['spark_window'][-1]}", ""]
+             f"  window {p['spark_window'][0]}..{p['spark_window'][-1]}"]
+    if p.get("tape_freshness"):
+        lines.append(render_data_freshness(p["tape_freshness"]))
+    lines.append("")
     hdr = f"{'TICKER':7}{'SCORE':6}{'AGE':4}{'5D%':7}{'SINCE%':8}{'ARMED':6}SPARKS  [FLAGS]"
     lines.append(hdr)
     for k in p["kegs"]:

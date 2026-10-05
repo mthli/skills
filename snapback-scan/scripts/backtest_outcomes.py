@@ -116,6 +116,8 @@ class Signal:
     down_gaps: int | None = None
     vol_ratio: float | None = None
     day_of_packet: int = 1    # consecutive snapback packets this keg has been in
+    tape_asof: str | None = None   # YYYY-MM-DD the packet's tape reached (2026-10-05 on)
+    published: str | None = None   # packet as_of, ISO with offset
 
     @property
     def spark_kind(self) -> str:
@@ -147,6 +149,8 @@ def load_signals(runs_dir: Path) -> tuple[list[Signal], list[str]]:
             continue
         pdate = pk.get("today") or p.stem
         dates.append(pdate)
+        tape = pk.get("tape_freshness") or {}
+        tape_asof = str(tape["asof"]) if tape.get("asof") else None
         regime = ((pk.get("regime") or {}).get("state")) or "?"
         for k in pk.get("kegs", []):
             entry = k.get("latest_close") or k.get("signal_close")
@@ -174,6 +178,8 @@ def load_signals(runs_dir: Path) -> tuple[list[Signal], list[str]]:
                 ret_5d=k.get("ret_5d_pct"),
                 down_gaps=k.get("down_gaps_5d"),
                 vol_ratio=k.get("vol_ratio_5d_20d"),
+                tape_asof=tape_asof,
+                published=pk.get("as_of"),
             ))
 
     # Day-of-packet: consecutive packets a keg keeps appearing in. A keg that
@@ -282,23 +288,53 @@ class Outcome:
     mae: float | None         # worst intraday drawdown vs entry, in %
 
 
+def first_open_after(index: pd.DatetimeIndex, published: str | None) -> int:
+    """Position of the first session that opens (09:30 ET) after the packet
+    was built. 0 when the build time is unknown, so it never binds."""
+    if not published:
+        return 0
+    ts = pd.Timestamp(published)
+    ts = ts.tz_convert("America/New_York") if ts.tzinfo else ts
+    day = pd.Timestamp(ts.date())
+    if (ts.hour, ts.minute) >= (9, 30):
+        day += pd.Timedelta(days=1)
+    return int(index.searchsorted(day, side="left"))
+
+
 def resolve_signal(sig: Signal, bars: pd.DataFrame, window: int,
                    entry_mode: str = "close") -> tuple[Outcome | None, str]:
     """Returns (outcome, status): resolved / open / no_bars / unit_mismatch /
     gap_skip / no_levels.
 
     entry_mode "close" is the protocol as written (tranche 1 at the packet's
-    latest_close). "next-open" is honest execution: the packet is built after
-    the close, so the earliest real fill is the next session's open; a keg
+    latest_close). "next-open" is honest execution: the earliest real fill is
+    the first open after the packet was built (as_of); a keg
     that gaps past its target or through its invalidation before you can buy
     is untradable → gap_skip."""
     if sig.stop is None or sig.target is None:
         return None, "no_levels"
     closes = bars["Close"]
-    anchor = pd.Timestamp(sig.packet_date)
+    anchor = pd.Timestamp(sig.tape_asof or sig.packet_date)
     pos = closes.index.searchsorted(anchor, side="right") - 1
     if pos < 0:
         return None, "no_bars"
+    if sig.tape_asof is None and sig.ret_5d is not None and pos >= 6:
+        # From 2026-09-02 to 10-02 the tape read the prior session under the
+        # packet's date (Yahoo's late daily bar), and these packets predate
+        # tape_asof. The recorded 5-day return is a ratio, so later dividend
+        # re-adjustment leaves it alone: whichever of the two bars
+        # reproduces it is the one the entry came from. The tolerance walk
+        # below would keep the packet-date bar whenever that day moved
+        # under 2%, a session late.
+        def ret5_miss(i: int) -> float:
+            return abs((float(closes.iloc[i]) / float(closes.iloc[i - 5]) - 1)
+                       * 100 - float(sig.ret_5d))
+        # The price guard keeps a packet whose MR run was itself a day old
+        # (stale_days 1: ret_5d from the day before, entry from the day of)
+        # from being pulled back onto the signal day.
+        if (ret5_miss(pos - 1) < ret5_miss(pos) and
+                abs(float(closes.iloc[pos - 1]) / sig.entry - 1) <= ANCHOR_TOL):
+            pos -= 1
 
     # Re-anchor onto the (re-adjusted) series. Walk back only when the
     # packet-date bar plainly isn't the one recorded (a weekend, holiday, or
@@ -321,7 +357,12 @@ def resolve_signal(sig: Signal, bars: pd.DataFrame, window: int,
     target = sig.target * ratio
     stop = sig.stop * ratio
 
-    post = bars.iloc[pos + 1:pos + 1 + window]
+    start = pos + 1
+    if entry_mode == "next-open":
+        # The fill can't come before the packet exists: on a lagged tape the
+        # open after the entry bar came before the report did.
+        start = max(start, first_open_after(bars.index, sig.published))
+    post = bars.iloc[start:start + window]
     if len(post) == 0:
         return None, "open"
 

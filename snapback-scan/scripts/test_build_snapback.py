@@ -157,3 +157,53 @@ def test_next_trading_days_skips_observed_holiday():
     assert not bp.is_trading_day(date(2026, 7, 3))
     assert bp.next_trading_days(date(2026, 7, 2), 2) == [date(2026, 7, 6),
                                                          date(2026, 7, 7)]
+
+
+# --------------------------------------------------------------------------- #
+# tape freshness — Yahoo's late daily bar
+# --------------------------------------------------------------------------- #
+def test_tape_rebuilds_the_signal_day_from_intraday(monkeypatch):
+    from datetime import datetime
+    import numpy as np
+    days = pd.bdate_range(end="2026-10-02", periods=25)
+    daily = pd.DataFrame({
+        ("AAA", "Open"): 100.0, ("AAA", "High"): 101.0, ("AAA", "Low"): 99.0,
+        ("AAA", "Close"): np.linspace(110, 100, 25), ("AAA", "Volume"): 1e6,
+    }, index=days)
+    daily.loc[days[-1], [("AAA", f) for f in ("Open", "High", "Low", "Close")]] = np.nan
+    intr_idx = pd.date_range("2026-10-02 09:30", "2026-10-02 15:30", freq="30min",
+                             tz="America/New_York")
+    intraday = pd.DataFrame({("AAA", "Open"): 98.0, ("AAA", "High"): 98.5,
+                             ("AAA", "Low"): 95.0, ("AAA", "Close"): 96.0,
+                             ("AAA", "Volume"): 1e4}, index=intr_idx)
+    calls = []
+
+    def fake(tickers, **kw):
+        calls.append(kw.get("interval"))
+        return daily.copy() if kw.get("interval") == "1d" else intraday
+    monkeypatch.setattr(bp.yf, "download", fake)
+    kegs = [{"ticker": "AAA", "signal_close": 96.0}]
+    now = datetime(2026, 10, 2, 20, 0, tzinfo=bp.MARKET_TZ)
+    fr = bp.tape_check(kegs, date(2026, 10, 2), [], now)
+    assert calls == ["1d", bp.INTRADAY_REPAIR_INTERVAL]
+    assert fr["repaired"] == ["AAA"] and fr["asof"] == date(2026, 10, 2)
+    k = kegs[0]
+    assert k["latest_close"] == 96.0 and k["since_signal_pct"] == 0.0
+    assert k["signal_day_low"] == 95.0  # the invalidation is the signal day's low
+
+
+def test_load_kegs_carries_the_mr_runs_data_asof(tmp_path, monkeypatch):
+    mr = tmp_path / "history.csv"
+    mr.write_text(MR_COLS + ",data_asof\n"
+                  + _mr_row("20261002", "AAA", 1, 60) + ",20261002\n")
+    monkeypatch.setattr(bp, "MR_HISTORY", mr)
+    kegs, meta = bp.load_kegs(40, 2, 20, [], date(2026, 10, 2))
+    assert meta["data_asof"] == "2026-10-02"
+
+
+def test_load_kegs_without_the_column_has_no_asof(tmp_path, monkeypatch):
+    mr = tmp_path / "history.csv"
+    mr.write_text(MR_COLS + "\n" + _mr_row("20261002", "AAA", 1, 60) + "\n")
+    monkeypatch.setattr(bp, "MR_HISTORY", mr)
+    _, meta = bp.load_kegs(40, 2, 20, [], date(2026, 10, 2))
+    assert meta["data_asof"] is None

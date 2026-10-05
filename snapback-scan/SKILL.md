@@ -74,6 +74,13 @@ The packet saves to `state/runs/<date>.json`. Per-keg fields that matter:
 - `signal_day_low` / `mr_stop`: invalidation candidates; `mr_target`
 - `next_own_earnings`: for unarmed kegs, the next known date beyond the window
 - `down_streak`, `down_gaps_5d`, `vol_ratio_5d_20d`: seller-mechanism reads
+- `tape_freshness` (packet level): which session `latest_close`, the setup
+  reads and `signal_day_low` come from. Since 2026-09-02 Yahoo has often not
+  published the just-closed session's daily bar by the evening run; the tape
+  (and the prior-run grading prices) rebuild it from 30-minute intraday bars,
+  and `asof` older than `expected` means the rebuild failed and every
+  invalidation sits under the previous session's low. The setup reads end on
+  the MR run's `data_asof` when it recorded one.
 - `prior_run_review`: full-sample grade of the previous flag list (n, win
   rate, avg/median, best AND worst tails, armed subset), sourced from this
   skill's own prior packet when one exists, else the prior MR run. A scanner
@@ -141,8 +148,9 @@ Rules that make this honest. Apply every one:
   the whole packet honest.
 - **Grade the prior run out loud**: the strip's third line comes from
   `prior_run_review`. Calibration compounds.
-- **State what's missing.** Stale MR cache (`stale_days` > 1), empty spark
-  calendar, `errors`: name them instead of papering over. No qualifying
+- **State what's missing.** Stale MR cache (`stale_days` > 1), a stale tape
+  (`tape_freshness.asof` < `expected`, or the table's `⚠️ stale tape` line),
+  empty spark calendar, `errors`: name them instead of papering over. No qualifying
   kegs is a valid, useful output: say so and stop; never pad.
 
 ## Interaction with the sisters
@@ -161,13 +169,16 @@ the *rules* work. The packets are already the history, so
 `scripts/backtest_outcomes.py` replays `state/runs/*.json` into
 `state/outcomes.csv`. The trade convention is this skill's protocol, not the
 MR scan's: entry at `latest_close`, hard exit at `signal_day_low`, target at
-`mr_target`.
+`mr_target`. The entry bar is `tape_freshness.asof` when the packet has it;
+packets from 2026-09-02 to 10-02 predate it and mostly read the prior
+session's tape, so the replay picks between the packet-date bar and the one
+before it by which reproduces the keg's `ret_5d_pct`.
 
 ```bash
 uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' \
   python <SKILL_DIR>/scripts/backtest_outcomes.py
 ... --window 5          # trading days to resolve (3/5/10 sensitivity always printed)
-... --entry next-open   # honest execution: fill at the next open, skip what gapped away
+... --entry next-open   # honest execution: fill at the first open after the packet was built, skip what gapped away
 ... --refresh-prices    # bypass the price cache
 ```
 

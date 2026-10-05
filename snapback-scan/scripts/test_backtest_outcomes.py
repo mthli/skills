@@ -357,3 +357,41 @@ def test_sample_banner_clears_once_the_sample_is_readable():
 def test_sample_banner_survives_an_empty_run_day_list():
     warn = bo.sample_banner(1, [_sig()], [])
     assert "SAMPLE TOO SMALL" in warn and "more run days" not in warn
+
+
+# --------------------------------------------------------------------------- #
+# the 2026-09 late-bar lag: which bar the entry came from, when the fill can be
+# --------------------------------------------------------------------------- #
+D9 = ["2026-07-22", "2026-07-23", "2026-07-24", "2026-07-27", "2026-07-28",
+      "2026-07-29", "2026-07-30", "2026-07-31", "2026-08-03", "2026-08-04",
+      "2026-08-05", "2026-08-06"]
+
+
+def test_lagged_packet_anchors_on_the_bar_its_ret5_came_from():
+    # Packet 07-30 recorded 07-29's close (100) and ret_5d; 07-30 moved only
+    # +1%, inside the 2% tolerance, so the old walk kept 07-30.
+    closes = [110, 108, 106, 104, 102, 100, 101, 101, 101, 101, 101, 101]
+    bars = _flat(closes, D9, span=0.5)
+    ret5 = round((100 / 110 - 1) * 100, 2)
+    out, status = bo.resolve_signal(_sig(ret_5d=ret5, target=200.0, stop=50.0),
+                                    bars, window=5)
+    assert status == "resolved" and out.outcome == "EXPIRED"
+    assert out.result == pytest.approx(1.0)  # from 07-29's 100, watched from 07-30
+
+
+def test_tape_asof_overrides_the_heuristics():
+    closes = [110, 108, 106, 104, 102, 100, 101, 101, 101, 101, 101, 101]
+    bars = _flat(closes, D9, span=0.5)
+    out, _ = bo.resolve_signal(_sig(tape_asof="2026-07-29", target=200.0,
+                                    stop=50.0), bars, window=5)
+    assert out.result == pytest.approx(1.0)
+
+
+def test_next_open_waits_for_the_packet():
+    closes = [110, 108, 106, 104, 102, 100, 101, 101, 101, 101, 101, 101]
+    bars = _flat(closes, D9, span=0.5)
+    sig = _sig(tape_asof="2026-07-29", published="2026-07-30T20:03:00-04:00",
+               target=200.0, stop=50.0)
+    out, status = bo.resolve_signal(sig, bars, window=5, entry_mode="next-open")
+    assert status == "resolved"
+    assert out.days == 5 and out.result == pytest.approx(0.0)  # entry 07-31 open 101
