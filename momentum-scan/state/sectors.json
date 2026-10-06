@@ -437,7 +437,7 @@
   "GMAB": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1787961685
+    "ts": 1791286226
   },
   "GPC": {
     "industry": "Auto Parts",
@@ -802,7 +802,7 @@
   "PSX": {
     "industry": "Oil & Gas Refining & Marketing",
     "sector": "Energy",
-    "ts": 1788480083
+    "ts": 1791286226
   },
   "PTRN": {
     "industry": "Software - Application",
@@ -852,7 +852,7 @@
   "RNG": {
     "industry": "Software - Application",
     "sector": "Technology",
-    "ts": 1788566484
+    "ts": 1791286226
   },
   "ROKU": {
     "industry": "Entertainment",
@@ -872,7 +872,7 @@
   "RVTY": {
     "industry": "Diagnostics & Research",
     "sector": "Healthcare",
-    "ts": 1788480083
+    "ts": 1791286226
   },
   "RY": {
     "industry": "Banks - Diversified",
@@ -1057,7 +1057,7 @@
   "TWST": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1788480083
+    "ts": 1791286226
   },
   "TXG": {
     "industry": "Medical Devices",
@@ -1097,7 +1097,7 @@
   "VEEV": {
     "industry": "Health Information Services",
     "sector": "Healthcare",
-    "ts": 1788480083
+    "ts": 1791286226
   },
   "VIK": {
     "industry": "Travel Services",
@@ -1158,6 +1158,11 @@
     "industry": "Computer Hardware",
     "sector": "Technology",
     "ts": 1782135476
+  },
+  "XP": {
+    "industry": "Capital Markets",
+    "sector": "Financial Services",
+    "ts": 1791286226
   },
   "YOU": {
     "industry": "Software - Application",

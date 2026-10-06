@@ -1,0 +1,155 @@
+{
+  "as_of": "2026-10-06T07:31:50.640498-04:00",
+  "today": "2026-10-06",
+  "spark_window": [
+    "2026-10-06 (AMC only)",
+    "2026-10-07",
+    "2026-10-08",
+    "2026-10-09"
+  ],
+  "macro_note": "",
+  "regime": {
+    "snapshot": "20261005",
+    "state": "CAUTION",
+    "score": 4,
+    "vix": 15.3,
+    "spy_vs_200_pct": 8.0,
+    "flags": "Breadth divergence: SPY -0.1% from high but only 28% of names above 50DMA ; Narrowing rally: only megacaps lifting the index (RSP/SPY -4.1%/20d)"
+  },
+  "mr_run": {
+    "run_id": "20261006",
+    "run_date": "2026-10-06",
+    "data_asof": "2026-10-05",
+    "stale_days": 0,
+    "rows_in_run": 22,
+    "kegs_after_filter": 2
+  },
+  "tape_freshness": {
+    "expected": "2026-10-05",
+    "asof": "2026-10-05",
+    "repaired": [],
+    "missing": []
+  },
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "PFE",
+      "rank": 3,
+      "score": 48.9,
+      "rsi2": 1.3,
+      "dist_200dma_pct": 6.16,
+      "signal_close": 27.41,
+      "mr_target": 28.11,
+      "mr_stop": 26.2,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-07",
+          "detail": "FOMC Meeting Minutes 2026-10-07 14:00 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 27.41,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -4.56,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.01,
+      "signal_day_low": 27.12,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "TGT",
+      "rank": 4,
+      "score": 44.7,
+      "rsi2": 2.5,
+      "dist_200dma_pct": 19.89,
+      "signal_close": 152.99,
+      "mr_target": 155.76,
+      "mr_stop": 144.15,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 2,
+      "sector": "Consumer Defensive",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-07",
+          "detail": "FOMC Meeting Minutes 2026-10-07 14:00 ET"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "PEP",
+          "date": "2026-10-08",
+          "slot": "BMO",
+          "detail": "PEP (Consumer Defensive, $171B) reports 2026-10-08 BMO"
+        }
+      ],
+      "armed": true,
+      "latest_close": 152.99,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -3.43,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 1.24,
+      "signal_day_low": 150.67,
+      "quiet_warning": true
+    }
+  ],
+  "macro_calendar": [
+    {
+      "date": "2026-10-07",
+      "time_et": "14:00",
+      "title": "FOMC Meeting Minutes"
+    }
+  ],
+  "prior_run_review": {
+    "source": "snapback:2026-10-02",
+    "n": 13,
+    "pct_positive": 76.9,
+    "avg_pct": 0.95,
+    "median_pct": 0.9,
+    "best": [
+      {
+        "ticker": "CAI",
+        "since_pct": 7.2
+      },
+      {
+        "ticker": "SAN",
+        "since_pct": 4.67
+      },
+      {
+        "ticker": "IQV",
+        "since_pct": 2.06
+      }
+    ],
+    "worst": [
+      {
+        "ticker": "DOC",
+        "since_pct": -3.09
+      },
+      {
+        "ticker": "INCY",
+        "since_pct": -2.57
+      },
+      {
+        "ticker": "JNJ",
+        "since_pct": -2.22
+      }
+    ]
+  },
+  "errors": []
+}

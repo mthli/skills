@@ -102,7 +102,7 @@
   "APA": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1788566554
+    "ts": 1791286265
   },
   "APGE": {
     "industry": "Biotechnology",
@@ -197,7 +197,7 @@
   "BBY": {
     "industry": "Specialty Retail",
     "sector": "Consumer Cyclical",
-    "ts": 1788480144
+    "ts": 1791286266
   },
   "BCS": {
     "industry": "Banks - Diversified",
@@ -369,6 +369,11 @@
     "sector": "Healthcare",
     "ts": 1789776146
   },
+  "CNH": {
+    "industry": "Farm & Heavy Construction Machinery",
+    "sector": "Industrials",
+    "ts": 1791286265
+  },
   "CNI": {
     "industry": "Railroads",
     "sector": "Industrials",
@@ -432,7 +437,7 @@
   "CSCO": {
     "industry": "Communication Equipment",
     "sector": "Technology",
-    "ts": 1785888158
+    "ts": 1791286265
   },
   "CSX": {
     "industry": "Railroads",
@@ -577,7 +582,7 @@
   "EC": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
-    "ts": 1788480144
+    "ts": 1791286265
   },
   "EIX": {
     "industry": "Utilities - Regulated Electric",
@@ -874,6 +879,11 @@
     "sector": "Technology",
     "ts": 1787702664
   },
+  "IOT": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1791286266
+  },
   "IRDM": {
     "industry": "Telecom Services",
     "sector": "Communication Services",
@@ -1022,7 +1032,7 @@
   "MET": {
     "industry": "Insurance - Life",
     "sector": "Financial Services",
-    "ts": 1788220950
+    "ts": 1791286265
   },
   "MFC": {
     "industry": "Insurance - Life",
@@ -1032,7 +1042,7 @@
   "MFG": {
     "industry": "Banks - Regional",
     "sector": "Financial Services",
-    "ts": 1788480144
+    "ts": 1791286265
   },
   "MGA": {
     "industry": "Auto Parts",
@@ -1079,6 +1089,11 @@
     "sector": "Healthcare",
     "ts": 1790121751
   },
+  "MRVL": {
+    "industry": "Semiconductors",
+    "sector": "Technology",
+    "ts": 1791286265
+  },
   "MS": {
     "industry": "Capital Markets",
     "sector": "Financial Services",
@@ -1107,7 +1122,7 @@
   "MUFG": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1788480144
+    "ts": 1791286265
   },
   "MUR": {
     "industry": "Oil & Gas E&P",
@@ -1362,7 +1377,7 @@
   "RVMD": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1787616281
+    "ts": 1791286266
   },
   "RVTY": {
     "industry": "Diagnostics & Research",
@@ -1467,7 +1482,7 @@
   "SSL": {
     "industry": "Specialty Chemicals",
     "sector": "Basic Materials",
-    "ts": 1787270632
+    "ts": 1791286266
   },
   "SSRM": {
     "industry": "Gold",
@@ -1537,7 +1552,7 @@
   "TEVA": {
     "industry": "Drug Manufacturers - Specialty & Generic",
     "sector": "Healthcare",
-    "ts": 1788480144
+    "ts": 1791286265
   },
   "TGT": {
     "industry": "Discount Stores",
@@ -1697,7 +1712,7 @@
   "VLO": {
     "industry": "Oil & Gas Refining & Marketing",
     "sector": "Energy",
-    "ts": 1788480144
+    "ts": 1791286266
   },
   "VLY": {
     "industry": "Banks - Regional",
@@ -1712,7 +1727,7 @@
   "VOD": {
     "industry": "Telecom Services",
     "sector": "Communication Services",
-    "ts": 1788307378
+    "ts": 1791286265
   },
   "VOYA": {
     "industry": "Financial Conglomerates",
