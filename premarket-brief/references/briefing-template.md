@@ -346,7 +346,11 @@ This is the section that can do harm if written lazily, so frame it honestly:
   rule — a clinical-readout gap is floor-class at any size** (XENE −23.2%
   kept 132%, VKTX +27.7% kept 128%, both closing at or near the extreme):
   expect > 100% kept and frame the premarket print as the floor, never the
-  range.
+  range. **Narrowed (QURE 09-29, PCVX 10-05; promoted on 2nd miss): "at any
+  size" is retired, 3-for-5.** QURE kept 96% and PCVX's +54% gap kept 56%,
+  closing near its low after a 90.75 high. Expect ≥ 70% kept on a clinical
+  gap up to ~30% (XENE / VKTX / KOD) and treat a larger one as range-class
+  (45–75%), like the earnings cap.
   **Scope boundary (09-03, 09-04; promoted on 2nd instance): the floor holds
   only for the leg that agrees with the group's close that day.** 09-03: the
   negative leg went 0-for-3 on a broad +1% tape with a catalyst-owned bid
