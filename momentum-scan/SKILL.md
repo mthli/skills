@@ -66,6 +66,15 @@ python <SKILL_DIR>/scripts/render_history_html.py   # --top-n 30 --days 60 --out
 ... python <SKILL_DIR>/scripts/backtest_outcomes.py
 # Realistic execution variant: both fills at the NEXT session's open
 ... python <SKILL_DIR>/scripts/backtest_outcomes.py --fills next-open
+
+# Multi-regime replay: rebuild the board for every session since 2023 on a point-in-time
+# universe and score it as a portfolio and per episode. Re-run quarterly. The first run
+# downloads ~3000 tickers (a few minutes); bars are cached in the temp dir after that.
+... python <SKILL_DIR>/scripts/replay_board.py
+# How much survivorship flatters the board: the same replay on today's large caps only
+... python <SKILL_DIR>/scripts/replay_board.py --universe-file <SKILL_DIR>/state/universe.txt
+# Share-count sensitivity: drop names that issued >25% more stock (fetches share history)
+... python <SKILL_DIR>/scripts/replay_board.py --dilution-check
 ```
 
 ## Parameters
@@ -132,7 +141,7 @@ _Trend: rank trajectory, last ≤10 runs · █ = #1 · ▁ = #30 or worse · ri
 ...
 
 ## New entrants (6)
-_entry quality by entry-day distribution days (the validated edge): 🟢 clean ≤1 · ⚪ mixed 2-3 · 🟠 loaded 4+. Suffix +surge/+quiet = entry-day volume ≥1.5×/<0.8×, a weak secondary signal_
+_entry quality by entry-day distribution days (a weak persistence hint): 🟢 clean ≤1 · ⚪ mixed 2-3 · 🟠 loaded 4+. Suffix +surge/+quiet = entry-day volume ≥1.5×/<0.8×, a weak secondary signal_
 - ⚪ **MRVL** at #2 (3m +109.4%, MaxDD -10.8%) · 3 dist, vol 2.1×
 - 🟠 **DELL** at #3 (3m +107.8%, MaxDD -10.8%, re-entry, was #24) · 5 dist, vol 0.6×
 ...
@@ -143,7 +152,7 @@ _entry quality by entry-day distribution days (the validated edge): 🟢 clean �
 
 The **Sig** strip under the banner is the cohort-level buyability read (see interpretation point 5): a 🔴-heavy strip means the whole cohort is extended; a shift toward 🟢/🔵 usually means the correction already happened. The table is the **slim** default (2026-07-31 redesign); `--verbose` restores the AnnVol% / RankΔ / FirstSeen / FromHigh% / MA20% / RSI diagnostic columns, and JSON always carries every field.
 
-(The section lists **episode starts** (`Streak = 1`), covering both first-ever debuts (🆕 in the table) and re-entries after a dropout; re-entries carry a `re-entry, was #N` note. Entry-quality tags tier each entrant **by its entry-day distribution-day count** (`dist_days_25d`), the half of the signal the backtest validated (≤1-dist-day entrants roughly doubled tenure and top-10 reach; **Backtested outcomes** #2): 🟢 clean ≤ 1 dist · ⚪ mixed 2-3 · 🟠 loaded ≥ 4. The entry-day volume character (`vol_ratio_20d`) is only a label suffix (`+surge` ≥ 1.5×, `+quiet` < 0.8×) because its original calibration was convention-inflated (**Backtested outcomes** #3; tiers were volume-primary before 2026-07-31). Read the tag as a priority hint for which entrants deserve attention. Tags appear whenever `dist_days_25d` is available; the volume suffix also needs `vol_ratio_20d`. JSON output carries the tier on each episode-start pick as `entry_quality: {emoji, label}` (labels like `clean+surge`, `mixed`, `loaded+quiet`).)
+(The section lists **episode starts** (`Streak = 1`), covering both first-ever debuts (🆕 in the table) and re-entries after a dropout; re-entries carry a `re-entry, was #N` note. Entry-quality tags tier each entrant **by its entry-day distribution-day count** (`dist_days_25d`), a weak persistence hint (≤1-dist-day entrants stayed listed longer and reached the top 10 more often, but the four-year replay shrank the gap to 7.8 vs 6.2 sessions and found no return edge; **Backtested outcomes** #2): 🟢 clean ≤ 1 dist · ⚪ mixed 2-3 · 🟠 loaded ≥ 4. The entry-day volume character (`vol_ratio_20d`) is only a label suffix (`+surge` ≥ 1.5×, `+quiet` < 0.8×) because its original calibration was convention-inflated (**Backtested outcomes** #3; tiers were volume-primary before 2026-07-31). Read the tag as a tiebreaker for which entrants to look at first, not as a quality grade. Tags appear whenever `dist_days_25d` is available; the volume suffix also needs `vol_ratio_20d`. JSON output carries the tier on each episode-start pick as `entry_quality: {emoji, label}` (labels like `clean+surge`, `mixed`, `loaded+quiet`).)
 
 (The `trail stop ...` suffix only appears when `--atr-stop-mult` is set *and* `Streak ≥ --persistent-min-streak`, which controls both the Persistent leaders threshold and the trail-stop attach threshold. Names below it skip the suffix.)
 
@@ -182,11 +191,11 @@ Write the interpretation for a reader with **no finance background**, in the con
 
 Before the numbered points, check the `**Data**` line: it names the session the numbers reflect. A `⚠️ Stale data` warning means Yahoo hadn't published the last session's daily bars and the intraday rebuild failed too, so the whole board, every close and every stop is a session old. Open the summary with that, in plain words ("these numbers are from Thursday's close, not Friday's"). A `rebuilt from 30m intraday bars` note is the workaround succeeding (closes within ~0.1% of the official ones). Only that session's volume is unknown, so entrants carry no `+surge` / `+quiet` suffix and the session can't count as a distribution day; no need to mention it unless an entrant's tag matters to the answer.
 
-1. **Read the Regime banner first.** SPY above a *rising* 200DMA with breadth above ~60% is where long-momentum has shown the cleanest risk/reward in the historical record. RISK-OFF banners (SPY below 200DMA, the 200DMA itself rolling over, or breadth collapsing while SPY still holds up) flip the read: treat the names below as *who's holding up* in a weak tape, not *what to buy*. Say up front that the filter doesn't defend against the post-bear momentum crashes (2009 Q2, 2020 Q2, early 2023); those hit right after the gate turns back on, when investors sell prior leaders to fund the rotation into the bombed-out cohort. The filter helps with bear-market downside, not with the regime-flip itself.
+1. **Read the Regime banner first.** SPY above a *rising* 200DMA with breadth above ~60% is where long-momentum has shown the cleanest risk/reward in the historical record. RISK-OFF banners (SPY below 200DMA, the 200DMA itself rolling over, or breadth collapsing while SPY still holds up) flip the read: treat the names below as *who's holding up* in a weak tape, not *what to buy*. Say up front that the filter doesn't defend against the post-bear momentum crashes (2009 Q2, 2020 Q2, early 2023); those hit right after the gate turns back on, when investors sell prior leaders to fund the rotation into the bombed-out cohort. The filter helps with bear-market downside, not with the regime-flip itself. Use the banner to frame the read, not as an in/out switch: the four-year replay found that holding the top 10 only on RISK-ON sessions cost ~4pt a year, most of it sitting out the 2023 recovery while the 200DMA still fell.
 
 2. **Sector clusters beat individual names.** Momentum arrives as a theme (AI infra, semis, defense, lithium, etc.). Group the top 10–15 by sector and call out the cluster; that's what the user can research, hedge, or fade. New entrants joining an existing cluster confirm the theme; isolated newcomers in unrelated sectors are more likely noise.
 
-3. **Streak ≥ 4 and top-5 dropouts are the real signals.** Long streaks have survived multiple periods of market noise; these are the durable trends the rank score alone can't surface. The Persistent leaders section uses a `≥ 3` threshold by default to surface emerging stickiness early; bump `--persistent-min-streak 4` to filter to only the high-conviction names. A name leaving the top 5 tends to mark a broken trend (max drawdown blew through the filter) and is often the leading edge of a regime shift.
+3. **Streak ≥ 4 is the persistence signal; dropouts are exits, not forecasts.** Long streaks have survived multiple periods of market noise; these are the durable trends the rank score alone can't surface. The Persistent leaders section uses a `≥ 3` threshold by default to surface emerging stickiness early; bump `--persistent-min-streak 4` to filter to only the high-conviction names. A name leaving the top 5 has broken the trend the filter measures (return faded or drawdown blew through it), so it's a reason to stop holding, not a prediction that it will fall: in the four-year replay former top-10 names drifted no worse than SPY after dropping out.
 
 4. **Vol-target the cohort, not individual names.** When `--target-vol-pct` is set, lead with the cohort vol and suggested leverage; that's the antidote to the post-bear momentum crash the trend filter misses. A cohort vol drifting up while leverage drops from 1.0x to 0.4x is the vol-target system *working*: it deleverages into the storm. The per-name Weight% column is useful but secondary; emphasize the leverage number.
 
@@ -202,7 +211,7 @@ Before the numbered points, check the `**Data**` line: it names the session the 
 
 7. **When sectors are on, lead with the cluster, not individual names.** The `**Sectors**` line is the most user-actionable single piece of info: Tech 12 of 23 means the cohort is concentrated and the vol-target Weight% column is understating true portfolio risk (correlated names). If the top sectors form one cluster (e.g. AI infra: Tech + parts of Comm Svc), say so. Diversifying across sectors at the same total leverage tends to beat chasing the highest-Score name.
 
-8. **Never recommend specific buys.** Frame results as "names worth investigating", not "you should buy". Flag that momentum strategies carry multi-year underperformance risk: 2023 was a textbook momentum crash where the 2022 leaders (energy) lost to a different cohort (mega-cap tech) for the entire year.
+8. **Never recommend specific buys.** Frame results as "names worth investigating", not "you should buy". The board is a map of what's running, not a buy list: in the four-year point-in-time replay an equal-weight top 10 made 16–21% a year against SPY's 22%, at twice SPY's volatility, and the top 3 returned between −34% and +12% in total while SPY made +112% (**Backtested outcomes**). Flag that momentum strategies carry multi-year underperformance risk: 2023 was a textbook momentum crash where the 2022 leaders (energy) lost to a different cohort (mega-cap tech) for the entire year, and in 2024 the top 10 went nowhere while SPY rose 25%.
 
 ## State files
 
@@ -220,19 +229,26 @@ uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' --with 'numpy>=1.24,<3' \
   --with 'pytest' pytest scripts/
 ```
 
-## Backtested outcomes (2026-05-14 → 2026-07-30 sample)
+## Backtested outcomes
 
-`scripts/backtest_outcomes.py` replays `state/history.csv` under the skill's canonical convention (enter at the close of the first top-30 day, sell at the close of the dropout-observation day) and stratifies by entry attributes. 228 episodes over 50 run-days, one regime; re-run quarterly. Findings, strongest first; full evidence, magnitudes, conventions, and caveats in `references/backtest-findings.md`:
+Two replays, both re-run quarterly; full evidence, magnitudes, conventions, and caveats in `references/backtest-findings.md`:
 
-1. **Sell the dropout; don't "give it a few days"**: dropped names keep falling for ~2 weeks, former top-10 names worst.
-2. **Entry-day distribution days are the durable entry edge**: clean (≤1 dist) entrants roughly double tenure and top-10 reach vs loaded (4+).
-3. **The volume-surge tag was convention-inflated**: the honest convention keeps the surge>quiet ordering but shrinks the gap ~12× (5.9pt → 0.5pt).
-4. **Entry Score buys persistence, not entry-point return**: top-tercile scores triple tenure but give back the most at the exit; size by score, enter on pullbacks (`Sig`).
-5. **Closed episodes are the losers by construction**: the carry is skew (dropouts cut fast while open winners ride); judge the system on both halves.
+- `scripts/backtest_outcomes.py` replays what the scan published (`state/history.csv`) under the skill's canonical convention (enter at the close of the first top-30 day, sell at the close of the dropout-observation day). Last calibration 2026-05-14 → 2026-07-30: 228 episodes, one regime.
+- `scripts/replay_board.py` rebuilds the board from prices for every session since 2023 on a point-in-time universe, so it spans several regimes (last run 2023-01-03 → 2026-10-02: 3652 closed episodes). Over the overlap it shares ~94% of the published board's names per day.
+
+**As a portfolio, the board has earned about the market's return at about twice its volatility.** Over 2023-01 → 2026-10, net of a 10bp round trip, an equal-weight top 30 made ~20% a year and the top 10 16–21% (the range is share-count sensitivity), against SPY's 22.3% at 15% volatility (the board ran 25–29%) and QQQ's 33.0%. No variant's alpha over SPY is distinguishable from zero. The top 3 lost money in every year except 2026, the year the live sample happens to cover. Buying at the top 10 and selling only below the top 30 cut turnover by a third and was the best variant; gating on the RISK-ON banner cost ~4pt a year. Survivorship would have hidden all of this: the same replay on today's large caps shows the top 10 at +28.8% a year.
+
+Episode findings, live sample first, then the four-year verdict:
+
+1. **The dropout exit is a mild stop; the "star dropout" signal didn't replicate.** Live, dropped names kept falling for ~2 weeks, former top-10 names worst. Over four years post-dropout drift was −0.3% at +10 sessions and −0.7% at +20, former top-10 names drifted with SPY, and in 2025 dropped names rose. Still the only exit with any evidence.
+2. **Entry-day distribution days are a weak persistence hint.** Live, clean (≤1 dist) entrants doubled tenure and top-10 reach vs loaded (4+); over four years the gap shrank to 7.8 vs 6.2 sessions and 35% vs 26% reach, with no stable return edge, and only 5% of entrants qualify.
+3. **The volume-surge tag was convention-inflated** (live sample only): the honest convention keeps the surge>quiet ordering but shrinks the gap ~12× (5.9pt → 0.5pt).
+4. **Entry Score buys persistence, not entry-point return** (replicated): top-tercile entrants stay longer and reach the top 10 twice as often but give back the most at the exit; size by score, enter on pullbacks (`Sig`).
+5. **Closed episodes are the losers by construction** (replicated): the carry is skew (dropouts get cut while open winners ride); judge the system on both halves.
 
 ### Should the trailing stop be a rule?
 
-Not yet, and the dashboard is careful not to imply otherwise. The trailing stop drawn in the hover cards (highest close since entry − mult × ATR) answers a sizing question — how much of an open gain is still exposed — and finding #1 above is the only exit this skill has evidence for. Every price- and volume-based exit rule tested against that baseline lost to it, and the climax-type rules were actively harmful; an ATR trail belongs to the same family, so the prior is against it.
+Not yet, and the dashboard is careful not to imply otherwise. The trailing stop drawn in the hover cards (highest close since entry − mult × ATR) answers a sizing question — how much of an open gain is still exposed — and finding #1 above is the only exit this skill has evidence for, thin as the four-year replay left it. Every price- and volume-based exit rule tested against that baseline lost to it, and the climax-type rules were actively harmful; an ATR trail belongs to the same family, so the prior is against it.
 
 It has not, however, been tested *as an ATR trail*, and now it can be: `benchmark.json`'s `px` block is exactly the per-day close and ATR such a replay needs. That is the real reason the number is on the page — persisting the inputs is what turns a hunch into a question with an answer. Add an `--exit-mode atr-trail` to `backtest_outcomes.py` and settle it on the next quarterly re-run.
 
@@ -250,8 +266,8 @@ For automatic recurring runs, use a local scheduler (macOS `launchd` LaunchAgent
 
 ## Known limitations
 
-- **Survivorship bias**: the universe is current US large caps; delisted names (Lehman, SVB, etc.) are absent. Backtested CAGR runs 1–2% optimistic vs a true point-in-time universe.
-- **Pre-cost**: no transaction costs, slippage, or taxes modeled. Real execution shaves another ~0.5–1% CAGR.
+- **Survivorship bias**: the universe is current US large caps, which is right for a live scan and badly wrong for a backtest. Replaying the board over 2023–2026 on today's large caps puts the top 10 at +28.8% a year; on a point-in-time universe it's 16–21%. Never quote a multi-year number computed on `state/universe.txt`; use `replay_board.py`, which rebuilds the universe from market cap at the time (names delisted, acquired, or now below $500M are still missing).
+- **Pre-cost**: the scan and the dashboard's benchmark panel model no transaction costs, slippage, or taxes. The board turns over fast (an equal-weight top 10 trades ~90× its value a year), so a 10bp round trip costs ~4.5pt a year; `replay_board.py` reports net of costs.
 - **mcap floor at $5B**: the default floor excludes small-cap moonshots; bump `--min-market-cap 1e9` if the user wants to see them.
 - **3mo window is noisier**: fresher-breakout signals come with more single-week pops; bump `--window-months 6` for smoother trends if needed.
 - **Short windows (1–2mo) answer a different question**: a 1mo window surfaces *what the last four weeks of flow is rotating into*, often a different cohort than the 3mo durable leaders. Expect a stretched, 🟠/🔴-heavy table, ±100 `RankΔ` swings, and the *return* floor (not the drawdown ceiling) becoming the binding filter; to widen a thin 1mo table, lower `--min-return-pct`, not `--max-dd-pct`. Full mechanics (drawdown-window geometry, the vol-collapse floor, the historical zero-picks bug) in `references/short-windows.md`.

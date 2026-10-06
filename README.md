@@ -22,7 +22,7 @@ Three layers, top to bottom: a **gate** (is the market healthy?), three **finder
 
 ### Finders
 
-- `momentum-scan` - Scan US large-cap equities for smooth uptrends and track which names persist across runs. Backtested edges (re-runnable via `scripts/backtest_outcomes.py`): sell-on-dropout beats holding through it (+0.9pt/episode, +1.7pt on former top-10 names; dropped names are weakest for ~2 weeks), and clean ≤1-distribution-day entries double tenure and top-10 reach. The once-quoted +9.0% vs +3.1% volume-tier gap was convention-inflated — re-measured at ~0.5pt.
+- `momentum-scan` - Scan US large-cap equities for smooth uptrends and track which names persist across runs. Backtested by `scripts/backtest_outcomes.py` (the published history) and `scripts/replay_board.py` (a point-in-time rebuild of the board since 2023): as a portfolio the board earned about the market's return at twice its volatility (equal-weight top 10 16–21% a year vs SPY's 22%, alpha indistinguishable from zero), so it reads as a map of what's running, not a buy list. Selling on dropout is a mild stop, clean ≤1-distribution-day entries are a weak persistence hint, and the once-quoted +9.0% vs +3.1% volume-tier gap was convention-inflated (~0.5pt).
 - `mean-reversion-scan` - Scan US large-cap equities for short-term oversold reversals inside confirmed long-term uptrends (Connors-style RSI(2) setups), and track running win rates on past picks. Backtested edge: Score ≥ 40 on a fresh (1st–2nd day) listing ran +1.83%/signal, ~3× baseline.
 - `base-breakout-scan` - Scan US large-cap equities for tight pre-breakout bases and track which setups persist across runs. Backtested edge: BaseWks ≥ 20 ran 75% winners vs the 45% baseline (the composite score did not discriminate).
 

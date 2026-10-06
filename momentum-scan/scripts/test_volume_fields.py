@@ -133,7 +133,7 @@ def test_entry_quality_thresholds_match_render_script():
 
 
 def test_entry_quality_tiers():
-    # Primary axis is dist_days (the validated edge); volume is a suffix.
+    # Primary axis is dist_days (a weak persistence hint); volume is a suffix.
     assert scan.entry_quality(1.5, 1) == ("🟢", "clean+surge")
     assert scan.entry_quality(1.0, 0) == ("🟢", "clean")
     assert scan.entry_quality(0.79, 1) == ("🟢", "clean+quiet")

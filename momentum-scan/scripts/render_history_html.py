@@ -245,7 +245,7 @@ def build_payload(rows: list[dict], sectors: dict, top_n: int,
         for i, e in enumerate(eps):
             e["c0"] = px_of(t, e["d0"], "c")
             # The dropout-observation day closes the spell: the skill's
-            # one validated exit sells at that close, so the trade has a
+            # only exit with any evidence sells at that close, so the trade has a
             # result the moment a next run-day exists.
             nd = e["d1"] + 1
             end = eps[i + 1]["d0"] if i + 1 < len(eps) else len(run_ids)
@@ -332,7 +332,7 @@ def build_payload(rows: list[dict], sectors: dict, top_n: int,
         vr_s = erow.get("vol_ratio_20d") or ""
         dd_s = erow.get("dist_days_25d") or ""
         if dd_s:
-            # Primary axis is dist days (the backtest-validated edge);
+            # Primary axis is dist days (a weak persistence hint);
             # 2 = clean (≤1), 1 = mixed (2-3), 0 = loaded (4+). The
             # volume character only shows in the hover tip and is
             # optional — same None-handling as scan.py's entry_quality.
@@ -724,7 +724,7 @@ const I18N = {
     secDelta: s => `${s} vs the previous day`,
     others: "Others",
     rosterTitle: "Roster",
-    rosterNote: "One row per name that ever made the board. Click a header to sort; click again to reverse. Every hover value from the charts is readable here.\nEntry quality = entry-day distribution-day count of the latest board spell (darker blue = cleaner entry, the backtest-validated edge; hover or tap the dot for the volume character).",
+    rosterNote: "One row per name that ever made the board. Click a header to sort; click again to reverse. Every hover value from the charts is readable here.\nEntry quality = entry-day distribution-day count of the latest board spell (darker blue = cleaner entry: a weak hint the name stays listed longer, not a return edge; hover or tap the dot for the volume character).",
     cols: ["Ticker", "Sector", "Current rank", "Latest score", "Entry quality", "Streak", "Days on board", "Best rank", "First seen", "Last seen"],
     eqLabels: ["Loaded (4+ dist days)", "Mixed (2-3)", "Clean (≤1 dist day)"],
     eqKv: (v, d) => [["Dist days (down on higher vol, last 25)", `${d}`],
@@ -777,7 +777,7 @@ const I18N = {
     secDelta: s => `比前一交易日 ${s}`,
     others: "其他",
     rosterTitle: "上榜名录",
-    rosterNote: "每个曾经上榜的标的一行。点击表头排序；再次点击反向。图表中所有悬停数值在此均可查阅。\n入场质量 = 最近一段在榜区间入场日的派发日数（蓝色越深入场越干净，即回测验证的边际；悬停或点按圆点看量能特征）。",
+    rosterNote: "每个曾经上榜的标的一行。点击表头排序；再次点击反向。图表中所有悬停数值在此均可查阅。\n入场质量 = 最近一段在榜区间入场日的派发日数（蓝色越深入场越干净，只是在榜可能更久的弱提示，不代表收益更好；悬停或点按圆点看量能特征）。",
     cols: ["代码", "行业", "当前排名", "最新评分", "入场质量", "连续在榜", "在榜天数", "最佳排名", "首次上榜", "最近上榜"],
     eqLabels: ["派发密集（≥4 天）", "中性（2-3 天）", "干净（≤1 天）"],
     eqKv: (v, d) => [["派发日（近 25 日放量下跌）", `${d} 天`],
@@ -835,7 +835,7 @@ const I18N = {
     secDelta: s => `比前一交易日 ${s}`,
     others: "其他",
     rosterTitle: "上榜名錄",
-    rosterNote: "每個曾經上榜的標的一行。點擊表頭排序；再次點擊反向。圖表中所有懸停數值在此均可查閱。\n進場品質 = 最近一段在榜區間進場日的派發日數（藍色越深進場越乾淨，即回測驗證的邊際；懸停或點按圓點看量能特徵）。",
+    rosterNote: "每個曾經上榜的標的一行。點擊表頭排序；再次點擊反向。圖表中所有懸停數值在此均可查閱。\n進場品質 = 最近一段在榜區間進場日的派發日數（藍色越深進場越乾淨，只是在榜可能更久的弱提示，不代表報酬更好；懸停或點按圓點看量能特徵）。",
     cols: ["代號", "產業", "目前排名", "最新評分", "進場品質", "連續在榜", "在榜天數", "最佳排名", "首次上榜", "最近上榜"],
     eqLabels: ["派發密集（≥4 天）", "中性（2-3 天）", "乾淨（≤1 天）"],
     eqKv: (v, d) => [["派發日（近 25 日放量下跌）", `${d} 天`],
@@ -893,7 +893,7 @@ const I18N = {
     secDelta: s => `前営業日比 ${s}`,
     others: "その他",
     rosterTitle: "ランクイン銘柄一覧",
-    rosterNote: "ランクインしたことのある銘柄を 1 行ずつ表示。ヘッダーをクリックでソート、もう一度クリックで逆順。チャートのホバー数値はすべてこの表で確認できます。\nエントリー品質 = 直近ランクイン期間の初日の分配日数（青が濃いほどクリーンなエントリー、バックテストで検証されたエッジ。ドットにホバーまたはタップで出来高特性）。",
+    rosterNote: "ランクインしたことのある銘柄を 1 行ずつ表示。ヘッダーをクリックでソート、もう一度クリックで逆順。チャートのホバー数値はすべてこの表で確認できます。\nエントリー品質 = 直近ランクイン期間の初日の分配日数（青が濃いほどクリーンなエントリー。ランクインが長続きしやすいという弱い目安で、リターンの優位ではありません。ドットにホバーまたはタップで出来高特性）。",
     cols: ["ティッカー", "セクター", "現在順位", "最新スコア", "エントリー品質", "連続日数", "ランクイン日数", "最高順位", "初登場", "直近登場"],
     eqLabels: ["分配日過多（4 日以上）", "中間（2-3 日）", "クリーン（1 日以下）"],
     eqKv: (v, d) => [["分配日（直近25日・出来高増の下落日）", `${d}`],
@@ -951,7 +951,7 @@ const I18N = {
     secDelta: s => `직전 거래일 대비 ${s}`,
     others: "기타",
     rosterTitle: "진입 종목 목록",
-    rosterNote: "순위에 오른 적 있는 종목을 한 행씩 표시. 헤더를 클릭해 정렬, 다시 클릭하면 역순. 차트의 모든 호버 값을 이 표에서 확인할 수 있습니다.\n진입 품질 = 최근 순위권 구간 첫날의 분배일 수 (파란색이 진할수록 깨끗한 진입, 백테스트로 검증된 엣지; 점에 호버하거나 탭하면 거래량 특성).",
+    rosterNote: "순위에 오른 적 있는 종목을 한 행씩 표시. 헤더를 클릭해 정렬, 다시 클릭하면 역순. 차트의 모든 호버 값을 이 표에서 확인할 수 있습니다.\n진입 품질 = 최근 순위권 구간 첫날의 분배일 수 (파란색이 진할수록 깨끗한 진입. 순위권에 더 오래 머물 수 있다는 약한 힌트일 뿐 수익 우위는 아님; 점에 호버하거나 탭하면 거래량 특성).",
     cols: ["티커", "섹터", "현재 순위", "최신 점수", "진입 품질", "연속 일수", "진입 일수", "최고 순위", "첫 진입", "최근 진입"],
     eqLabels: ["분배일 과다 (4일 이상)", "중간 (2-3일)", "클린 (1일 이하)"],
     eqKv: (v, d) => [["분배일 (최근 25일 · 거래량 증가 하락일)", `${d}`],

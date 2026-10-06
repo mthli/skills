@@ -1181,19 +1181,21 @@ def attach_volume_fields(picks: list[dict], bars: pd.DataFrame,
     return picks
 
 
-# Entry-quality tiers. The PRIMARY axis is dist_days — the re-runnable
-# backtest's one durable entry edge: low-distribution entries
-# (dist_days ≤ 1) roughly doubled both tenure and top-10 reach rate under
-# every convention tried, while loaded entries (4+) ran half the tenure at
-# a fraction of the reach. The vol_ratio character is a weak SECONDARY
+# Entry-quality tiers. The PRIMARY axis is dist_days, a weak persistence
+# hint: in the live history (2026-05 → 07) low-distribution entries
+# (dist_days ≤ 1) roughly doubled both tenure and top-10 reach rate, but
+# the four-year point-in-time replay (scripts/replay_board.py, 2023 →
+# 2026) shrank that to 7.8 vs 6.2 sessions and 35% vs 26% reach for
+# loaded entries (4+), with no stable return edge. The vol_ratio
+# character is a weaker SECONDARY
 # suffix only: the original +9.0% (surge) vs +3.1% (quiet) held-to-dropout
 # gap came from look-ahead exits plus open winners marked at unrealized
 # highs; the honest convention (closed episodes, exit at the
 # observed-dropout close) keeps the surge>quiet ordering but shrinks the
 # gap to ~0.5pt. (Tiers were volume-primary before 2026-07-31; the flip
 # aligns the tag's visual hierarchy with where the signal actually lives.)
-# Re-measure via scripts/backtest_outcomes.py quarterly. Small samples
-# from a single regime — treat as a priority hint, not a signal.
+# Re-measure via scripts/backtest_outcomes.py and replay_board.py
+# quarterly. Treat the tag as a priority hint, not a signal.
 # Exit-side rules built on the same fields all failed vs the
 # hold-to-dropout baseline; that's why this attaches to entrants only.
 ENTRY_VOL_SURGE_MIN = 1.5
@@ -1204,8 +1206,8 @@ ENTRY_LOADED_DIST_MIN = 4
 
 def entry_quality(vol_ratio: float | None,
                   dist_days: float | None) -> tuple[str, str] | None:
-    """Tier an episode start by its entry-day distribution-day count (the
-    validated edge), with the volume character as a weak label suffix.
+    """Tier an episode start by its entry-day distribution-day count (a
+    weak persistence hint), with the volume character as a label suffix.
     Returns (emoji, label), or None when dist_days is unavailable."""
     if dist_days is None:
         return None
@@ -2319,8 +2321,8 @@ def main() -> int | None:
         if new_entries:
             print(f"\n## New entrants ({len(new_entries)})")
             if any(p.get("entry_quality") for p in new_entries):
-                print("_entry quality by entry-day distribution days (the "
-                      "validated edge): 🟢 clean ≤1 · ⚪ mixed 2-3 · "
+                print("_entry quality by entry-day distribution days (a "
+                      "weak persistence hint): 🟢 clean ≤1 · ⚪ mixed 2-3 · "
                       "🟠 loaded 4+. Suffix +surge/+quiet = entry-day "
                       "volume ≥1.5×/<0.8×, a weak secondary signal_")
             for p in new_entries:
