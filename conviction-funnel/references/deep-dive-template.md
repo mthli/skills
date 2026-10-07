@@ -5,7 +5,7 @@ Spawn one subagent per finalist, in parallel; if your harness can't spawn subage
 ## Filling in the blanks
 
 - `{{TICKER}}` / `{{NAME}}` / `{{SECTOR_DESC}}`: e.g. `ELV` / `Elevance Health` / `healthcare / managed care`.
-- `{{SCAN_CONTEXT}}`: which scans list it and which validated pockets it passes (BaseWks / fresh MR score), ranks/scores, 3-month return, max drawdown, RSI, MA20%, AnnVol, the ATR stop level and approx spot, the `Sig`. Hand this over so the agent anchors instead of re-deriving.
+- `{{SCAN_CONTEXT}}`: which scans list it and which pockets it sits in (BaseWks ≥ 20; on MR's list or 📝 MR paper-track, context only), ranks/scores, 3-month return, max drawdown, RSI, MA20%, AnnVol, the ATR stop level and approx spot, the `Sig`. Hand this over so the agent anchors instead of re-deriving.
 - `{{REGIME_LINE}}`: one sentence with today's regime state + the narrow/broad read (e.g. "🟢 RISK-ON but mega-cap-led, breadth mid-50s%, size for a healthy-but-not-broad tape").
 - `{{WSB_CLAUSE}}`: see the conditional rule below; include the "run it" or the "skip it" variant per finalist.
 - For **foreign private issuers** (ADRs like RIO, BHP, ING): tell the agent there's no Form 4 / 10-Q; they file 6-K / 20-F, and US-style insider data likely won't exist. Point it at the production report / half-year results instead.
@@ -56,6 +56,6 @@ Be concrete and numeric. If a data point is unavailable, say so briefly rather t
 
 ## What the orchestrator does with the briefs
 
-Collect all N, then build the side-by-side comparison table and the per-name verdicts (see the main SKILL.md "Output" section). The most valuable synthesis move: call out where the deep-dive *changed the picture* relative to the raw scan signals, e.g. a validated-pocket name that holds up clean vs one whose reward is capped at the analyst target or whose fundamental backdrop is weakening. A scan listing earns a *look*, not a buy; the deep-dive separates the two.
+Collect all N, then build the side-by-side comparison table and the per-name verdicts (see the main SKILL.md "Output" section). The most valuable synthesis move: call out where the deep-dive *changed the picture* relative to the raw scan signals, e.g. a base-pocket name that holds up clean vs one whose reward is capped at the analyst target or whose fundamental backdrop is weakening. A scan listing earns a *look*, not a buy; the deep-dive separates the two.
 
 Then close the run per SKILL.md **Step 6**: transcribe the table into `state/runs/<date>.json` (finalists with entry/stop/size, runner-ups, and every rejected name with its reason) and self-check with `grade_outcomes.py --validate`. The run isn't finished until you've written the ledger.
