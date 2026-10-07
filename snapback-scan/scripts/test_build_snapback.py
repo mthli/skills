@@ -39,7 +39,7 @@ def _bars(closes_by_ticker: dict[str, list], dates: list[str]) -> pd.DataFrame:
 
 
 # --------------------------------------------------------------------------- #
-# load_kegs — the backtest profile: score >= 40 AND consecutive age <= 2 runs
+# load_kegs — the shortlist: score >= 40 AND consecutive age <= 2 runs
 # --------------------------------------------------------------------------- #
 def test_load_kegs_age_and_score_filters(tmp_path, monkeypatch):
     rows = [MR_COLS]
@@ -58,6 +58,8 @@ def test_load_kegs_age_and_score_filters(tmp_path, monkeypatch):
     assert [k["ticker"] for k in kegs] == ["FRESH", "AGE2", "GAPPY"]
     ages = {k["ticker"]: k["listing_age_runs"] for k in kegs}
     assert ages == {"FRESH": 1, "AGE2": 2, "GAPPY": 1}   # a gap resets the streak
+    paper = {k["ticker"]: k["paper_track"] for k in kegs}
+    assert paper == {"FRESH": True, "AGE2": False, "GAPPY": False}   # score >= 70
     assert meta["run_id"] == "20260730" and meta["stale_days"] == 1
     assert meta["prior_run"]["run_id"] == "20260729"
 

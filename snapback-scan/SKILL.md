@@ -12,22 +12,25 @@ scheduled catalyst gives it a date.
 
 Origin, 2026-07-30: the night before the semis epicenter ripped +15–23%,
 mean-reversion-scan's top-3 were SNDK / MU / AMD (scores 79/79/78, MU a
-60-day-first listing, the backtest's highest-conviction profile). The bell
+60-day-first listing, the Score ≥ 70 profile mean-reversion-scan now paper-tracks). The bell
 rang at the bottom; the missing piece was the join against the one thing
 that made the NEXT day the day: MSFT's capex verdict, on the earnings
 calendar for weeks. Powder keg × spark calendar = this skill.
 
-Five components, each with a backtest receipt:
+Five components, with their receipts, including the ones that failed:
 
 1. **Powder keg**: mean-reversion-scan's latest run (violent decline,
    structure intact; its 200DMA gates enforce this). A crash above a rising
    200DMA is a coiled spring; below it, a falling knife.
-2. **Freshness**: Score ≥ 40 AND listed ≤ 2 runs = +1.83%/signal, 3× the
-   baseline. This is exactly the stratum mean-reversion-scan surfaces as
-   its **⭐️ Validated pocket**, so the keg list and that section name the
-   same names. A name camped on the oversold list for a week is a downtrend,
-   not a panic. Two backtested inversions to respect: deep RSI(2) earns NO
-   bonus, and quiet-tape oversold is a knife catch; the edge needs panic.
+2. **Freshness**: Score ≥ 40 AND listed ≤ 2 runs keeps the list on fresh
+   panics; a name camped on the oversold list for a week is a downtrend.
+   It was +1.83%/signal in mean-reversion-scan's 2026-05→07 sample, and
+   that scan's 2021→2026 replay put it at SPY's return over the same days
+   (−0.14%/signal against SPY), so it is a shortlist, not an edge. Kegs
+   scoring ≥ 70 carry 📝, the one MR stratum that beat SPY over six years
+   (+1.06%/signal) and lost 2.7%/signal in 2022. Deep RSI(2) earns no bonus
+   in either test, and quiet-tape oversold stays a warning (the old pocket
+   on quiet days ran −0.58% against SPY over six years).
 3. **Spark calendar**: the scheduled events that can flip the narrative.
    The keg's own earnings (a *coin flip*, never a verdict; the earnings-gap
    rule), same-sector megacap **verdict prints** (MSFT's report owned the
@@ -36,10 +39,12 @@ Five components, each with a backtest receipt:
    price-insensitive selling. Forced flows stop all at once; that vacuum
    (the forced seller finishing while buyers are still scared off) is the
    fuel.
-5. **Survival math**: last cycle's base rate killed 5 of 6 bounce attempts.
-   The protocol exists to make being early survivable: +1.83%/signal is the
-   honest mean, +16% days are the right tail. The goal is systematic
-   exposure to that tail, not bottom-ticking.
+5. **Survival math**: last cycle's base rate killed 5 of 6 bounce attempts,
+   and over six years an oversold bounce earned the index's own return. The
+   protocol exists to make being early survivable; any edge has to come
+   from the spark, which this skill's own ledger hasn't tested yet. +16%
+   days are the right tail. The goal is cheap, systematic exposure to that
+   tail, not bottom-ticking.
 
 `<SKILL_DIR>` is the directory containing this file. Dependencies auto-fetch
 via `uv` (`yfinance>=1.3,<2`, `pandas>=2`). Reuses sister caches (best run
@@ -53,9 +58,9 @@ uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' \
 ... --format table        # human-scannable table
 ... --window-days 5       # widen the spark window (default 3 trading days)
 ... --min-score 30        # loosen the keg gate when nothing qualifies (default 40)
-... --max-age 3           # widen the freshness gate (default 2 = the backtested
-                          #   "listed ≤ 2 runs" cutoff; widening dilutes the
-                          #   +1.83%/signal edge; say so in the brief if you do)
+... --max-age 3           # widen the freshness gate (default 2 = "listed ≤ 2
+                          #   runs"; the six-year replay found no return edge
+                          #   in the cutoff either way)
 ... --top-n 30            # cap on kegs pulled from the MR list (default 20)
 ... --no-save             # don't write state/runs/<date>.json (exploration)
 ```
@@ -68,6 +73,7 @@ The packet saves to `state/runs/<date>.json`. Per-keg fields that matter:
 
 - `armed`: has ≥ 1 spark scoped to it (own print / sector verdict / macro;
   a marketwide megacap print is context and cannot arm a keg)
+- `paper_track` 📝: score ≥ 70, mean-reversion-scan's paper-tracked stratum
 - `sparks[]`: dated, with reporter symbol and slot
 - `ignited`: already moved ≥ +7% since signal (chase-guard)
 - `quiet_warning` 😴: no panic in the 5d tape (knife risk)
@@ -110,7 +116,7 @@ Then one brief per **armed** keg; unarmed kegs get one line each in a
 weeks out is information, not absence). Never a bare "buy X". Each brief:
 
 ```
-### <TICKER> · score <s> · day <age> on list  <flags: 🔥 ignited / 😴 quiet / ⚠️ crowded>
+### <TICKER> · score <s> · day <age> on list  <flags: 📝 paper-track / 🔥 ignited / 😴 quiet / ⚠️ crowded>
 KEG    why it crashed + the seller-mechanism read (streak/gaps/volume: forced or drift?)
 SPARK  <date + event>: what verdict it delivers, branched BOTH ways
 PLAN   tranche 1: 1/4 size at ~<latest_close>, invalidation <signal_day_low>
@@ -138,8 +144,13 @@ Rules that make this honest. Apply every one:
   means the snapback already fired; in the sample so far, the morning after
   ignition is the worst entry of the cycle (AMD 07-27, TSM 07-17). Write
   the retest level and what would invalidate the whole episode.
-- **Demote 😴 quiet kegs** to the watch list, with the reason: the
-  backtest says quiet-day oversold is a knife catch; the edge needs panic.
+- **Demote 😴 quiet kegs** to the watch list, with the reason: both
+  backtests lean the same way; quiet-day oversold is a knife catch.
+- **Say where the edge would come from.** Mean-reversion-scan's six-year
+  replay found oversold bounces earn what SPY does over the same days, so
+  a keg without a spark is the market's drift with a stop attached. The
+  spark is the bet, and it stays untested until the outcome ledger's banner
+  clears. A 📝 keg gets its flag named in the brief, never a bigger size.
 - **Own-earnings sparks are coin flips**: branch the brief BOTH ways
   (earnings-gap rule: zero directional trust in the print). A sector-verdict
   spark is the better structure: someone ELSE re-prices the narrative and

@@ -8,8 +8,9 @@ join against the one thing that gives the bounce a DATE: the scheduled catalyst
 calendar (MSFT's capex verdict was on it for weeks). This script builds that
 join:
 
-  POWDER KEGS  = mean-reversion-scan's latest run, filtered by the backtested
-                 high-conviction profile (Score >= 40, freshly listed <= 2 runs)
+  POWDER KEGS  = mean-reversion-scan's latest run, shortlisted to Score >= 40
+                 and freshly listed <= 2 runs (once a backtested profile;
+                 mean-reversion-scan's 2021-2026 replay put it at SPY's return)
   SPARKS       = scheduled narrative-flipping events within the next N trading
                  days: the keg's OWN earnings, same-sector megacap "verdict
                  prints", and high-impact US macro events (FOMC/CPI/NFP/GDP)
@@ -20,9 +21,11 @@ Reuses, never recomputes (sister-scan caches):
   mean-reversion-scan/state/sectors.json  ticker -> sector
   regime-scan/state/history.csv           regime state (sizing gate) + VIX
 
-Backtest-informed rules encoded here (see SKILL.md for the receipts):
-  - Score >= 40 AND listing age <= 2 runs  -> the 3x-baseline profile
-  - deep RSI(2) gets NO extra weight       -> the backtest found it inverse
+Rules encoded here (see SKILL.md for the receipts):
+  - Score >= 40 AND listing age <= 2 runs  -> the shortlist; no measured edge
+  - Score >= 70                            -> 📝 paper-track flag, the one MR
+    stratum that beat SPY over 2021-2026 (and lost in 2022)
+  - deep RSI(2) gets NO extra weight       -> no edge in either backtest
   - quiet-tape signals carry a warning     -> panic-day signals are the edge;
     quiet-day oversold is knife-catching
   - already-ignited (> chase threshold since signal) -> chase-guard flag
@@ -33,8 +36,8 @@ Everything degrades cleanly: one dead source never sinks the packet; the
 Usage:
   uv run --with 'yfinance>=1.3,<2' --with 'pandas>=2' python build_snapback.py
   ... --window-days 3     # spark window (trading days, default 3)
-  ... --min-score 40      # keg gate (backtest default 40)
-  ... --max-age 2         # max listing age in runs (backtest default 2)
+  ... --min-score 40      # keg shortlist gate (default 40)
+  ... --max-age 2         # max listing age in runs (default 2)
   ... --format table      # human table instead of JSON
   ... --no-save           # don't write state/runs/<date>.json
 """
@@ -82,6 +85,10 @@ SKILLS_ROOT = SKILL_DIR.parent
 STATE_DIR = SKILL_DIR / "state"
 RUNS_DIR = STATE_DIR / "runs"
 MR_HISTORY = SKILLS_ROOT / "mean-reversion-scan" / "state" / "history.csv"
+# Mirrors mean-reversion-scan's PAPER_MIN_SCORE: the one stratum its
+# 2021-2026 replay kept (+1.06%/signal over SPY, −2.7% in 2022). Flagged,
+# not sized up.
+PAPER_MIN_SCORE = 70.0
 MR_SECTORS = SKILLS_ROOT / "mean-reversion-scan" / "state" / "sectors.json"
 REGIME_HISTORY = SKILLS_ROOT / "regime-scan" / "state" / "history.csv"
 MARKET_TZ = ZoneInfo("America/New_York")
@@ -357,7 +364,7 @@ def next_trading_days(start: date, n: int) -> list[date]:
 
 
 # --------------------------------------------------------------------------- #
-# Powder kegs — mean-reversion-scan's latest run, backtest-profile filtered
+# Powder kegs — mean-reversion-scan's latest run, shortlisted
 # --------------------------------------------------------------------------- #
 def load_kegs(min_score: float, max_age: int, top_n: int, errors: list,
               today: date) -> tuple[list[dict], dict]:
@@ -372,8 +379,9 @@ def load_kegs(min_score: float, max_age: int, top_n: int, errors: list,
     latest = runs[-1]
     rows = df[df["run_id"].astype(str) == latest]
     # Listing age = consecutive runs (ending at the latest) the ticker appears
-    # in. The backtest's edge lives in FRESH listings (<= 2); a name camped on
-    # the oversold list for a week is a downtrend, not a panic.
+    # in. Fresh listings (<= 2) keep the list on panics rather than names
+    # camped on the oversold list for a week; the six-year replay found no
+    # return edge in the cutoff itself.
     appear = {r: set(df[df["run_id"].astype(str) == r]["ticker"]) for r in runs[-6:]}
     def listing_age(tk: str) -> int:
         age = 0
@@ -403,6 +411,7 @@ def load_kegs(min_score: float, max_age: int, top_n: int, errors: list,
             "signal": r.get("signal", ""),
             "listing_age_runs": age,
             "freq_60d": int(r["freq_60d"]),
+            "paper_track": score >= PAPER_MIN_SCORE,
         })
     kegs.sort(key=lambda k: k["score"], reverse=True)
     # Staleness against the MARKET-tz date (passed in), not the machine's
@@ -803,7 +812,8 @@ def as_table(p: dict) -> str:
     for k in p["kegs"]:
         # Flags ride at the END of the line: emoji are double-width in most
         # terminals, so a fixed-width flags column skews every column after it.
-        flags = ("🔥" if k.get("ignited") else "") + \
+        flags = ("📝" if k.get("paper_track") else "") + \
+                ("🔥" if k.get("ignited") else "") + \
                 ("😴" if k.get("quiet_warning") else "")
         sparks = "; ".join(
             ("~" if s["type"] == "marketwide_verdict" else "")
