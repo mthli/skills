@@ -59,13 +59,18 @@ SCREENER_PAGE_SLEEP_SEC = 0.2
 SCREENER_MAX_PAGES = 20
 SECTORS_TTL_DAYS = 30  # sectors change slowly; long TTL keeps repeat runs fast
 MARKET_TZ = ZoneInfo("America/New_York")  # one snapshot per US market day
-# The 2026-05→07 outcome backtest's single big validated edge: bases ≥ 20
-# weeks ran +4.9%/trade (75% win) vs −0.8% baseline, while the composite
-# base_score did not discriminate outcomes at all. Names at or above this
-# threshold are foregrounded as the "validated pocket" in the output; the
-# score keeps its role as a display floor only. In-sample (one flat
-# regime) — revisit alongside the quarterly backtest_outcomes.py re-run.
-VALIDATED_BASE_WEEKS = 20.0
+# Long-base threshold. The 2026-05→07 sample made bases ≥ 20 weeks look
+# like the one big edge (+4.9%/trade, 75% win vs −0.8%); the 2021→2026
+# point-in-time replay (scripts/replay_bases.py) put them at −0.55%/trade
+# against SPY over the same days (t −2.4), negative in 5 of 6 years. They
+# only stop out less (26% vs 39%). Kept as a descriptive split (the
+# `long_base` flag, the dashboard's long-base panel), not as an edge.
+LONG_BASE_WEEKS = 20.0
+# The replay's one robust finding is an avoid rule: episodes listed when
+# SPY was not above a rising 200DMA (compute_regime's RISK-ON test failing)
+# ran −1.26%/trade against SPY (t −3.5), long bases −2.13% (t −4.1). On
+# those days the banner says not to place pivot buy-stops, and JSON
+# carries avoid_breakouts for the sister skills.
 
 HISTORY_COLS = [
     "run_id", "run_date", "ticker", "rank", "score_rank", "base_score",
@@ -1546,9 +1551,9 @@ def attach_atr_stops(picks: list[dict],
     base setups haven't triggered, so spot/pivot stops are what matters.
 
     Runs over EVERY pick, not just the displayed top-N: append_history writes
-    the whole list, and the ⭐️ pocket (BaseWks >= 20) does not respect the
-    top-N line — filling only the top-N would sample the stop-rule data on
-    exactly the wrong side of that cutoff. Same lesson the sector cache
+    the whole list, and the long-base split (BaseWks >= 20) does not respect
+    the top-N line — filling only the top-N would sample the stop-rule data
+    on exactly the wrong side of that cutoff. Same lesson the sector cache
     learned at the call site. Costs nothing extra: compute_atrs reads the
     bars frame already in memory."""
     for p in picks:
@@ -2291,7 +2296,7 @@ def score_tickers(closes: dict[str, pd.Series],
             "three_wk_tight": three_wk_tight,
             "signal": signal,
             "last_close": base["last_close"],
-            "validated_pocket": base["base_weeks"] >= VALIDATED_BASE_WEEKS,
+            "long_base": base["base_weeks"] >= LONG_BASE_WEEKS,
             # VCP annotation passthrough — hypothesis columns, not signal.
             "vcp_contractions": base.get("vcp_contractions"),
             "vcp_depths": base.get("vcp_depths"),
@@ -2454,13 +2459,10 @@ def render_table(picks: list[dict], top_n: int, verbose: bool = False) -> str:
            "|" + "|".join("---" for _ in headers) + "|"]
     for p in rows:
         # Three-weeks-tight gets a 🔒 prefix on the ticker — quick visual
-        # for "supply absorbed" without an extra column. ⭐️ marks the
-        # validated pocket (BaseWks ≥ 20, the backtest's one big edge).
+        # for "supply absorbed" without an extra column.
         ticker_disp = f"**{p['ticker']}**"
         if p.get("three_wk_tight"):
             ticker_disp = "🔒 " + ticker_disp
-        if p.get("validated_pocket"):
-            ticker_disp = "⭐️ " + ticker_disp
         # If this ticker absorbed a same-issuer dedup, append the runner-
         # up as a parenthetical. Users still learn "PBR also passed" even
         # though we only list PBR-A as the canonical row.
@@ -2845,10 +2847,9 @@ def _render_single_ticker_markdown(args, result: dict) -> None:
         return
 
     print(f"✅ **Valid base** detected")
-    pocket_note = (" ⭐️ validated pocket (≥20wk — the backtest's one big edge)"
-                   if base['base_weeks'] >= VALIDATED_BASE_WEEKS else
-                   f" (below the {VALIDATED_BASE_WEEKS:.0f}wk validated-pocket"
-                   f" threshold — unvalidated stratum)")
+    pocket_note = (f" (a long base, ≥{LONG_BASE_WEEKS:.0f}wk: fewer stop-outs in the "
+                   f"2021→2026 replay, no excess over SPY)"
+                   if base['base_weeks'] >= LONG_BASE_WEEKS else "")
     print(f"- Length: {base['base_weeks']:.1f} weeks "
           f"({base['days_in_base']} trading days){pocket_note}")
     mode_label = "base-to-today" if base['anchor_mode'] == 0 else "breakout-today"
@@ -3233,7 +3234,7 @@ def main():
 
     if args.atr_stop_mult and args.atr_stop_mult > 0:
         # Every pick, not just the top-N: history.csv persists the whole
-        # list and the ⭐️ pocket ignores the rank-30 line. Pure CPU on the
+        # list and the long-base split ignores the rank-30 line. Pure CPU on the
         # bars already in memory — no extra fetch.
         atrs = compute_atrs(bars, [p["ticker"] for p in picks])
         picks = attach_atr_stops(picks, atrs, args.atr_stop_mult)
@@ -3385,6 +3386,9 @@ def main():
             "regime": regime,
             "sector_breakdown": sector_breakdown,
             "picks_suppressed_by_gate": suppress_picks,
+            # The replay's avoid rule: no pivot buy-stops unless RISK-ON.
+            "avoid_breakouts": (None if regime is None
+                                else not regime["risk_on"]),
             "picks": [] if suppress_picks else picks[: args.top_n],
             "dropouts_since_last_run": [] if suppress_picks else drops,
             "recent_breakouts": [] if suppress_picks else recent_breakouts,
@@ -3425,15 +3429,15 @@ def main():
     if args.regime_gate != "off":
         print(render_regime_banner(regime))
         if regime is not None and not regime["risk_on"]:
+            print("\n> ⛔ **Not RISK-ON: don't place pivot buy-stops.** In the "
+                  "2021→2026 replay, breakouts listed on days like this lost "
+                  "1.3%/trade against SPY over the same days (bases ≥ 20 "
+                  "weeks 2.1%). Read the list as who is holding up, not what "
+                  "to enter.")
             if args.regime_gate == "strict":
-                print("\n> ⚠️ **RISK-OFF + strict gate**: top-N suppressed. "
-                      "History still saved so persistence data survives "
-                      "the regime. Re-run with `--regime-gate warn` to see names.")
-            else:
-                print("\n> ⚠️ **RISK-OFF regime**: base setups in weak markets "
-                      "have higher failure rates. Most bases break *down*, "
-                      "not up. Treat below as 'who's holding up structurally', "
-                      "not 'what to enter'.")
+                print("> Strict gate: top-N suppressed. History still saved "
+                      "so persistence data survives the regime. Re-run with "
+                      "`--regime-gate warn` to see names.")
 
     if not suppress_picks and not args.no_sectors:
         sector_line = render_sector_breakdown(picks, args.top_n)
@@ -3480,32 +3484,11 @@ def main():
                   f"(base {p['base_weeks']:.0f}wks, width {p['width_pct']:.1f}%, "
                   f"today vol {vol_str})")
 
-    # Validated pocket — the one backtest-validated stratum (BaseWks ≥ 20:
-    # +4.9%/trade, 75% win vs −0.8% baseline in the 2026-05→07 sample).
-    # Printed even when the pocket is empty — an empty pocket is itself
-    # the signal that today's list is entirely unvalidated candidates —
-    # but skipped entirely when there are no picks at all ("the rest of
-    # the list" would refer to nothing).
-    if picks[: args.top_n]:
-        pocket = [p for p in picks[: args.top_n] if p.get("validated_pocket")]
-        print(f"\n## ⭐️ Validated pocket — BaseWks ≥ "
-              f"{VALIDATED_BASE_WEEKS:.0f} ({len(pocket)})")
-        print("_The one stratum the outcome backtest validated "
-              "(+4.9%/trade, 75% win vs −0.8% baseline, in-sample). "
-              "Score does not rank outcomes; base length does._")
-        if pocket:
-            for p in pocket:
-                print(f"- **{p['ticker']}** (#{p['rank']}): "
-                      f"base {p['base_weeks']:.0f}wks, "
-                      f"width {p['width_pct']:.1f}%, "
-                      f"{p['to_pivot_pct']:+.1f}% to "
-                      f"${p['pivot_price']:.2f} pivot, "
-                      f"{p.get('signal', '—')}")
-        else:
-            print("- (none today: treat the rest of the list as "
-                  "unvalidated candidates, not high-conviction setups)")
-
     print(f"\n## Top {args.top_n}\n")
+    if picks[: args.top_n]:
+        print("_No stratum of this list beat SPY in the 2021→2026 replay "
+              "(pivot buy-stops −0.5%/trade against it, bases ≥ 20 weeks "
+              "included): a map of who is basing, not a buy list._\n")
     print(render_table(picks, args.top_n, verbose=args.verbose))
     if picks[: args.top_n] and not args.verbose:
         print(f"\n_Diagnostic columns (RS, Smooth%, BB%ile, Vol↓, "

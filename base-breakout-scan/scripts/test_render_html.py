@@ -1,6 +1,6 @@
 """Tests for render_history_html.py — payload building + drift guards.
 
-The renderer duplicates scan.py's validated-pocket constant and the Sig
+The renderer duplicates scan.py's long-base constant and the Sig
 tier vocabulary numerically (it must stay stdlib-only while scan.py imports
 yfinance at module level); the drift-guard tests pin the files together.
 The ledger tests cover backtest_outcomes.py's --write-ledger classification,
@@ -23,8 +23,8 @@ import scan
 
 # ------------------------------------------------------------ drift guards
 
-def test_pocket_constant_matches_scan():
-    assert rh.VALIDATED_BASE_WEEKS == scan.VALIDATED_BASE_WEEKS
+def test_long_base_constant_matches_scan():
+    assert rh.LONG_BASE_WEEKS == scan.LONG_BASE_WEEKS
 
 
 def test_sig_order_covers_every_glyph_scan_emits():
@@ -377,8 +377,9 @@ def test_pocket_vs_base_expectancy_lines():
     # BBB's episodes never triggered, so they have no trade to average.
     assert pk["base"][0] is None
     assert pk["base"][3] == -8.0 and pk["baseN"][-1] == 1
-    assert pk["refPkt"] == rh.BACKTEST_POCKET_TRADE
-    assert pk["minWeeks"] == rh.VALIDATED_BASE_WEEKS
+    assert pk["refPkt"] == rh.REPLAY_LONG_TRADE
+    assert pk["refBase"] == rh.REPLAY_REST_TRADE
+    assert pk["minWeeks"] == rh.LONG_BASE_WEEKS
 
 
 def test_summary_and_kpi():
@@ -408,7 +409,7 @@ def test_grid_and_roster_share_one_row_order():
     grid_order = [s["t"] for s in p["series"]]
     roster_order = [s["t"] for s in p["summary"]]
     assert grid_order == roster_order
-    # Longest base first, so validated names cluster at the top.
+    # Longest base first, so long bases cluster at the top.
     assert grid_order[0] == "AAA"
 
 

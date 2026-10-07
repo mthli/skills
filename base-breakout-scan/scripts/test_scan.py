@@ -603,7 +603,7 @@ def _pick(**over):
         "pivot_price": 108.60, "signal": "📊", "streak": 2,
         "rank_delta": -1, "first_seen": "2026-05-12",
         "stop_trigger": 104.68, "stop_trigger_pct": -3.6,
-        "validated_pocket": True,
+        "long_base": True,
         "vcp_contractions": 3, "vcp_depths": "18.2>9.1>4.0",
         "vcp_ratio": 0.22, "vcp_is_vcp": True,
     }
@@ -620,7 +620,7 @@ class TestRenderTableSlimVerbose:
         for col in ("| RS |", "Smooth%", "BB%ile", "Vol↓", "RSslope%/wk",
                     "VCP", "RankΔ", "FirstSeen"):
             assert col not in out
-        assert "⭐️" in out          # pocket prefix survives the slim cut
+        assert "⭐" not in out      # the retired pocket prefix stays gone
 
     def test_verbose_restores_diagnostics(self):
         out = scan.render_table([_pick()], 5, verbose=True)

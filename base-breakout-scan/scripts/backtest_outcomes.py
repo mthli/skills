@@ -635,7 +635,8 @@ def exit_rule_table(outs: list[Outcome], horizon: int, stop_pct: float) -> str:
 
     Paired: the same triggered episodes and the same fills price all three
     rules, so the comparison is not a sample difference. Split by the one
-    stratum the backtest validated (base ≥ 20wk) because a rule that helps
+    stratum the live sample validated (base ≥ 20wk, which the 2021→2026
+    replay in replay_bases.py didn't confirm) because a rule that helps
     the junk and hurts the pocket is worse than useless here.
     """
     def row(name: str, G: list[Outcome]) -> str:
@@ -667,7 +668,7 @@ def exit_rule_table(outs: list[Outcome], horizon: int, stop_pct: float) -> str:
         f"better/worse |",
         "|---|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
-    for name, grp in (("All triggered", G), ("⭐ pocket (≥20wk)", pocket),
+    for name, grp in (("All triggered", G), ("long bases (≥20wk)", pocket),
                       ("The rest", rest)):
         r = row(name, grp)
         if r:

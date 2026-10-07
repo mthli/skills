@@ -6,20 +6,19 @@ Reads the base-breakout run history, the per-episode outcomes ledger and
 the sector cache and writes a single HTML file (no external assets, no
 network) with:
 
-  - a KPI row (span, today's watchlist and how loaded it is, today's ⭐
-    pocket, episode trigger rate, ⭐ pocket trade expectancy vs its
-    backtest reference, the baseline it has to beat)
+  - a KPI row (span, today's watchlist and how loaded it is, today's long
+    bases, episode trigger rate, long-base and other trade expectancy vs
+    the 2021→2026 replay's references)
   - an approach-to-pivot chart: one line per episode, y = distance to the
     pivot, so the zero line IS the buy trigger and a line reaching it is a
-    breakout (filterable: ⭐ pocket / triggered / all)
+    breakout (filterable: triggered / long bases / all)
   - a date × ticker maturity grid, cell color = that day's Sig tier
-    (forming → coiled → imminent → breakout), dot = ⭐ pocket day, row end =
+    (forming → coiled → imminent → breakout), dot = long-base day, row end =
     that name's realized trade expectancy, with a min-days filter
-  - a cohort chart: each day's watchlist stacked by Sig tier with the ⭐
-    pocket count overlaid, answering "is the list loaded, and does it hold
-    anything validated"
-  - a ⭐-pocket-vs-rest running trade-expectancy chart against the
-    backtest's in-sample reference values
+  - a cohort chart: each day's watchlist stacked by Sig tier with the
+    long-base count overlaid, answering "is the list loaded"
+  - a long-base-vs-rest running trade-expectancy chart against the
+    2021→2026 replay's reference values
   - a per-sector realized-result panel: one bar per sector (avg %/completed
     trade) with its 95% interval drawn above it, read against a dashed
     all-trades average — a sector whose interval reaches that line is not
@@ -62,22 +61,21 @@ SKILL_DIR = Path(__file__).resolve().parent.parent
 # Duplicated numerically because this script deliberately stays
 # stdlib-only while scan.py imports yfinance at module level.
 BENCH_KEYS = ("spy", "qqq")
-VALIDATED_BASE_WEEKS = 20.0
+LONG_BASE_WEEKS = 20.0
 # Sig tiers in ascending order of "how close to firing" — the ordinal ramp
 # for the grid, the stack order for the cohort chart, and the sort order
 # for the roster's status column. Mirrors scan.py's classifier. These glyphs
 # are the CSV's vocabulary only; the page names the tiers in words and
 # carries the ordinal in color, so it never prints them.
 SIG_ORDER = ["📊", "⏳", "🔥", "🚀"]
-# In-sample reference expectancies from the 2026-05→07 outcome backtest
-# (references/backtest-findings.md #1 and #4), both on the stop-based trade
-# (20-session horizon, 8% stop, buy-stop touch entry) — drawn as dashed
-# reference lines so the pocket chart answers "is the validated edge still
-# paying out-of-sample". Re-validate quarterly alongside the backtest
-# re-run; they only mean anything against a ledger built with the same
-# convention, which check_ledger_convention() enforces.
-BACKTEST_POCKET_TRADE = 4.9
-BACKTEST_BASELINE_TRADE = -0.8
+# Reference expectancies from the 2021→2026 replay (scripts/replay_bases.py,
+# references/backtest-findings.md), both on the stop-based trade (20-session
+# horizon, 8% stop booked at −8%, buy-stop touch entry): long bases and the
+# rest. Drawn as dashed reference lines; they only mean anything against a
+# ledger built with the same convention, which check_ledger_convention()
+# enforces. The 2026-05→07 sample's +4.9% / −0.8% didn't replicate.
+REPLAY_LONG_TRADE = 0.42
+REPLAY_REST_TRADE = 0.38
 LEDGER_CONVENTION = {"horizon": "20", "stop_pct": "8.0", "entry": "touch"}
 # Roster/grid rows need a floor before "trade expectancy" means anything;
 # one lucky episode is not a track record.
@@ -334,7 +332,7 @@ def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
             bw = _f(r.get("base_weeks"))
             tp = _f(r.get("to_pivot_pct"))
             si = sig_idx(r.get("signal"))
-            pocket = bool(bw is not None and bw >= VALIDATED_BASE_WEEKS)
+            pocket = bool(bw is not None and bw >= LONG_BASE_WEEKS)
 
             cohort[d][si] += 1
             if pocket:
@@ -443,8 +441,8 @@ def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
                     # State on the segment's last day — the day the end dot
                     # sits on, and the day its to-pivot % is measured
                     # against. Base weeks rides along because it is the
-                    # ranker the backtest validated; the tooltip would
-                    # otherwise send the reader to the roster for it.
+                    # split the panels draw; the tooltip would otherwise
+                    # send the reader to the roster for it.
                     "pv": seg[-1]["pv"], "sp": seg[-1]["sp"],
                     "bw": seg[-1]["bw"],
                 })
@@ -462,9 +460,9 @@ def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
             "st": last["s"],
         })
 
-    # Grid row order = roster default: longest base first, so the ⭐ pocket
-    # (the one validated stratum) clusters at the top and the two adjacent
-    # panels read in ONE direction.
+    # Grid row order = roster default: longest base first, so the long
+    # bases cluster at the top and the two adjacent panels read in ONE
+    # direction.
     #
     # The key must match the roster's default comparator KEY FOR KEY —
     # max base weeks desc, days desc, last-seen desc, with names that have
@@ -477,7 +475,7 @@ def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
                       -s["lastD"], s["t"]) for s in summary}
     series.sort(key=lambda s: order[s["t"]])
     summary.sort(key=lambda s: order[s["t"]])
-    # Draw the ⭐ pocket last so its lines land on top of the gray mass.
+    # Draw the long bases last so their lines land on top of the gray mass.
     approach.sort(key=lambda a: (a["pk"], a["oc"] == "TRIGGERED"))
 
     def cum_mean(per_day: list[list[float]]) -> tuple[list, list]:
@@ -543,9 +541,9 @@ def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
                        "n": bench["spy"][1][win_start:]}
                       if bench["spy"][1][-1] else None),
             "base": base_line[win_start:], "baseN": base_n[win_start:],
-            "refPkt": BACKTEST_POCKET_TRADE,
-            "refBase": BACKTEST_BASELINE_TRADE,
-            "minWeeks": VALIDATED_BASE_WEEKS,
+            "refPkt": REPLAY_LONG_TRADE,
+            "refBase": REPLAY_REST_TRADE,
+            "minWeeks": LONG_BASE_WEEKS,
         },
         "sectorEdge": sec_panel,
         "kpi": {
@@ -616,7 +614,7 @@ HTML_TEMPLATE = r"""<!doctype html>
      color at 6.3 ΔE. So the state rides on line type instead — see the dash
      + hollow end dot in renderApproach. */
   --oT: #2a78d6; --oB: #a02525; --oF: #b5b4ad;
-  /* ⭐ pocket, in BOTH panels that draw it (the count line over the Sig
+  /* Long bases, in BOTH panels that draw them (the count line over the Sig
      stack, the expectancy line and its dashed reference). One stratum, one
      hue. Aqua = dataviz slot 3: off the blue ramp it overlays (ΔE 20.9
      light / 19.2 dark, deutan 18.4 / 15.7) and out of the warm family,
@@ -796,7 +794,7 @@ svg a:hover text { text-decoration: underline; }
   </div>
 
   <div class="card" id="pk-card">
-    <h2 id="pk-title">⭐ Pocket vs the rest</h2>
+    <h2 id="pk-title">Long bases vs the rest</h2>
     <p class="note" id="pk-note"></p>
     <div class="scroll" id="pkchart"></div>
     <div class="legend" id="pk-legend"></div>
@@ -851,34 +849,34 @@ const I18N = {
     winTag: (s, t) => ` Charts show the last ${s} of ${t} trading days.`,
     kList: "Today's watchlist",
     kListSub: (hot, n) => `${hot} near or past trigger`,
-    kToday: "Today's ⭐ pocket",
+    kToday: "Today's long bases (≥20 wk)",
     kTrig: "Trigger rate",
     kTrigSub: (t, n) => `${t} / ${n} resolved`,
-    kPocket: "⭐ Pocket per trade",
-    kPocketSub: (n, r) => `n=${n} · backtest ${r >= 0 ? "+" : ""}${r}%`,
+    kPocket: "Long bases per trade",
+    kPocketSub: (n, r) => `n=${n} · 6-yr replay ${r >= 0 ? "+" : ""}${r}%`,
     kBase: "Everything else",
-    kBaseSub: (n, r) => `n=${n} · backtest ${r >= 0 ? "+" : ""}${r}%`,
+    kBaseSub: (n, r) => `n=${n} · 6-yr replay ${r >= 0 ? "+" : ""}${r}%`,
     kLongest: "Longest base now",
     none: "None",
     apTitle: "Approach to pivot",
     apNote: () => `One line per episode (a name's unbroken run on the list). Height = how far the price sits below its pivot.\nThe 0 line is the pivot, the price that makes the setup a buy. A line reaching it broke out; color = how the episode ended.`,
-    apFilter: { pocket: `⭐ Pocket only (base ≥ ${MINWK}wk)`, trig: "Triggered only", all: "All episodes" },
+    apFilter: { pocket: `Long bases only (≥ ${MINWK}wk)`, trig: "Triggered only", all: "All episodes" },
     apFilterLabel: "Filter episodes",
     apEmpty: "No episodes match this filter in the charted window.",
     oc: { TRIGGERED: "Cleared the pivot", FADED: "Faded off the list", BROKE_DOWN: "Broke down", null: "In flight" },
     ocShort: { TRIGGERED: "Triggered", FADED: "Faded", BROKE_DOWN: "Broke down", null: "In flight" },
     pivotLine: "Pivot (trigger price)",
     coTitle: "Watchlist tension",
-    coNote: () => `One column per day: the whole watchlist stacked by how close each name is to firing.\nA stack thick with imminent and breakout means the list is loaded and time-sensitive. All forming means nothing is near a trigger, so check back later.\nThe line counts the ⭐ pocket (bases ≥ ${MINWK} weeks). At zero, the list holds nothing the backtest validated.`,
-    coPocketLine: "⭐ Pocket count",
-    pkTitle: "⭐ Pocket vs the rest",
-    pkNote: "Solid: the running average result per trade (pivot buy, 8% stop, 20 sessions), ⭐ pocket vs the rest. Dashed: the backtest's own numbers.\nDotted: SPY and QQQ bought the same day and sold when the trade was, stop-outs included. They sell at the close, the trade at its stop, so the gap is a ceiling.",
+    coNote: () => `One column per day: the whole watchlist stacked by how close each name is to firing.\nA stack thick with imminent and breakout means the list is loaded and time-sensitive. All forming means nothing is near a trigger, so check back later.\nThe line counts long bases (≥ ${MINWK} weeks): a description of the list, since over the 2021→2026 replay they didn't beat SPY either.`,
+    coPocketLine: "Long-base count",
+    pkTitle: "Long bases vs the rest",
+    pkNote: "Solid: the running average result per trade (pivot buy, 8% stop, 20 sessions), long bases vs the rest. Dashed: the 2021→2026 replay's numbers.\nDotted: SPY and QQQ bought the same day and sold when the trade was, stop-outs included. They sell at the close, the trade at its stop, so the gap is a ceiling.",
     pkBench: n => `${n}, same trades`,
-    pkVsMkt: n => `⭐ beyond ${n}`,
+    pkVsMkt: n => `Long bases beyond ${n}`,
     pkBenchNote: n => `${n} trades matched to both SPY and QQQ`,
-    pkPocket: "⭐ Pocket", pkBase: "The rest",
-    pkRef: v => `backtest ${v >= 0 ? "+" : ""}${v}%`,
-    pkTipNs: (a, b) => `${a} pocket / ${b} rest trades`,
+    pkPocket: "Long bases", pkBase: "The rest",
+    pkRef: v => `replay ${v >= 0 ? "+" : ""}${v}%`,
+    pkTipNs: (a, b) => `${a} long-base / ${b} rest trades`,
     seTitle: "Which sectors paid",
     seNote: minN => `Average result per completed trade, grouped by sector; sectors under ${minN} trades fold away.\nAn interval reaching the dashed all-trades average means no readable difference from the board.\nA gap here can be recent sector beta rather than a property of these bases: re-check each quarter, not a filter.`,
     sePos: "Sector made money", seNeg: "Sector lost money",
@@ -892,13 +890,13 @@ const I18N = {
     seFolded: (secs, n) => `\n${secs} sector(s) under the cutoff folded away (${n} trades).`,
     seUntagged: n => `\n${n} completed trades have no sector tag and sit outside this panel.`,
     gridTitle: "Maturity grid",
-    gridNote: () => `One row per name, one cell per listed day, color = how close it was to firing that day; a center dot = ⭐ pocket day (base ≥ ${MINWK} weeks).\nRows run longest-base first, so the validated names lead. Row-end = that name's realized result per trade.\nA row whose color grows more vivid left to right is a base tightening toward its trigger; a break in the row is a dropout.`,
+    gridNote: () => `One row per name, one cell per listed day, color = how close it was to firing that day; a center dot = long-base day (base ≥ ${MINWK} weeks).\nRows run longest-base first. Row-end = that name's realized result per trade.\nA row whose color grows more vivid left to right is a base tightening toward its trigger; a break in the row is a dropout.`,
     all: "All",
     geDays: n => `≥${n} days listed`,
     daysFilterLabel: "Filter by days listed",
     rosterTitle: "Roster",
-    rosterNote: "One row per name that ever made the list. Click a header to sort; click again to reverse. This table carries every value the charts show on hover.\nJudge by base weeks: the backtest validated that attribute and no other. Score is a display floor, not a ranker.",
-    cols: ["Ticker", "Sector", "Max base wks", "Result %/trade", "Trigger rate", "Episodes", "⭐ days", "Tightest %", "Closest to pivot", "Days", "Last seen", "Sig"],
+    rosterNote: "One row per name that ever made the list. Click a header to sort; click again to reverse. This table carries every value the charts show on hover.\nNo column here beat SPY over the 2021→2026 replay; long bases only stopped out less. Score is a display floor, not a ranker.",
+    cols: ["Ticker", "Sector", "Max base wks", "Result %/trade", "Trigger rate", "Episodes", "Long-base days", "Tightest %", "Closest to pivot", "Days", "Last seen", "Sig"],
     sigName: { 0: "Forming", 1: "Coiled", 2: "Imminent", 3: "Breakout" },
     sigTip: {
       0: "Valid base, not near the trigger yet",
@@ -907,7 +905,7 @@ const I18N = {
       3: "Broke out today on volume",
     },
     spellDay: k => `Day ${k} on the list`,
-    pocketDay: "⭐ Pocket day",
+    pocketDay: "Long-base day",
     baseWks: "Base",
     wks: n => `${n} wks`,
     toPivot: "To pivot",
@@ -935,34 +933,34 @@ const I18N = {
     winTag: (s, t) => `图表仅显示最近 ${s} / ${t} 个交易日。`,
     kList: "今日名单",
     kListSub: (hot, n) => `${hot} 只临门一脚或已突破`,
-    kToday: "今日 ⭐ 口袋",
+    kToday: "今日长基（≥20 周）",
     kTrig: "触发率",
     kTrigSub: (t, n) => `${n} 段里 ${t} 段冲过`,
-    kPocket: "⭐ 口袋每单结果",
-    kPocketSub: (n, r) => `样本 ${n} · 回测 ${r >= 0 ? "+" : ""}${r}%`,
+    kPocket: "长基每单结果",
+    kPocketSub: (n, r) => `样本 ${n} · 六年回放 ${r >= 0 ? "+" : ""}${r}%`,
     kBase: "其余全部",
-    kBaseSub: (n, r) => `样本 ${n} · 回测 ${r >= 0 ? "+" : ""}${r}%`,
+    kBaseSub: (n, r) => `样本 ${n} · 六年回放 ${r >= 0 ? "+" : ""}${r}%`,
     kLongest: "当前最长的基",
     none: "无",
     apTitle: "逼近触发线",
     apNote: () => `一条线 = 一段上榜（某只票连续留在名单上的那一段）。线的高度 = 现价还差多少才够到触发价。\n0 线是触发线：线碰到它 = 突破了。线的颜色 = 这段上榜的结局。`,
-    apFilter: { pocket: `只看 ⭐ 口袋（基龄 ≥ ${MINWK} 周）`, trig: "只看已触发", all: "全部上榜段" },
+    apFilter: { pocket: `只看长基（基龄 ≥ ${MINWK} 周）`, trig: "只看已触发", all: "全部上榜段" },
     apFilterLabel: "筛选上榜段",
     apEmpty: "当前窗口内没有符合此筛选的上榜段。",
     oc: { TRIGGERED: "冲过了触发线", FADED: "没冲上去，淡出名单", BROKE_DOWN: "跌穿了", null: "进行中" },
     ocShort: { TRIGGERED: "已触发", FADED: "淡出", BROKE_DOWN: "跌穿", null: "进行中" },
     pivotLine: "触发价",
     coTitle: "名单上膛程度",
-    coNote: () => `每天一根柱：当天名单上的全部票，按「离触发还有多远」分层堆叠。\n柱子又高、临门一脚和今日突破又多 = 名单已上膛，时间敏感；全是成形中 = 没有一只逼近触发，过几天再看。\n折线 = ⭐ 口袋只数（基龄 ≥ ${MINWK} 周）。折线落到 0，当天名单里没有一只是回测验证过的类型。`,
-    coPocketLine: "⭐ 口袋只数",
-    pkTitle: "⭐ 口袋 vs 其余",
-    pkNote: "实线：每单滚动平均盈亏（触发价买入、8% 止损、20 天卖出），⭐ 口袋 vs 其余。虚线：回测里的对应数。\n点线：同一天买 SPY / QQQ，这单何时了结就何时卖，止损出场也照算。指数按收盘卖、这单按止损价，所以差距是上限。",
+    coNote: () => `每天一根柱：当天名单上的全部票，按「离触发还有多远」分层堆叠。\n柱子又高、临门一脚和今日突破又多 = 名单已上膛，时间敏感；全是成形中 = 没有一只逼近触发，过几天再看。\n折线 = 长基只数（基龄 ≥ ${MINWK} 周），只描述名单构成：2021→2026 回放里长基同样没跑赢 SPY。`,
+    coPocketLine: "长基只数",
+    pkTitle: "长基 vs 其余",
+    pkNote: "实线：每单滚动平均盈亏（触发价买入、8% 止损、20 天卖出），长基 vs 其余。虚线：2021→2026 回放里的对应数。\n点线：同一天买 SPY / QQQ，这单何时了结就何时卖，止损出场也照算。指数按收盘卖、这单按止损价，所以差距是上限。",
     pkBench: n => `同期 ${n}`,
-    pkVsMkt: n => `⭐ 超出 ${n}`,
+    pkVsMkt: n => `长基超出 ${n}`,
     pkBenchNote: n => `${n} 单 SPY / QQQ 均已对齐`,
-    pkPocket: "⭐ 口袋", pkBase: "其余全部",
-    pkRef: v => `回测 ${v >= 0 ? "+" : ""}${v}%`,
-    pkTipNs: (a, b) => `⭐ 口袋 ${a} 单 · 其余 ${b} 单`,
+    pkPocket: "长基", pkBase: "其余全部",
+    pkRef: v => `回放 ${v >= 0 ? "+" : ""}${v}%`,
+    pkTipNs: (a, b) => `长基 ${a} 单 · 其余 ${b} 单`,
     seTitle: "哪类股票的底部真的兑现了",
     seNote: minN => `按板块看每笔了结交易的平均结果；不足 ${minN} 笔的板块不画。\n误差范围够到「全体平均」虚线，就是跟整体比不出差别。\n差距也可能只是最近的板块行情，而不是这类底部更靠谱：当成每季复查的观察，别当筛选条件。`,
     sePos: "该板块赚钱", seNeg: "该板块亏钱",
@@ -976,13 +974,13 @@ const I18N = {
     seFolded: (secs, n) => `\n另有 ${secs} 个板块样本不足，已折叠（共 ${n} 笔交易）。`,
     seUntagged: n => `\n另有 ${n} 笔已了结交易没有板块标签，不计入本图。`,
     gridTitle: "成熟度网格",
-    gridNote: () => `一行一只票，一格一个上榜日，颜色 = 那天离触发有多近；带中心点 = ⭐ 口袋日（基龄 ≥ ${MINWK} 周）。\n行序按最长基龄排，验证过的名字在最上面；行尾 = 该票实际每单盈亏。\n一行从左到右越来越醒目 = 这个基在收紧、逼近触发；行中间断开 = 那天掉出名单了。`,
+    gridNote: () => `一行一只票，一格一个上榜日，颜色 = 那天离触发有多近；带中心点 = 长基日（基龄 ≥ ${MINWK} 周）。\n行序按最长基龄排；行尾 = 该票实际每单盈亏。\n一行从左到右越来越醒目 = 这个基在收紧、逼近触发；行中间断开 = 那天掉出名单了。`,
     all: "全部",
     geDays: n => `上榜 ≥ ${n} 天`,
     daysFilterLabel: "按上榜天数筛选",
     rosterTitle: "上榜名录",
-    rosterNote: "每只上过榜的票一行。点击表头排序；再次点击反向。图表里悬停能看到的数值，这张表都有。\n挑票看「最长基龄」这列，它是回测里唯一验证过的属性。Score 是显示门槛，不是排序依据。",
-    cols: ["代码", "行业", "最长基龄(周)", "每单盈亏 %", "触发率", "上榜段数", "⭐ 天数", "最紧宽度 %", "最接近触发", "上榜天数", "最近上榜", "状态"],
+    rosterNote: "每只上过榜的票一行。点击表头排序；再次点击反向。图表里悬停能看到的数值，这张表都有。\n2021→2026 回放里没有一列能跑赢 SPY，长基只是止损少一些。Score 是显示门槛，不是排序依据。",
+    cols: ["代码", "行业", "最长基龄(周)", "每单盈亏 %", "触发率", "上榜段数", "长基天数", "最紧宽度 %", "最接近触发", "上榜天数", "最近上榜", "状态"],
     sigName: { 0: "成形中", 1: "收紧中", 2: "临门一脚", 3: "今日突破" },
     sigTip: {
       0: "基有效，但还没靠近触发价",
@@ -991,7 +989,7 @@ const I18N = {
       3: "今天带量冲过了触发价",
     },
     spellDay: k => `上榜第 ${k} 天`,
-    pocketDay: "⭐ 口袋日",
+    pocketDay: "长基日",
     baseWks: "基龄",
     wks: n => `${n} 周`,
     toPivot: "距触发",
@@ -1024,34 +1022,34 @@ const I18N = {
     winTag: (s, t) => `圖表僅顯示最近 ${s} / ${t} 個交易日。`,
     kList: "今日名單",
     kListSub: (hot, n) => `${hot} 檔臨門一腳或已突破`,
-    kToday: "今日 ⭐ 口袋",
+    kToday: "今日長基（≥20 週）",
     kTrig: "觸發率",
     kTrigSub: (t, n) => `${n} 段裡 ${t} 段衝過`,
-    kPocket: "⭐ 口袋每筆結果",
-    kPocketSub: (n, r) => `樣本 ${n} · 回測 ${r >= 0 ? "+" : ""}${r}%`,
+    kPocket: "長基每筆結果",
+    kPocketSub: (n, r) => `樣本 ${n} · 六年回放 ${r >= 0 ? "+" : ""}${r}%`,
     kBase: "其餘全部",
-    kBaseSub: (n, r) => `樣本 ${n} · 回測 ${r >= 0 ? "+" : ""}${r}%`,
+    kBaseSub: (n, r) => `樣本 ${n} · 六年回放 ${r >= 0 ? "+" : ""}${r}%`,
     kLongest: "目前最長的基",
     none: "無",
     apTitle: "逼近觸發線",
     apNote: () => `一條線 = 一段上榜（某檔票連續留在名單上的那一段）。線的高度 = 現價還差多少才夠到觸發價。\n0 線是觸發線：線碰到它 = 突破了。線的顏色 = 這段上榜的結局。`,
-    apFilter: { pocket: `只看 ⭐ 口袋（基齡 ≥ ${MINWK} 週）`, trig: "只看已觸發", all: "全部上榜段" },
+    apFilter: { pocket: `只看長基（基齡 ≥ ${MINWK} 週）`, trig: "只看已觸發", all: "全部上榜段" },
     apFilterLabel: "篩選上榜段",
     apEmpty: "目前窗口內沒有符合此篩選的上榜段。",
     oc: { TRIGGERED: "衝過了觸發線", FADED: "沒衝上去，淡出名單", BROKE_DOWN: "跌穿了", null: "進行中" },
     ocShort: { TRIGGERED: "已觸發", FADED: "淡出", BROKE_DOWN: "跌穿", null: "進行中" },
     pivotLine: "觸發價",
     coTitle: "名單上膛程度",
-    coNote: () => `每天一根柱：當天名單上的全部票，按「離觸發還有多遠」分層堆疊。\n柱子又高、臨門一腳和今日突破又多 = 名單已上膛，時間敏感；全是成形中 = 沒有一檔逼近觸發，過幾天再看。\n折線 = ⭐ 口袋檔數（基齡 ≥ ${MINWK} 週）。折線落到 0，當天名單裡沒有一檔是回測驗證過的類型。`,
-    coPocketLine: "⭐ 口袋檔數",
-    pkTitle: "⭐ 口袋 vs 其餘",
-    pkNote: "實線：每筆滾動平均盈虧（觸發價買入、8% 停損、20 天賣出），⭐ 口袋 vs 其餘。虛線：回測裡的對應數。\n點線：同一天買 SPY / QQQ，這筆何時了結就何時賣，停損出場也照算。指數按收盤賣、這筆按停損價，所以差距是上限。",
+    coNote: () => `每天一根柱：當天名單上的全部票，按「離觸發還有多遠」分層堆疊。\n柱子又高、臨門一腳和今日突破又多 = 名單已上膛，時間敏感；全是成形中 = 沒有一檔逼近觸發，過幾天再看。\n折線 = 長基檔數（基齡 ≥ ${MINWK} 週），只描述名單構成：2021→2026 回放裡長基同樣沒跑贏 SPY。`,
+    coPocketLine: "長基檔數",
+    pkTitle: "長基 vs 其餘",
+    pkNote: "實線：每筆滾動平均盈虧（觸發價買入、8% 停損、20 天賣出），長基 vs 其餘。虛線：2021→2026 回放裡的對應數。\n點線：同一天買 SPY / QQQ，這筆何時了結就何時賣，停損出場也照算。指數按收盤賣、這筆按停損價，所以差距是上限。",
     pkBench: n => `同期 ${n}`,
-    pkVsMkt: n => `⭐ 超出 ${n}`,
+    pkVsMkt: n => `長基超出 ${n}`,
     pkBenchNote: n => `${n} 筆 SPY / QQQ 均已對齊`,
-    pkPocket: "⭐ 口袋", pkBase: "其餘全部",
-    pkRef: v => `回測 ${v >= 0 ? "+" : ""}${v}%`,
-    pkTipNs: (a, b) => `⭐ 口袋 ${a} 筆 · 其餘 ${b} 筆`,
+    pkPocket: "長基", pkBase: "其餘全部",
+    pkRef: v => `回放 ${v >= 0 ? "+" : ""}${v}%`,
+    pkTipNs: (a, b) => `長基 ${a} 筆 · 其餘 ${b} 筆`,
     seTitle: "哪類股票的底部真的兌現了",
     seNote: minN => `按板塊看每筆了結交易的平均結果；不足 ${minN} 筆的板塊不畫。\n誤差範圍搆到「全體平均」虛線，就是跟整體比不出差別。\n差距也可能只是最近的板塊行情，而不是這類底部更可靠：當成每季複查的觀察，別當篩選條件。`,
     sePos: "該板塊賺錢", seNeg: "該板塊虧錢",
@@ -1065,13 +1063,13 @@ const I18N = {
     seFolded: (secs, n) => `\n另有 ${secs} 個板塊樣本不足，已摺疊（共 ${n} 筆交易）。`,
     seUntagged: n => `\n另有 ${n} 筆已了結交易沒有板塊標籤，不計入本圖。`,
     gridTitle: "成熟度網格",
-    gridNote: () => `一行一檔票，一格一個上榜日，顏色 = 那天離觸發有多近；帶中心點 = ⭐ 口袋日（基齡 ≥ ${MINWK} 週）。\n行序按最長基齡排，驗證過的名字在最上面；行尾 = 該檔實際每筆盈虧。\n一行從左到右越來越醒目 = 這個基在收緊、逼近觸發；行中間斷開 = 那天掉出名單了。`,
+    gridNote: () => `一行一檔票，一格一個上榜日，顏色 = 那天離觸發有多近；帶中心點 = 長基日（基齡 ≥ ${MINWK} 週）。\n行序按最長基齡排；行尾 = 該檔實際每筆盈虧。\n一行從左到右越來越醒目 = 這個基在收緊、逼近觸發；行中間斷開 = 那天掉出名單了。`,
     all: "全部",
     geDays: n => `上榜 ≥ ${n} 天`,
     daysFilterLabel: "按上榜天數篩選",
     rosterTitle: "上榜名錄",
-    rosterNote: "每檔上過榜的票一行。點擊表頭排序；再次點擊反向。圖表裡懸停看得到的數值，這張表都有。\n挑票看「最長基齡」這欄，它是回測裡唯一驗證過的屬性。Score 是顯示門檻，不是排序依據。",
-    cols: ["代號", "產業", "最長基齡(週)", "每筆盈虧 %", "觸發率", "上榜段數", "⭐ 天數", "最緊寬度 %", "最接近觸發", "上榜天數", "最近上榜", "狀態"],
+    rosterNote: "每檔上過榜的票一行。點擊表頭排序；再次點擊反向。圖表裡懸停看得到的數值，這張表都有。\n2021→2026 回放裡沒有一欄能跑贏 SPY，長基只是停損少一些。Score 是顯示門檻，不是排序依據。",
+    cols: ["代號", "產業", "最長基齡(週)", "每筆盈虧 %", "觸發率", "上榜段數", "長基天數", "最緊寬度 %", "最接近觸發", "上榜天數", "最近上榜", "狀態"],
     sigName: { 0: "成形中", 1: "收緊中", 2: "臨門一腳", 3: "今日突破" },
     sigTip: {
       0: "基有效，但還沒靠近觸發價",
@@ -1080,7 +1078,7 @@ const I18N = {
       3: "今天帶量衝過了觸發價",
     },
     spellDay: k => `上榜第 ${k} 天`,
-    pocketDay: "⭐ 口袋日",
+    pocketDay: "長基日",
     baseWks: "基齡",
     wks: n => `${n} 週`,
     toPivot: "距觸發",
@@ -1113,34 +1111,34 @@ const I18N = {
     winTag: (s, t) => `チャートは直近 ${s} / ${t} 営業日のみ表示。`,
     kList: "本日のリスト",
     kListSub: (hot, n) => `${hot} 銘柄が目前か突破`,
-    kToday: "本日の ⭐ ポケット",
+    kToday: "本日のロングベース（20 週以上）",
     kTrig: "トリガー率",
     kTrigSub: (t, n) => `${n} 件中 ${t} 件が突破`,
-    kPocket: "⭐ ポケット 1 回の損益",
-    kPocketSub: (n, r) => `n=${n} · 検証値 ${r >= 0 ? "+" : ""}${r}%`,
+    kPocket: "ロングベース 1 回の損益",
+    kPocketSub: (n, r) => `n=${n} · 6 年リプレイ ${r >= 0 ? "+" : ""}${r}%`,
     kBase: "それ以外すべて",
-    kBaseSub: (n, r) => `n=${n} · 検証値 ${r >= 0 ? "+" : ""}${r}%`,
+    kBaseSub: (n, r) => `n=${n} · 6 年リプレイ ${r >= 0 ? "+" : ""}${r}%`,
     kLongest: "現在の最長ベース",
     none: "なし",
     apTitle: "ピボットへの接近",
     apNote: () => `1 本の線 = 1 エピソード（銘柄がリストに連続して載っていた期間）。線の高さ = 現在値がピボットまであと何 % か。\n0 の線がトリガー：線がそこに届けばブレイクアウト成立。線の色はエピソードの結末を表します。`,
-    apFilter: { pocket: `⭐ ポケットのみ（ベース ${MINWK} 週以上）`, trig: "トリガー済みのみ", all: "全エピソード" },
+    apFilter: { pocket: `ロングベースのみ（${MINWK} 週以上）`, trig: "トリガー済みのみ", all: "全エピソード" },
     apFilterLabel: "エピソードを絞り込み",
     apEmpty: "この期間に該当するエピソードはありません。",
     oc: { TRIGGERED: "ピボット突破", FADED: "届かずリスト落ち", BROKE_DOWN: "下方ブレイク", null: "進行中" },
     ocShort: { TRIGGERED: "トリガー済み", FADED: "フェード", BROKE_DOWN: "下方ブレイク", null: "進行中" },
     pivotLine: "ピボット（トリガー価格）",
     coTitle: "リストの張り詰め具合",
-    coNote: () => `1 日 1 本の柱：その日のリスト全体を「発火までの近さ」で積み上げたもの。\n目前とブレイクが厚い柱 = リストは装填済みで時間との勝負。すべて形成中 = 発火寸前の銘柄なし、日を改めて確認を。\n折れ線は ⭐ ポケット数（ベース ${MINWK} 週以上）。ゼロの日は検証済みタイプが 1 つもありません。`,
-    coPocketLine: "⭐ ポケット数",
-    pkTitle: "⭐ ポケット vs その他",
-    pkNote: "実線：1 トレード平均損益の推移（ピボット買い、8% ストップ、20 セッション）。⭐ ポケット vs その他。破線：バックテストの対応値。\n点線：同じ日に SPY / QQQ を買い、そのトレードが終わった日に売った場合。指数は終値、トレードはストップ価格なので、差は上限。",
+    coNote: () => `1 日 1 本の柱：その日のリスト全体を「発火までの近さ」で積み上げたもの。\n目前とブレイクが厚い柱 = リストは装填済みで時間との勝負。すべて形成中 = 発火寸前の銘柄なし、日を改めて確認を。\n折れ線はロングベース数（${MINWK} 週以上）。リストの構成を示すだけで、2021→2026 リプレイではロングベースも SPY に勝っていません。`,
+    coPocketLine: "ロングベース数",
+    pkTitle: "ロングベース vs その他",
+    pkNote: "実線：1 トレード平均損益の推移（ピボット買い、8% ストップ、20 セッション）。ロングベース vs その他。破線：2021→2026 リプレイの対応値。\n点線：同じ日に SPY / QQQ を買い、そのトレードが終わった日に売った場合。指数は終値、トレードはストップ価格なので、差は上限。",
     pkBench: n => `同期間 ${n}`,
-    pkVsMkt: n => `⭐ の ${n} 超過`,
+    pkVsMkt: n => `ロングベースの ${n} 超過`,
     pkBenchNote: n => `SPY・QQQ 双方と対応したトレード ${n} 件`,
-    pkPocket: "⭐ ポケット", pkBase: "その他",
-    pkRef: v => `バックテスト ${v >= 0 ? "+" : ""}${v}%`,
-    pkTipNs: (a, b) => `⭐ ポケット ${a} 件 · その他 ${b} 件`,
+    pkPocket: "ロングベース", pkBase: "その他",
+    pkRef: v => `リプレイ ${v >= 0 ? "+" : ""}${v}%`,
+    pkTipNs: (a, b) => `ロングベース ${a} 件 · その他 ${b} 件`,
     seTitle: "どのセクターのベースが実際に報われたか",
     seNote: minN => `セクター別の、決済済みトレード1件あたりの平均結果。${minN}件未満のセクターは折り畳み。\n誤差範囲が「全体平均」の破線に届くセクターは、全体との差が読み取れません。\nこの差はベースの質ではなく直近のセクター物色かもしれません。四半期ごとに見直す観察で、絞り込み条件ではありません。`,
     sePos: "このセクターは利益", seNeg: "このセクターは損失",
@@ -1154,13 +1152,13 @@ const I18N = {
     seFolded: (secs, n) => `\nサンプル不足の${secs}セクター（計${n}トレード）は折り畳み。`,
     seUntagged: n => `\nセクター未設定の決済済み${n}トレードは本図の対象外。`,
     gridTitle: "成熟度グリッド",
-    gridNote: () => `1 行 = 1 銘柄、1 セル = リスト入り 1 日、色 = その日の発火までの近さ。中心の点 = ⭐ ポケット日（ベース ${MINWK} 週以上）。\n行は最長ベース順、検証済みの銘柄が上に来ます。行末 = その銘柄の実際の 1 トレード損益。\n左から右へ色が鮮やかになる行はベースが締まりトリガーへ近づいた証。行の途切れはリスト落ちです。`,
+    gridNote: () => `1 行 = 1 銘柄、1 セル = リスト入り 1 日、色 = その日の発火までの近さ。中心の点 = ロングベース日（${MINWK} 週以上）。\n行は最長ベース順。行末 = その銘柄の実際の 1 トレード損益。\n左から右へ色が鮮やかになる行はベースが締まりトリガーへ近づいた証。行の途切れはリスト落ちです。`,
     all: "すべて",
     geDays: n => `リスト入り ${n} 日以上`,
     daysFilterLabel: "リスト入り日数で絞り込み",
     rosterTitle: "銘柄一覧",
-    rosterNote: "リストに載ったことのある銘柄を 1 行ずつ表示。ヘッダーをクリックでソート、もう一度クリックで逆順。チャートのホバー数値はすべてこの表で確認できます。\n判断はベース週数の列で。バックテストで検証された唯一の属性です。スコアは表示の足切りであり、ランキング指標ではありません。",
-    cols: ["ティッカー", "セクター", "最長ベース(週)", "1 トレード損益 %", "トリガー率", "エピソード", "⭐ 日数", "最小幅 %", "ピボット最接近", "日数", "直近登場", "シグナル"],
+    rosterNote: "リストに載ったことのある銘柄を 1 行ずつ表示。ヘッダーをクリックでソート、もう一度クリックで逆順。チャートのホバー数値はすべてこの表で確認できます。\n2021→2026 リプレイで SPY に勝った列はなく、ロングベースはストップが少なかっただけです。スコアは表示の足切りであり、ランキング指標ではありません。",
+    cols: ["ティッカー", "セクター", "最長ベース(週)", "1 トレード損益 %", "トリガー率", "エピソード", "ロングベース日数", "最小幅 %", "ピボット最接近", "日数", "直近登場", "シグナル"],
     sigName: { 0: "形成中", 1: "収縮中", 2: "目前", 3: "ブレイク" },
     sigTip: {
       0: "有効なベース、まだトリガーには遠い",
@@ -1169,7 +1167,7 @@ const I18N = {
       3: "本日、出来高を伴い突破",
     },
     spellDay: k => `リスト入り ${k} 日目`,
-    pocketDay: "⭐ ポケット日",
+    pocketDay: "ロングベース日",
     baseWks: "ベース",
     wks: n => `${n} 週`,
     toPivot: "ピボットまで",
@@ -1202,34 +1200,34 @@ const I18N = {
     winTag: (s, t) => `차트는 최근 ${s} / ${t}거래일만 표시합니다.`,
     kList: "오늘의 목록",
     kListSub: (hot, n) => `${hot}종목 임박 또는 돌파`,
-    kToday: "오늘의 ⭐ 포켓",
+    kToday: "오늘의 롱 베이스(20주 이상)",
     kTrig: "발동률",
     kTrigSub: (t, n) => `${n}건 중 ${t}건 돌파`,
-    kPocket: "⭐ 포켓 거래당 손익",
-    kPocketSub: (n, r) => `n=${n} · 백테스트 ${r >= 0 ? "+" : ""}${r}%`,
+    kPocket: "롱 베이스 거래당 손익",
+    kPocketSub: (n, r) => `n=${n} · 6년 리플레이 ${r >= 0 ? "+" : ""}${r}%`,
     kBase: "나머지 전체",
-    kBaseSub: (n, r) => `n=${n} · 백테스트 ${r >= 0 ? "+" : ""}${r}%`,
+    kBaseSub: (n, r) => `n=${n} · 6년 리플레이 ${r >= 0 ? "+" : ""}${r}%`,
     kLongest: "현재 가장 긴 베이스",
     none: "없음",
     apTitle: "피봇 접근",
     apNote: () => `선 1개 = 에피소드 1개(종목이 목록에 연속으로 남아 있던 구간). 선의 높이 = 현재가가 피봇까지 몇 % 남았는지.\n0 선이 발동선입니다. 선이 거기 닿으면 돌파 성공. 선 색깔은 에피소드의 결말을 뜻합니다.`,
-    apFilter: { pocket: `⭐ 포켓만 (베이스 ${MINWK}주 이상)`, trig: "발동한 것만", all: "전체 에피소드" },
+    apFilter: { pocket: `롱 베이스만 (${MINWK}주 이상)`, trig: "발동한 것만", all: "전체 에피소드" },
     apFilterLabel: "에피소드 필터",
     apEmpty: "이 기간에 해당하는 에피소드가 없습니다.",
     oc: { TRIGGERED: "피봇 돌파", FADED: "못 넘고 목록에서 이탈", BROKE_DOWN: "하방 이탈", null: "진행 중" },
     ocShort: { TRIGGERED: "발동", FADED: "소멸", BROKE_DOWN: "하방 이탈", null: "진행 중" },
     pivotLine: "피봇(발동 가격)",
     coTitle: "목록의 긴장도",
-    coNote: () => `하루 1개 기둥: 그날 목록 전체를 '발동까지의 거리'로 쌓은 것.\n임박과 돌파가 두꺼운 기둥이면 목록이 장전된 상태이고 시간이 중요합니다. 전부 형성 중이면 발동에 가까운 종목이 없다는 뜻이니 나중에 다시 보세요.\n선은 ⭐ 포켓 개수(베이스 ${MINWK}주 이상)입니다. 0인 날은 백테스트로 검증된 유형이 하나도 없습니다.`,
-    coPocketLine: "⭐ 포켓 개수",
-    pkTitle: "⭐ 포켓 vs 나머지",
-    pkNote: "실선: 거래당 롤링 평균 손익(피봇 매수, 8% 손절, 20세션 청산). ⭐ 포켓 vs 나머지. 파선: 백테스트 수치.\n점선: 같은 날 SPY / QQQ를 사서 그 거래가 끝난 날 판 경우. 지수는 종가로, 거래는 손절가로 정산하므로 격차는 상한입니다.",
+    coNote: () => `하루 1개 기둥: 그날 목록 전체를 '발동까지의 거리'로 쌓은 것.\n임박과 돌파가 두꺼운 기둥이면 목록이 장전된 상태이고 시간이 중요합니다. 전부 형성 중이면 발동에 가까운 종목이 없다는 뜻이니 나중에 다시 보세요.\n선은 롱 베이스 개수(${MINWK}주 이상)로, 목록 구성을 보여줄 뿐입니다. 2021→2026 리플레이에서 롱 베이스도 SPY를 이기지 못했습니다.`,
+    coPocketLine: "롱 베이스 개수",
+    pkTitle: "롱 베이스 vs 나머지",
+    pkNote: "실선: 거래당 롤링 평균 손익(피봇 매수, 8% 손절, 20세션 청산). 롱 베이스 vs 나머지. 파선: 2021→2026 리플레이 수치.\n점선: 같은 날 SPY / QQQ를 사서 그 거래가 끝난 날 판 경우. 지수는 종가로, 거래는 손절가로 정산하므로 격차는 상한입니다.",
     pkBench: n => `같은 기간 ${n}`,
-    pkVsMkt: n => `⭐의 ${n} 초과`,
+    pkVsMkt: n => `롱 베이스의 ${n} 초과`,
     pkBenchNote: n => `SPY·QQQ 모두에 대응시킨 거래 ${n}건`,
-    pkPocket: "⭐ 포켓", pkBase: "나머지",
-    pkRef: v => `백테스트 ${v >= 0 ? "+" : ""}${v}%`,
-    pkTipNs: (a, b) => `⭐ 포켓 ${a}건 · 나머지 ${b}건`,
+    pkPocket: "롱 베이스", pkBase: "나머지",
+    pkRef: v => `리플레이 ${v >= 0 ? "+" : ""}${v}%`,
+    pkTipNs: (a, b) => `롱 베이스 ${a}건 · 나머지 ${b}건`,
     seTitle: "어떤 섹터의 베이스가 실제로 결실을 맺었나",
     seNote: minN => `섹터별 청산 거래 1건당 평균 결과. ${minN}건 미만인 섹터는 접힙니다.\n오차 범위가 "전체 평균" 점선에 닿는 섹터는 전체와 구분되지 않습니다.\n이 차이는 베이스의 질이 아니라 최근 섹터 장세일 수 있습니다. 분기마다 다시 확인할 관찰이지, 필터가 아닙니다.`,
     sePos: "이 섹터는 수익", seNeg: "이 섹터는 손실",
@@ -1243,13 +1241,13 @@ const I18N = {
     seFolded: (secs, n) => `\n표본이 부족한 ${secs}개 섹터(총 ${n}건)는 접었습니다.`,
     seUntagged: n => `\n섹터 태그가 없는 청산된 거래 ${n}건은 이 패널에서 제외됩니다.`,
     gridTitle: "성숙도 그리드",
-    gridNote: () => `1행 = 1종목, 1셀 = 등재 1일, 색 = 그날 발동까지의 거리. 중심의 점 = ⭐ 포켓일(베이스 ${MINWK}주 이상).\n행은 최장 베이스 순이라 검증된 종목이 위에 옵니다. 행 끝 = 그 종목의 실제 거래당 손익.\n왼쪽에서 오른쪽으로 색이 선명해지는 행은 베이스가 조여지며 발동에 다가간 것이고, 행이 끊기면 목록에서 빠진 것입니다.`,
+    gridNote: () => `1행 = 1종목, 1셀 = 등재 1일, 색 = 그날 발동까지의 거리. 중심의 점 = 롱 베이스일(${MINWK}주 이상).\n행은 최장 베이스 순입니다. 행 끝 = 그 종목의 실제 거래당 손익.\n왼쪽에서 오른쪽으로 색이 선명해지는 행은 베이스가 조여지며 발동에 다가간 것이고, 행이 끊기면 목록에서 빠진 것입니다.`,
     all: "전체",
     geDays: n => `등재 ${n}일 이상`,
     daysFilterLabel: "등재 일수로 필터",
     rosterTitle: "종목 목록",
-    rosterNote: "목록에 오른 적 있는 종목을 한 행씩 표시. 헤더를 클릭해 정렬, 다시 클릭하면 역순. 차트의 모든 호버 값을 이 표에서 확인할 수 있습니다.\n판단은 베이스 주수 열로 하세요. 백테스트가 검증한 유일한 속성입니다. 점수는 표시 기준일 뿐 순위 지표가 아닙니다.",
-    cols: ["티커", "섹터", "최장 베이스(주)", "거래당 손익 %", "발동률", "에피소드", "⭐ 일수", "최소 폭 %", "피봇 최근접", "일수", "최근 등재", "신호"],
+    rosterNote: "목록에 오른 적 있는 종목을 한 행씩 표시. 헤더를 클릭해 정렬, 다시 클릭하면 역순. 차트의 모든 호버 값을 이 표에서 확인할 수 있습니다.\n2021→2026 리플레이에서 SPY를 이긴 열은 없고, 롱 베이스는 손절이 적었을 뿐입니다. 점수는 표시 기준일 뿐 순위 지표가 아닙니다.",
+    cols: ["티커", "섹터", "최장 베이스(주)", "거래당 손익 %", "발동률", "에피소드", "롱 베이스 일수", "최소 폭 %", "피봇 최근접", "일수", "최근 등재", "신호"],
     sigName: { 0: "형성 중", 1: "수축 중", 2: "임박", 3: "돌파" },
     sigTip: {
       0: "유효한 베이스, 아직 발동선과 거리 있음",
@@ -1258,7 +1256,7 @@ const I18N = {
       3: "오늘 거래량과 함께 돌파",
     },
     spellDay: k => `등재 ${k}일째`,
-    pocketDay: "⭐ 포켓일",
+    pocketDay: "롱 베이스일",
     baseWks: "베이스",
     wks: n => `${n}주`,
     toPivot: "피봇까지",
@@ -1441,7 +1439,7 @@ function epLines(e) {
   // On a finished trade the result line above already answers it, and
   // repeating it on all 154 of those pushes a signal the exit-rule backtest
   // says NOT to act on — cutting at that first close below the pivot costs
-  // the ⭐ pocket 3.6pt per trade. A null fb means those 5 sessions have not
+  // the long bases 3.6pt per trade. A null fb means those 5 sessions have not
   // printed yet, so neither line is true.
   if (open && e.fb != null) out.push(e.fb ? T.fellBack : T.heldPivot);
   return out;
@@ -1486,7 +1484,7 @@ function renderApproach(mode) {
   apBox.textContent = "";
   const eps = DATA.approach.filter(a =>
     mode === "all" ? true : mode === "trig" ? a.oc === "TRIGGERED" : a.pk);
-  // The default ⭐-pocket filter can legitimately match nothing, and bare
+  // A filter can legitimately match nothing in the window, and bare
   // axes would claim "no edge" when the truth is "no data" — say so.
   if (!eps.length) {
     const d = div(null, apBox, T.apEmpty);
@@ -1544,7 +1542,7 @@ function renderApproach(mode) {
     } else marks[ai] = [];
     // End dot: the episode's last known distance to the pivot. On a one-day
     // episode it is the whole mark, which is why in-flight has to read here
-    // too — 40 of the 96 ⭐ pocket episodes are a single day.
+    // too — 40 of the 96 long-base episodes are a single day.
     const cy = yOf(a.tps[a.tps.length - 1]).toFixed(1);
     const dot = live
       ? { r: a.pk ? 3.5 : 2.5, fill: "var(--surface)", stroke: col,
@@ -1604,7 +1602,7 @@ function renderApproach(mode) {
     if (i === null) { hideTip(); return; }
     const a = eps[i];
     showTip(ev.clientX, ev.clientY, tt => tipCard(tt, {
-      title: a.t + (a.pk ? " ⭐" : ""),
+      title: a.t + (a.pk ? ` · ≥${MINWK}wk` : ""),
       aux: secName(a.sec),
       color: cssVar(OC_VAR[a.oc === null || a.oc === undefined ? null : a.oc]),
       line: true,
@@ -1639,15 +1637,16 @@ function renderApproach(mode) {
   document.getElementById("ap-note").textContent = T.apNote() + WIN_TAG;
   const sel = document.getElementById("ap-filter");
   sel.setAttribute("aria-label", T.apFilterLabel);
-  // Default to the ⭐ pocket: with every episode drawn the panel is a gray
-  // thicket, and the pocket is the only stratum the backtest validated.
-  [["pocket", T.apFilter.pocket], ["trig", T.apFilter.trig], ["all", T.apFilter.all]]
+  // Default to triggered episodes: with every episode drawn the panel is a
+  // gray thicket. (It defaulted to the ⭐ pocket until the 2021→2026 replay
+  // retired it.)
+  [["trig", T.apFilter.trig], ["pocket", T.apFilter.pocket], ["all", T.apFilter.all]]
     .forEach(([v, lbl]) => {
       const o = document.createElement("option");
       o.value = v; o.textContent = lbl;
       sel.appendChild(o);
     });
-  sel.value = "pocket";
+  sel.value = "trig";
   sel.addEventListener("change", () => renderApproach(sel.value));
   renderApproach(sel.value);
   const leg = document.getElementById("ap-legend");
@@ -1694,7 +1693,7 @@ function renderApproach(mode) {
     if (d === DAYS - 1 || (d % 5 === 0 && DAYS - 1 - d >= 3))
       el("text", { x: x + BW / 2, y: H - 8, "text-anchor": "middle", class: "tick" }, svg).textContent = DATA.days[d];
   });
-  // ⭐ pocket count rides on the same count axis as the stack, so the two
+  // The long-base count rides on the same count axis as the stack, so the two
   // read against each other directly (no second scale to reconcile).
   let dstr = "";
   DATA.cohort.pocket.forEach((v, d) => {
@@ -1706,7 +1705,7 @@ function renderApproach(mode) {
   el("circle", { cx: ML + (DAYS - 1) * DX + BW / 2, cy: yOf(lastP).toFixed(1), r: 4,
     fill: "var(--pkt)", stroke: "var(--surface)", "stroke-width": 2 }, svg);
   el("text", { x: ML + (DAYS - 1) * DX + BW / 2 + 10, y: yOf(lastP) + 4, class: "dlabel" }, svg)
-    .textContent = `⭐ ${lastP}`;
+    .textContent = `${lastP}`;
   const leg = document.getElementById("co-legend");
   // Every Sig legend on this page descends (breakout first): here it
   // matches the stack's own top-down order, and the grid and the roster
@@ -1737,7 +1736,7 @@ function renderApproach(mode) {
         // top-down order as the legend and the grid, breakout first, so
         // the scale is learned once. The pocket line rides on this same
         // axis, so its count closes the block rather than starting a new
-        // one: at zero the day held nothing the backtest validated.
+        // one: at zero the day held no long base.
         kv: [
           ...SIGS.slice().reverse().map(j =>
             counts[j] ? [T.sigName[j], `${counts[j]}`] : null),
@@ -1943,7 +1942,7 @@ function renderGrid(minDays) {
       const r = el("rect", { x: GL + p.d * CW, y: y + 1, width: CW - 2, height: CH - 2, rx: 2,
         fill: `var(${SIG_VAR[p.s]})` }, svg);
       r.dataset.t = s.t; r.dataset.i = pi;
-      // ⭐ pocket day → surface-colored center dot (color-independent, so
+      // Long-base day → surface-colored center dot (color-independent, so
       // it reads on every tier fill and survives CVD).
       if (p.p) el("circle", { cx: GL + p.d * CW + (CW - 2) / 2, cy: y + CH / 2,
         r: 2, fill: "var(--surface)", "pointer-events": "none" }, svg);
@@ -1956,7 +1955,7 @@ function renderGrid(minDays) {
       const p = s.pts[+t.dataset.i];
       const e = s.eps[p.e] || {};
       showTip(ev.clientX, ev.clientY, tt => tipCard(tt, {
-        title: s.t + (p.p ? " ⭐" : ""),
+        title: s.t + (p.p ? ` · ≥${MINWK}wk` : ""),
         aux: DATA.days[p.d],
         color: cssVar(SIG_VAR[p.s]),
         // The tier name belongs with the day it describes, not in a row of
@@ -2156,8 +2155,8 @@ if (!DATA.sectorEdge.rows.length) {
 // ---- roster table ----
 {
   const tbl = document.getElementById("tbl");
-  // Column order follows the judgment path: identity, the validated ranker
-  // (base weeks), the realized verdict, the evidence behind it, then
+  // Column order follows the judgment path: identity, base length (the
+  // split the panels draw), the realized verdict, the evidence behind it, then
   // geometry, exposure and current state.
   const COLS = [
     { h: T.cols[0], v: s => s.t,     dir: 1 },
@@ -2201,8 +2200,8 @@ if (!DATA.sectorEdge.rows.length) {
     }).forEach(s => {
       const tr = document.createElement("tr");
       [s.t, secName(s.sec),
-       // Keep the decimal: rounding 19.6 up to "20" would claim the ⭐
-       // threshold (≥ 20) for a base that never reached it.
+       // Keep the decimal: rounding 19.6 up to "20" would claim the
+       // long-base threshold (≥ 20) for a base that never reached it.
        s.mbw !== null ? String(s.mbw) : "—",
        s.exp !== null ? pctTxt(s.exp) : "—",
        s.trate !== null ? s.trate + "%" : "—",
@@ -2316,7 +2315,7 @@ def main() -> None:
         f"Every pre-breakout base on the daily US large-cap watchlist, "
         f"{k['span'][0]} to {k['span'][1]} ({k['runs']} trading days, "
         f"{k['episodes']['n']} finished episodes): approach-to-pivot "
-        "trajectories, a date-by-ticker maturity grid, validated-pocket vs "
+        "trajectories, a date-by-ticker maturity grid, long-base vs "
         "rest trade expectancy and a sortable roster."
     )
     data_json = json.dumps(payload, separators=(
