@@ -21,8 +21,9 @@ rolling stat can't see:
   - a no-exit baseline — the raw close-to-close return over the same window
     if you used no target and no stop at all.
 
-Beyond the single-attribute strata it reports the combined entry filter
-(Score >= 40 on a 1st-2nd-day listing), a scan-breadth stratification
+Beyond the single-attribute strata it reports the old combined entry
+filter (Score >= 40 on a 1st-2nd-day listing, which the 2021→2026 replay in
+replay_signals.py didn't confirm), a scan-breadth stratification
 (signals emitted that run-day — quiet-day vs washout-day signals behave
 very differently), a first-half/second-half stability split, and an
 exit-horizon test — every maximum holding period replayed over ONE fixed
@@ -30,8 +31,9 @@ set of trades, with the delta paired per trade against the live rule, so
 "cut it if it hasn't bounced by day K" is answered by what the change
 would have earned rather than by bucketing the ledger on days-to-resolve
 (which conditions on the future and gives the opposite answer). Every
-number quoted in SKILL.md's "Backtested outcomes" section reproduces from
-this one script.
+number SKILL.md's "Backtested outcomes" quotes for the live-history
+backtest reproduces from this one script; the six-year numbers come from
+replay_signals.py.
 
 --entry next-open replays the realistic execution instead: the scan output
 only exists after the close, so entry is the open of the first session
@@ -659,7 +661,7 @@ def main() -> None:
         return o.sig.day_of_spell <= 2
 
     print(strata_table("Combined filter: Score≥40 × day-of-spell≤2", [
-        ("Score≥40 & spell≤2 (THE filter)",
+        ("Score≥40 & spell≤2 (old pocket)",
          [o for o in outcomes if sc40(o) and fresh(o)]),
         ("Score≥40 & spell 3+", [o for o in outcomes if sc40(o) and not fresh(o)]),
         ("Score<40 & spell≤2", [o for o in outcomes if not sc40(o) and fresh(o)]),
@@ -712,7 +714,7 @@ def main() -> None:
     W = args.target_window
     horizon_groups = [
         ("All signals", lambda s: True),
-        ("⭐ pocket (Score≥40 & spell≤2)",
+        ("old pocket (Score≥40 & spell≤2)",
          lambda s: s.score >= 40 and s.day_of_spell <= 2),
     ]
     horizon_table(

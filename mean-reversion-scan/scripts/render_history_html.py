@@ -6,15 +6,16 @@ Reads the mean-reversion run history, the outcomes ledger and the sector
 cache and writes a single HTML file (no external assets, no network) with:
 
   - a KPI row (span, resolved signals + win rate, expectancy/signal,
-    ⭐ pocket expectancy vs its backtest reference, latest signal breadth,
+    📝 paper-track expectancy vs its replay reference, latest signal breadth,
     currently stuck-oversold names)
   - a signal-breadth stacked column chart, each day's emitted signals
     colored by eventual outcome, with the backtest's thin/washout cutoffs
   - a date × ticker outcome grid (the MR counterpart of momentum-scan's
-    rank heatmap: cell color = that day's signal outcome, dot = ⭐ pocket
-    day, long unbroken rows = stuck oversold) with a min-days filter
-  - a ⭐-pocket-vs-rest running-expectancy chart against the backtest's
-    in-sample reference values
+    rank heatmap: cell color = that day's signal outcome, dot = 📝
+    paper-track day, long unbroken rows = stuck oversold) with a min-days
+    filter
+  - a 📝-paper-track-vs-rest running-expectancy chart against the
+    2021→2026 replay's reference values
   - a per-sector realized-result panel: one bar per sector (avg %/resolved
     signal) with its 95% interval drawn above it, read against a dashed
     all-signals average — a sector whose interval reaches that line is not
@@ -29,7 +30,7 @@ The chart semantics deliberately DIFFER from momentum-scan's renderer:
 momentum tells a persistence story (long streak = durable winner), so it
 draws rank trajectories; mean reversion tells an event + outcome story
 (every signal resolves within days, long streak = failed thesis), so this
-page draws outcomes and puts the validated ⭐ pocket's out-of-sample
+page draws outcomes and puts the 📝 paper-track stratum's live
 performance on screen. No rank chart on purpose — MR daily ranks are noise.
 
 Usage:
@@ -50,8 +51,7 @@ SKILL_DIR = Path(__file__).resolve().parent.parent
 # test_render_html.py has a drift-guard test asserting equality).
 # Duplicated numerically because this script deliberately stays
 # stdlib-only while scan.py imports yfinance at module level.
-VALIDATED_MIN_SCORE = 40.0
-VALIDATED_MAX_STREAK = 2
+PAPER_MIN_SCORE = 70.0
 BREADTH_THIN_MAX = 30
 BREADTH_WASHOUT_MIN = 60
 # Mirrors scan.py's --persistent-min-streak argparse default (no module
@@ -62,12 +62,14 @@ STUCK_MIN_STREAK = 3
 # are UNRESOLVED (no price data reached them — delisted ticker or a ledger
 # gap that needs --backfill-outcomes).
 TARGET_WINDOW_DAYS = 5
-# In-sample reference expectancies from the 2026-05→07 outcome backtest
-# (references/backtest-findings.md #1 and #2) — drawn as dashed reference
-# lines so the pocket chart answers "is the validated edge still paying
-# out-of-sample". Re-validate quarterly alongside the backtest re-run.
-BACKTEST_POCKET_EXPECT = 1.83
-BACKTEST_BASELINE_EXPECT = 0.68
+# Reference expectancies from the 2021→2026 replay (scripts/
+# replay_signals.py, signal-day close fills, the ledger's own convention):
+# score ≥ 70, score < 70, and every signal. Drawn as dashed reference lines
+# so the paper-track chart answers "is the one stratum the replay kept
+# still paying live". Update when the replay is re-run.
+REPLAY_PAPER_EXPECT = 2.49
+REPLAY_REST_EXPECT = 0.29
+REPLAY_ALL_EXPECT = 0.32
 # Sector panel: a sector needs this many resolved signals to get its own bar;
 # thinner ones fold into "Other" (counted in the note, never dropped
 # silently). Not a validated threshold — it is the point below which a 95%
@@ -162,7 +164,7 @@ def load_benchmark(path: Path) -> dict | None:
     without it. A missing file says how to make one rather than going
     quiet about a benchmark that silently never appears."""
     if not path.exists():
-        print(f"note: no benchmark at {path}; the ⭐ pocket panel will draw "
+        print(f"note: no benchmark at {path}; the 📝 paper-track panel will draw "
               f"without its index reference. Generate it with "
               f"scripts/compute_benchmark.py.", file=sys.stderr)
         return None
@@ -278,9 +280,7 @@ def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
             while d - streak in dset:
                 streak += 1
             score = _f(r.get("score"))
-            pocket = bool(score is not None
-                          and score >= VALIDATED_MIN_SCORE
-                          and streak <= VALIDATED_MAX_STREAK)
+            pocket = bool(score is not None and score >= PAPER_MIN_SCORE)
             cat, o = outcome_cat(rid, t)
             pct = _f(o["result_pct"]) if o else None
             dtr = None
@@ -406,10 +406,10 @@ def build_payload(rows: list[dict], outcomes: dict, sectors: dict,
         "pocket": {
             "pkt": pkt_line[win_start:], "pktN": pkt_n[win_start:],
             "base": base_line[win_start:], "baseN": base_n[win_start:],
-            "refPkt": BACKTEST_POCKET_EXPECT,
-            "refBase": BACKTEST_BASELINE_EXPECT,
-            "minScore": VALIDATED_MIN_SCORE,
-            "maxStreak": VALIDATED_MAX_STREAK,
+            "refPkt": REPLAY_PAPER_EXPECT,
+            "refBase": REPLAY_REST_EXPECT,
+            "refAll": REPLAY_ALL_EXPECT,
+            "minScore": PAPER_MIN_SCORE,
             "bench": bench_window(bench_lines(bench, run_ids), win_start),
         },
         "sectorEdge": sec_panel,
@@ -619,7 +619,7 @@ svg a:hover text { text-decoration: underline; }
   </div>
 
   <div class="card">
-    <h2 id="pk-title">⭐ Pocket vs the rest</h2>
+    <h2 id="pk-title">📝 Paper-track vs the rest</h2>
     <p class="note" id="pk-note"></p>
     <div class="scroll" id="pkchart"></div>
     <div class="legend" id="pk-legend"></div>
@@ -671,37 +671,37 @@ const I18N = {
     h1Suffix: "history",
     subtitle: (a, b, runs) => `${a} → ${b} · ${runs} trading days · every oversold signal's outcome: won / lost / expired`,
     winTag: (s, t) => ` Charts show the last ${s} of ${t} trading days.`,
-    kToday: "Today's ⭐ pocket",
+    kToday: "Today's 📝 paper-track",
     resFilterLabel: "Filter by resolved count",
     geRes: n => `≥${n} resolved`,
     kResolved: "Resolved signals",
     kResolvedSub: (w, l, e, r) => `${w}W / ${l}L / ${e} expired${r !== null ? ` · win rate ${r}%` : ""}`,
     kExp: "Expectancy / signal",
-    kExpSub: b => `backtest baseline +${b}% (in-sample)`,
-    kPocket: "⭐ Pocket expectancy",
-    kPocketSub: (n, r) => `n=${n} · backtest +${r}%`,
+    kExpSub: b => `6-yr replay +${b}%`,
+    kPocket: "📝 Paper-track expectancy",
+    kPocketSub: (n, r) => `n=${n} · replay +${r}%`,
     kBreadth: "Latest breadth",
     tierName: { thin: "THIN", normal: "NORMAL", washout: "WASHOUT" },
     tierSub: {
       thin: "isolated oversold: research-only tape",
-      normal: "between the backtest's cutoffs",
-      washout: "market-wide panic: best regime in-sample",
+      normal: "between the two cutoffs",
+      washout: "market-wide panic: the bounce is mostly the index's",
     },
     kStuck: "Stuck oversold now",
     none: "none",
     brTitle: "Signal breadth × outcome",
     brNote: (thin, wo) => `One column per day: all of that day's signals, colored by how they ended.\nTwo dashed lines: under ${thin} (thin) the selling is isolated and tends to keep falling; over ${wo} (washout) the panic is market-wide and tends to snap back.`,
     gridTitle: "Outcome grid",
-    gridNote: () => `One row per name, one cell per listed day, color = that day's outcome; a center dot = ⭐ pocket day (Score ≥ ${DATA.pocket.minScore}, day ≤ ${DATA.pocket.maxStreak}).\nRows sorted by expectancy, best first (matching the roster); nothing-resolved names sink. Row-end = expectancy (%/signal).\nRows running ≥ __STUCK_MIN_STREAK__ days unbroken = stuck oversold, a warning, not a bargain.`,
+    gridNote: () => `One row per name, one cell per listed day, color = that day's outcome; a center dot = 📝 paper-track day (Score ≥ ${DATA.pocket.minScore}).\nRows sorted by expectancy, best first (matching the roster); nothing-resolved names sink. Row-end = expectancy (%/signal).\nRows running ≥ __STUCK_MIN_STREAK__ days unbroken = stuck oversold, a warning, not a bargain.`,
     all: "All",
-    pkTitle: "⭐ Pocket vs the rest",
-    pkNote: "Solid: the running expectancy (avg %/signal to date) of ⭐ pocket signals vs the rest. Dashed: the backtest references.\nDotted: the index, same days and holding lengths. It settles at the close and signals at their touch, so the gap is a ceiling.",
+    pkTitle: "📝 Paper-track vs the rest",
+    pkNote: "Solid: the running expectancy (avg %/signal to date) of 📝 paper-track signals vs the rest. Dashed: the 2021→2026 replay's values.\nDotted: the index, same days and holding lengths. It settles at the close and signals at their touch, so the gap is a ceiling.",
     pkBench: n => `${n} same days`,
-    pkVsMkt: n => `⭐ beyond ${n}`,
+    pkVsMkt: n => `📝 beyond ${n}`,
     pkBenchNote: n => `${n} signals matched to both SPY and QQQ`,
-    pkPocket: "⭐ Pocket", pkBase: "The rest",
-    pkRef: v => `backtest +${v}%`,
-    pkTipNs: (a, b) => `${a} pocket / ${b} rest resolved`,
+    pkPocket: "📝 Paper-track", pkBase: "The rest",
+    pkRef: v => `replay +${v}%`,
+    pkTipNs: (a, b) => `${a} paper-track / ${b} rest resolved`,
     seTitle: "Which sectors paid",
     seNote: minN => `Average result per resolved signal, grouped by sector; sectors under ${minN} signals fold away.\nAn interval reaching the dashed all-signals average means no readable difference from the board, and most still reach it.\nA gap here can be recent sector beta rather than a property of these names: re-check each quarter, not a filter.`,
     sePos: "Sector made money", seNeg: "Sector lost money",
@@ -716,7 +716,7 @@ const I18N = {
     seUntagged: n => `\n${n} resolved signals have no sector tag and sit outside this panel.`,
     rosterTitle: "Roster",
     rosterNote: "One row per name that ever signaled. Click a header to sort; click again to reverse. Every per-name hover value is readable here; the per-day levels (close, target, stop) live only in the grid's hover.\nExpectancy = avg %/signal, the column to judge by; the win rate runs hot by construction, and 100% can still lose money. Status = the latest signal's state.",
-    cols: ["Ticker", "Sector", "Expect %/sig", "Total %", "W / L / Exp", "Win rate", "⭐ days", "Days", "Last seen", "Status"],
+    cols: ["Ticker", "Sector", "Expect %/sig", "Total %", "W / L / Exp", "Win rate", "📝 days", "Days", "Last seen", "Status"],
     oc: { W: "Won", L: "Lost", E: "Expired", O: "Open", U: "No data" },
     ocTip: {
       W: (p, d) => `Won +${p}% in ${d} day(s)`,
@@ -726,7 +726,7 @@ const I18N = {
       U: () => "Unresolved: no price data reached it",
     },
     spellDay: k => `day ${k} of the spell`,
-    pocketDay: "⭐ pocket day",
+    pocketDay: "📝 paper-track day",
     score: "Score",
     closePx: "Close",
     targetPx: "Target",
@@ -743,37 +743,37 @@ const I18N = {
     h1Suffix: "历史",
     subtitle: (a, b, runs) => `${a} → ${b} · 共 ${runs} 个交易日 · 每个超卖信号的最终结局（赢 / 输 / 过期）`,
     winTag: (s, t) => `图表仅显示最近 ${s} / ${t} 个交易日。`,
-    kToday: "今日 ⭐ 口袋",
+    kToday: "今日 📝 纸面跟踪",
     resFilterLabel: "按已结算单数筛选",
     geRes: n => `已结算 ≥ ${n} 单`,
     kResolved: "已结算信号",
     kResolvedSub: (w, l, e, r) => `${w} 赢 / ${l} 输 / ${e} 过期${r !== null ? ` · 胜率 ${r}%` : ""}`,
     kExp: "每信号期望",
-    kExpSub: b => `回测基线 +${b}%（样本内）`,
-    kPocket: "⭐ 口袋期望",
-    kPocketSub: (n, r) => `样本 ${n} · 回测 +${r}%`,
+    kExpSub: b => `六年回放 +${b}%`,
+    kPocket: "📝 纸面跟踪期望",
+    kPocketSub: (n, r) => `样本 ${n} · 回放 +${r}%`,
     kBreadth: "最新信号广度",
     tierName: { thin: "接刀", normal: "正常", washout: "洗盘" },
     tierSub: {
       thin: "孤立超卖：只研究、别动手",
-      normal: "处于回测两条档位线之间",
-      washout: "全市场恐慌：回测中的最佳环境",
+      normal: "处于两条档位线之间",
+      washout: "全市场恐慌：反弹多半是大盘自己的",
     },
     kStuck: "当前卡死名单",
     none: "无",
     brTitle: "信号广度 × 结局",
     brNote: (thin, wo) => `每天一根柱：当天的全部信号，颜色 = 最终结局。\n两条虚线：矮过 ${thin}（接刀线）= 零星下跌，往往继续跌，别接；高过 ${wo}（洗盘线）= 全场恐慌，反而最容易弹回来。`,
     gridTitle: "结局网格",
-    gridNote: () => `一行一只票，一格一个上榜日，颜色 = 那天的结局；带中心点 = ⭐ 口袋日（Score ≥ ${DATA.pocket.minScore} 且上榜 ≤ ${DATA.pocket.maxStreak} 天）。\n行序按期望从高到低（与名录一致），无结算的沉底；行尾 = 该票期望（%/单）。\n连续 ≥ __STUCK_MIN_STREAK__ 天的长行 = 卡死超卖，是警告不是便宜货。`,
+    gridNote: () => `一行一只票，一格一个上榜日，颜色 = 那天的结局；带中心点 = 📝 纸面跟踪日（Score ≥ ${DATA.pocket.minScore}）。\n行序按期望从高到低（与名录一致），无结算的沉底；行尾 = 该票期望（%/单）。\n连续 ≥ __STUCK_MIN_STREAK__ 天的长行 = 卡死超卖，是警告不是便宜货。`,
     all: "全部",
-    pkTitle: "⭐ 口袋 vs 其余",
-    pkNote: "实线：⭐ 口袋与其余信号各自的滚动期望（截至当日平均每单盈亏 %）。虚线：回测参考值。\n点线：同样的日子买指数、持有同样多的交易日。信号按触碰价结算、指数按收盘，所以差距偏乐观。",
+    pkTitle: "📝 纸面跟踪 vs 其余",
+    pkNote: "实线：📝 纸面跟踪与其余信号各自的滚动期望（截至当日平均每单盈亏 %）。虚线：2021→2026 回放参考值。\n点线：同样的日子买指数、持有同样多的交易日。信号按触碰价结算、指数按收盘，所以差距偏乐观。",
     pkBench: n => `同期 ${n}`,
-    pkVsMkt: n => `⭐ 超出 ${n}`,
+    pkVsMkt: n => `📝 超出 ${n}`,
     pkBenchNote: n => `${n} 个信号 SPY / QQQ 均已对齐`,
-    pkPocket: "⭐ 口袋", pkBase: "其余信号",
-    pkRef: v => `回测 +${v}%`,
-    pkTipNs: (a, b) => `已结算 ⭐ ${a} 个 · 其余 ${b} 个`,
+    pkPocket: "📝 纸面跟踪", pkBase: "其余信号",
+    pkRef: v => `回放 +${v}%`,
+    pkTipNs: (a, b) => `已结算 📝 ${a} 个 · 其余 ${b} 个`,
     seTitle: "哪类股票真的赚到钱",
     seNote: minN => `按板块看每个已结算信号的平均结果；不足 ${minN} 个的板块不画。\n误差范围够到「全体平均」虚线，就是跟整体比不出差别，目前大多数都还比不出。\n差距也可能只是最近的板块行情，而不是这类股票更容易反弹：当成每季复查的观察，别当筛选条件。`,
     sePos: "该板块赚钱", seNeg: "该板块亏钱",
@@ -788,7 +788,7 @@ const I18N = {
     seUntagged: n => `\n另有 ${n} 个已结算信号没有板块标签，不计入本图。`,
     rosterTitle: "信号名录",
     rosterNote: "每个发过信号的标的一行。点击表头排序；再次点击反向。图表里按票汇总的悬停数值在此均可查阅；单日的收盘、目标价、止损价只在结局网格的悬停里。\n期望 = 平均每单盈亏 %，挑票看这列；胜率天生虚高，100% 胜率也可能在亏钱。状态 = 最近一次信号的状态。",
-    cols: ["代码", "行业", "期望 %/信号", "累计 %", "赢 / 输 / 过期", "胜率", "⭐ 天数", "上榜天数", "最近上榜", "状态"],
+    cols: ["代码", "行业", "期望 %/信号", "累计 %", "赢 / 输 / 过期", "胜率", "📝 天数", "上榜天数", "最近上榜", "状态"],
     oc: { W: "赢", L: "输", E: "过期", O: "在途", U: "无数据" },
     ocTip: {
       W: (p, d) => `赢：+${p}%，${d} 天到目标`,
@@ -798,7 +798,7 @@ const I18N = {
       U: () => "未结算：行情数据没覆盖到",
     },
     spellDay: k => `上榜第 ${k} 天`,
-    pocketDay: "⭐ 口袋日",
+    pocketDay: "📝 纸面跟踪日",
     score: "评分",
     closePx: "上榜收盘",
     targetPx: "目标价",
@@ -820,37 +820,37 @@ const I18N = {
     h1Suffix: "歷史",
     subtitle: (a, b, runs) => `${a} → ${b} · 共 ${runs} 個交易日 · 每個超賣訊號的最終結局（贏 / 輸 / 過期）`,
     winTag: (s, t) => `圖表僅顯示最近 ${s} / ${t} 個交易日。`,
-    kToday: "今日 ⭐ 口袋",
+    kToday: "今日 📝 紙面追蹤",
     resFilterLabel: "按已結算單數篩選",
     geRes: n => `已結算 ≥ ${n} 單`,
     kResolved: "已結算訊號",
     kResolvedSub: (w, l, e, r) => `${w} 贏 / ${l} 輸 / ${e} 過期${r !== null ? ` · 勝率 ${r}%` : ""}`,
     kExp: "每訊號期望",
-    kExpSub: b => `回測基線 +${b}%（樣本內）`,
-    kPocket: "⭐ 口袋期望",
-    kPocketSub: (n, r) => `樣本 ${n} · 回測 +${r}%`,
+    kExpSub: b => `六年回放 +${b}%`,
+    kPocket: "📝 紙面追蹤期望",
+    kPocketSub: (n, r) => `樣本 ${n} · 回放 +${r}%`,
     kBreadth: "最新訊號廣度",
     tierName: { thin: "接刀", normal: "正常", washout: "洗盤" },
     tierSub: {
       thin: "孤立超賣：只研究、別動手",
-      normal: "處於回測兩條檔位線之間",
-      washout: "全市場恐慌：回測中的最佳環境",
+      normal: "處於兩條檔位線之間",
+      washout: "全市場恐慌：反彈多半是大盤自己的",
     },
     kStuck: "目前卡死名單",
     none: "無",
     brTitle: "訊號廣度 × 結局",
     brNote: (thin, wo) => `每天一根柱：當天的全部訊號，顏色 = 最終結局。\n兩條虛線：矮過 ${thin}（接刀線）= 零星下跌，往往繼續跌，別接；高過 ${wo}（洗盤線）= 全場恐慌，反而最容易彈回來。`,
     gridTitle: "結局網格",
-    gridNote: () => `一行一檔票，一格一個上榜日，顏色 = 那天的結局；帶中心點 = ⭐ 口袋日（Score ≥ ${DATA.pocket.minScore} 且上榜 ≤ ${DATA.pocket.maxStreak} 天）。\n行序按期望從高到低（與名錄一致），無結算的沉底；行尾 = 該檔期望（%/單）。\n連續 ≥ __STUCK_MIN_STREAK__ 天的長行 = 卡死超賣，是警告不是便宜貨。`,
+    gridNote: () => `一行一檔票，一格一個上榜日，顏色 = 那天的結局；帶中心點 = 📝 紙面追蹤日（Score ≥ ${DATA.pocket.minScore}）。\n行序按期望從高到低（與名錄一致），無結算的沉底；行尾 = 該檔期望（%/單）。\n連續 ≥ __STUCK_MIN_STREAK__ 天的長行 = 卡死超賣，是警告不是便宜貨。`,
     all: "全部",
-    pkTitle: "⭐ 口袋 vs 其餘",
-    pkNote: "實線：⭐ 口袋與其餘訊號各自的滾動期望（截至當日平均每單盈虧 %）。虛線：回測參考值。\n點線：同樣的日子買指數、持有同樣多的交易日。訊號按觸碰價結算、指數按收盤，所以差距偏樂觀。",
+    pkTitle: "📝 紙面追蹤 vs 其餘",
+    pkNote: "實線：📝 紙面追蹤與其餘訊號各自的滾動期望（截至當日平均每單盈虧 %）。虛線：2021→2026 回放參考值。\n點線：同樣的日子買指數、持有同樣多的交易日。訊號按觸碰價結算、指數按收盤，所以差距偏樂觀。",
     pkBench: n => `同期 ${n}`,
-    pkVsMkt: n => `⭐ 超出 ${n}`,
+    pkVsMkt: n => `📝 超出 ${n}`,
     pkBenchNote: n => `${n} 個訊號 SPY / QQQ 均已對齊`,
-    pkPocket: "⭐ 口袋", pkBase: "其餘訊號",
-    pkRef: v => `回測 +${v}%`,
-    pkTipNs: (a, b) => `已結算 ⭐ ${a} 個 · 其餘 ${b} 個`,
+    pkPocket: "📝 紙面追蹤", pkBase: "其餘訊號",
+    pkRef: v => `回放 +${v}%`,
+    pkTipNs: (a, b) => `已結算 📝 ${a} 個 · 其餘 ${b} 個`,
     seTitle: "哪類股票真的賺到錢",
     seNote: minN => `按板塊看每個已結算訊號的平均結果；不足 ${minN} 個的板塊不畫。\n誤差範圍搆到「全體平均」虛線，就是跟整體比不出差別，目前大多數都還比不出。\n差距也可能只是最近的板塊行情，而不是這類股票更容易反彈：當成每季複查的觀察，別當篩選條件。`,
     sePos: "該板塊賺錢", seNeg: "該板塊虧錢",
@@ -865,7 +865,7 @@ const I18N = {
     seUntagged: n => `\n另有 ${n} 個已結算訊號沒有板塊標籤，不計入本圖。`,
     rosterTitle: "訊號名錄",
     rosterNote: "每個發過訊號的標的一行。點擊表頭排序；再次點擊反向。圖表裡按檔彙總的懸停數值在此均可查閱；單日的收盤、目標價、停損價只在結局網格的懸停裡。\n期望 = 平均每單盈虧 %，挑票看這欄；勝率天生虛高，100% 勝率也可能在虧錢。狀態 = 最近一次訊號的狀態。",
-    cols: ["代號", "產業", "期望 %/訊號", "累計 %", "贏 / 輸 / 過期", "勝率", "⭐ 天數", "上榜天數", "最近上榜", "狀態"],
+    cols: ["代號", "產業", "期望 %/訊號", "累計 %", "贏 / 輸 / 過期", "勝率", "📝 天數", "上榜天數", "最近上榜", "狀態"],
     oc: { W: "贏", L: "輸", E: "過期", O: "在途", U: "無數據" },
     ocTip: {
       W: (p, d) => `贏：+${p}%，${d} 天到目標`,
@@ -875,7 +875,7 @@ const I18N = {
       U: () => "未結算：行情數據沒覆蓋到",
     },
     spellDay: k => `上榜第 ${k} 天`,
-    pocketDay: "⭐ 口袋日",
+    pocketDay: "📝 紙面追蹤日",
     score: "評分",
     closePx: "上榜收盤",
     targetPx: "目標價",
@@ -897,37 +897,37 @@ const I18N = {
     h1Suffix: "履歴",
     subtitle: (a, b, runs) => `${a} → ${b} · 全 ${runs} 営業日 · 各売られすぎシグナルの最終結果（勝ち / 負け / 期限切れ）`,
     winTag: (s, t) => `チャートは直近 ${s} / ${t} 営業日のみ表示。`,
-    kToday: "本日の ⭐ ポケット",
+    kToday: "本日の 📝 ペーパー追跡",
     resFilterLabel: "確定件数で絞り込み",
     geRes: n => `確定 ${n} 件以上`,
     kResolved: "確定シグナル数",
     kResolvedSub: (w, l, e, r) => `${w} 勝 / ${l} 敗 / ${e} 期限切れ${r !== null ? ` · 勝率 ${r}%` : ""}`,
     kExp: "シグナルあたり期待値",
-    kExpSub: b => `バックテスト基準 +${b}%（イン・サンプル）`,
-    kPocket: "⭐ ポケット期待値",
-    kPocketSub: (n, r) => `n=${n} · バックテスト +${r}%`,
+    kExpSub: b => `6 年リプレイ +${b}%`,
+    kPocket: "📝 ペーパー追跡の期待値",
+    kPocketSub: (n, r) => `n=${n} · リプレイ +${r}%`,
     kBreadth: "最新シグナル数",
     tierName: { thin: "THIN", normal: "NORMAL", washout: "WASHOUT" },
     tierSub: {
       thin: "孤立した売られすぎ：リサーチのみ",
-      normal: "バックテストの 2 つのカットオフの間",
-      washout: "市場全体のパニック：イン・サンプルで最良の環境",
+      normal: "2 つのカットオフの間",
+      washout: "市場全体のパニック：反発の大半は指数そのもの",
     },
     kStuck: "現在の停滞銘柄",
     none: "なし",
     brTitle: "シグナル数 × 結果",
     brNote: (thin, wo) => `1 日 1 本の柱：その日の全シグナル、色 = 最終結果。\n破線は 2 本：${thin} 未満（thin）なら散発的な下げでまだ下がりやすく、${wo} 超（washout）なら市場全体のパニックでかえって反発しやすい。`,
     gridTitle: "結果グリッド",
-    gridNote: () => `1 行 = 1 銘柄、1 セル = リスト入り 1 日、色 = その日の結果。中心の点 = ⭐ ポケット日（Score ≥ ${DATA.pocket.minScore} かつ ${DATA.pocket.maxStreak} 日目以内）。\n行は期待値の高い順（一覧表と同じ）。確定なしは下へ。行末 = 期待値（%/シグナル）。\n__STUCK_MIN_STREAK__ 日以上続く行は停滞した売られすぎ。警告であり掘り出し物ではない。`,
+    gridNote: () => `1 行 = 1 銘柄、1 セル = リスト入り 1 日、色 = その日の結果。中心の点 = 📝 ペーパー追跡日（Score ≥ ${DATA.pocket.minScore}）。\n行は期待値の高い順（一覧表と同じ）。確定なしは下へ。行末 = 期待値（%/シグナル）。\n__STUCK_MIN_STREAK__ 日以上続く行は停滞した売られすぎ。警告であり掘り出し物ではない。`,
     all: "すべて",
-    pkTitle: "⭐ ポケット vs その他",
-    pkNote: "実線：⭐ ポケットとその他それぞれのローリング期待値（当日までの平均損益 %/シグナル）。破線：バックテストの参考値。\n点線：同じ日に指数を買い、同じ日数だけ持った場合。シグナルはタッチ価格、指数は終値で決済するため、差は甘めに出る。",
+    pkTitle: "📝 ペーパー追跡 vs その他",
+    pkNote: "実線：📝 ペーパー追跡とその他それぞれのローリング期待値（当日までの平均損益 %/シグナル）。破線：2021→2026 リプレイの参考値。\n点線：同じ日に指数を買い、同じ日数だけ持った場合。シグナルはタッチ価格、指数は終値で決済するため、差は甘めに出る。",
     pkBench: n => `同期間 ${n}`,
-    pkVsMkt: n => `⭐ の ${n} 超過`,
+    pkVsMkt: n => `📝 の ${n} 超過`,
     pkBenchNote: n => `SPY・QQQ 双方と対応したシグナル ${n} 件`,
-    pkPocket: "⭐ ポケット", pkBase: "その他",
-    pkRef: v => `バックテスト +${v}%`,
-    pkTipNs: (a, b) => `確定 ⭐ ${a} 件 · その他 ${b} 件`,
+    pkPocket: "📝 ペーパー追跡", pkBase: "その他",
+    pkRef: v => `リプレイ +${v}%`,
+    pkTipNs: (a, b) => `確定 📝 ${a} 件 · その他 ${b} 件`,
     seTitle: "どのセクターが実際に稼いだか",
     seNote: minN => `セクター別の、確定シグナル1件あたりの平均結果。${minN}件未満のセクターは折り畳み。\n誤差範囲が「全体平均」の破線に届くセクターは、全体との差が読み取れません。今のところ大半がそうです。\nこの差は銘柄の性質ではなく直近のセクター物色かもしれません。四半期ごとに見直す観察で、絞り込み条件ではありません。`,
     sePos: "このセクターは利益", seNeg: "このセクターは損失",
@@ -942,7 +942,7 @@ const I18N = {
     seUntagged: n => `\nセクター未設定の確定シグナル${n}件は本図の対象外。`,
     rosterTitle: "銘柄一覧",
     rosterNote: "シグナルが出たことのある銘柄を 1 行ずつ表示。ヘッダーをクリックでソート、もう一度クリックで逆順。銘柄単位のホバー数値はすべてこの表で確認できます。日ごとの終値・目標・損切りは結果グリッドのホバーにだけあります。\n期待値 = 平均損益 %/シグナル。銘柄選びはこの列で。勝率は構造的に高く出るため、100% でも損をしていることがある。ステータス = 直近シグナルの状態。",
-    cols: ["ティッカー", "セクター", "期待値 %/シグナル", "累計 %", "勝 / 敗 / 期限切れ", "勝率", "⭐ 日数", "日数", "直近登場", "ステータス"],
+    cols: ["ティッカー", "セクター", "期待値 %/シグナル", "累計 %", "勝 / 敗 / 期限切れ", "勝率", "📝 日数", "日数", "直近登場", "ステータス"],
     oc: { W: "勝ち", L: "負け", E: "期限切れ", O: "進行中", U: "データなし" },
     ocTip: {
       W: (p, d) => `勝ち：+${p}%、${d} 日で目標到達`,
@@ -952,7 +952,7 @@ const I18N = {
       U: () => "未確定：価格データが届いていない",
     },
     spellDay: k => `リスト入り ${k} 日目`,
-    pocketDay: "⭐ ポケット日",
+    pocketDay: "📝 ペーパー追跡日",
     score: "スコア",
     closePx: "終値",
     targetPx: "目標",
@@ -974,37 +974,37 @@ const I18N = {
     h1Suffix: "히스토리",
     subtitle: (a, b, runs) => `${a} → ${b} · 총 ${runs}거래일 · 각 과매도 신호의 최종 결과 (승 / 패 / 만료)`,
     winTag: (s, t) => `차트는 최근 ${s} / ${t}거래일만 표시합니다.`,
-    kToday: "오늘의 ⭐ 포켓",
+    kToday: "오늘의 📝 페이퍼 추적",
     resFilterLabel: "확정 건수로 필터",
     geRes: n => `확정 ${n}건 이상`,
     kResolved: "확정 신호 수",
     kResolvedSub: (w, l, e, r) => `${w}승 / ${l}패 / ${e} 만료${r !== null ? ` · 승률 ${r}%` : ""}`,
     kExp: "신호당 기대값",
-    kExpSub: b => `백테스트 기준 +${b}% (인샘플)`,
-    kPocket: "⭐ 포켓 기대값",
-    kPocketSub: (n, r) => `n=${n} · 백테스트 +${r}%`,
+    kExpSub: b => `6년 리플레이 +${b}%`,
+    kPocket: "📝 페이퍼 추적 기대값",
+    kPocketSub: (n, r) => `n=${n} · 리플레이 +${r}%`,
     kBreadth: "최신 신호 수",
     tierName: { thin: "THIN", normal: "NORMAL", washout: "WASHOUT" },
     tierSub: {
       thin: "고립된 과매도: 리서치 전용",
-      normal: "백테스트 컷오프 사이",
-      washout: "시장 전체 패닉: 인샘플 최고 환경",
+      normal: "두 컷오프 사이",
+      washout: "시장 전체 패닉: 반등 대부분은 지수 자체의 몫",
     },
     kStuck: "현재 정체 종목",
     none: "없음",
     brTitle: "신호 수 × 결과",
     brNote: (thin, wo) => `하루 1개 기둥: 그날의 모든 신호, 색 = 최종 결과.\n점선 2개: ${thin} 미만(thin)이면 산발적 하락이라 더 떨어지기 쉽고, ${wo} 초과(washout)면 시장 전체 패닉이라 오히려 반등하기 쉽습니다.`,
     gridTitle: "결과 그리드",
-    gridNote: () => `1행 = 1종목, 1셀 = 등재 1일, 색 = 그날의 결과. 중심의 점 = ⭐ 포켓일 (Score ≥ ${DATA.pocket.minScore}, 등재 ${DATA.pocket.maxStreak}일 이내).\n행은 기대값 높은 순(목록과 동일), 확정 없는 종목은 아래로. 행 끝 = 기대값(%/신호).\n__STUCK_MIN_STREAK__일 이상 이어지는 행은 정체된 과매도, 경고이지 헐값이 아닙니다.`,
+    gridNote: () => `1행 = 1종목, 1셀 = 등재 1일, 색 = 그날의 결과. 중심의 점 = 📝 페이퍼 추적일 (Score ≥ ${DATA.pocket.minScore}).\n행은 기대값 높은 순(목록과 동일), 확정 없는 종목은 아래로. 행 끝 = 기대값(%/신호).\n__STUCK_MIN_STREAK__일 이상 이어지는 행은 정체된 과매도, 경고이지 헐값이 아닙니다.`,
     all: "전체",
-    pkTitle: "⭐ 포켓 vs 나머지",
-    pkNote: "실선: ⭐ 포켓과 나머지 각각의 롤링 기대값(현재까지 평균 손익 %/신호). 파선: 백테스트 참고값.\n점선: 같은 날 지수를 사서 같은 일수만큼 보유한 경우. 신호는 터치가로, 지수는 종가로 정산하므로 격차는 후하게 나옵니다.",
+    pkTitle: "📝 페이퍼 추적 vs 나머지",
+    pkNote: "실선: 📝 페이퍼 추적과 나머지 각각의 롤링 기대값(현재까지 평균 손익 %/신호). 파선: 2021→2026 리플레이 참고값.\n점선: 같은 날 지수를 사서 같은 일수만큼 보유한 경우. 신호는 터치가로, 지수는 종가로 정산하므로 격차는 후하게 나옵니다.",
     pkBench: n => `같은 기간 ${n}`,
-    pkVsMkt: n => `⭐의 ${n} 초과`,
+    pkVsMkt: n => `📝의 ${n} 초과`,
     pkBenchNote: n => `SPY·QQQ 모두에 대응시킨 신호 ${n}건`,
-    pkPocket: "⭐ 포켓", pkBase: "나머지",
-    pkRef: v => `백테스트 +${v}%`,
-    pkTipNs: (a, b) => `확정 ⭐ ${a}건 · 나머지 ${b}건`,
+    pkPocket: "📝 페이퍼 추적", pkBase: "나머지",
+    pkRef: v => `리플레이 +${v}%`,
+    pkTipNs: (a, b) => `확정 📝 ${a}건 · 나머지 ${b}건`,
     seTitle: "어떤 섹터가 실제로 벌었나",
     seNote: minN => `섹터별 확정 신호 1건당 평균 결과. ${minN}건 미만인 섹터는 접힙니다.\n오차 범위가 "전체 평균" 점선에 닿는 섹터는 전체와 구분되지 않습니다. 현재로선 대부분이 그렇습니다.\n이 차이는 종목의 성질이 아니라 최근 섹터 장세일 수 있습니다. 분기마다 다시 확인할 관찰이지, 필터가 아닙니다.`,
     sePos: "이 섹터는 수익", seNeg: "이 섹터는 손실",
@@ -1019,7 +1019,7 @@ const I18N = {
     seUntagged: n => `\n섹터 태그가 없는 확정 신호 ${n}건은 이 패널에서 제외됩니다.`,
     rosterTitle: "종목 목록",
     rosterNote: "신호가 나온 적 있는 종목을 한 행씩 표시. 헤더를 클릭해 정렬, 다시 클릭하면 역순. 종목 단위 호버 값은 모두 이 표에서 확인할 수 있습니다. 일자별 종가·목표가·손절가는 결과 그리드 호버에만 있습니다.\n기대값 = 평균 손익 %/신호. 종목은 이 열로 판단하세요. 승률은 구조적으로 높게 나와 100%여도 손해일 수 있습니다. 상태 = 최근 신호의 상태.",
-    cols: ["티커", "섹터", "기대값 %/신호", "누적 %", "승 / 패 / 만료", "승률", "⭐ 일수", "일수", "최근 등재", "상태"],
+    cols: ["티커", "섹터", "기대값 %/신호", "누적 %", "승 / 패 / 만료", "승률", "📝 일수", "일수", "최근 등재", "상태"],
     oc: { W: "승", L: "패", E: "만료", O: "진행 중", U: "데이터 없음" },
     ocTip: {
       W: (p, d) => `승: +${p}%, ${d}일 만에 목표 도달`,
@@ -1029,7 +1029,7 @@ const I18N = {
       U: () => "미확정: 가격 데이터가 닿지 않음",
     },
     spellDay: k => `등재 ${k}일째`,
-    pocketDay: "⭐ 포켓일",
+    pocketDay: "📝 페이퍼 추적일",
     score: "점수",
     closePx: "종가",
     targetPx: "목표가",
@@ -1186,7 +1186,7 @@ function tipCard(t, { title, aux, color, sub, kv, notes }) {
   const r = k.resolved;
   tile(T.kResolved, `${r.n}`, T.kResolvedSub(r.w, r.l, r.e, r.rate));
   if (k.exp !== null)
-    tile(T.kExp, pctTxt(k.exp), T.kExpSub(DATA.pocket.refBase));
+    tile(T.kExp, pctTxt(k.exp), T.kExpSub(DATA.pocket.refAll));
   if (k.pexp.v !== null)
     tile(T.kPocket, pctTxt(k.pexp.v),
          T.kPocketSub(k.pexp.n, DATA.pocket.refPkt));
@@ -1319,7 +1319,7 @@ function renderGrid(minRes) {
       const r = el("rect", { x: GL + p.d * CW, y: y + 1, width: CW - 2, height: CH - 2, rx: 2,
         fill: `var(${OC_VAR[p.o]})` }, svg);
       r.dataset.t = s.t; r.dataset.i = pi;
-      // ⭐ pocket day → surface-colored center dot (color-independent, so
+      // 📝 paper-track day → surface-colored center dot (color-independent, so
       // it reads on every outcome fill and survives CVD).
       if (p.p) el("circle", { cx: GL + p.d * CW + (CW - 2) / 2, cy: y + CH / 2,
         r: 2, fill: "var(--surface)", "pointer-events": "none" }, svg);
@@ -1331,7 +1331,7 @@ function renderGrid(minRes) {
       const s = DATA.series.find(x => x.t === t.dataset.t);
       const p = s.pts[+t.dataset.i];
       showTip(ev.clientX, ev.clientY, tt => tipCard(tt, {
-        title: s.t + (p.p ? " ⭐" : ""),
+        title: s.t + (p.p ? " 📝" : ""),
         aux: DATA.days[p.d],
         color: cssVar(OC_VAR[p.o]),
         // The day belongs with the date it describes, not in a row of its

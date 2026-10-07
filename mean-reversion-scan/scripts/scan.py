@@ -53,24 +53,24 @@ SCREENER_MAX_PAGES = 20
 SECTORS_TTL_DAYS = 30
 MARKET_TZ = ZoneInfo("America/New_York")
 
-# Signal-breadth regime dial (backtest finding #6, 2026-05→07 sample,
-# n=1,584 resolved signals): days when the scan emitted <30 signals ran
-# −1.39%/signal and Score ≥ 40 did NOT rescue them (−1.62%) — a name
-# that's oversold when nothing else is usually has its own bad news.
-# Days >60 (market-wide washout) ran +1.29%, and +2.27% on Score ≥ 40.
-# Market-driven panic mean-reverts; idiosyncratic oversold doesn't.
-# Both cutoffs were chosen in-sample — re-validate quarterly via
-# scripts/backtest_outcomes.py before leaning harder on them.
+# Signal-breadth dial. The 2026-05→07 live sample made it look strong
+# (<30 signals: −1.39%/signal; >60: +1.29%); the 2021→2026 replay
+# (scripts/replay_signals.py, next-open fills, excess over SPY averaged by
+# day) shrank it to a weak tilt: thin days −0.12%/signal (t −1.6), washout
+# days +0.10% (t +1.3). The thin warning keeps its place because thin days
+# are where the old Score ≥ 40 pocket did worst (−0.58%, t −2.7).
 BREADTH_THIN_MAX = 30     # emitted signals < this → "thin"
 BREADTH_WASHOUT_MIN = 60  # emitted signals > this → "washout"
 
 
-# The funnel's validated MR pocket (2026-05→07 outcome backtest): score ≥ 40
-# on a 1st/2nd-day listing ran +1.83%/signal (~3× baseline); 3rd-day-plus
-# listings ran negative. Computed here so the ⭐️ section, the table prefix,
-# JSON, and conviction-funnel all read the same flag.
-VALIDATED_MIN_SCORE = 40.0
-VALIDATED_MAX_STREAK = 2
+# Paper-track stratum. The old "validated pocket" (score ≥ 40 on a
+# 1st/2nd-day listing, +1.83%/signal in the 2026-05→07 sample) didn't
+# survive the 2021→2026 replay: −0.14%/signal against SPY (t −1.2). The
+# one stratum that did is score ≥ 70, +1.06%/signal over SPY (t +2.7), and
+# it lost 2.7%/signal in 2022, so it is tracked on paper, not traded.
+# Computed here so the 📝 section, the table prefix, JSON, the dashboard
+# and the sister skills all read the same flag.
+PAPER_MIN_SCORE = 70.0
 
 # Canonical Connors exit window — days for the bounce-to-target to count as
 # WON; the --target-window-days default. render_history_html.py mirrors this
@@ -85,11 +85,9 @@ TARGET_WINDOW_DAYS = 5
 LOST_ITEMIZE_MAX = 10
 
 
-def attach_validated_pocket(picks: list[dict]) -> None:
+def attach_paper_track(picks: list[dict]) -> None:
     for p in picks:
-        p["validated_pocket"] = bool(
-            p.get("score", 0) >= VALIDATED_MIN_SCORE
-            and p.get("streak", 1) <= VALIDATED_MAX_STREAK)
+        p["paper_track"] = bool(p.get("score", 0) >= PAPER_MIN_SCORE)
 
 
 def classify_signal_breadth(n_signals: int) -> dict:
@@ -1653,8 +1651,8 @@ def render_table(picks: list[dict], top_n: int, verbose: bool = False) -> str:
            "|" + "|".join("---" for _ in headers) + "|"]
     for p in rows:
         ticker_disp = f"**{p['ticker']}**"
-        if p.get("validated_pocket"):
-            ticker_disp = "⭐️ " + ticker_disp
+        if p.get("paper_track"):
+            ticker_disp = "📝 " + ticker_disp
         row = [str(p["rank"]), ticker_disp]
         if show_sector:
             row.append(abbreviate_sector(p.get("sector", "")))
@@ -1890,7 +1888,7 @@ def build_argparser() -> argparse.ArgumentParser:
                           "fetches SPY and QQQ (two tickers, quick) and "
                           "averages what the index paid over each resolved "
                           "signal's own entry day and holding length — the "
-                          "index reference lines on the ⭐ pocket panel."))
+                          "index reference lines on the 📝 paper-track panel."))
     ap.add_argument("--no-sectors", action="store_true")
     ap.add_argument("--vol-collapse-ratio", type=_vol_collapse_ratio,
                     default=0.2)
@@ -1903,7 +1901,7 @@ def build_argparser() -> argparse.ArgumentParser:
 
 
 def refresh_benchmark() -> None:
-    """Rebuild state/benchmark.json for the ⭐ pocket panel's index lines.
+    """Rebuild state/benchmark.json for the 📝 paper-track panel's index lines.
 
     Runs after the ledger write (the matched-horizon returns are derived
     from it) and after the report is printed (its price fetch shouldn't
@@ -1916,7 +1914,7 @@ def refresh_benchmark() -> None:
         payload = cb.refresh(outcomes=OUTCOMES_FILE, out=BENCHMARK_FILE)
     except (Exception, SystemExit) as e:
         print(f"WARNING: benchmark refresh failed ({type(e).__name__}: {e}); "
-              f"{BENCHMARK_FILE.name} is unchanged and the ⭐ pocket panel "
+              f"{BENCHMARK_FILE.name} is unchanged and the 📝 paper-track panel "
               f"keeps its previous index lines. Re-run "
               f"scripts/compute_benchmark.py to retry.", file=sys.stderr)
         return
@@ -2009,7 +2007,7 @@ def main() -> bool:
     history = load_history()
     run_id = make_run_id(now, allow_same_day=args.allow_same_day)
     picks = enrich_with_persistence(picks, history, run_id)
-    attach_validated_pocket(picks)
+    attach_paper_track(picks)
 
     if not args.no_sectors:
         # Tag EVERY pick, not just the top-N: append_history writes the whole
@@ -2030,7 +2028,7 @@ def main() -> bool:
     # would delay ledger updates for signals that resolved on Friday.
     if not args.no_save:
         upsert_outcomes(outcomes)
-        # Deferred past every print below: the ⭐ pocket panel's index
+        # Deferred past every print below: the 📝 paper-track panel's index
         # reference is derived from the ledger we just wrote, and the
         # reader shouldn't wait on a price fetch to see the signals.
         benchmark_after = not args.no_benchmark
@@ -2091,31 +2089,29 @@ def main() -> bool:
     print(f"**Universe**: {len(universe)} tickers · {passed} · "
           f"**Prior runs**: {n_prior}")
     print(render_data_freshness(freshness))
-    # Breadth line — backtest finding #6 promoted from interpretation
-    # doctrine to output: the emitted-signal count is itself a signal.
+    # Breadth line: the emitted-signal count is itself a (weak) signal;
+    # numbers from the 2021→2026 replay, see BREADTH_THIN_MAX.
     if signal_breadth["tier"] == "thin":
         print(f"**Signal breadth**: {len(picks)} → **THIN** "
-              f"(<{BREADTH_THIN_MAX}). ⚠️ Isolated oversold: on days like "
-              f"this the backtest ran −1.39%/signal and Score ≥ 40 did not "
-              f"rescue it. Treat today's list as research-only.")
+              f"(<{BREADTH_THIN_MAX}). ⚠️ Isolated oversold: in the "
+              f"2021→2026 replay, signals on days like this trailed SPY "
+              f"over the same days. Treat today's list as research-only.")
     elif signal_breadth["tier"] == "washout":
-        # Finding #6 was measured INSIDE RISK-ON — a broad washout in a
-        # RISK-OFF tape is the canonical MR disaster case (2008 H2), so
-        # the "best regime" framing must never print next to a RISK-OFF
-        # regime banner.
+        # A broad washout in a RISK-OFF tape is the canonical MR disaster
+        # case (2008 H2), so the bounce framing must never print next to a
+        # RISK-OFF regime banner.
         risk_off = regime is not None and not regime["risk_on"]
         if risk_off:
             print(f"**Signal breadth**: {len(picks)} → **WASHOUT** "
                   f"(>{BREADTH_WASHOUT_MIN}). ⚠️ Broad capitulation in a "
-                  f"RISK-OFF tape: the +1.29%/signal washout edge was "
-                  f"measured inside RISK-ON only, and this combination is "
-                  f"the canonical MR disaster setup (2008 H2). The regime "
-                  f"gate overrides the breadth dial.")
+                  f"RISK-OFF tape: the canonical MR disaster setup (2008 "
+                  f"H2), and in the replay RISK-OFF signals trailed SPY. "
+                  f"The regime gate overrides the breadth dial.")
         else:
             print(f"**Signal breadth**: {len(picks)} → **WASHOUT** "
-                  f"(>{BREADTH_WASHOUT_MIN}). Market-wide panic, the "
-                  f"setup's best regime in-sample (RISK-ON tape): "
-                  f"+1.29%/signal on days like this, +2.27% on Score ≥ 40.")
+                  f"(>{BREADTH_WASHOUT_MIN}). Market-wide panic: the "
+                  f"bounce on days like this is mostly the index's own "
+                  f"(replay: +0.44%/signal, +0.10% more than SPY).")
     else:
         print(f"**Signal breadth**: {len(picks)} → normal "
               f"({BREADTH_THIN_MAX}-{BREADTH_WASHOUT_MIN})")
@@ -2173,25 +2169,23 @@ def main() -> bool:
     if suppress_picks:
         return benchmark_after
 
-    # ⭐️ pocket before the table — the funnel's validated stratum, printed
-    # even when empty because an empty pocket is itself the signal that
-    # today's list is all unvalidated candidates.
+    # 📝 paper-track before the table, printed even when empty: none of
+    # the list has a replay-proven edge, and the section says so daily.
     if picks[: args.top_n]:
-        pocket = [p for p in picks[: args.top_n] if p.get("validated_pocket")]
-        print(f"\n## ⭐️ Validated pocket — Score ≥ "
-              f"{VALIDATED_MIN_SCORE:.0f} & listing day ≤ "
-              f"{VALIDATED_MAX_STREAK} ({len(pocket)})")
-        print("_The stratum the outcome backtest validated (+1.83%/signal, "
-              "~3× baseline, in-sample); 3rd-day-plus listings ran "
-              "negative._")
-        if pocket:
-            for p in pocket:
+        paper = [p for p in picks[: args.top_n] if p.get("paper_track")]
+        print(f"\n## 📝 Paper-track — Score ≥ {PAPER_MIN_SCORE:.0f} "
+              f"({len(paper)})")
+        print("_The one stratum the 2021→2026 replay kept: +1.06%/signal "
+              "over SPY, but −2.7% in 2022. Hot names after a violent "
+              "drop; tracked on paper, not a buy list._")
+        if paper:
+            for p in paper:
                 print(f"- **{p['ticker']}** (#{p['rank']}): "
                       f"score {p['score']:.0f}, day {p.get('streak', 1)}, "
                       f"RSI(2) {p['rsi2']:.1f}, {p.get('signal', '—')}")
         else:
-            print("- (none today: no fresh high-score listings; treat the "
-                  "list below as unvalidated candidates)")
+            print("- (none today; nothing on the list below has a "
+                  "replay-proven edge over SPY)")
 
     print(f"\n## Top {min(args.top_n, len(picks))}\n")
     print(render_table(picks, args.top_n, verbose=args.verbose))

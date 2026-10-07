@@ -415,26 +415,26 @@ def test_upsert_outcomes_creates_replaces_and_preserves(tmp_path, monkeypatch):
     assert list(df["run_id"]) == sorted(df["run_id"])
 
 
-# ── Slim/verbose table + ⭐️ pocket + Sig strip (2026-07-31 redesign) ──────
-def test_validated_pocket_flag():
+# ── Slim/verbose table + 📝 paper-track + Sig strip ──────────────────────
+def test_paper_track_flag():
     picks = [
-        {"score": 45, "streak": 1},   # in
-        {"score": 45, "streak": 3},   # stale listing
-        {"score": 39, "streak": 1},   # score below floor
-        {"score": 40, "streak": 2},   # both boundaries inclusive
+        {"score": 82, "streak": 1},
+        {"score": 75, "streak": 4},   # no listing-day condition
+        {"score": 69.9, "streak": 1},  # below the floor
+        {"score": 70, "streak": 2},   # boundary inclusive
     ]
-    scan.attach_validated_pocket(picks)
-    assert [p["validated_pocket"] for p in picks] == [True, False, False, True]
+    scan.attach_paper_track(picks)
+    assert [p["paper_track"] for p in picks] == [True, True, False, True]
 
 
-def test_render_table_slim_verbose_and_pocket_prefix():
+def test_render_table_slim_verbose_and_paper_prefix():
     p = {"ticker": "FOO", "rank": 1, "rsi2": 1.8, "dist_5dma_pct": -3.2,
          "dist_50dma_pct": 4.1, "dist_200dma_pct": 14.2, "score": 65.0,
          "signal": "🔵", "streak": 1, "freq_60d": 2,
          "stop_price": 228.40, "target_price": 237.55, "last_close": 234.70,
-         "validated_pocket": True}
+         "paper_track": True}
     slim = scan.render_table([p], 5)
-    assert "⭐️" in slim
+    assert "📝" in slim
     for col in ("RSI(2)", "Score", "Sig", "Streak", "Stop", "Target"):
         assert col in slim
     for col in ("5DMA%", "50DMA%", "200DMA%", "Freq60d"):

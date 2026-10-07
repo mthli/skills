@@ -1,6 +1,6 @@
 """Tests for render_history_html.py — payload building + drift guards.
 
-The renderer duplicates scan.py's validated-pocket / breadth constants
+The renderer duplicates scan.py's paper-track / breadth constants
 numerically (it must stay stdlib-only while scan.py imports yfinance at
 module level); the drift-guard tests pin the two files together.
 
@@ -14,9 +14,8 @@ import scan
 
 # ------------------------------------------------------------ drift guards
 
-def test_pocket_constants_match_scan():
-    assert rh.VALIDATED_MIN_SCORE == scan.VALIDATED_MIN_SCORE
-    assert rh.VALIDATED_MAX_STREAK == scan.VALIDATED_MAX_STREAK
+def test_paper_track_constant_matches_scan():
+    assert rh.PAPER_MIN_SCORE == scan.PAPER_MIN_SCORE
 
 
 def test_breadth_constants_match_scan():
@@ -46,7 +45,7 @@ DAYS6 = ["20260701", "20260702", "20260703",
          "20260706", "20260707", "20260708"]
 
 
-def _row(rid, t, score="45", rsi="2.0", sig="🟢"):
+def _row(rid, t, score="75", rsi="2.0", sig="🟢"):
     return {"run_id": rid, "ticker": t, "score": score, "rsi2": rsi,
             "signal": sig}
 
@@ -57,18 +56,22 @@ def _o(outcome, days, pct):
 
 def _fixture():
     rows = [
-        # AAA: 3-day spell from day 1; score 45 → pocket on days 1-2 only.
-        # Day 3 has no ledger row → OPEN (still inside the target window).
-        _row(DAYS6[0], "AAA"), _row(DAYS6[1], "AAA"), _row(DAYS6[2], "AAA"),
-        # BBB: one-day, score below the pocket floor.
+        # AAA: 3-day spell from day 1; scores 75, 75, 60 → paper-track on
+        # days 1-2 only. Day 3 has no ledger row → OPEN (still inside the
+        # target window).
+        _row(DAYS6[0], "AAA"), _row(DAYS6[1], "AAA"),
+        _row(DAYS6[2], "AAA", score="60"),
+        # BBB: one-day, score below the paper-track floor.
         _row(DAYS6[0], "BBB", score="30"),
         # CCC: signals on the last day — no outcome yet → OPEN.
         _row(DAYS6[5], "CCC"),
         # DDD: day-1 signal with no ledger row → UNRESOLVED (index 0 is the
         # only day outside the 5-day window in a 6-day space).
         _row(DAYS6[0], "DDD"),
-        # EEE: 3-day live streak into the latest run → stuck.
-        _row(DAYS6[3], "EEE"), _row(DAYS6[4], "EEE"), _row(DAYS6[5], "EEE"),
+        # EEE: 3-day live streak into the latest run → stuck; only its
+        # last day scores into the paper-track (no listing-day condition).
+        _row(DAYS6[3], "EEE", score="45"), _row(DAYS6[4], "EEE", score="45"),
+        _row(DAYS6[5], "EEE"),
     ]
     outcomes = {
         (DAYS6[0], "AAA"): _o("WON", "1", "2.0"),
@@ -88,7 +91,7 @@ def test_streak_pocket_and_outcome_cats():
     ps = [pt["p"] for pt in aaa["pts"]]
     os_ = [pt["o"] for pt in aaa["pts"]]
     assert ks == [1, 2, 3]
-    assert ps == [1, 1, 0]          # day 3 of the spell falls out of the pocket
+    assert ps == [1, 1, 0]          # day 3 scores under the floor
     # Day-3 signal has no ledger row but is still inside the target window.
     assert os_ == ["W", "L", "O"]
     ccc = next(s for s in p["series"] if s["t"] == "CCC")
@@ -133,9 +136,9 @@ def test_pocket_lines_and_kpi():
     assert k["exp"] == -0.5
     assert k["pexp"] == {"v": -0.5, "n": 2}
     assert k["latestBreadth"] == {"n": 2, "tier": "thin"}
-    # CCC signals on the latest day with score 45 on day 1 of its spell;
-    # EEE is on day 3 (stuck), which the pocket excludes by definition.
-    assert k["todayPocket"] == ["CCC"]
+    # Both latest-day signals score 75; EEE's being day 3 of a stuck spell
+    # doesn't keep it out (the replay found no listing-day effect).
+    assert k["todayPocket"] == ["CCC", "EEE"]
     assert k["stuck"] == ["EEE"]
     assert k["tracked"] == 5
 
