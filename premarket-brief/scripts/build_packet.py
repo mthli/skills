@@ -7,6 +7,7 @@ catalysts (econ calendar + earnings), the headline sentiment gauge — and folds
 in two things the sister scans already compute so we don't recompute them:
 
   - regime-scan's latest 🟢/🟡/🔴 state (the structural backdrop)  [read state/history.csv]
+    plus base-breakout-scan's breakout gate derived from it (breakout_entries_ok)
   - the sister scans' names (the watchlist)                       [read state/history.csv]
     (momentum's leaderboard + mean-reversion's 📝 paper-track names, score≥70 —
     this replaced cross-scan's consensus overlaps when that skill was retired
@@ -61,6 +62,8 @@ STATE_DIR = SKILL_DIR / "state"
 PACKET_DIR = STATE_DIR / "packets"
 POSITIONS_FILE = SKILL_DIR / "positions.md"
 REGIME_HISTORY = SKILLS_ROOT / "regime-scan" / "state" / "history.csv"
+# Mirrors base-breakout-scan's MA200_SLOPE_RISK_ON_THRESHOLD_PCT.
+BREAKOUT_SLOPE_DEADBAND_PCT = -0.05
 MOMENTUM_STATE = SKILLS_ROOT / "momentum-scan" / "state"
 MR_STATE = SKILLS_ROOT / "mean-reversion-scan" / "state"
 MARKET_TZ = ZoneInfo("America/New_York")
@@ -757,6 +760,15 @@ def regime_state(today: date, errors: list) -> dict | None:
         except Exception:
             pass
         stale = (today - snap_date).days if snap_date else None
+        # base-breakout-scan's regime test (SPY above a 200DMA whose 20-day
+        # slope clears its −0.05% dead band), the gate its 2021→2026 replay
+        # backed: breakouts listed outside it lost 1.26%/trade against SPY.
+        try:
+            breakouts_ok = bool(float(row["spy_vs_200_pct"]) > 0
+                                and float(row["ma200_slope_pct"])
+                                > BREAKOUT_SLOPE_DEADBAND_PCT)
+        except (KeyError, TypeError, ValueError):
+            breakouts_ok = None
         return {
             "snapshot": snap,
             "stale_days": stale,
@@ -773,6 +785,7 @@ def regime_state(today: date, errors: list) -> dict | None:
             "def_off_pct": row.get("def_off_pct"),
             "spy_vs_200_pct": row.get("spy_vs_200_pct"),
             "ma200_slope_pct": row.get("ma200_slope_pct"),
+            "breakout_entries_ok": breakouts_ok,
             "flags": row.get("flags") if isinstance(row.get("flags"), str) else "",
         }
     except Exception as e:

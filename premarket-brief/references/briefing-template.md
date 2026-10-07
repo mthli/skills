@@ -600,6 +600,13 @@ This is the section that can do harm if written lazily, so frame it honestly:
   read; ① names the count of consecutive counter-plan sessions on that name,
   and every lot's add-lot exit is written at the *lot's* level, never the
   core's.
+- **No breakout buys when `regime.breakout_entries_ok` is false (2026-10-07).**
+  base-breakout-scan's 2021→2026 replay: breakouts listed when SPY wasn't
+  above a rising 200DMA lost 1.26%/trade against SPY, bases ≥ 20 weeks
+  2.13%. On those days the playbook carries no buy-stop over a pivot and
+  no "add on the break" line, held names included, and the action line
+  says so. In a healthy tape a breakout still isn't an edge (the list ran
+  ~0.3%/trade under SPY), so the gate only ever removes lines.
 - **There is no ⭐ venue: the MR pocket is retired (2026-10-07).**
   mean-reversion-scan's 2021→2026 replay put the score≥40 + ≤2d-listed
   pocket at −0.14%/signal against SPY over the same days; its +1.83% 5-day

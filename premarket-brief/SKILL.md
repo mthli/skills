@@ -168,6 +168,14 @@ to not get fooled by them. Check these:
   CAUTION yesterday, unconfirmed; framing stays RISK-ON, flip confirms if it
   holds today". The exception is a trend-gate break (SPY losing its 200DMA):
   that's mechanical, respect it same-day.
+- **Breakout gate.** `regime.breakout_entries_ok` is base-breakout-scan's
+  test (SPY above a 200DMA that is still rising). When it is false, no line
+  in the brief buys a breakout: no buy-stop over a pivot, no "add on the
+  break of X", for any name, held or watched. That scan's 2021→2026 replay
+  found breakouts listed on such days lost 1.26%/trade against SPY (bases
+  ≥ 20 weeks 2.13%); it was the one robust result the replay produced.
+  Say it in the action line in plain words ("not a day to buy breakouts:
+  the market's long-term trend isn't rising").
 - **Degradation.** If `errors` is non-empty or the calendar source is
   `unavailable`, the briefing must *name the missing inputs* rather than drop
   them without comment. Honest gaps beat invisible ones.

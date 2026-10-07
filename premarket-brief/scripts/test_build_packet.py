@@ -297,3 +297,19 @@ def test_watchlist_takes_mr_paper_track_names_on_any_listing_day(tmp_path, monke
     assert w["OLD"]["read"] == "MR 📝 score 71 day3" and w["OLD"]["paper_track"]
     assert w["AAA"]["sources"] == ["momentum", "mean-reversion"] and w["AAA"]["paper_track"]
     assert "paper_track" not in w["BBB"]
+
+
+# --------------------------------------------------------------------------- #
+# regime_state — base-breakout's breakout gate (SPY above a rising 200DMA)
+# --------------------------------------------------------------------------- #
+def test_regime_state_flags_the_breakout_gate(tmp_path, monkeypatch):
+    f = tmp_path / "history.csv"
+    rows = ["run_id,run_date,state,score,spy_vs_200_pct,ma200_slope_pct,flags"]
+    for rid, vs, sl in (("20260727", 5.0, 0.80), ("20260728", 3.1, -0.04),
+                        ("20260729", -0.4, 0.30)):
+        rows.append(f"{rid},x,RISK-ON,6,{vs},{sl},")
+    monkeypatch.setattr(bp, "REGIME_HISTORY", f)
+    f.write_text("\n".join(rows[:3]))
+    assert bp.regime_state(TODAY, [])["breakout_entries_ok"] is True    # slope inside the dead band
+    f.write_text("\n".join(rows))
+    assert bp.regime_state(TODAY, [])["breakout_entries_ok"] is False   # SPY under its 200DMA
