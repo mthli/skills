@@ -16,10 +16,13 @@ US open and covers the fast, event-driven ground the structural scans miss:
   headline sentiment gauge. None of that lives in any sister scan.
 
 This skill **reuses, never recomputes**: it reads regime-scan's latest state
-as the structural backdrop and the sister scans' validated pockets as the
-watchlist (momentum's leaderboard plus mean-reversion's fresh score≥40
-listings; the watchlist replaced cross-scan's consensus overlaps when that
-skill was retired 2026-07 on its overlap backtest). On top it layers the
+as the structural backdrop and the sister scans' names as the watchlist
+(momentum's leaderboard plus mean-reversion's 📝 paper-track names, Score
+≥ 70; the watchlist replaced cross-scan's consensus overlaps when that skill
+was retired 2026-07 on its overlap backtest). Since 2026-10-07 nothing on
+it is a validated venue for adds: mean-reversion's fresh score≥40 pocket,
+the old ⭐, ran at SPY's return over its 2021→2026 replay, and the 📝 names
+are listed, never sized. On top it layers the
 overnight tape, catalysts, and your positions. The output is a dashboard-first
 briefing (glyph dashboard → plain-language read with an explicit action line →
 if/then playbook → capped appendix; 2026-08-01 redesign after the dense
@@ -96,7 +99,8 @@ earnings, recent analyst rating changes on your names + watchlist
 (`rating_changes`), overnight macro headlines (`headlines`, CNBC RSS), Fear &
 Greed, the regime-scan state row (incl. `confirmed_state` / `first_day_flip`,
 the 2-day whipsaw filter), the sister-scan watchlist (`names.watchlist`:
-momentum leaderboard + fresh high-score mean-reversion listings), your parsed
+momentum leaderboard + mean-reversion's 📝 paper-track names, flagged
+`paper_track`), your parsed
 positions (with `reports_today` / `on_watchlist` joins), special-day flags, an
 `errors` list, and a `data_quality` list (cross-source premarket disagreements
 + prev-close provenance; see step 3).

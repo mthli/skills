@@ -274,3 +274,26 @@ def test_realized_moves_names_what_it_could_not_grade(monkeypatch):
     monkeypatch.setattr(bp.yf, "download", _route(daily, pd.DataFrame()))
     out = bp.realized_moves(date(2026, 7, 29), [])
     assert out["moves"] == {} and out["missing"] == tks
+
+
+# --------------------------------------------------------------------------- #
+# scan_watchlist_names — momentum leaderboard + MR 📝 paper-track names
+# --------------------------------------------------------------------------- #
+def test_watchlist_takes_mr_paper_track_names_on_any_listing_day(tmp_path, monkeypatch):
+    mom, mr = tmp_path / "mom", tmp_path / "mr"
+    mom.mkdir(); mr.mkdir()
+    (mom / "history.csv").write_text("run_id,ticker,rank\n20260729,AAA,1\n20260729,BBB,2\n")
+    (mr / "history.csv").write_text(
+        "run_id,ticker,score\n"
+        "20260727,OLD,75\n20260728,OLD,72\n"            # day 3 by the latest run
+        "20260729,OLD,71\n20260729,NEW,82\n"
+        "20260729,AAA,74\n"                             # also on momentum's board
+        "20260729,MID,55\n")                            # the retired ≥ 40 pocket: out
+    monkeypatch.setattr(bp, "MOMENTUM_STATE", mom)
+    monkeypatch.setattr(bp, "MR_STATE", mr)
+    out = bp.scan_watchlist_names(TODAY, [], mom_top_n=2)
+    w = {x["ticker"]: x for x in out["watchlist"]}
+    assert set(w) == {"AAA", "BBB", "OLD", "NEW"}
+    assert w["OLD"]["read"] == "MR 📝 score 71 day3" and w["OLD"]["paper_track"]
+    assert w["AAA"]["sources"] == ["momentum", "mean-reversion"] and w["AAA"]["paper_track"]
+    assert "paper_track" not in w["BBB"]

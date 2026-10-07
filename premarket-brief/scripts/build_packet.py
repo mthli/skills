@@ -7,9 +7,10 @@ catalysts (econ calendar + earnings), the headline sentiment gauge — and folds
 in two things the sister scans already compute so we don't recompute them:
 
   - regime-scan's latest 🟢/🟡/🔴 state (the structural backdrop)  [read state/history.csv]
-  - the sister scans' validated pockets (the watchlist)           [read state/history.csv]
-    (momentum's leaderboard + mean-reversion's fresh score≥40 listings — this
-    replaced cross-scan's consensus overlaps when that skill was retired 2026-07)
+  - the sister scans' names (the watchlist)                       [read state/history.csv]
+    (momentum's leaderboard + mean-reversion's 📝 paper-track names, score≥70 —
+    this replaced cross-scan's consensus overlaps when that skill was retired
+    2026-07)
 
 Everything price-related is best-effort and degrades to None cleanly (mirrors
 regime-scan's philosophy): one dead source must never sink the whole packet —
@@ -793,15 +794,18 @@ def _sector_map() -> dict:
 
 
 def scan_watchlist_names(today: date, errors: list, mom_top_n: int = 30,
-                         mr_min_score: float = 40.0) -> dict:
+                         mr_min_score: float = 70.0) -> dict:
     """Watchlist from the sister-scan caches (pure file reads; no refresh).
 
     This used to shell out to cross-scan for a consensus-overlap list; the
     overlap backtest inverted that premise (more overlap = worse outcomes) and
-    the skill was retired 2026-07. The watchlist is now the validated pockets
-    read directly: momentum's current leaderboard, plus mean-reversion names
-    passing its backtest-validated filter (score ≥ 40 on a 1st/2nd-day
-    listing — 3rd+ consecutive listings ran negative)."""
+    the skill was retired 2026-07. The watchlist is now read directly:
+    momentum's current leaderboard, plus mean-reversion's 📝 paper-track
+    names (score ≥ 70, any listing day; mirrors its PAPER_MIN_SCORE). Its
+    old filter, score ≥ 40 on a 1st/2nd-day listing, ran at SPY's return in
+    the 2021→2026 replay; the paper-track stratum beat SPY by ~1%/signal but
+    lost 2.7%/signal in 2022, so its names carry paper_track and are listed,
+    never sized."""
     sectors = _sector_map()
     watch: list = []
     freshness: dict = {}
@@ -838,15 +842,15 @@ def scan_watchlist_names(today: date, errors: list, mom_top_n: int = 30,
                 if r["ticker"] not in by_run[rid]:
                     break
                 day += 1
-            if day > 2:
-                continue
-            read = f"MR score {r['score']:.0f} day{day}"
+            read = f"MR 📝 score {r['score']:.0f} day{day}"
             if r["ticker"] in idx:
                 idx[r["ticker"]]["sources"].append("mean-reversion")
                 idx[r["ticker"]]["read"] += f" + {read}"
+                idx[r["ticker"]]["paper_track"] = True
             else:
                 watch.append({"ticker": r["ticker"], "sector": sectors.get(r["ticker"]),
-                              "sources": ["mean-reversion"], "read": read})
+                              "sources": ["mean-reversion"], "read": read,
+                              "paper_track": True})
     except Exception as e:
         errors.append(f"names/mean-reversion: {e}")
 

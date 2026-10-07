@@ -25,8 +25,9 @@ a plain-language read, and every block below them carries a hard cap.
 - **Every block leads with its conclusion in plain language.** Numbers support
   the sentence; they don't replace it.
 - **Glyphs over prose for state**: 🟢/🟡/🔴 for the call and regime,
-  ↑↗→↘↓ for direction, ⭐ for backtest-validated-pocket names, ⚠️ for a
-  suspect or unverified number. Same conventions as the sister scans.
+  ↑↗→↘↓ for direction, 📝 for paper-tracked names (mean-reversion Score ≥
+  70: listed, never sized), ⚠️ for a suspect or unverified number. Same
+  conventions as the sister scans.
 - **Times are ET with Beijing time alongside** (header + event rows); the
   reader acts on Beijing time.
 
@@ -59,9 +60,9 @@ after them has the day.
 → where the biggest risk sits. Terms explained in place; suspect numbers
 tagged ⚠️ with one reason.>
 
-**Action:** <one explicit line, e.g. "small adds OK in the ⭐ pocket
-(ODFL/VTR); don't chase chips already +18%; do nothing before the 10:00
-print". On a no-action day say so: "nothing to do today".>
+**Action:** <one explicit line, e.g. "execute the ledger at the open; don't
+chase chips already +18%; add nothing before the 10:00 print". On a
+no-action day say so: "nothing to do today".>
 
 ## ③ Playbook (if / then)
 
@@ -86,8 +87,8 @@ whole block if it's all noise; don't pad.>
 premkt · gap · resistance above / support below.>
 
 ### Focus names
-<≤ 6 bullets, one line each: name + why it matters today. ⭐ marks
-backtest-validated-pocket names; analyst actions only for genuine
+<≤ 6 bullets, one line each: name + why it matters today. 📝 marks
+paper-tracked names (watched, never sized); analyst actions only for genuine
 up/downgrades and raise-walls (see doctrine).>
 
 ### Watch-outs
@@ -599,12 +600,15 @@ This is the section that can do harm if written lazily, so frame it honestly:
   read; ① names the count of consecutive counter-plan sessions on that name,
   and every lot's add-lot exit is written at the *lot's* level, never the
   core's.
-- **⭐ MR pocket has zero day-1 edge on broad risk-on days (08-03, 08-04).**
-  08-03 the pocket lost 2.4pp to SPY on a broad green day; 08-04 it matched
-  SPY to the basis point. Its validated KPI is 5-day expectancy (score≥40 +
-  ≤2d listed = +1.83%/signal), not the day-1 print: on a trend day the
-  pocket is beta — size it small, never bill it as the day's alpha venue,
-  and don't grade its day-1 move as pass/fail.
+- **There is no ⭐ venue: the MR pocket is retired (2026-10-07).**
+  mean-reversion-scan's 2021→2026 replay put the score≥40 + ≤2d-listed
+  pocket at −0.14%/signal against SPY over the same days; its +1.83% 5-day
+  expectancy was one in-sample window, and 08-03 / 08-04 (−2.4pp, then SPY
+  to the basis point) were its first cracks. So the ⭐ gate has nothing left
+  to open: don't write one, and never name an MR listing as the place to
+  add. 📝 paper-track names (Score ≥ 70; +1.06%/signal over SPY across six
+  years, −2.7% in 2022) go in Focus names marked 📝, never sized, never
+  graded as a call.
 
 ## Output honesty rules
 
