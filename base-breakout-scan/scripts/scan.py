@@ -3272,6 +3272,7 @@ def main():
             vol_s = volumes.get(ticker)
             if close_s is None or vol_s is None:
                 continue
+            vol_s = vol_s.reindex(close_s.index)  # see score_tickers
             # TT also handles the RS gate internally — short-circuits on
             # missing/low RS via its `fail_rs_rating` branch.
             rs = rs_ratings.get(ticker)
