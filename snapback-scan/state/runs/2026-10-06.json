@@ -1,0 +1,247 @@
+{
+  "as_of": "2026-10-06T20:07:19.212120-04:00",
+  "today": "2026-10-06",
+  "spark_window": [
+    "2026-10-07",
+    "2026-10-08",
+    "2026-10-09"
+  ],
+  "macro_note": "",
+  "regime": {
+    "snapshot": "20261006",
+    "state": "CAUTION",
+    "score": 5,
+    "vix": 15.0,
+    "spy_vs_200_pct": 8.5,
+    "flags": "Breadth divergence: SPY +0.0% from high but only 30% of names above 50DMA ; Narrowing rally: only megacaps lifting the index (RSP/SPY -3.6%/20d)"
+  },
+  "mr_run": {
+    "run_id": "20261006",
+    "run_date": "2026-10-06",
+    "data_asof": "2026-10-06",
+    "stale_days": 0,
+    "rows_in_run": 21,
+    "kegs_after_filter": 5
+  },
+  "tape_freshness": {
+    "expected": "2026-10-06",
+    "asof": "2026-10-06",
+    "repaired": [
+      "BBY",
+      "DFTX",
+      "IMVT",
+      "IOVA",
+      "RPRX"
+    ],
+    "missing": []
+  },
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "DFTX",
+      "rank": 2,
+      "score": 51.9,
+      "rsi2": 2.65,
+      "dist_200dma_pct": 28.79,
+      "signal_close": 35.61,
+      "mr_target": 36.98,
+      "mr_stop": 31.11,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-07",
+          "detail": "FOMC Meeting Minutes 2026-10-07 14:00 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 35.61,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 6,
+      "ret_5d_pct": -6.8,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 0.85,
+      "signal_day_low": 34.38,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "BBY",
+      "rank": 3,
+      "score": 49.4,
+      "rsi2": 2.31,
+      "dist_200dma_pct": 18.57,
+      "signal_close": 84.85,
+      "mr_target": 87.23,
+      "mr_stop": 77.88,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "sector": "Consumer Cyclical",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-07",
+          "detail": "FOMC Meeting Minutes 2026-10-07 14:00 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 84.85,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -4.39,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.84,
+      "signal_day_low": 84.81,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "IOVA",
+      "rank": 5,
+      "score": 44.0,
+      "rsi2": 9.44,
+      "dist_200dma_pct": 167.56,
+      "signal_close": 12.96,
+      "mr_target": 14.08,
+      "mr_stop": 10.42,
+      "signal": "\ud83d\udfe1",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-07",
+          "detail": "FOMC Meeting Minutes 2026-10-07 14:00 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 12.96,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -10.31,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 0.9,
+      "signal_day_low": 12.92,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "IMVT",
+      "rank": 6,
+      "score": 43.2,
+      "rsi2": 1.71,
+      "dist_200dma_pct": 1.04,
+      "signal_close": 32.13,
+      "mr_target": 33.29,
+      "mr_stop": 28.59,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 3,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-07",
+          "detail": "FOMC Meeting Minutes 2026-10-07 14:00 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 32.13,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -3.97,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 0.83,
+      "signal_day_low": 31.36,
+      "quiet_warning": true
+    },
+    {
+      "ticker": "RPRX",
+      "rank": 8,
+      "score": 41.2,
+      "rsi2": 2.05,
+      "dist_200dma_pct": 10.8,
+      "signal_close": 56.46,
+      "mr_target": 57.25,
+      "mr_stop": 53.77,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 3,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-07",
+          "detail": "FOMC Meeting Minutes 2026-10-07 14:00 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 56.46,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -3.02,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 1.08,
+      "signal_day_low": 56.04,
+      "quiet_warning": true
+    }
+  ],
+  "macro_calendar": [
+    {
+      "date": "2026-10-07",
+      "time_et": "14:00",
+      "title": "FOMC Meeting Minutes"
+    }
+  ],
+  "prior_run_review": {
+    "source": "snapback:2026-10-05",
+    "n": 2,
+    "pct_positive": 100.0,
+    "avg_pct": 0.57,
+    "median_pct": 0.57,
+    "best": [
+      {
+        "ticker": "TGT",
+        "since_pct": 0.87
+      },
+      {
+        "ticker": "PFE",
+        "since_pct": 0.27
+      }
+    ],
+    "worst": [
+      {
+        "ticker": "PFE",
+        "since_pct": 0.27
+      },
+      {
+        "ticker": "TGT",
+        "since_pct": 0.87
+      }
+    ],
+    "armed_subset": {
+      "n": 2,
+      "pct_positive": 100.0,
+      "avg_pct": 0.57,
+      "median_pct": 0.57
+    }
+  },
+  "errors": []
+}

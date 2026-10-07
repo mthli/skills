@@ -12,7 +12,7 @@
   "ABBV": {
     "industry": "Drug Manufacturers - General",
     "sector": "Healthcare",
-    "ts": 1788307378
+    "ts": 1791331429
   },
   "ABEV": {
     "industry": "Beverages - Brewers",
@@ -619,6 +619,11 @@
     "sector": "Energy",
     "ts": 1784592126
   },
+  "EQH": {
+    "industry": "Asset Management",
+    "sector": "Financial Services",
+    "ts": 1791331429
+  },
   "EQNR": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
@@ -1128,6 +1133,11 @@
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
     "ts": 1779157116
+  },
+  "NBIS": {
+    "industry": "Internet Content & Information",
+    "sector": "Communication Services",
+    "ts": 1791331429
   },
   "NBIX": {
     "industry": "Drug Manufacturers - Specialty & Generic",

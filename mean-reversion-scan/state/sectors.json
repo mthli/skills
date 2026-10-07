@@ -1792,7 +1792,7 @@
   "INTC": {
     "industry": "Semiconductors",
     "sector": "Technology",
-    "ts": 1787184308
+    "ts": 1791331630
   },
   "INVH": {
     "industry": "REIT - Residential",
@@ -1803,6 +1803,11 @@
     "industry": "Software - Infrastructure",
     "sector": "Technology",
     "ts": 1788480190
+  },
+  "IOVA": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1791331630
   },
   "IQV": {
     "industry": "Diagnostics & Research",
@@ -2072,7 +2077,7 @@
   "M": {
     "industry": "Department Stores",
     "sector": "Consumer Cyclical",
-    "ts": 1788307447
+    "ts": 1791331630
   },
   "MA": {
     "industry": "Credit Services",
@@ -2917,12 +2922,17 @@
   "RYCEY": {
     "industry": "Aerospace & Defense",
     "sector": "Industrials",
-    "ts": 1788307440
+    "ts": 1791331630
   },
   "S": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
     "ts": 1790640180
+  },
+  "SAIL": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1791331630
   },
   "SAN": {
     "industry": "Banks - Diversified",
@@ -3057,7 +3067,7 @@
   "SNDK": {
     "industry": "Computer Hardware",
     "sector": "Technology",
-    "ts": 1787702742
+    "ts": 1791331630
   },
   "SNDR": {
     "industry": "Trucking",

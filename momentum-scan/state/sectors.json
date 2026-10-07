@@ -459,6 +459,11 @@
     "sector": "Consumer Cyclical",
     "ts": 1784246492
   },
+  "HAFN": {
+    "industry": "Marine Shipping",
+    "sector": "Industrials",
+    "ts": 1791331328
+  },
   "HALO": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
