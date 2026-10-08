@@ -1,0 +1,1527 @@
+{
+  "as_of": "2026-10-08T09:00:38.661100-04:00",
+  "today_et": "2026-10-08",
+  "trading_day": true,
+  "session": {
+    "phase": "pre-open",
+    "et_time": "09:00",
+    "valid": true,
+    "intended_window": "04:00\u201309:30 ET (pre-open)",
+    "warning": ""
+  },
+  "special_days": [],
+  "overnight_tape": {
+    "futures": {
+      "ES=F": {
+        "label": "S&P 500",
+        "last": 7818.75,
+        "prev_close": 7847.0,
+        "pct": -0.36
+      },
+      "NQ=F": {
+        "label": "Nasdaq 100",
+        "last": 31179.0,
+        "prev_close": 31359.0,
+        "pct": -0.57
+      },
+      "YM=F": {
+        "label": "Dow",
+        "last": 51105.0,
+        "prev_close": 51395.0,
+        "pct": -0.56
+      },
+      "RTY=F": {
+        "label": "Russell 2000",
+        "last": 2790.0,
+        "prev_close": 2806.8999,
+        "pct": -0.6
+      }
+    },
+    "vix": {
+      "levels": {
+        "^VIX9D": {
+          "label": "VIX9D",
+          "last": 11.78,
+          "prev_close": 11.78,
+          "pct": 0.0,
+          "prev_close_source": "daily"
+        },
+        "^VIX": {
+          "label": "VIX",
+          "last": 15.71,
+          "prev_close": 15.08,
+          "pct": 4.18,
+          "prev_close_source": "daily"
+        },
+        "^VIX3M": {
+          "label": "VIX3M",
+          "last": 17.72,
+          "prev_close": 17.72,
+          "pct": 0.0,
+          "prev_close_source": "daily"
+        }
+      },
+      "vix_3m_ratio": 0.887,
+      "vix_9d_ratio": 0.75,
+      "shape": "contango"
+    },
+    "global": {
+      "^N225": {
+        "label": "Nikkei",
+        "last": 69042.1094,
+        "prev_close": 70163.2734,
+        "pct": -1.6
+      },
+      "^HSI": {
+        "label": "Hang Seng",
+        "last": 23785.7891,
+        "prev_close": 24130.5,
+        "pct": -1.43
+      },
+      "000001.SS": {
+        "label": "Shanghai",
+        "last": 3811.9043,
+        "prev_close": 3842.9934,
+        "pct": -0.81
+      },
+      "^KS11": {
+        "label": "KOSPI",
+        "last": 6625.9302,
+        "prev_close": 6803.9,
+        "pct": -2.62
+      },
+      "^GDAXI": {
+        "label": "DAX",
+        "last": 24897.6309,
+        "prev_close": 25089.0898,
+        "pct": -0.76
+      },
+      "^FTSE": {
+        "label": "FTSE 100",
+        "last": 10451.9004,
+        "prev_close": 10457.3799,
+        "pct": -0.05
+      },
+      "^STOXX50E": {
+        "label": "Euro Stoxx 50",
+        "last": 6130.5,
+        "prev_close": 6173.4502,
+        "pct": -0.7
+      },
+      "^FCHI": {
+        "label": "CAC 40",
+        "last": 7735.6499,
+        "prev_close": 7759.7202,
+        "pct": -0.31
+      }
+    },
+    "yields": {
+      "^IRX": {
+        "label": "13wk",
+        "last": 4.043,
+        "prev_close": 4.037,
+        "pct": 0.15
+      },
+      "^FVX": {
+        "label": "5y",
+        "last": 5.077,
+        "prev_close": 5.021,
+        "pct": 1.12
+      },
+      "^TNX": {
+        "label": "10y",
+        "last": 5.324,
+        "prev_close": 5.277,
+        "pct": 0.89
+      },
+      "^TYX": {
+        "label": "30y",
+        "last": 5.694,
+        "prev_close": 5.661,
+        "pct": 0.58
+      }
+    },
+    "fx": {
+      "DX-Y.NYB": {
+        "label": "DXY",
+        "last": 102.368,
+        "prev_close": 102.23,
+        "pct": 0.13
+      },
+      "EURUSD=X": {
+        "label": "EUR/USD",
+        "last": 1.1187,
+        "prev_close": 1.1204,
+        "pct": -0.16
+      },
+      "USDJPY=X": {
+        "label": "USD/JPY",
+        "last": 158.232,
+        "prev_close": 157.992,
+        "pct": 0.15
+      }
+    },
+    "commodities": {
+      "CL=F": {
+        "label": "WTI crude",
+        "last": 92.47,
+        "prev_close": 89.87,
+        "pct": 2.89
+      },
+      "BZ=F": {
+        "label": "Brent",
+        "last": 104.87,
+        "prev_close": 102.35,
+        "pct": 2.46
+      },
+      "GC=F": {
+        "label": "Gold",
+        "last": 4141.5,
+        "prev_close": 4160.3999,
+        "pct": -0.45
+      },
+      "SI=F": {
+        "label": "Silver",
+        "last": 59.025,
+        "prev_close": 60.25,
+        "pct": -2.03
+      },
+      "HG=F": {
+        "label": "Copper",
+        "last": 6.63,
+        "prev_close": 6.7255,
+        "pct": -1.42
+      },
+      "NG=F": {
+        "label": "Nat gas",
+        "last": 3.247,
+        "prev_close": 3.274,
+        "pct": -0.82
+      }
+    },
+    "crypto": {
+      "BTC-USD": {
+        "label": "Bitcoin",
+        "last": 82219.0781,
+        "prev_close": 83275.0625,
+        "pct": -1.27
+      },
+      "ETH-USD": {
+        "label": "Ethereum",
+        "last": 2529.5901,
+        "prev_close": 2572.8,
+        "pct": -1.68
+      }
+    }
+  },
+  "index_premarket": {
+    "note": "",
+    "movers": {
+      "DIA": {
+        "premkt": 508.1,
+        "prev_close": 511.02,
+        "prev_close_source": "daily",
+        "pct": -0.57,
+        "as_of": "2026-10-08 09:01:07-04:00"
+      },
+      "IWM": {
+        "premkt": 275.7,
+        "prev_close": 277.7,
+        "prev_close_source": "daily",
+        "pct": -0.72,
+        "as_of": "2026-10-08 09:00:43-04:00"
+      },
+      "QQQ": {
+        "premkt": 753.2401,
+        "prev_close": 757.73,
+        "prev_close_source": "daily",
+        "pct": -0.59,
+        "as_of": "2026-10-08 09:01:13-04:00"
+      },
+      "SPY": {
+        "premkt": 774.45,
+        "prev_close": 777.22,
+        "prev_close_source": "daily",
+        "pct": -0.36,
+        "as_of": "2026-10-08 09:01:13-04:00"
+      }
+    }
+  },
+  "sectors_premarket": {
+    "note": "",
+    "movers": {
+      "XLB": {
+        "premkt": 48.984,
+        "prev_close": 48.98,
+        "prev_close_source": "daily",
+        "pct": 0.01,
+        "as_of": "2026-10-08 08:47:27-04:00"
+      },
+      "XLC": {
+        "premkt": 110.6,
+        "prev_close": 111.26,
+        "prev_close_source": "daily",
+        "pct": -0.59,
+        "as_of": "2026-10-08 07:02:00-04:00"
+      },
+      "XLE": {
+        "premkt": 64.5507,
+        "prev_close": 63.36,
+        "prev_close_source": "daily",
+        "pct": 1.88,
+        "as_of": "2026-10-08 09:00:45-04:00"
+      },
+      "XLF": {
+        "premkt": 53.431,
+        "prev_close": 53.75,
+        "prev_close_source": "daily",
+        "pct": -0.59,
+        "as_of": "2026-10-08 08:58:29-04:00"
+      },
+      "XLI": {
+        "premkt": 166.59,
+        "prev_close": 167.84,
+        "prev_close_source": "daily",
+        "pct": -0.74,
+        "as_of": "2026-10-08 08:52:11-04:00"
+      },
+      "XLK": {
+        "premkt": 199.5679,
+        "prev_close": 201.39,
+        "prev_close_source": "daily",
+        "pct": -0.9,
+        "as_of": "2026-10-08 08:47:00-04:00"
+      },
+      "XLP": {
+        "premkt": 82.2318,
+        "prev_close": 81.7,
+        "prev_close_source": "daily",
+        "pct": 0.65,
+        "as_of": "2026-10-08 08:26:00-04:00"
+      },
+      "XLRE": {
+        "premkt": 40.45,
+        "prev_close": 40.57,
+        "prev_close_source": "daily",
+        "pct": -0.3,
+        "as_of": "2026-10-08 08:21:00-04:00"
+      },
+      "XLU": {
+        "premkt": 41.15,
+        "prev_close": 41.15,
+        "prev_close_source": "daily",
+        "pct": 0.0,
+        "as_of": "2026-10-08 09:00:47-04:00"
+      },
+      "XLV": {
+        "premkt": 168.57,
+        "prev_close": 168.81,
+        "prev_close_source": "daily",
+        "pct": -0.14,
+        "as_of": "2026-10-08 08:43:00-04:00"
+      },
+      "XLY": {
+        "premkt": 110.85,
+        "prev_close": 111.36,
+        "prev_close_source": "daily",
+        "pct": -0.46,
+        "as_of": "2026-10-08 08:45:38-04:00"
+      }
+    }
+  },
+  "premarket_movers": {
+    "note": "",
+    "movers": {
+      "ACN": {
+        "premkt": 197.0,
+        "prev_close": 196.64,
+        "prev_close_source": "daily",
+        "pct": 0.18,
+        "as_of": "2026-10-08 08:26:00-04:00"
+      },
+      "ALAB": {
+        "premkt": 373.8,
+        "prev_close": 382.25,
+        "prev_close_source": "daily",
+        "pct": -2.21,
+        "as_of": "2026-10-08 09:00:40-04:00"
+      },
+      "ANF": {
+        "premkt": 138.5,
+        "prev_close": 139.44,
+        "prev_close_source": "daily",
+        "pct": -0.67,
+        "as_of": "2026-10-08 04:01:00-04:00"
+      },
+      "BMNR": {
+        "premkt": 24.07,
+        "prev_close": 24.66,
+        "prev_close_source": "daily",
+        "pct": -2.39,
+        "as_of": "2026-10-08 09:00:39-04:00"
+      },
+      "CIBR": {
+        "premkt": 106.15,
+        "prev_close": 106.57,
+        "prev_close_source": "daily",
+        "pct": -0.39,
+        "as_of": "2026-10-08 08:28:00-04:00"
+      },
+      "COIN": {
+        "premkt": 175.1066,
+        "prev_close": 178.45,
+        "prev_close_source": "daily",
+        "pct": -1.87,
+        "as_of": "2026-10-08 09:00:18-04:00"
+      },
+      "CVI": {
+        "premkt": 58.19,
+        "prev_close": 57.38,
+        "prev_close_source": "daily",
+        "pct": 1.41,
+        "as_of": "2026-10-08 08:43:00-04:00"
+      },
+      "DINO": {
+        "premkt": 117.49,
+        "prev_close": 115.63,
+        "prev_close_source": "daily",
+        "pct": 1.61,
+        "as_of": "2026-10-08 08:41:40-04:00"
+      },
+      "DT": {
+        "premkt": 60.5,
+        "prev_close": 59.81,
+        "prev_close_source": "daily",
+        "pct": 1.15,
+        "as_of": "2026-10-08 08:26:00-04:00"
+      },
+      "DUOL": {
+        "premkt": 150.77,
+        "prev_close": 151.72,
+        "prev_close_source": "daily",
+        "pct": -0.63,
+        "as_of": "2026-10-08 07:19:00-04:00"
+      },
+      "FRO": {
+        "premkt": 54.64,
+        "prev_close": 53.06,
+        "prev_close_source": "daily",
+        "pct": 2.98,
+        "as_of": "2026-10-08 08:53:55-04:00"
+      },
+      "GTLB": {
+        "premkt": 51.69,
+        "prev_close": 51.99,
+        "prev_close_source": "daily",
+        "pct": -0.58,
+        "as_of": "2026-10-08 08:26:00-04:00"
+      },
+      "HAFN": {
+        "premkt": 10.54,
+        "prev_close": 10.33,
+        "prev_close_source": "daily",
+        "pct": 2.03,
+        "as_of": "2026-10-08 08:48:00-04:00"
+      },
+      "HALO": {
+        "premkt": 111.0652,
+        "prev_close": 110.79,
+        "prev_close_source": "daily",
+        "pct": 0.25,
+        "as_of": "2026-10-08 04:00:00-04:00"
+      },
+      "IBKR": {
+        "premkt": 86.8,
+        "prev_close": 87.74,
+        "prev_close_source": "daily",
+        "pct": -1.07,
+        "as_of": "2026-10-08 07:05:00-04:00"
+      },
+      "MPC": {
+        "premkt": 449.44,
+        "prev_close": 442.26,
+        "prev_close_source": "daily",
+        "pct": 1.62,
+        "as_of": "2026-10-08 08:52:28-04:00"
+      },
+      "MSFT": {
+        "premkt": 528.53,
+        "prev_close": 529.76,
+        "prev_close_source": "daily",
+        "pct": -0.23,
+        "as_of": "2026-10-08 09:00:22-04:00"
+      },
+      "MSTR": {
+        "premkt": 149.68,
+        "prev_close": 153.37,
+        "prev_close_source": "daily",
+        "pct": -2.41,
+        "as_of": "2026-10-08 09:00:38-04:00"
+      },
+      "NTNX": {
+        "premkt": 73.0,
+        "prev_close": 73.42,
+        "prev_close_source": "daily",
+        "pct": -0.57,
+        "as_of": "2026-10-08 07:54:00-04:00"
+      },
+      "NTRA": {
+        "premkt": 390.0,
+        "prev_close": 395.56,
+        "prev_close_source": "daily",
+        "pct": -1.41,
+        "as_of": "2026-10-08 07:17:00-04:00"
+      },
+      "PBR": {
+        "premkt": 24.4,
+        "prev_close": 23.99,
+        "prev_close_source": "daily",
+        "pct": 1.71,
+        "as_of": "2026-10-08 08:59:39-04:00"
+      },
+      "PBR-A": {
+        "premkt": 22.01,
+        "prev_close": 21.66,
+        "prev_close_source": "daily",
+        "pct": 1.62,
+        "as_of": "2026-10-08 08:57:52-04:00"
+      },
+      "PLTR": {
+        "premkt": 198.7686,
+        "prev_close": 194.12,
+        "prev_close_source": "daily",
+        "pct": 2.39,
+        "as_of": "2026-10-08 09:00:33-04:00"
+      },
+      "PSX": {
+        "premkt": 274.0,
+        "prev_close": 271.62,
+        "prev_close_source": "daily",
+        "pct": 0.88,
+        "as_of": "2026-10-08 07:58:00-04:00"
+      },
+      "REMX": {
+        "premkt": 60.544,
+        "prev_close": 61.88,
+        "prev_close_source": "daily",
+        "pct": -2.16,
+        "as_of": "2026-10-08 08:42:00-04:00"
+      },
+      "RNG": {
+        "premkt": 76.6,
+        "prev_close": 76.54,
+        "prev_close_source": "daily",
+        "pct": 0.08,
+        "as_of": "2026-10-08 07:00:00-04:00"
+      },
+      "SOXX": {
+        "premkt": 572.0,
+        "prev_close": 582.82,
+        "prev_close_source": "daily",
+        "pct": -1.86,
+        "as_of": "2026-10-08 09:00:44-04:00"
+      },
+      "SPCX": {
+        "premkt": 166.58,
+        "prev_close": 167.6,
+        "prev_close_source": "daily",
+        "pct": -0.61,
+        "as_of": "2026-10-08 09:00:40-04:00"
+      },
+      "TEAM": {
+        "premkt": 195.5,
+        "prev_close": 195.79,
+        "prev_close_source": "daily",
+        "pct": -0.15,
+        "as_of": "2026-10-08 08:46:15-04:00"
+      },
+      "TSLA": {
+        "premkt": 373.56,
+        "prev_close": 377.81,
+        "prev_close_source": "daily",
+        "pct": -1.12,
+        "as_of": "2026-10-08 09:00:36-04:00"
+      },
+      "VEEV": {
+        "premkt": 283.49,
+        "prev_close": 282.5,
+        "prev_close_source": "daily",
+        "pct": 0.35,
+        "as_of": "2026-10-08 08:02:00-04:00"
+      },
+      "VLO": {
+        "premkt": 430.49,
+        "prev_close": 424.1,
+        "prev_close_source": "daily",
+        "pct": 1.51,
+        "as_of": "2026-10-08 08:51:17-04:00"
+      },
+      "XE": {
+        "premkt": 14.1,
+        "prev_close": 14.39,
+        "prev_close_source": "daily",
+        "pct": -2.02,
+        "as_of": "2026-10-08 08:58:00-04:00"
+      },
+      "XP": {
+        "premkt": 29.25,
+        "prev_close": 29.53,
+        "prev_close_source": "daily",
+        "pct": -0.95,
+        "as_of": "2026-10-08 08:51:55-04:00"
+      },
+      "ZETA": {
+        "premkt": 33.83,
+        "prev_close": 33.74,
+        "prev_close_source": "daily",
+        "pct": 0.27,
+        "as_of": "2026-10-08 08:58:10-04:00"
+      },
+      "ZS": {
+        "premkt": 213.5,
+        "prev_close": 213.55,
+        "prev_close_source": "daily",
+        "pct": -0.02,
+        "as_of": "2026-10-08 08:24:00-04:00"
+      }
+    }
+  },
+  "premarket_gappers": {
+    "source": "tradingview",
+    "note": "",
+    "filters": {
+      "min_mktcap": 2000000000.0,
+      "min_premkt_vol": 50000
+    },
+    "gainers": [
+      {
+        "ticker": "GFS",
+        "name": "GlobalFoundries Inc.",
+        "pct": 4.01,
+        "premkt_vol": 343217,
+        "mktcap": 26378462210,
+        "sector": "Electronic Technology"
+      },
+      {
+        "ticker": "BP",
+        "name": "BP PLC Sponsored ADR",
+        "pct": 3.41,
+        "premkt_vol": 371588,
+        "mktcap": 114727177734.211,
+        "sector": "Energy Minerals"
+      },
+      {
+        "ticker": "EQNR",
+        "name": "Equinor ASA Sponsored ADR",
+        "pct": 3.41,
+        "premkt_vol": 109946,
+        "mktcap": 100672672222.67253,
+        "sector": "Energy Minerals"
+      },
+      {
+        "ticker": "TRMD",
+        "name": "TORM PLC Class A",
+        "pct": 3.29,
+        "premkt_vol": 112806,
+        "mktcap": 3975966369.2085705,
+        "sector": "Transportation"
+      },
+      {
+        "ticker": "RIG",
+        "name": "Transocean Ltd.",
+        "pct": 2.6,
+        "premkt_vol": 55380,
+        "mktcap": 6019983735,
+        "sector": "Industrial Services"
+      },
+      {
+        "ticker": "SHEL",
+        "name": "Shell Plc Sponsored ADR",
+        "pct": 2.56,
+        "premkt_vol": 133405,
+        "mktcap": 274736442815.93994,
+        "sector": "Energy Minerals"
+      },
+      {
+        "ticker": "OXY",
+        "name": "Occidental Petroleum Corporation",
+        "pct": 2.41,
+        "premkt_vol": 63773,
+        "mktcap": 58188891565,
+        "sector": "Energy Minerals"
+      },
+      {
+        "ticker": "PLTR",
+        "name": "Palantir Technologies Inc. Class A",
+        "pct": 2.39,
+        "premkt_vol": 697885,
+        "mktcap": 466481662698.99994,
+        "sector": "Technology Services"
+      },
+      {
+        "ticker": "U",
+        "name": "Unity Software, Inc.",
+        "pct": 2.31,
+        "premkt_vol": 122725,
+        "mktcap": 19997640294,
+        "sector": "Technology Services"
+      },
+      {
+        "ticker": "VG",
+        "name": "Venture Global, Inc. Class A",
+        "pct": 2.19,
+        "premkt_vol": 95598,
+        "mktcap": 32626212317.000004,
+        "sector": "Industrial Services"
+      }
+    ],
+    "losers": [
+      {
+        "ticker": "ARGX",
+        "name": "argenx SE Sponsored ADR",
+        "pct": -14.14,
+        "premkt_vol": 51476,
+        "mktcap": 59047208432.38158,
+        "sector": "Health Technology"
+      },
+      {
+        "ticker": "AAOI",
+        "name": "Applied Optoelectronics, Inc.",
+        "pct": -4.59,
+        "premkt_vol": 232892,
+        "mktcap": 10404416627,
+        "sector": "Electronic Technology"
+      },
+      {
+        "ticker": "LITE",
+        "name": "Lumentum Holdings, Inc.",
+        "pct": -3.81,
+        "premkt_vol": 62713,
+        "mktcap": 100643896565.99998,
+        "sector": "Producer Manufacturing"
+      },
+      {
+        "ticker": "STLA",
+        "name": "Stellantis N.V.",
+        "pct": -3.69,
+        "premkt_vol": 1535040,
+        "mktcap": 17351663566.032246,
+        "sector": "Consumer Durables"
+      },
+      {
+        "ticker": "STM",
+        "name": "STMicroelectronics NV Sponsored ADR RegS",
+        "pct": -3.58,
+        "premkt_vol": 221393,
+        "mktcap": 49830772682.498886,
+        "sector": "Electronic Technology"
+      },
+      {
+        "ticker": "COHR",
+        "name": "Coherent Corp.",
+        "pct": -3.5,
+        "premkt_vol": 77196,
+        "mktcap": 65517635367,
+        "sector": "Electronic Technology"
+      },
+      {
+        "ticker": "PHI",
+        "name": "PLDT, Inc. Sponsored ADR",
+        "pct": -3.44,
+        "premkt_vol": 57367,
+        "mktcap": 3911815320.28829,
+        "sector": "Communications"
+      },
+      {
+        "ticker": "LEVI",
+        "name": "Levi Strauss & Co. Class A",
+        "pct": -3.3,
+        "premkt_vol": 317865,
+        "mktcap": 7508434552,
+        "sector": "Consumer Non-Durables"
+      },
+      {
+        "ticker": "AXTI",
+        "name": "AXT, Inc.",
+        "pct": -3.26,
+        "premkt_vol": 116505,
+        "mktcap": 5232086619,
+        "sector": "Electronic Technology"
+      },
+      {
+        "ticker": "ARM",
+        "name": "ARM Holdings PLC Sponsored ADR",
+        "pct": -3.18,
+        "premkt_vol": 66228,
+        "mktcap": 314387154785,
+        "sector": "Electronic Technology"
+      }
+    ]
+  },
+  "calendar": {
+    "source": "forexfactory",
+    "events": [
+      {
+        "time_et": "04:30",
+        "title": "FOMC Member Waller Speaks",
+        "impact": "Medium",
+        "scope": "US",
+        "forecast": "",
+        "previous": ""
+      },
+      {
+        "time_et": "08:30",
+        "title": "Unemployment Claims",
+        "impact": "Medium",
+        "scope": "US",
+        "forecast": "200K",
+        "previous": "197K"
+      }
+    ]
+  },
+  "earnings": {
+    "source": "nasdaq",
+    "before": [
+      {
+        "symbol": "PEP",
+        "name": "Pepsico, Inc.",
+        "slot": "before",
+        "mktcap": 168878031000.0,
+        "eps_forecast": "$2.29"
+      },
+      {
+        "symbol": "NG",
+        "name": "Novagold Resources Inc.",
+        "slot": "before",
+        "mktcap": 2797139970.0,
+        "eps_forecast": "($0.08)"
+      },
+      {
+        "symbol": "HELE",
+        "name": "Helen of Troy Limited",
+        "slot": "before",
+        "mktcap": 595112130.0,
+        "eps_forecast": "$0.32"
+      },
+      {
+        "symbol": "ANGO",
+        "name": "AngioDynamics, Inc.",
+        "slot": "before",
+        "mktcap": 586506620.0,
+        "eps_forecast": "($0.10)"
+      },
+      {
+        "symbol": "TLRY",
+        "name": "Tilray Brands, Inc.",
+        "slot": "before",
+        "mktcap": 553142660.0,
+        "eps_forecast": "($0.19)"
+      },
+      {
+        "symbol": "BYRN",
+        "name": "Byrna Technologies, Inc.",
+        "slot": "before",
+        "mktcap": 94789256.0,
+        "eps_forecast": "($0.14)"
+      }
+    ],
+    "after": [
+      {
+        "symbol": "ODC",
+        "name": "Oil-Dri Corporation Of America",
+        "slot": "after",
+        "mktcap": 1272220670.0,
+        "eps_forecast": ""
+      },
+      {
+        "symbol": "PKE",
+        "name": "Park Aerospace Corp.",
+        "slot": "after",
+        "mktcap": 636440450.0,
+        "eps_forecast": ""
+      }
+    ],
+    "unknown_time": [
+      {
+        "symbol": "NRIX",
+        "name": "Nurix Therapeutics, Inc.",
+        "slot": "unknown",
+        "mktcap": 2358957570.0,
+        "eps_forecast": "($0.56)"
+      },
+      {
+        "symbol": "CMMB",
+        "name": "Chemomab Therapeutics Ltd. ",
+        "slot": "unknown",
+        "mktcap": 9926483.0,
+        "eps_forecast": ""
+      }
+    ],
+    "watchlist_matches": [],
+    "position_matches": [],
+    "total_reporting": 10
+  },
+  "rating_changes": {
+    "source": "yfinance",
+    "lookback_days": 4,
+    "changes": [
+      {
+        "ticker": "HALO",
+        "date": "2026-10-08",
+        "firm": "HC Wainwright & Co.",
+        "action": "main",
+        "from_grade": "Buy",
+        "to_grade": "Buy",
+        "pt_action": "Raises",
+        "pt": 130.0,
+        "prior_pt": 115.0
+      },
+      {
+        "ticker": "MPC",
+        "date": "2026-10-08",
+        "firm": "Mizuho",
+        "action": "main",
+        "from_grade": "Neutral",
+        "to_grade": "Neutral",
+        "pt_action": "Raises",
+        "pt": 457.0,
+        "prior_pt": 304.0
+      },
+      {
+        "ticker": "PSX",
+        "date": "2026-10-08",
+        "firm": "Mizuho",
+        "action": "down",
+        "from_grade": "Outperform",
+        "to_grade": "Neutral",
+        "pt_action": "Raises",
+        "pt": 300.0,
+        "prior_pt": 220.0
+      },
+      {
+        "ticker": "VLO",
+        "date": "2026-10-08",
+        "firm": "Mizuho",
+        "action": "main",
+        "from_grade": "Neutral",
+        "to_grade": "Neutral",
+        "pt_action": "Raises",
+        "pt": 434.0,
+        "prior_pt": 300.0
+      },
+      {
+        "ticker": "AVTR",
+        "date": "2026-10-07",
+        "firm": "Barclays",
+        "action": "main",
+        "from_grade": "Underweight",
+        "to_grade": "Underweight",
+        "pt_action": "Raises",
+        "pt": 15.0,
+        "prior_pt": 13.0
+      },
+      {
+        "ticker": "COIN",
+        "date": "2026-10-07",
+        "firm": "Barclays",
+        "action": "main",
+        "from_grade": "Underweight",
+        "to_grade": "Underweight",
+        "pt_action": "Raises",
+        "pt": 149.0,
+        "prior_pt": 95.0
+      },
+      {
+        "ticker": "COIN",
+        "date": "2026-10-07",
+        "firm": "BTIG",
+        "action": "reit",
+        "from_grade": "Buy",
+        "to_grade": "Buy",
+        "pt_action": "Maintains",
+        "pt": 240.0,
+        "prior_pt": 240.0
+      },
+      {
+        "ticker": "IBKR",
+        "date": "2026-10-07",
+        "firm": "UBS",
+        "action": "main",
+        "from_grade": "Neutral",
+        "to_grade": "Neutral",
+        "pt_action": "Lowers",
+        "pt": 101.0,
+        "prior_pt": 102.0
+      },
+      {
+        "ticker": "IBKR",
+        "date": "2026-10-07",
+        "firm": "Barclays",
+        "action": "main",
+        "from_grade": "Overweight",
+        "to_grade": "Overweight",
+        "pt_action": "Raises",
+        "pt": 115.0,
+        "prior_pt": 114.0
+      },
+      {
+        "ticker": "MSFT",
+        "date": "2026-10-07",
+        "firm": "Evercore ISI Group",
+        "action": "main",
+        "from_grade": "Outperform",
+        "to_grade": "Outperform",
+        "pt_action": "Raises",
+        "pt": 635.0,
+        "prior_pt": 528.0
+      },
+      {
+        "ticker": "NTRA",
+        "date": "2026-10-07",
+        "firm": "Barclays",
+        "action": "main",
+        "from_grade": "Overweight",
+        "to_grade": "Overweight",
+        "pt_action": "Raises",
+        "pt": 475.0,
+        "prior_pt": 340.0
+      },
+      {
+        "ticker": "SPCX",
+        "date": "2026-10-07",
+        "firm": "Susquehanna",
+        "action": "main",
+        "from_grade": "Neutral",
+        "to_grade": "Neutral",
+        "pt_action": "Raises",
+        "pt": 173.0,
+        "prior_pt": 144.0
+      },
+      {
+        "ticker": "TSLA",
+        "date": "2026-10-07",
+        "firm": "UBS",
+        "action": "main",
+        "from_grade": "Neutral",
+        "to_grade": "Neutral",
+        "pt_action": "Raises",
+        "pt": 391.0,
+        "prior_pt": 385.0
+      },
+      {
+        "ticker": "IBKR",
+        "date": "2026-10-06",
+        "firm": "BMO Capital",
+        "action": "main",
+        "from_grade": "Outperform",
+        "to_grade": "Outperform",
+        "pt_action": "Lowers",
+        "pt": 105.0,
+        "prior_pt": 110.0
+      },
+      {
+        "ticker": "NTRA",
+        "date": "2026-10-06",
+        "firm": "Citigroup",
+        "action": "main",
+        "from_grade": "Buy",
+        "to_grade": "Buy",
+        "pt_action": "Raises",
+        "pt": 480.0,
+        "prior_pt": 365.0
+      },
+      {
+        "ticker": "VLO",
+        "date": "2026-10-06",
+        "firm": "Barclays",
+        "action": "main",
+        "from_grade": "Overweight",
+        "to_grade": "Overweight",
+        "pt_action": "Raises",
+        "pt": 441.0,
+        "prior_pt": 323.0
+      },
+      {
+        "ticker": "XP",
+        "date": "2026-10-06",
+        "firm": "JP Morgan",
+        "action": "main",
+        "from_grade": "Overweight",
+        "to_grade": "Overweight",
+        "pt_action": "Raises",
+        "pt": 38.0,
+        "prior_pt": 26.0
+      },
+      {
+        "ticker": "XP",
+        "date": "2026-10-06",
+        "firm": "Itau BBA",
+        "action": "up",
+        "from_grade": "Market Perform",
+        "to_grade": "Outperform",
+        "pt_action": "Announces",
+        "pt": 27.0,
+        "prior_pt": 0.0
+      },
+      {
+        "ticker": "IBKR",
+        "date": "2026-10-05",
+        "firm": "B of A Securities",
+        "action": "main",
+        "from_grade": "Buy",
+        "to_grade": "Buy",
+        "pt_action": "Raises",
+        "pt": 116.0,
+        "prior_pt": 114.0
+      },
+      {
+        "ticker": "MSFT",
+        "date": "2026-10-05",
+        "firm": "Scotiabank",
+        "action": "main",
+        "from_grade": "Sector Outperform",
+        "to_grade": "Sector Outperform",
+        "pt_action": "Raises",
+        "pt": 615.0,
+        "prior_pt": 510.0
+      }
+    ]
+  },
+  "sentiment": {
+    "fear_greed": {
+      "score": 44.7,
+      "rating": "fear",
+      "prev_close": 44.5,
+      "week_ago": 29.0,
+      "month_ago": 39.1,
+      "year_ago": 52.9,
+      "as_of": "2026-10-08T12:43:16+00:00"
+    }
+  },
+  "headlines": {
+    "source": "cnbc",
+    "window_h": 18,
+    "headlines": [
+      {
+        "time_et": "Thu 08:56 ET",
+        "title": "Skydance's David Ellison tells CNBC combined company is 'positioned to win in every single vertical'",
+        "feed": "Top News",
+        "link": "https://www.cnbc.com/2026/10/08/skydance-co-ceos-ellison-kreiz.html"
+      },
+      {
+        "time_et": "Thu 08:50 ET",
+        "title": "Trump's former defense secretary sees no end in sight for Iran war \u2014 to the benefit of America's 'greatest adversary'",
+        "feed": "Top News",
+        "link": "https://www.cnbc.com/2026/10/08/trump-iran-war-mark-esper.html"
+      },
+      {
+        "time_et": "Thu 08:42 ET",
+        "title": "Hundreds of new pro sports team ETFs lead world of retail investing to the edge of gambling",
+        "feed": "Top News",
+        "link": "https://www.cnbc.com/2026/10/08/sports-team-etfs-prediction-markets-futures-gambling.html"
+      },
+      {
+        "time_et": "Thu 08:05 ET",
+        "title": "Inflation on many everyday items was entirely due to tariffs, NY Fed says",
+        "feed": "Top News",
+        "link": "https://www.cnbc.com/2026/10/08/inflation-tariffs-trump-fed-consumer-goods.html"
+      },
+      {
+        "time_et": "Thu 07:56 ET",
+        "title": "PepsiCo cuts earnings forecast as North American turnaround takes longer than expected",
+        "feed": "Top News",
+        "link": "https://www.cnbc.com/2026/10/08/pepsico-pep-q3-2026-earnings.html"
+      },
+      {
+        "time_et": "Thu 07:49 ET",
+        "title": "Microsoft to sell $2,599 Surface Laptop Ultra containing Nvidia AI chip",
+        "feed": "Top News",
+        "link": "https://www.cnbc.com/2026/10/07/microsoft-starts-taking-preorders-for-2599-surface-laptop-ultra.html"
+      },
+      {
+        "time_et": "Thu 07:42 ET",
+        "title": "Trump says he doesn't want Iran deal as U.S. reportedly prepares for 'massive bombing'",
+        "feed": "Top News",
+        "link": "https://www.cnbc.com/2026/10/08/us-iran-war-trump-hormuz.html"
+      },
+      {
+        "time_et": "Thu 07:28 ET",
+        "title": "Why REITs aren't getting killed by rising interest rates this time around",
+        "feed": "Top News",
+        "link": "https://www.cnbc.com/2026/10/08/why-reits-arent-getting-killed-by-rising-interest-rates-this-time.html"
+      },
+      {
+        "time_et": "Thu 07:04 ET",
+        "title": "Russia, China hypersonic missile threats fuel need for space defense, satellite CEO says",
+        "feed": "Top News",
+        "link": "https://www.cnbc.com/2026/10/08/space-missile-defense-interceptors-russia-china.html"
+      },
+      {
+        "time_et": "Thu 06:56 ET",
+        "title": "CNBC's No. 1 financial advisor takes a family-office approach: 'There is real value in all of those relationships'",
+        "feed": "Top News",
+        "link": "https://www.cnbc.com/2026/10/08/howland-capital-management-top-financial-advisor-strategy.html"
+      },
+      {
+        "time_et": "Thu 06:50 ET",
+        "title": "NFL tells Supreme Court prediction markets are gambling and should be regulated by the states",
+        "feed": "Top News",
+        "link": "https://www.cnbc.com/2026/10/08/nfl-tells-supreme-court-prediction-markets-are-gambling-and-should-be-regulated-by-the-states.html"
+      },
+      {
+        "time_et": "Thu 06:07 ET",
+        "title": "CNBC's Financial Advisor 100: Best financial advisors, top firms for 2026 ranked",
+        "feed": "Top News",
+        "link": "https://www.cnbc.com/2026/10/08/best-financial-advisors.html"
+      }
+    ]
+  },
+  "regime": {
+    "snapshot": "20261007",
+    "stale_days": 1,
+    "state": "CAUTION",
+    "confirmed_state": "CAUTION",
+    "first_day_flip": false,
+    "score": 3,
+    "vix": 15.1,
+    "vix_term": 0.85,
+    "breadth_50_pct": 29.0,
+    "breadth_200_pct": 47.0,
+    "rsp_spy_pct": -3.6,
+    "credit_pct": 0.8,
+    "def_off_pct": -3.3,
+    "spy_vs_200_pct": 8.1,
+    "ma200_slope_pct": 1.34,
+    "breakout_entries_ok": true,
+    "flags": "Breadth divergence: SPY -0.3% from high but only 29% of names above 50DMA ; Narrowing rally: only megacaps lifting the index (RSP/SPY -3.6%/20d)"
+  },
+  "names": {
+    "source": "sister-scans",
+    "freshness": {
+      "momentum": {
+        "run_id": "20261007",
+        "stale_days": 1
+      },
+      "mean-reversion": {
+        "run_id": "20261007",
+        "stale_days": 1
+      }
+    },
+    "watchlist": [
+      {
+        "ticker": "RNG",
+        "sector": "Technology",
+        "sources": [
+          "momentum"
+        ],
+        "read": "momentum #1"
+      },
+      {
+        "ticker": "MSFT",
+        "sector": "Technology",
+        "sources": [
+          "momentum"
+        ],
+        "read": "momentum #2"
+      },
+      {
+        "ticker": "TEAM",
+        "sector": "Technology",
+        "sources": [
+          "momentum"
+        ],
+        "read": "momentum #3"
+      },
+      {
+        "ticker": "XP",
+        "sector": "Financial Services",
+        "sources": [
+          "momentum"
+        ],
+        "read": "momentum #4"
+      },
+      {
+        "ticker": "MPC",
+        "sector": "Energy",
+        "sources": [
+          "momentum"
+        ],
+        "read": "momentum #5"
+      },
+      {
+        "ticker": "FRO",
+        "sector": "Energy",
+        "sources": [
+          "momentum"
+        ],
+        "read": "momentum #6"
+      },
+      {
+        "ticker": "PBR-A",
+        "sector": "Energy",
+        "sources": [
+          "momentum"
+        ],
+        "read": "momentum #7"
+      },
+      {
+        "ticker": "HALO",
+        "sector": "Healthcare",
+        "sources": [
+          "momentum"
+        ],
+        "read": "momentum #8"
+      },
+      {
+        "ticker": "AVTR",
+        "sector": "Healthcare",
+        "sources": [
+          "momentum"
+        ],
+        "read": "momentum #9"
+      },
+      {
+        "ticker": "VLO",
+        "sector": "Energy",
+        "sources": [
+          "momentum"
+        ],
+        "read": "momentum #10"
+      },
+      {
+        "ticker": "PSX",
+        "sector": "Energy",
+        "sources": [
+          "momentum"
+        ],
+        "read": "momentum #11"
+      },
+      {
+        "ticker": "VEEV",
+        "sector": "Healthcare",
+        "sources": [
+          "momentum"
+        ],
+        "read": "momentum #12"
+      },
+      {
+        "ticker": "NTNX",
+        "sector": "Technology",
+        "sources": [
+          "momentum"
+        ],
+        "read": "momentum #13"
+      },
+      {
+        "ticker": "GTLB",
+        "sector": "Technology",
+        "sources": [
+          "momentum"
+        ],
+        "read": "momentum #14"
+      },
+      {
+        "ticker": "NTRA",
+        "sector": "Healthcare",
+        "sources": [
+          "momentum"
+        ],
+        "read": "momentum #15"
+      },
+      {
+        "ticker": "PBR",
+        "sector": "Energy",
+        "sources": [
+          "momentum"
+        ],
+        "read": "momentum #16"
+      },
+      {
+        "ticker": "RVTY",
+        "sector": "Healthcare",
+        "sources": [
+          "momentum"
+        ],
+        "read": "momentum #17"
+      },
+      {
+        "ticker": "PLTR",
+        "sector": "Technology",
+        "sources": [
+          "momentum"
+        ],
+        "read": "momentum #18"
+      },
+      {
+        "ticker": "MSTR",
+        "sector": "Technology",
+        "sources": [
+          "momentum"
+        ],
+        "read": "momentum #19"
+      },
+      {
+        "ticker": "CVI",
+        "sector": "Energy",
+        "sources": [
+          "momentum"
+        ],
+        "read": "momentum #20"
+      },
+      {
+        "ticker": "BMNR",
+        "sector": "Financial Services",
+        "sources": [
+          "momentum"
+        ],
+        "read": "momentum #21"
+      },
+      {
+        "ticker": "ACN",
+        "sector": "Technology",
+        "sources": [
+          "momentum"
+        ],
+        "read": "momentum #22"
+      },
+      {
+        "ticker": "HAFN",
+        "sector": "Industrials",
+        "sources": [
+          "momentum"
+        ],
+        "read": "momentum #23"
+      },
+      {
+        "ticker": "DINO",
+        "sector": "Energy",
+        "sources": [
+          "momentum"
+        ],
+        "read": "momentum #24"
+      },
+      {
+        "ticker": "ANF",
+        "sector": "Consumer Cyclical",
+        "sources": [
+          "momentum"
+        ],
+        "read": "momentum #25"
+      },
+      {
+        "ticker": "ZS",
+        "sector": "Technology",
+        "sources": [
+          "momentum"
+        ],
+        "read": "momentum #26"
+      },
+      {
+        "ticker": "ZETA",
+        "sector": "Technology",
+        "sources": [
+          "momentum"
+        ],
+        "read": "momentum #27"
+      },
+      {
+        "ticker": "NIQ",
+        "sector": null,
+        "sources": [
+          "momentum"
+        ],
+        "read": "momentum #28"
+      },
+      {
+        "ticker": "SWKS",
+        "sector": "Technology",
+        "sources": [
+          "momentum"
+        ],
+        "read": "momentum #29"
+      },
+      {
+        "ticker": "DT",
+        "sector": "Technology",
+        "sources": [
+          "momentum"
+        ],
+        "read": "momentum #30"
+      }
+    ]
+  },
+  "positions": [
+    {
+      "ticker": "ALAB",
+      "tag": "ai-connectivity",
+      "reports_today": false,
+      "on_watchlist": false,
+      "redacted": true
+    },
+    {
+      "ticker": "CIBR",
+      "tag": "cyber-etf",
+      "reports_today": false,
+      "on_watchlist": false,
+      "redacted": true
+    },
+    {
+      "ticker": "COIN",
+      "tag": "crypto-beta",
+      "reports_today": false,
+      "on_watchlist": false,
+      "redacted": true
+    },
+    {
+      "ticker": "DUOL",
+      "tag": null,
+      "reports_today": false,
+      "on_watchlist": false,
+      "redacted": true
+    },
+    {
+      "ticker": "IBKR",
+      "tag": "broker",
+      "reports_today": false,
+      "on_watchlist": false,
+      "redacted": true
+    },
+    {
+      "ticker": "REMX",
+      "tag": "rare-earth-etf",
+      "reports_today": false,
+      "on_watchlist": false,
+      "redacted": true
+    },
+    {
+      "ticker": "SOXX",
+      "tag": "semis-etf",
+      "reports_today": false,
+      "on_watchlist": false,
+      "redacted": true
+    },
+    {
+      "ticker": "SPCX",
+      "tag": "space-etf",
+      "reports_today": false,
+      "on_watchlist": false,
+      "redacted": true
+    },
+    {
+      "ticker": "TSLA",
+      "tag": "ev-robotaxi",
+      "reports_today": false,
+      "on_watchlist": false,
+      "redacted": true
+    },
+    {
+      "ticker": "XE",
+      "tag": null,
+      "reports_today": false,
+      "on_watchlist": false,
+      "redacted": true
+    }
+  ],
+  "data_quality": [],
+  "errors": []
+}
