@@ -237,7 +237,7 @@
   "AMRX": {
     "industry": "Drug Manufacturers - Specialty & Generic",
     "sector": "Healthcare",
-    "ts": 1786493002
+    "ts": 1791417890
   },
   "AMX": {
     "industry": "Telecom Services",
@@ -327,7 +327,7 @@
   "ASB": {
     "industry": "Banks - Regional",
     "sector": "Financial Services",
-    "ts": 1788221000
+    "ts": 1791417890
   },
   "ASML": {
     "industry": "Semiconductor Equipment & Materials",
@@ -1002,7 +1002,7 @@
   "CZR": {
     "industry": "Resorts & Casinos",
     "sector": "Consumer Cyclical",
-    "ts": 1785456162
+    "ts": 1791417890
   },
   "D": {
     "industry": "Utilities - Regulated Electric",
@@ -1212,7 +1212,7 @@
   "EMBJ": {
     "industry": "Aerospace & Defense",
     "sector": "Industrials",
-    "ts": 1787961793
+    "ts": 1791417890
   },
   "EMN": {
     "industry": "Specialty Chemicals",
@@ -2757,7 +2757,7 @@
   "QCOM": {
     "industry": "Semiconductors",
     "sector": "Technology",
-    "ts": 1784073920
+    "ts": 1791417890
   },
   "QRVO": {
     "industry": "Semiconductors",
@@ -2862,7 +2862,7 @@
   "ROIV": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1788480191
+    "ts": 1791417890
   },
   "ROKU": {
     "industry": "Entertainment",
@@ -3082,7 +3082,7 @@
   "SNOW": {
     "industry": "Software - Application",
     "sector": "Technology",
-    "ts": 1787270704
+    "ts": 1791417890
   },
   "SO": {
     "industry": "Utilities - Regulated Electric",

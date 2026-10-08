@@ -334,6 +334,11 @@
     "sector": "Technology",
     "ts": 1789171274
   },
+  "DT": {
+    "industry": "Software - Application",
+    "sector": "Technology",
+    "ts": 1791417724
+  },
   "EAT": {
     "industry": "Restaurants",
     "sector": "Consumer Cyclical",
@@ -467,7 +472,7 @@
   "HALO": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1788825682
+    "ts": 1791417724
   },
   "HNGE": {
     "industry": "Health Information Services",
@@ -722,7 +727,7 @@
   "NTRA": {
     "industry": "Diagnostics & Research",
     "sector": "Healthcare",
-    "ts": 1788825682
+    "ts": 1791417724
   },
   "NUE": {
     "industry": "Steel",
@@ -1173,5 +1178,15 @@
     "industry": "Software - Application",
     "sector": "Technology",
     "ts": 1778771326
+  },
+  "ZETA": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1791417724
+  },
+  "ZS": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1791417724
   }
 }

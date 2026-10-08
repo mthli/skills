@@ -857,7 +857,7 @@
   "IFF": {
     "industry": "Specialty Chemicals",
     "sector": "Basic Materials",
-    "ts": 1788307378
+    "ts": 1791417815
   },
   "ILMN": {
     "industry": "Diagnostics & Research",
@@ -1313,6 +1313,11 @@
     "industry": "Aerospace & Defense",
     "sector": "Industrials",
     "ts": 1778771445
+  },
+  "PM": {
+    "industry": "Tobacco",
+    "sector": "Consumer Defensive",
+    "ts": 1791417815
   },
   "PNC": {
     "industry": "Banks - Regional",
