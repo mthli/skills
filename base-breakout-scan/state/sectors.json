@@ -164,6 +164,11 @@
     "sector": "Technology",
     "ts": 1784678546
   },
+  "AVTR": {
+    "industry": "Medical Instruments & Supplies",
+    "sector": "Healthcare",
+    "ts": 1791504225
+  },
   "AXTA": {
     "industry": "Specialty Chemicals",
     "sector": "Basic Materials",
@@ -297,7 +302,7 @@
   "CAH": {
     "industry": "Medical Distribution",
     "sector": "Healthcare",
-    "ts": 1787702664
+    "ts": 1791504225
   },
   "CARR": {
     "industry": "Building Products & Equipment",
@@ -1607,7 +1612,7 @@
   "TRV": {
     "industry": "Insurance - Property & Casualty",
     "sector": "Financial Services",
-    "ts": 1788825728
+    "ts": 1791504225
   },
   "TS": {
     "industry": "Oil & Gas Equipment & Services",

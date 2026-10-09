@@ -1,0 +1,227 @@
+{
+  "as_of": "2026-10-08T20:05:15.143000-04:00",
+  "today": "2026-10-08",
+  "spark_window": [
+    "2026-10-09",
+    "2026-10-12",
+    "2026-10-13"
+  ],
+  "macro_note": "ForexFactory covers the current week only \u2014 macro sparks beyond Sunday not visible",
+  "regime": {
+    "snapshot": "20261008",
+    "state": "CAUTION",
+    "score": 4,
+    "vix": 15.4,
+    "spy_vs_200_pct": 7.6,
+    "flags": "Breadth divergence: SPY -0.7% from high but only 33% of names above 50DMA ; Narrowing rally: only megacaps lifting the index (RSP/SPY -2.5%/20d)"
+  },
+  "mr_run": {
+    "run_id": "20261008",
+    "run_date": "2026-10-08",
+    "data_asof": "2026-10-08",
+    "stale_days": 0,
+    "rows_in_run": 33,
+    "kegs_after_filter": 4
+  },
+  "tape_freshness": {
+    "expected": "2026-10-08",
+    "asof": "2026-10-08",
+    "repaired": [
+      "ARM",
+      "DOCN",
+      "KXIAY",
+      "ROIV"
+    ],
+    "missing": []
+  },
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "KXIAY",
+      "rank": 1,
+      "score": 54.4,
+      "rsi2": 2.42,
+      "dist_200dma_pct": 17.25,
+      "signal_close": 32.3,
+      "mr_target": 34.71,
+      "mr_stop": 27.39,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 1,
+      "freq_60d": 2,
+      "paper_track": false,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "JPM",
+          "date": "2026-10-13",
+          "slot": "BMO",
+          "detail": "JPM ($876B) reports 2026-10-13 BMO"
+        }
+      ],
+      "armed": false,
+      "latest_close": 32.3,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -10.53,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.62,
+      "signal_day_low": 31.75,
+      "quiet_warning": false,
+      "next_own_earnings": null
+    },
+    {
+      "ticker": "DOCN",
+      "rank": 3,
+      "score": 47.7,
+      "rsi2": 2.94,
+      "dist_200dma_pct": 15.65,
+      "signal_close": 123.86,
+      "mr_target": 131.89,
+      "mr_stop": 102.61,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "paper_track": false,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "JPM",
+          "date": "2026-10-13",
+          "slot": "BMO",
+          "detail": "JPM ($876B) reports 2026-10-13 BMO"
+        }
+      ],
+      "armed": false,
+      "latest_close": 123.86,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -11.4,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.68,
+      "signal_day_low": 121.38,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-11-04"
+    },
+    {
+      "ticker": "ROIV",
+      "rank": 4,
+      "score": 42.4,
+      "rsi2": 2.58,
+      "dist_200dma_pct": 12.47,
+      "signal_close": 34.22,
+      "mr_target": 35.2,
+      "mr_stop": 31.19,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "paper_track": false,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "JPM",
+          "date": "2026-10-13",
+          "slot": "BMO",
+          "detail": "JPM ($876B) reports 2026-10-13 BMO"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "JNJ",
+          "date": "2026-10-13",
+          "slot": "BMO",
+          "detail": "JNJ (Healthcare, $623B) reports 2026-10-13 BMO"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "UNH",
+          "date": "2026-10-13",
+          "slot": "BMO",
+          "detail": "UNH (Healthcare, $337B) reports 2026-10-13 BMO"
+        }
+      ],
+      "armed": true,
+      "latest_close": 34.22,
+      "since_signal_pct": 0.01,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -3.59,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.72,
+      "signal_day_low": 33.32,
+      "quiet_warning": true
+    },
+    {
+      "ticker": "ARM",
+      "rank": 5,
+      "score": 40.3,
+      "rsi2": 4.51,
+      "dist_200dma_pct": 25.57,
+      "signal_close": 275.43,
+      "mr_target": 296.55,
+      "mr_stop": 226.02,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 3,
+      "paper_track": false,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "JPM",
+          "date": "2026-10-13",
+          "slot": "BMO",
+          "detail": "JPM ($876B) reports 2026-10-13 BMO"
+        }
+      ],
+      "armed": false,
+      "latest_close": 275.43,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -5.78,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.66,
+      "signal_day_low": 270.26,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-11-05"
+    }
+  ],
+  "macro_calendar": [],
+  "prior_run_review": {
+    "source": "snapback:2026-10-07",
+    "n": 2,
+    "pct_positive": 100.0,
+    "avg_pct": 3.38,
+    "median_pct": 3.38,
+    "best": [
+      {
+        "ticker": "BBY",
+        "since_pct": 4.56
+      },
+      {
+        "ticker": "SAIL",
+        "since_pct": 2.2
+      }
+    ],
+    "worst": [
+      {
+        "ticker": "SAIL",
+        "since_pct": 2.2
+      },
+      {
+        "ticker": "BBY",
+        "since_pct": 4.56
+      }
+    ]
+  },
+  "errors": []
+}

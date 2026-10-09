@@ -202,7 +202,7 @@
   "AMAT": {
     "industry": "Semiconductor Equipment & Materials",
     "sector": "Technology",
-    "ts": 1787616367
+    "ts": 1791504306
   },
   "AMCR": {
     "industry": "Packaging & Containers",
@@ -307,7 +307,7 @@
   "ARM": {
     "industry": "Semiconductors",
     "sector": "Technology",
-    "ts": 1787097898
+    "ts": 1791504305
   },
   "ARMK": {
     "industry": "Specialty Business Services",
@@ -332,7 +332,7 @@
   "ASML": {
     "industry": "Semiconductor Equipment & Materials",
     "sector": "Technology",
-    "ts": 1787961792
+    "ts": 1791504306
   },
   "ASTS": {
     "industry": "Communication Equipment",
@@ -382,7 +382,7 @@
   "AVT": {
     "industry": "Electronics & Computer Distribution",
     "sector": "Technology",
-    "ts": 1785589365
+    "ts": 1791504305
   },
   "AVTR": {
     "industry": "Medical Instruments & Supplies",
@@ -842,7 +842,7 @@
   "COHR": {
     "industry": "Scientific & Technical Instruments",
     "sector": "Technology",
-    "ts": 1787616368
+    "ts": 1791504305
   },
   "COLB": {
     "industry": "Banks - Regional",
@@ -1422,7 +1422,7 @@
   "FORM": {
     "industry": "Semiconductor Equipment & Materials",
     "sector": "Technology",
-    "ts": 1787616367
+    "ts": 1791504305
   },
   "FOXA": {
     "industry": "Entertainment",
@@ -1637,7 +1637,7 @@
   "HBM": {
     "industry": "Copper",
     "sector": "Basic Materials",
-    "ts": 1788307441
+    "ts": 1791504306
   },
   "HESM": {
     "industry": "Oil & Gas Midstream",
@@ -2032,12 +2032,12 @@
   "LRCX": {
     "industry": "Semiconductor Equipment & Materials",
     "sector": "Technology",
-    "ts": 1788307442
+    "ts": 1791504305
   },
   "LSCC": {
     "industry": "Semiconductors",
     "sector": "Technology",
-    "ts": 1785197030
+    "ts": 1791504305
   },
   "LTH": {
     "industry": "Leisure",
@@ -2522,7 +2522,7 @@
   "ONTO": {
     "industry": "Semiconductor Equipment & Materials",
     "sector": "Technology",
-    "ts": 1787357093
+    "ts": 1791504305
   },
   "ORI": {
     "industry": "Insurance - Property & Casualty",
@@ -2992,7 +2992,7 @@
   "SFTBY": {
     "industry": "Telecom Services",
     "sector": "Communication Services",
-    "ts": 1784937791
+    "ts": 1791504305
   },
   "SGHC": {
     "industry": "Gambling",
@@ -3032,7 +3032,7 @@
   "SKM": {
     "industry": "Telecom Services",
     "sector": "Communication Services",
-    "ts": 1788220998
+    "ts": 1791504305
   },
   "SLB": {
     "industry": "Oil & Gas Equipment & Services",
@@ -3227,7 +3227,7 @@
   "TER": {
     "industry": "Semiconductor Equipment & Materials",
     "sector": "Technology",
-    "ts": 1788307442
+    "ts": 1791504305
   },
   "TEVA": {
     "industry": "Drug Manufacturers - Specialty & Generic",
