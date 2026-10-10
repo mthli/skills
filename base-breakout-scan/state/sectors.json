@@ -354,6 +354,11 @@
     "sector": "Technology",
     "ts": 1779285544
   },
+  "CLMT": {
+    "industry": "Specialty Chemicals",
+    "sector": "Basic Materials",
+    "ts": 1791590634
+  },
   "CM": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
@@ -417,12 +422,17 @@
   "CORT": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1788998573
+    "ts": 1791590634
   },
   "CORZ": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
     "ts": 1781654569
+  },
+  "CRBG": {
+    "industry": "Asset Management",
+    "sector": "Financial Services",
+    "ts": 1791590634
   },
   "CRNX": {
     "industry": "Biotechnology",
@@ -789,6 +799,11 @@
     "sector": "Communication Services",
     "ts": 1788220950
   },
+  "GTLB": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1791590634
+  },
   "GTX": {
     "industry": "Auto Parts",
     "sector": "Consumer Cyclical",
@@ -837,7 +852,7 @@
   "HST": {
     "industry": "REIT - Hotel & Motel",
     "sector": "Real Estate",
-    "ts": 1784246534
+    "ts": 1791590634
   },
   "HUM": {
     "industry": "Healthcare Plans",
@@ -1282,7 +1297,7 @@
   "PANW": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1788220951
+    "ts": 1791590634
   },
   "PBA": {
     "industry": "Oil & Gas Midstream",
@@ -1414,6 +1429,11 @@
     "sector": "Industrials",
     "ts": 1788220950
   },
+  "S": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1791590634
+  },
   "SAN": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
@@ -1532,7 +1552,7 @@
   "SU": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
-    "ts": 1788998573
+    "ts": 1791590634
   },
   "SW": {
     "industry": "Packaging & Containers",
@@ -1562,7 +1582,7 @@
   "TECK": {
     "industry": "Copper",
     "sector": "Basic Materials",
-    "ts": 1788566553
+    "ts": 1791590634
   },
   "TER": {
     "industry": "Semiconductor Equipment & Materials",
@@ -1762,7 +1782,7 @@
   "VTRS": {
     "industry": "Drug Manufacturers - Specialty & Generic",
     "sector": "Healthcare",
-    "ts": 1788480144
+    "ts": 1791590634
   },
   "WBD": {
     "industry": "Entertainment",
@@ -1822,7 +1842,7 @@
   "XOM": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
-    "ts": 1788998573
+    "ts": 1791590634
   },
   "XPO": {
     "industry": "Trucking",
