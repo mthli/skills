@@ -147,7 +147,7 @@
   "ALAB": {
     "industry": "Semiconductors",
     "sector": "Technology",
-    "ts": 1787097898
+    "ts": 1791849895
   },
   "ALB": {
     "industry": "Specialty Chemicals",
@@ -1012,7 +1012,7 @@
   "DAL": {
     "industry": "Airlines",
     "sector": "Industrials",
-    "ts": 1786406609
+    "ts": 1791849895
   },
   "DAR": {
     "industry": "Packaged Foods",
@@ -1407,7 +1407,7 @@
   "FLR": {
     "industry": "Engineering & Construction",
     "sector": "Industrials",
-    "ts": 1789171380
+    "ts": 1791849895
   },
   "FLS": {
     "industry": "Specialty Industrial Machinery",
@@ -1597,7 +1597,7 @@
   "GTES": {
     "industry": "Specialty Industrial Machinery",
     "sector": "Industrials",
-    "ts": 1785589370
+    "ts": 1791849895
   },
   "GTLB": {
     "industry": "Software - Infrastructure",
@@ -1817,7 +1817,7 @@
   "IRDM": {
     "industry": "Telecom Services",
     "sector": "Communication Services",
-    "ts": 1787184310
+    "ts": 1791849895
   },
   "IREN": {
     "industry": "Capital Markets",
@@ -1912,7 +1912,7 @@
   "KLAC": {
     "industry": "Semiconductor Equipment & Materials",
     "sector": "Technology",
-    "ts": 1787184310
+    "ts": 1791849895
   },
   "KLIC": {
     "industry": "Semiconductor Equipment & Materials",
@@ -3049,6 +3049,11 @@
     "sector": "Energy",
     "ts": 1790121795
   },
+  "SMCI": {
+    "industry": "Computer Hardware",
+    "sector": "Technology",
+    "ts": 1791849895
+  },
   "SMFG": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
@@ -3057,7 +3062,7 @@
   "SMTC": {
     "industry": "Semiconductors",
     "sector": "Technology",
-    "ts": 1785283361
+    "ts": 1791849895
   },
   "SN": {
     "industry": "Furnishings, Fixtures & Appliances",
@@ -3322,7 +3327,7 @@
   "TSEM": {
     "industry": "Semiconductors",
     "sector": "Technology",
-    "ts": 1787184308
+    "ts": 1791849895
   },
   "TSM": {
     "industry": "Semiconductors",
@@ -3377,7 +3382,7 @@
   "TXN": {
     "industry": "Semiconductors",
     "sector": "Technology",
-    "ts": 1787357092
+    "ts": 1791849895
   },
   "TXNM": {
     "industry": "Utilities - Regulated Electric",
@@ -3552,7 +3557,7 @@
   "VSH": {
     "industry": "Semiconductors",
     "sector": "Technology",
-    "ts": 1785283361
+    "ts": 1791849895
   },
   "VSXY": {
     "industry": "Apparel Retail",

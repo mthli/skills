@@ -307,7 +307,7 @@
   "DINO": {
     "industry": "Oil & Gas Refining & Marketing",
     "sector": "Energy",
-    "ts": 1789084891
+    "ts": 1791849728
   },
   "DLTR": {
     "industry": "Discount Stores",
@@ -1013,6 +1013,11 @@
     "industry": "Biotechnology",
     "sector": "Healthcare",
     "ts": 1786147298
+  },
+  "TEVA": {
+    "industry": "Drug Manufacturers - Specialty & Generic",
+    "sector": "Healthcare",
+    "ts": 1791849728
   },
   "TGOPY": {
     "industry": "Asset Management",

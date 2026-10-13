@@ -1,0 +1,513 @@
+{
+  "as_of": "2026-10-12T20:05:03.720190-04:00",
+  "today": "2026-10-12",
+  "spark_window": [
+    "2026-10-13",
+    "2026-10-14",
+    "2026-10-15"
+  ],
+  "macro_note": "",
+  "regime": {
+    "snapshot": "20261012",
+    "state": "CAUTION",
+    "score": 2,
+    "vix": 15.2,
+    "spy_vs_200_pct": 8.0,
+    "flags": "Breadth divergence: SPY -0.1% from high but only 37% of names above 50DMA ; Narrowing rally: only megacaps lifting the index (RSP/SPY -2.9%/20d)"
+  },
+  "mr_run": {
+    "run_id": "20261012",
+    "run_date": "2026-10-12",
+    "data_asof": "2026-10-12",
+    "stale_days": 0,
+    "rows_in_run": 35,
+    "kegs_after_filter": 4
+  },
+  "tape_freshness": {
+    "expected": "2026-10-12",
+    "asof": "2026-10-12",
+    "repaired": [
+      "ALAB",
+      "SMTC",
+      "SNDK",
+      "SWKS"
+    ],
+    "missing": []
+  },
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "SMTC",
+      "rank": 1,
+      "score": 70.3,
+      "rsi2": 2.22,
+      "dist_200dma_pct": 39.72,
+      "signal_close": 168.17,
+      "mr_target": 186.79,
+      "mr_stop": 138.62,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "paper_track": true,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "JPM",
+          "date": "2026-10-13",
+          "slot": "BMO",
+          "detail": "JPM ($885B) reports 2026-10-13 BMO"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "ASML",
+          "date": "2026-10-14",
+          "slot": "BMO",
+          "detail": "ASML (Technology, $686B) reports 2026-10-14 BMO"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-14",
+          "detail": "Core CPI m/m 2026-10-14 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-14",
+          "detail": "Core CPI y/y 2026-10-14 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-14",
+          "detail": "CPI m/m 2026-10-14 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-14",
+          "detail": "CPI y/y 2026-10-14 08:30 ET"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "TSM",
+          "date": "2026-10-15",
+          "slot": "BMO",
+          "detail": "TSM (Technology, $2351B) reports 2026-10-15 BMO"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core Retail Sales m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Retail Sales m/m 2026-10-15 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 168.17,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -12.79,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.79,
+      "signal_day_low": 167.15,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "SNDK",
+      "rank": 4,
+      "score": 52.8,
+      "rsi2": 3.24,
+      "dist_200dma_pct": 25.22,
+      "signal_close": 1487.33,
+      "mr_target": 1606.3,
+      "mr_stop": 1277.97,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 2,
+      "paper_track": false,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "JPM",
+          "date": "2026-10-13",
+          "slot": "BMO",
+          "detail": "JPM ($885B) reports 2026-10-13 BMO"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "ASML",
+          "date": "2026-10-14",
+          "slot": "BMO",
+          "detail": "ASML (Technology, $686B) reports 2026-10-14 BMO"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-14",
+          "detail": "Core CPI m/m 2026-10-14 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-14",
+          "detail": "Core CPI y/y 2026-10-14 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-14",
+          "detail": "CPI m/m 2026-10-14 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-14",
+          "detail": "CPI y/y 2026-10-14 08:30 ET"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "TSM",
+          "date": "2026-10-15",
+          "slot": "BMO",
+          "detail": "TSM (Technology, $2351B) reports 2026-10-15 BMO"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core Retail Sales m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Retail Sales m/m 2026-10-15 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 1487.33,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -12.72,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.91,
+      "signal_day_low": 1464.43,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "SWKS",
+      "rank": 5,
+      "score": 51.7,
+      "rsi2": 2.32,
+      "dist_200dma_pct": 13.43,
+      "signal_close": 74.68,
+      "mr_target": 79.6,
+      "mr_stop": 63.43,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "paper_track": false,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "JPM",
+          "date": "2026-10-13",
+          "slot": "BMO",
+          "detail": "JPM ($885B) reports 2026-10-13 BMO"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "ASML",
+          "date": "2026-10-14",
+          "slot": "BMO",
+          "detail": "ASML (Technology, $686B) reports 2026-10-14 BMO"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-14",
+          "detail": "Core CPI m/m 2026-10-14 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-14",
+          "detail": "Core CPI y/y 2026-10-14 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-14",
+          "detail": "CPI m/m 2026-10-14 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-14",
+          "detail": "CPI y/y 2026-10-14 08:30 ET"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "TSM",
+          "date": "2026-10-15",
+          "slot": "BMO",
+          "detail": "TSM (Technology, $2351B) reports 2026-10-15 BMO"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core Retail Sales m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Retail Sales m/m 2026-10-15 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 74.68,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -11.0,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 1.08,
+      "signal_day_low": 74.56,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "ALAB",
+      "rank": 8,
+      "score": 42.9,
+      "rsi2": 6.48,
+      "dist_200dma_pct": 31.09,
+      "signal_close": 323.98,
+      "mr_target": 357.06,
+      "mr_stop": 265.2,
+      "signal": "\ud83d\udfe1",
+      "listing_age_runs": 1,
+      "freq_60d": 3,
+      "paper_track": false,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "JPM",
+          "date": "2026-10-13",
+          "slot": "BMO",
+          "detail": "JPM ($885B) reports 2026-10-13 BMO"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "ASML",
+          "date": "2026-10-14",
+          "slot": "BMO",
+          "detail": "ASML (Technology, $686B) reports 2026-10-14 BMO"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-14",
+          "detail": "Core CPI m/m 2026-10-14 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-14",
+          "detail": "Core CPI y/y 2026-10-14 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-14",
+          "detail": "CPI m/m 2026-10-14 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-14",
+          "detail": "CPI y/y 2026-10-14 08:30 ET"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "TSM",
+          "date": "2026-10-15",
+          "slot": "BMO",
+          "detail": "TSM (Technology, $2351B) reports 2026-10-15 BMO"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core Retail Sales m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Retail Sales m/m 2026-10-15 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 323.98,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -10.59,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 1.27,
+      "signal_day_low": 320.23,
+      "quiet_warning": false
+    }
+  ],
+  "macro_calendar": [
+    {
+      "date": "2026-10-14",
+      "time_et": "08:30",
+      "title": "Core CPI m/m"
+    },
+    {
+      "date": "2026-10-14",
+      "time_et": "08:30",
+      "title": "Core CPI y/y"
+    },
+    {
+      "date": "2026-10-14",
+      "time_et": "08:30",
+      "title": "CPI m/m"
+    },
+    {
+      "date": "2026-10-14",
+      "time_et": "08:30",
+      "title": "CPI y/y"
+    },
+    {
+      "date": "2026-10-15",
+      "time_et": "08:30",
+      "title": "Core PPI m/m"
+    },
+    {
+      "date": "2026-10-15",
+      "time_et": "08:30",
+      "title": "Core Retail Sales m/m"
+    },
+    {
+      "date": "2026-10-15",
+      "time_et": "08:30",
+      "title": "PPI m/m"
+    },
+    {
+      "date": "2026-10-15",
+      "time_et": "08:30",
+      "title": "Retail Sales m/m"
+    }
+  ],
+  "prior_run_review": {
+    "source": "snapback:2026-10-09",
+    "n": 3,
+    "pct_positive": 0.0,
+    "avg_pct": -3.25,
+    "median_pct": -3.22,
+    "best": [
+      {
+        "ticker": "SWKS",
+        "since_pct": -2.21
+      },
+      {
+        "ticker": "INTC",
+        "since_pct": -3.22
+      },
+      {
+        "ticker": "ARM",
+        "since_pct": -4.31
+      }
+    ],
+    "worst": [
+      {
+        "ticker": "ARM",
+        "since_pct": -4.31
+      },
+      {
+        "ticker": "INTC",
+        "since_pct": -3.22
+      },
+      {
+        "ticker": "SWKS",
+        "since_pct": -2.21
+      }
+    ],
+    "armed_subset": {
+      "n": 3,
+      "pct_positive": 0.0,
+      "avg_pct": -3.25,
+      "median_pct": -3.22
+    }
+  },
+  "errors": []
+}
