@@ -430,6 +430,10 @@ This is the section that can do harm if written lazily, so frame it honestly:
   Frame a driverless premarket gap-up as the day's high-water mark, never a
   floor and never a reason to chase; the >100% floor framing belongs to gaps
   a named catalyst owns. On a confirmed RISK-ON tape the rule is untested.
+  **Record 8-for-11 by 10-12 (breaks: GFS 110% 10-08, META 247% and SPCX
+  40% 10-12, all under CAUTION).** The framing stands, but the rule now
+  fails about one time in four. Keep a driverless gap-up two-sided and
+  never write an expected keep for it.
 - **Gap-is-half-the-move symmetry (unwind 07-01; risk-on 06-29, 07-30,
   08-04).** In a crowded unwind the premarket gap ≈ half the closing damage;
   on a corroborated catalyst-owned risk-on morning the gap ≈ half the day's
