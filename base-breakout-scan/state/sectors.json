@@ -32,7 +32,7 @@
   "ADM": {
     "industry": "Farm Products",
     "sector": "Consumer Defensive",
-    "ts": 1788307378
+    "ts": 1791936910
   },
   "AEG": {
     "industry": "Insurance - Diversified",
@@ -612,7 +612,7 @@
   "ELV": {
     "industry": "Healthcare Plans",
     "sector": "Healthcare",
-    "ts": 1788566553
+    "ts": 1791936910
   },
   "EMBJ": {
     "industry": "Aerospace & Defense",
@@ -653,6 +653,11 @@
     "industry": "Specialty Chemicals",
     "sector": "Basic Materials",
     "ts": 1780452058
+  },
+  "ESTC": {
+    "industry": "Software - Application",
+    "sector": "Technology",
+    "ts": 1791936910
   },
   "ET": {
     "industry": "Oil & Gas Midstream",
@@ -914,6 +919,11 @@
     "sector": "Technology",
     "ts": 1791286266
   },
+  "IQV": {
+    "industry": "Diagnostics & Research",
+    "sector": "Healthcare",
+    "ts": 1791936910
+  },
   "IRDM": {
     "industry": "Telecom Services",
     "sector": "Communication Services",
@@ -1129,6 +1139,11 @@
     "sector": "Financial Services",
     "ts": 1788566553
   },
+  "MSFT": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1791936910
+  },
   "MT": {
     "industry": "Steel",
     "sector": "Basic Materials",
@@ -1227,7 +1242,7 @@
   "NVDA": {
     "industry": "Semiconductors",
     "sector": "Technology",
-    "ts": 1788825728
+    "ts": 1791936910
   },
   "NVT": {
     "industry": "Electrical Equipment & Parts",
@@ -1738,6 +1753,11 @@
     "industry": "Other Industrial Metals & Mining",
     "sector": "Basic Materials",
     "ts": 1779848040
+  },
+  "VEEV": {
+    "industry": "Health Information Services",
+    "sector": "Healthcare",
+    "ts": 1791936910
   },
   "VG": {
     "industry": "Oil & Gas Midstream",

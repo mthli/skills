@@ -1472,7 +1472,7 @@
   "FWONK": {
     "industry": "Entertainment",
     "sector": "Communication Services",
-    "ts": 1787961793
+    "ts": 1791937103
   },
   "GBCI": {
     "industry": "Banks - Regional",
@@ -2302,7 +2302,7 @@
   "NBIS": {
     "industry": "Internet Content & Information",
     "sector": "Communication Services",
-    "ts": 1788307441
+    "ts": 1791937103
   },
   "NBIX": {
     "industry": "Drug Manufacturers - Specialty & Generic",
@@ -3167,7 +3167,7 @@
   "STX": {
     "industry": "Computer Hardware",
     "sector": "Technology",
-    "ts": 1787616367
+    "ts": 1791937103
   },
   "SU": {
     "industry": "Oil & Gas Integrated",
@@ -3427,7 +3427,7 @@
   "UMC": {
     "industry": "Semiconductors",
     "sector": "Technology",
-    "ts": 1787270704
+    "ts": 1791937103
   },
   "UNH": {
     "industry": "Healthcare Plans",
@@ -3502,7 +3502,7 @@
   "VIRT": {
     "industry": "Capital Markets",
     "sector": "Financial Services",
-    "ts": 1788480190
+    "ts": 1791937103
   },
   "VIST": {
     "industry": "Oil & Gas E&P",
@@ -3547,7 +3547,7 @@
   "VRTX": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1788998617
+    "ts": 1791937103
   },
   "VSAT": {
     "industry": "Communication Equipment",
