@@ -117,7 +117,7 @@
   "AFRM": {
     "industry": "Credit Services",
     "sector": "Financial Services",
-    "ts": 1788307440
+    "ts": 1792023112
   },
   "AGNC": {
     "industry": "REIT - Mortgage",
@@ -252,7 +252,7 @@
   "ANET": {
     "industry": "Computer Hardware",
     "sector": "Technology",
-    "ts": 1788480190
+    "ts": 1792023112
   },
   "ANF": {
     "industry": "Apparel Retail",
@@ -277,7 +277,7 @@
   "APH": {
     "industry": "Electronic Components",
     "sector": "Technology",
-    "ts": 1785589365
+    "ts": 1792023113
   },
   "APLD": {
     "industry": "Information Technology Services",
@@ -472,7 +472,7 @@
   "BE": {
     "industry": "Electrical Equipment & Parts",
     "sector": "Industrials",
-    "ts": 1787097898
+    "ts": 1792023111
   },
   "BEKE": {
     "industry": "Real Estate Services",
@@ -502,7 +502,7 @@
   "BHP": {
     "industry": "Other Industrial Metals & Mining",
     "sector": "Basic Materials",
-    "ts": 1788307442
+    "ts": 1792023113
   },
   "BIIB": {
     "industry": "Drug Manufacturers - General",
@@ -557,7 +557,7 @@
   "BRKR": {
     "industry": "Medical Devices",
     "sector": "Healthcare",
-    "ts": 1789085008
+    "ts": 1792023113
   },
   "BROS": {
     "industry": "Restaurants",
@@ -568,6 +568,11 @@
     "industry": "REIT - Retail",
     "sector": "Real Estate",
     "ts": 1788221000
+  },
+  "BTG": {
+    "industry": "Gold",
+    "sector": "Basic Materials",
+    "ts": 1792023113
   },
   "BTI": {
     "industry": "Tobacco",
@@ -917,7 +922,7 @@
   "CRWD": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1787270703
+    "ts": 1792023112
   },
   "CRWV": {
     "industry": "Software - Infrastructure",
@@ -1057,7 +1062,7 @@
   "DELL": {
     "industry": "Computer Hardware",
     "sector": "Technology",
-    "ts": 1788307440
+    "ts": 1792023111
   },
   "DEO": {
     "industry": "Beverages - Wineries & Distilleries",
@@ -1237,7 +1242,7 @@
   "ENTG": {
     "industry": "Semiconductor Equipment & Materials",
     "sector": "Technology",
-    "ts": 1787184309
+    "ts": 1792023112
   },
   "EOG": {
     "industry": "Oil & Gas E&P",
@@ -1297,7 +1302,7 @@
   "ETN": {
     "industry": "Specialty Industrial Machinery",
     "sector": "Industrials",
-    "ts": 1788307444
+    "ts": 1792023113
   },
   "ETR": {
     "industry": "Utilities - Regulated Electric",
@@ -1442,7 +1447,7 @@
   "FROG": {
     "industry": "Software - Application",
     "sector": "Technology",
-    "ts": 1788825775
+    "ts": 1792023111
   },
   "FSLR": {
     "industry": "Solar",
@@ -1462,7 +1467,7 @@
   "FTNT": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1784764989
+    "ts": 1792023112
   },
   "FTV": {
     "industry": "Scientific & Technical Instruments",
@@ -1497,7 +1502,7 @@
   "GEV": {
     "industry": "Specialty Industrial Machinery",
     "sector": "Industrials",
-    "ts": 1787357092
+    "ts": 1792023113
   },
   "GFS": {
     "industry": "Semiconductors",
@@ -1677,7 +1682,7 @@
   "HPE": {
     "industry": "Communication Equipment",
     "sector": "Technology",
-    "ts": 1787184308
+    "ts": 1792023111
   },
   "HPQ": {
     "industry": "Computer Hardware",
@@ -1892,7 +1897,7 @@
   "KEYS": {
     "industry": "Scientific & Technical Instruments",
     "sector": "Technology",
-    "ts": 1785589371
+    "ts": 1792023113
   },
   "KGS": {
     "industry": "Oil & Gas Equipment & Services",
@@ -1943,6 +1948,11 @@
     "industry": "Beverages - Non-Alcoholic",
     "sector": "Consumer Defensive",
     "ts": 1790812981
+  },
+  "KOD": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1792023111
   },
   "KRG": {
     "industry": "REIT - Retail",
@@ -2227,7 +2237,7 @@
   "MRVL": {
     "industry": "Semiconductors",
     "sector": "Technology",
-    "ts": 1787961792
+    "ts": 1792023111
   },
   "MS": {
     "industry": "Capital Markets",
@@ -2267,7 +2277,7 @@
   "MTSI": {
     "industry": "Semiconductors",
     "sector": "Technology",
-    "ts": 1787270703
+    "ts": 1792023113
   },
   "MTZ": {
     "industry": "Engineering & Construction",
@@ -2292,7 +2302,7 @@
   "MXL": {
     "industry": "Semiconductors",
     "sector": "Technology",
-    "ts": 1787184308
+    "ts": 1792023111
   },
   "NAVN": {
     "industry": "Software - Application",
@@ -2332,7 +2342,7 @@
   "NET": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1784851400
+    "ts": 1792023111
   },
   "NGG": {
     "industry": "Utilities - Regulated Electric",
@@ -2382,7 +2392,12 @@
   "NTAP": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1787184309
+    "ts": 1792023112
+  },
+  "NTNX": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1792023112
   },
   "NTR": {
     "industry": "Agricultural Inputs",
@@ -2417,7 +2432,7 @@
   "NVT": {
     "industry": "Electrical Equipment & Parts",
     "sector": "Industrials",
-    "ts": 1788307444
+    "ts": 1792023112
   },
   "NVTS": {
     "industry": "Semiconductors",
@@ -2497,7 +2512,7 @@
   "OKTA": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1787616367
+    "ts": 1792023112
   },
   "OMC": {
     "industry": "Advertising Agencies",
@@ -2577,7 +2592,7 @@
   "PANW": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1784764989
+    "ts": 1792023111
   },
   "PATH": {
     "industry": "Software - Infrastructure",
@@ -2752,7 +2767,7 @@
   "PWR": {
     "industry": "Engineering & Construction",
     "sector": "Industrials",
-    "ts": 1787357092
+    "ts": 1792023113
   },
   "QCOM": {
     "industry": "Semiconductors",
@@ -2782,7 +2797,7 @@
   "RBRK": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1787270704
+    "ts": 1792023111
   },
   "RCL": {
     "industry": "Travel Services",
@@ -3492,7 +3507,7 @@
   "VIAV": {
     "industry": "Communication Equipment",
     "sector": "Technology",
-    "ts": 1787616367
+    "ts": 1792023112
   },
   "VIK": {
     "industry": "Travel Services",

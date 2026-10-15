@@ -1,0 +1,1181 @@
+{
+  "as_of": "2026-10-14T20:12:03.780245-04:00",
+  "today": "2026-10-14",
+  "spark_window": [
+    "2026-10-15",
+    "2026-10-16",
+    "2026-10-19"
+  ],
+  "macro_note": "ForexFactory covers the current week only \u2014 macro sparks beyond Sunday not visible",
+  "regime": {
+    "snapshot": "20261014",
+    "state": "RISK-OFF (internals)",
+    "score": 1,
+    "vix": 16.9,
+    "spy_vs_200_pct": 6.7,
+    "flags": "Breadth divergence: SPY -1.2% from high but only 36% of names above 50DMA ; Narrowing rally: only megacaps lifting the index (RSP/SPY -2.0%/20d) ; Credit weakening: HYG/LQD -0.3%/20d while stocks hold ; Defensive rotation: deepening, defensives +2.1pp over offensives / 20d, +5.4pp more than 5 sessions ago"
+  },
+  "mr_run": {
+    "run_id": "20261014",
+    "run_date": "2026-10-14",
+    "data_asof": "2026-10-14",
+    "stale_days": 0,
+    "rows_in_run": 64,
+    "kegs_after_filter": 18
+  },
+  "tape_freshness": {
+    "expected": "2026-10-14",
+    "asof": "2026-10-14",
+    "repaired": [
+      "ALAB",
+      "ASML",
+      "DELL",
+      "FORM",
+      "FROG",
+      "HPE",
+      "KOD",
+      "LITE",
+      "LSCC",
+      "MFG",
+      "MRVL",
+      "MXL",
+      "NBIS",
+      "S",
+      "STT",
+      "STX",
+      "TSM",
+      "UMC"
+    ],
+    "missing": []
+  },
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "MXL",
+      "rank": 2,
+      "score": 65.4,
+      "rsi2": 3.26,
+      "dist_200dma_pct": 38.93,
+      "signal_close": 78.85,
+      "mr_target": 89.27,
+      "mr_stop": 57.68,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "paper_track": false,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "TSM",
+          "date": "2026-10-15",
+          "slot": "BMO",
+          "detail": "TSM (Technology, $2309B) reports 2026-10-15 BMO"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core Retail Sales m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Retail Sales m/m 2026-10-15 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 78.85,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -26.56,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.99,
+      "signal_day_low": 78.2,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "DELL",
+      "rank": 5,
+      "score": 63.5,
+      "rsi2": 2.82,
+      "dist_200dma_pct": 63.64,
+      "signal_close": 507.57,
+      "mr_target": 563.48,
+      "mr_stop": 435.99,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 2,
+      "paper_track": false,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "TSM",
+          "date": "2026-10-15",
+          "slot": "BMO",
+          "detail": "TSM (Technology, $2309B) reports 2026-10-15 BMO"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core Retail Sales m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Retail Sales m/m 2026-10-15 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 507.57,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -12.33,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.8,
+      "signal_day_low": 502.32,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "NBIS",
+      "rank": 7,
+      "score": 62.4,
+      "rsi2": 1.79,
+      "dist_200dma_pct": 7.49,
+      "signal_close": 186.09,
+      "mr_target": 208.76,
+      "mr_stop": 147.67,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "paper_track": false,
+      "sector": "Communication Services",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "TSM",
+          "date": "2026-10-15",
+          "slot": "BMO",
+          "detail": "TSM ($2309B) reports 2026-10-15 BMO"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core Retail Sales m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Retail Sales m/m 2026-10-15 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 186.09,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -21.53,
+      "down_gaps_5d": 4,
+      "vol_ratio_5d_20d": 0.96,
+      "signal_day_low": 183.13,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "UMC",
+      "rank": 9,
+      "score": 60.0,
+      "rsi2": 2.16,
+      "dist_200dma_pct": 31.7,
+      "signal_close": 21.4,
+      "mr_target": 22.42,
+      "mr_stop": 19.08,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "paper_track": false,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "TSM",
+          "date": "2026-10-15",
+          "slot": "BMO",
+          "detail": "TSM (Technology, $2309B) reports 2026-10-15 BMO"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core Retail Sales m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Retail Sales m/m 2026-10-15 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 21.4,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -8.19,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.7,
+      "signal_day_low": 21.34,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "STT",
+      "rank": 14,
+      "score": 53.4,
+      "rsi2": 0.87,
+      "dist_200dma_pct": 7.59,
+      "signal_close": 166.98,
+      "mr_target": 173.21,
+      "mr_stop": 156.19,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 1,
+      "freq_60d": 3,
+      "paper_track": false,
+      "sector": "Financial Services",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "TSM",
+          "date": "2026-10-15",
+          "slot": "BMO",
+          "detail": "TSM ($2309B) reports 2026-10-15 BMO"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "SCHW",
+          "date": "2026-10-15",
+          "slot": "BMO",
+          "detail": "SCHW (Financial Services, $166B) reports 2026-10-15 BMO"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core Retail Sales m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Retail Sales m/m 2026-10-15 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 166.98,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -4.14,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.84,
+      "signal_day_low": 156.5,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "KOD",
+      "rank": 17,
+      "score": 52.3,
+      "rsi2": 5.96,
+      "dist_200dma_pct": 111.97,
+      "signal_close": 81.07,
+      "mr_target": 93.22,
+      "mr_stop": 51.85,
+      "signal": "\ud83d\udfe1",
+      "listing_age_runs": 1,
+      "freq_60d": 2,
+      "paper_track": false,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "TSM",
+          "date": "2026-10-15",
+          "slot": "BMO",
+          "detail": "TSM ($2309B) reports 2026-10-15 BMO"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core Retail Sales m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Retail Sales m/m 2026-10-15 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 81.07,
+      "since_signal_pct": -0.01,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -11.0,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.38,
+      "signal_day_low": 80.16,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "ASML",
+      "rank": 18,
+      "score": 50.4,
+      "rsi2": 1.64,
+      "dist_200dma_pct": 5.18,
+      "signal_close": 1649.85,
+      "mr_target": 1733.6,
+      "mr_stop": 1519.76,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "paper_track": false,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "TSM",
+          "date": "2026-10-15",
+          "slot": "BMO",
+          "detail": "TSM (Technology, $2309B) reports 2026-10-15 BMO"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core Retail Sales m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Retail Sales m/m 2026-10-15 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 1649.85,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -8.59,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 1.03,
+      "signal_day_low": 1648.8,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "ALAB",
+      "rank": 19,
+      "score": 48.9,
+      "rsi2": 3.46,
+      "dist_200dma_pct": 20.76,
+      "signal_close": 300.18,
+      "mr_target": 327.79,
+      "mr_stop": 238.41,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 3,
+      "paper_track": false,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "TSM",
+          "date": "2026-10-15",
+          "slot": "BMO",
+          "detail": "TSM (Technology, $2309B) reports 2026-10-15 BMO"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core Retail Sales m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Retail Sales m/m 2026-10-15 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 300.18,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 1,
+      "ret_5d_pct": -21.47,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.01,
+      "signal_day_low": 299.2,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "FORM",
+      "rank": 20,
+      "score": 48.6,
+      "rsi2": 2.69,
+      "dist_200dma_pct": 7.18,
+      "signal_close": 119.71,
+      "mr_target": 130.98,
+      "mr_stop": 100.68,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 3,
+      "paper_track": false,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "TSM",
+          "date": "2026-10-15",
+          "slot": "BMO",
+          "detail": "TSM (Technology, $2309B) reports 2026-10-15 BMO"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core Retail Sales m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Retail Sales m/m 2026-10-15 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 119.71,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -14.37,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.62,
+      "signal_day_low": 118.8,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "HPE",
+      "rank": 21,
+      "score": 46.0,
+      "rsi2": 5.38,
+      "dist_200dma_pct": 63.86,
+      "signal_close": 63.17,
+      "mr_target": 69.35,
+      "mr_stop": 53.79,
+      "signal": "\ud83d\udfe1",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "paper_track": false,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "TSM",
+          "date": "2026-10-15",
+          "slot": "BMO",
+          "detail": "TSM (Technology, $2309B) reports 2026-10-15 BMO"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core Retail Sales m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Retail Sales m/m 2026-10-15 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 63.17,
+      "since_signal_pct": -0.01,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -12.38,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.92,
+      "signal_day_low": 62.62,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "LSCC",
+      "rank": 22,
+      "score": 45.4,
+      "rsi2": 2.2,
+      "dist_200dma_pct": 0.45,
+      "signal_close": 114.98,
+      "mr_target": 122.0,
+      "mr_stop": 101.24,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "paper_track": false,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "TSM",
+          "date": "2026-10-15",
+          "slot": "BMO",
+          "detail": "TSM (Technology, $2309B) reports 2026-10-15 BMO"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core Retail Sales m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Retail Sales m/m 2026-10-15 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 114.98,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -12.22,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.65,
+      "signal_day_low": 112.13,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "S",
+      "rank": 23,
+      "score": 44.3,
+      "rsi2": 5.5,
+      "dist_200dma_pct": 33.47,
+      "signal_close": 22.82,
+      "mr_target": 24.83,
+      "mr_stop": 20.06,
+      "signal": "\ud83d\udfe1",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "paper_track": false,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "TSM",
+          "date": "2026-10-15",
+          "slot": "BMO",
+          "detail": "TSM (Technology, $2309B) reports 2026-10-15 BMO"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core Retail Sales m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Retail Sales m/m 2026-10-15 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 22.82,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -9.84,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.24,
+      "signal_day_low": 22.8,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "MFG",
+      "rank": 24,
+      "score": 43.4,
+      "rsi2": 2.23,
+      "dist_200dma_pct": 8.97,
+      "signal_close": 10.26,
+      "mr_target": 10.55,
+      "mr_stop": 9.52,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 1,
+      "freq_60d": 2,
+      "paper_track": false,
+      "sector": "Financial Services",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "TSM",
+          "date": "2026-10-15",
+          "slot": "BMO",
+          "detail": "TSM ($2309B) reports 2026-10-15 BMO"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "SCHW",
+          "date": "2026-10-15",
+          "slot": "BMO",
+          "detail": "SCHW (Financial Services, $166B) reports 2026-10-15 BMO"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core Retail Sales m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Retail Sales m/m 2026-10-15 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 10.26,
+      "since_signal_pct": -0.05,
+      "ignited": false,
+      "down_streak": 1,
+      "ret_5d_pct": -4.78,
+      "down_gaps_5d": 3,
+      "vol_ratio_5d_20d": 0.91,
+      "signal_day_low": 10.18,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "LITE",
+      "rank": 25,
+      "score": 43.0,
+      "rsi2": 5.84,
+      "dist_200dma_pct": 16.01,
+      "signal_close": 896.46,
+      "mr_target": 1006.36,
+      "mr_stop": 712.83,
+      "signal": "\ud83d\udfe1",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "paper_track": false,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "TSM",
+          "date": "2026-10-15",
+          "slot": "BMO",
+          "detail": "TSM (Technology, $2309B) reports 2026-10-15 BMO"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core Retail Sales m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Retail Sales m/m 2026-10-15 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 896.46,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -19.32,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 1.06,
+      "signal_day_low": 893.88,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "MRVL",
+      "rank": 26,
+      "score": 41.8,
+      "rsi2": 6.34,
+      "dist_200dma_pct": 40.7,
+      "signal_close": 245.24,
+      "mr_target": 265.94,
+      "mr_stop": 205.52,
+      "signal": "\ud83d\udfe1",
+      "listing_age_runs": 1,
+      "freq_60d": 2,
+      "paper_track": false,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "TSM",
+          "date": "2026-10-15",
+          "slot": "BMO",
+          "detail": "TSM (Technology, $2309B) reports 2026-10-15 BMO"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core Retail Sales m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Retail Sales m/m 2026-10-15 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 245.24,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 1,
+      "ret_5d_pct": -13.85,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.03,
+      "signal_day_low": 245.1,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "TSM",
+      "rank": 27,
+      "score": 41.0,
+      "rsi2": 2.79,
+      "dist_200dma_pct": 9.65,
+      "signal_close": 430.08,
+      "mr_target": 446.17,
+      "mr_stop": 401.53,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 2,
+      "paper_track": false,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "own_earnings",
+          "symbol": "TSM",
+          "date": "2026-10-15",
+          "slot": "BMO",
+          "detail": "TSM reports 2026-10-15 BMO (eps est $4.45) \u2014 a coin flip, NOT a verdict: earnings-gap rule says zero directional trust"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core Retail Sales m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Retail Sales m/m 2026-10-15 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 430.08,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 1,
+      "ret_5d_pct": -8.92,
+      "down_gaps_5d": 3,
+      "vol_ratio_5d_20d": 1.04,
+      "signal_day_low": 428.06,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "FROG",
+      "rank": 28,
+      "score": 40.3,
+      "rsi2": 8.79,
+      "dist_200dma_pct": 32.0,
+      "signal_close": 91.97,
+      "mr_target": 97.95,
+      "mr_stop": 79.61,
+      "signal": "\ud83d\udfe1",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "paper_track": false,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "TSM",
+          "date": "2026-10-15",
+          "slot": "BMO",
+          "detail": "TSM (Technology, $2309B) reports 2026-10-15 BMO"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core Retail Sales m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Retail Sales m/m 2026-10-15 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 91.97,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 1,
+      "ret_5d_pct": -6.3,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.02,
+      "signal_day_low": 91.63,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "STX",
+      "rank": 29,
+      "score": 40.0,
+      "rsi2": 2.93,
+      "dist_200dma_pct": 6.57,
+      "signal_close": 713.68,
+      "mr_target": 754.39,
+      "mr_stop": 584.92,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 3,
+      "paper_track": false,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "TSM",
+          "date": "2026-10-15",
+          "slot": "BMO",
+          "detail": "TSM (Technology, $2309B) reports 2026-10-15 BMO"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Core Retail Sales m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "PPI m/m 2026-10-15 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-15",
+          "detail": "Retail Sales m/m 2026-10-15 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 713.68,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -11.63,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.01,
+      "signal_day_low": 711.75,
+      "quiet_warning": false
+    }
+  ],
+  "macro_calendar": [
+    {
+      "date": "2026-10-15",
+      "time_et": "08:30",
+      "title": "Core PPI m/m"
+    },
+    {
+      "date": "2026-10-15",
+      "time_et": "08:30",
+      "title": "Core Retail Sales m/m"
+    },
+    {
+      "date": "2026-10-15",
+      "time_et": "08:30",
+      "title": "PPI m/m"
+    },
+    {
+      "date": "2026-10-15",
+      "time_et": "08:30",
+      "title": "Retail Sales m/m"
+    }
+  ],
+  "prior_run_review": {
+    "source": "snapback:2026-10-13",
+    "n": 7,
+    "pct_positive": 14.3,
+    "avg_pct": -4.47,
+    "median_pct": -4.12,
+    "best": [
+      {
+        "ticker": "INCY",
+        "since_pct": 2.83
+      },
+      {
+        "ticker": "KLAC",
+        "since_pct": -2.82
+      },
+      {
+        "ticker": "DAL",
+        "since_pct": -3.66
+      }
+    ],
+    "worst": [
+      {
+        "ticker": "KXIAY",
+        "since_pct": -9.8
+      },
+      {
+        "ticker": "ONTO",
+        "since_pct": -8.38
+      },
+      {
+        "ticker": "SNDK",
+        "since_pct": -5.35
+      }
+    ],
+    "armed_subset": {
+      "n": 7,
+      "pct_positive": 14.3,
+      "avg_pct": -4.47,
+      "median_pct": -4.12
+    }
+  },
+  "errors": []
+}

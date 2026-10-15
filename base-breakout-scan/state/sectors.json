@@ -34,6 +34,11 @@
     "sector": "Consumer Defensive",
     "ts": 1791936910
   },
+  "ADP": {
+    "industry": "Software - Application",
+    "sector": "Technology",
+    "ts": 1792022921
+  },
   "AEG": {
     "industry": "Insurance - Diversified",
     "sector": "Financial Services",
@@ -98,6 +103,11 @@
     "industry": "Computer Hardware",
     "sector": "Technology",
     "ts": 1790899417
+  },
+  "ANF": {
+    "industry": "Apparel Retail",
+    "sector": "Consumer Cyclical",
+    "ts": 1792022921
   },
   "APA": {
     "industry": "Oil & Gas E&P",
@@ -563,6 +573,11 @@
     "industry": "Software - Infrastructure",
     "sector": "Technology",
     "ts": 1781654569
+  },
+  "DOCU": {
+    "industry": "Software - Application",
+    "sector": "Technology",
+    "ts": 1792022921
   },
   "DOW": {
     "industry": "Chemicals",
@@ -1197,7 +1212,7 @@
   "NET": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1789430545
+    "ts": 1792022921
   },
   "NMR": {
     "industry": "Capital Markets",
@@ -1517,7 +1532,7 @@
   "SNOW": {
     "industry": "Software - Application",
     "sector": "Technology",
-    "ts": 1789430545
+    "ts": 1792022921
   },
   "SON": {
     "industry": "Packaging & Containers",
