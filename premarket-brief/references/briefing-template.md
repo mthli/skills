@@ -220,6 +220,9 @@ This is the section that can do harm if written lazily, so frame it honestly:
   (−4.9bp → +4.0bp). Write a relief hypothesis as 10-year branches and
   never read it off the print. The equity gap is a separate claim: 10-02
   QQQ kept 82% of its gap to a record close while the relief failed.
+  **Spikes too (10-07, 10-08, 10-14):** 5.345 and 5.324 closed at 5.277
+  and 5.231, and 10-14's hot-core +8.9bp (5.306) closed −2.7bp at 5.190.
+  Any 09:00 10-year print, relief or spike, is a claim graded at its close.
 - **A stale regime cache does not vote; the exam does (09-02, 09-03;
   promoted on 2nd instance).** When `regime.stale_days > 1`, the index exam's
   two breadth gauges *are* the day's regime grade — say so in ①, never "the
@@ -284,7 +287,11 @@ This is the section that can do harm if written lazily, so frame it honestly:
   level governs" (breadth fell 32 → 29% that night). Write all nine count ×
   weight cells before the open, and give every witness its sign × sign cells
   (all-green-on-green = beta, no read; 09-21's cyber witness had no such
-  cell).
+  cell). **Gauges get a dead band (10-12, 10-14; promoted on 2nd deciding
+  instance).** XLB's +0.02% made 10-12's 8th green sector and RSP − SPY
+  +0.51pp picked 10-14's weight cell by 0.01pp. A sector inside ±0.05% and
+  a spread inside ±0.05pp of its threshold carry a boundary tag, and both
+  neighbouring cells are graded.
 - **Label a branch by its level or spread, never by the story expected to
   produce it (09-09, 09-15; promoted on 2nd instance).** 09-09's ⭐ gate
   branch read "> 5.30 = failed auction" and was reached the next morning by
