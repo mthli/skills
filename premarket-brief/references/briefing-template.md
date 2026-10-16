@@ -473,6 +473,13 @@ This is the section that can do harm if written lazily, so frame it honestly:
   non-modal weight cell missed it in both directions. Write the ①
   hypothesis on the count gauge with the weight at ±0.5pp unless a named
   driver owns the average stock's move.
+  **The exception's test: a named driver selling a cap-weighted sector
+  sets the weight gauge, opposite sign (10-14, 10-15; promoted on 2nd
+  instance).** The AI-financing story put XLK at −2.98 and −0.65 and RSP
+  − SPY at +0.51 and +1.09pp; 10-15 named the ≥ +0.5 cell pre-open from
+  it and hit. Write the weight cell from the epicenter's index weight.
+  The count stays a separate claim: both sessions missed it by one
+  sector.
 - **A fired line is not re-litigated by a green premarket (08-10, 08-11,
   08-12, 08-13; 1-for-4).** Once a close-graded exit or trim has fired, the
   next morning's bounce above that line is a *better fill*, not a reprieve: XE
