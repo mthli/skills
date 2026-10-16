@@ -427,7 +427,7 @@
   "COP": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1788825728
+    "ts": 1792109330
   },
   "CORT": {
     "industry": "Biotechnology",
@@ -752,7 +752,7 @@
   "FROG": {
     "industry": "Software - Application",
     "sector": "Technology",
-    "ts": 1789516957
+    "ts": 1792109330
   },
   "FTI": {
     "industry": "Oil & Gas Equipment & Services",
@@ -1102,7 +1102,7 @@
   "MGA": {
     "industry": "Auto Parts",
     "sector": "Consumer Cyclical",
-    "ts": 1787357018
+    "ts": 1792109330
   },
   "MGM": {
     "industry": "Resorts & Casinos",
@@ -1232,7 +1232,7 @@
   "NTNX": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1789516957
+    "ts": 1792109330
   },
   "NTR": {
     "industry": "Agricultural Inputs",
@@ -1612,7 +1612,7 @@
   "TD": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1788480144
+    "ts": 1792109330
   },
   "TEAM": {
     "industry": "Software - Application",
@@ -1822,7 +1822,7 @@
   "VSXY": {
     "industry": "Apparel Retail",
     "sector": "Consumer Cyclical",
-    "ts": 1784160121
+    "ts": 1792109330
   },
   "VTRS": {
     "industry": "Drug Manufacturers - Specialty & Generic",

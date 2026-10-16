@@ -342,7 +342,7 @@
   "ASX": {
     "industry": "Semiconductors",
     "sector": "Technology",
-    "ts": 1787184309
+    "ts": 1792109526
   },
   "ATI": {
     "industry": "Metal Fabrication",
@@ -867,7 +867,7 @@
   "CORT": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1787875400
+    "ts": 1792109526
   },
   "CORZ": {
     "industry": "Software - Infrastructure",
@@ -932,7 +932,7 @@
   "CSCO": {
     "industry": "Communication Equipment",
     "sector": "Technology",
-    "ts": 1788566599
+    "ts": 1792109526
   },
   "CSX": {
     "industry": "Railroads",
@@ -957,7 +957,7 @@
   "CTVA": {
     "industry": "Agricultural Inputs",
     "sector": "Basic Materials",
-    "ts": 1789085009
+    "ts": 1792109527
   },
   "CUBE": {
     "industry": "REIT - Industrial",
@@ -1047,7 +1047,7 @@
   "DDOG": {
     "industry": "Software - Application",
     "sector": "Technology",
-    "ts": 1787702742
+    "ts": 1792109526
   },
   "DE": {
     "industry": "Farm & Heavy Construction Machinery",
@@ -1442,7 +1442,7 @@
   "FRO": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
-    "ts": 1787789077
+    "ts": 1792109526
   },
   "FROG": {
     "industry": "Software - Application",
@@ -1613,6 +1613,11 @@
     "industry": "Auto Parts",
     "sector": "Consumer Cyclical",
     "ts": 1785283361
+  },
+  "HAFN": {
+    "industry": "Marine Shipping",
+    "sector": "Industrials",
+    "ts": 1792109526
   },
   "HAL": {
     "industry": "Oil & Gas Equipment & Services",
@@ -1837,7 +1842,7 @@
   "ITUB": {
     "industry": "Banks - Regional",
     "sector": "Financial Services",
-    "ts": 1785589371
+    "ts": 1792109526
   },
   "ITW": {
     "industry": "Specialty Industrial Machinery",
@@ -1862,7 +1867,7 @@
   "JCI": {
     "industry": "Building Products & Equipment",
     "sector": "Industrials",
-    "ts": 1785589371
+    "ts": 1792109527
   },
   "JEF": {
     "industry": "Capital Markets",
@@ -1997,7 +2002,7 @@
   "LITE": {
     "industry": "Communication Equipment",
     "sector": "Technology",
-    "ts": 1789516999
+    "ts": 1792109526
   },
   "LLY": {
     "industry": "Drug Manufacturers - General",
@@ -2577,7 +2582,7 @@
   "P": {
     "industry": "Computer Hardware",
     "sector": "Technology",
-    "ts": 1787270703
+    "ts": 1792109526
   },
   "PAA": {
     "industry": "Oil & Gas Midstream",
@@ -3357,7 +3362,7 @@
   "TT": {
     "industry": "Building Products & Equipment",
     "sector": "Industrials",
-    "ts": 1785456162
+    "ts": 1792109527
   },
   "TTE": {
     "industry": "Oil & Gas Integrated",
@@ -3387,7 +3392,7 @@
   "TWST": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1788480190
+    "ts": 1792109526
   },
   "TXG": {
     "industry": "Health Information Services",
