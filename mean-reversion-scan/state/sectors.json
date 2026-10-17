@@ -247,7 +247,7 @@
   "AMZN": {
     "industry": "Internet Retail",
     "sector": "Consumer Cyclical",
-    "ts": 1789085009
+    "ts": 1792195488
   },
   "ANET": {
     "industry": "Computer Hardware",
@@ -1134,6 +1134,11 @@
     "sector": "Industrials",
     "ts": 1785510645
   },
+  "DT": {
+    "industry": "Software - Application",
+    "sector": "Technology",
+    "ts": 1792195488
+  },
   "DTE": {
     "industry": "Utilities - Regulated Electric",
     "sector": "Utilities",
@@ -1572,7 +1577,7 @@
   "GOOGL": {
     "industry": "Internet Content & Information",
     "sector": "Communication Services",
-    "ts": 1788221001
+    "ts": 1792195488
   },
   "GPC": {
     "industry": "Auto Parts",
@@ -1672,7 +1677,7 @@
   "HNGE": {
     "industry": "Health Information Services",
     "sector": "Healthcare",
-    "ts": 1789171379
+    "ts": 1792195488
   },
   "HOMB": {
     "industry": "Banks - Regional",
@@ -1757,7 +1762,7 @@
   "IBRX": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1783728176
+    "ts": 1792195488
   },
   "ICL": {
     "industry": "Agricultural Inputs",
@@ -1777,7 +1782,7 @@
   "ILMN": {
     "industry": "Diagnostics & Research",
     "sector": "Healthcare",
-    "ts": 1789171379
+    "ts": 1792195488
   },
   "IMVT": {
     "industry": "Biotechnology",
@@ -1977,7 +1982,7 @@
   "LAUR": {
     "industry": "Education & Training Services",
     "sector": "Consumer Defensive",
-    "ts": 1788480190
+    "ts": 1792195488
   },
   "LBRT": {
     "industry": "Oil & Gas Equipment & Services",
@@ -2694,6 +2699,11 @@
     "sector": "Real Estate",
     "ts": 1785888203
   },
+  "PLTR": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1792195488
+  },
   "PLUG": {
     "industry": "Electrical Equipment & Parts",
     "sector": "Industrials",
@@ -3229,6 +3239,11 @@
     "sector": "Healthcare",
     "ts": 1790380977
   },
+  "TAL": {
+    "industry": "Education & Training Services",
+    "sector": "Consumer Defensive",
+    "ts": 1792195488
+  },
   "TD": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
@@ -3387,7 +3402,7 @@
   "TWLO": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1784592170
+    "ts": 1792195488
   },
   "TWST": {
     "industry": "Biotechnology",
@@ -3723,6 +3738,11 @@
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
     "ts": 1790121796
+  },
+  "XP": {
+    "industry": "Capital Markets",
+    "sector": "Financial Services",
+    "ts": 1792195488
   },
   "XPO": {
     "industry": "Trucking",

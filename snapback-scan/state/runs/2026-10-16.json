@@ -1,0 +1,1150 @@
+{
+  "as_of": "2026-10-16T20:04:55.986765-04:00",
+  "today": "2026-10-16",
+  "spark_window": [
+    "2026-10-19",
+    "2026-10-20",
+    "2026-10-21"
+  ],
+  "macro_note": "ForexFactory covers the current week only \u2014 macro sparks beyond Sunday not visible",
+  "regime": {
+    "snapshot": "20261016",
+    "state": "RISK-OFF (internals)",
+    "score": 0,
+    "vix": 20.0,
+    "spy_vs_200_pct": 5.7,
+    "flags": "Breadth divergence: SPY -2.0% from high but only 46% of names above 50DMA ; Credit weakening: HYG/LQD -0.9%/20d while stocks hold ; Defensive rotation: deepening, defensives +5.7pp over offensives / 20d, +6.3pp more than 5 sessions ago ; VIX 5-day spike +35%"
+  },
+  "mr_run": {
+    "run_id": "20261016",
+    "run_date": "2026-10-16",
+    "data_asof": "2026-10-16",
+    "stale_days": 0,
+    "rows_in_run": 58,
+    "kegs_after_filter": 16
+  },
+  "tape_freshness": {
+    "expected": "2026-10-16",
+    "asof": "2026-10-16",
+    "repaired": [
+      "AMD",
+      "ASX",
+      "CMBT",
+      "CORT",
+      "CSCO",
+      "DDOG",
+      "FRO",
+      "INTC",
+      "NTNX",
+      "P",
+      "PLTR",
+      "RAL",
+      "SMTC",
+      "SNOW",
+      "TWLO",
+      "TWST"
+    ],
+    "missing": []
+  },
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "P",
+      "rank": 8,
+      "score": 71.5,
+      "rsi2": 2.54,
+      "dist_200dma_pct": 50.29,
+      "signal_close": 124.01,
+      "mr_target": 142.24,
+      "mr_stop": 105.18,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "paper_track": true,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "META",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "META ($1877B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "TSLA",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "TSLA ($1431B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "LRCX",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "LRCX (Technology, $347B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "SAP",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "SAP (Technology, $276B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "TXN",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "TXN (Technology, $255B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "IBM",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "IBM (Technology, $221B) reports 2026-10-21 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 124.01,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -19.73,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.93,
+      "signal_day_low": 123.65,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "TWST",
+      "rank": 9,
+      "score": 71.4,
+      "rsi2": 1.8,
+      "dist_200dma_pct": 59.56,
+      "signal_close": 132.85,
+      "mr_target": 145.74,
+      "mr_stop": 91.35,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "paper_track": true,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "ISRG",
+          "date": "2026-10-20",
+          "slot": "AMC",
+          "detail": "ISRG (Healthcare, $151B) reports 2026-10-20 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "META",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "META ($1877B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "TSLA",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "TSLA ($1431B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "TMO",
+          "date": "2026-10-21",
+          "slot": "BMO",
+          "detail": "TMO (Healthcare, $258B) reports 2026-10-21 BMO"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "ABT",
+          "date": "2026-10-21",
+          "slot": "BMO",
+          "detail": "ABT (Healthcare, $181B) reports 2026-10-21 BMO"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "DHR",
+          "date": "2026-10-21",
+          "slot": "BMO",
+          "detail": "DHR (Healthcare, $163B) reports 2026-10-21 BMO"
+        }
+      ],
+      "armed": true,
+      "latest_close": 132.85,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -16.86,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.75,
+      "signal_day_low": 130.98,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "SNOW",
+      "rank": 12,
+      "score": 67.6,
+      "rsi2": 2.69,
+      "dist_200dma_pct": 31.1,
+      "signal_close": 306.7,
+      "mr_target": 339.0,
+      "mr_stop": 265.72,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 0,
+      "paper_track": false,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "META",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "META ($1877B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "TSLA",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "TSLA ($1431B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "LRCX",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "LRCX (Technology, $347B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "SAP",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "SAP (Technology, $276B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "TXN",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "TXN (Technology, $255B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "IBM",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "IBM (Technology, $221B) reports 2026-10-21 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 306.7,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -16.86,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 1.08,
+      "signal_day_low": 302.24,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "ASX",
+      "rank": 15,
+      "score": 65.3,
+      "rsi2": 2.58,
+      "dist_200dma_pct": 23.55,
+      "signal_close": 39.53,
+      "mr_target": 44.17,
+      "mr_stop": 34.39,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "paper_track": false,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "META",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "META ($1877B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "TSLA",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "TSLA ($1431B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "LRCX",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "LRCX (Technology, $347B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "SAP",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "SAP (Technology, $276B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "TXN",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "TXN (Technology, $255B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "IBM",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "IBM (Technology, $221B) reports 2026-10-21 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 39.53,
+      "since_signal_pct": -0.01,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -14.87,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 1.42,
+      "signal_day_low": 39.42,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "CMBT",
+      "rank": 16,
+      "score": 64.9,
+      "rsi2": 2.12,
+      "dist_200dma_pct": 17.22,
+      "signal_close": 17.25,
+      "mr_target": 19.17,
+      "mr_stop": 15.49,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "paper_track": false,
+      "sector": "Energy",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "META",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "META ($1877B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "TSLA",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "TSLA ($1431B) reports 2026-10-21 AMC"
+        }
+      ],
+      "armed": false,
+      "latest_close": 17.25,
+      "since_signal_pct": -0.03,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -16.29,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 1.54,
+      "signal_day_low": 17.23,
+      "quiet_warning": false,
+      "next_own_earnings": null
+    },
+    {
+      "ticker": "DDOG",
+      "rank": 18,
+      "score": 64.6,
+      "rsi2": 2.55,
+      "dist_200dma_pct": 28.96,
+      "signal_close": 247.11,
+      "mr_target": 270.66,
+      "mr_stop": 216.37,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "paper_track": false,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "META",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "META ($1877B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "TSLA",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "TSLA ($1431B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "LRCX",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "LRCX (Technology, $347B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "SAP",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "SAP (Technology, $276B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "TXN",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "TXN (Technology, $255B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "IBM",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "IBM (Technology, $221B) reports 2026-10-21 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 247.11,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -15.74,
+      "down_gaps_5d": 3,
+      "vol_ratio_5d_20d": 0.91,
+      "signal_day_low": 243.63,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "CORT",
+      "rank": 20,
+      "score": 62.1,
+      "rsi2": 1.73,
+      "dist_200dma_pct": 53.49,
+      "signal_close": 110.15,
+      "mr_target": 115.75,
+      "mr_stop": 97.31,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "paper_track": false,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "ISRG",
+          "date": "2026-10-20",
+          "slot": "AMC",
+          "detail": "ISRG (Healthcare, $151B) reports 2026-10-20 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "META",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "META ($1877B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "TSLA",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "TSLA ($1431B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "TMO",
+          "date": "2026-10-21",
+          "slot": "BMO",
+          "detail": "TMO (Healthcare, $258B) reports 2026-10-21 BMO"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "ABT",
+          "date": "2026-10-21",
+          "slot": "BMO",
+          "detail": "ABT (Healthcare, $181B) reports 2026-10-21 BMO"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "DHR",
+          "date": "2026-10-21",
+          "slot": "BMO",
+          "detail": "DHR (Healthcare, $163B) reports 2026-10-21 BMO"
+        }
+      ],
+      "armed": true,
+      "latest_close": 110.15,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -9.11,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 0.74,
+      "signal_day_low": 107.79,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "PLTR",
+      "rank": 21,
+      "score": 61.1,
+      "rsi2": 2.47,
+      "dist_200dma_pct": 21.87,
+      "signal_close": 186.03,
+      "mr_target": 201.03,
+      "mr_stop": 167.32,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 1,
+      "freq_60d": 0,
+      "paper_track": false,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "META",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "META ($1877B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "TSLA",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "TSLA ($1431B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "LRCX",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "LRCX (Technology, $347B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "SAP",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "SAP (Technology, $276B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "TXN",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "TXN (Technology, $255B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "IBM",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "IBM (Technology, $221B) reports 2026-10-21 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 186.03,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -11.01,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.02,
+      "signal_day_low": 184.45,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "AMD",
+      "rank": 22,
+      "score": 59.2,
+      "rsi2": 3.02,
+      "dist_200dma_pct": 34.12,
+      "signal_close": 528.75,
+      "mr_target": 572.31,
+      "mr_stop": 463.06,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "paper_track": false,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "META",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "META ($1877B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "TSLA",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "TSLA ($1431B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "LRCX",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "LRCX (Technology, $347B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "SAP",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "SAP (Technology, $276B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "TXN",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "TXN (Technology, $255B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "IBM",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "IBM (Technology, $221B) reports 2026-10-21 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 528.75,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -13.05,
+      "down_gaps_5d": 3,
+      "vol_ratio_5d_20d": 1.0,
+      "signal_day_low": 526.83,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "SMTC",
+      "rank": 23,
+      "score": 57.7,
+      "rsi2": 2.88,
+      "dist_200dma_pct": 12.11,
+      "signal_close": 136.68,
+      "mr_target": 156.44,
+      "mr_stop": 103.56,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 3,
+      "paper_track": false,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "META",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "META ($1877B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "TSLA",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "TSLA ($1431B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "LRCX",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "LRCX (Technology, $347B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "SAP",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "SAP (Technology, $276B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "TXN",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "TXN (Technology, $255B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "IBM",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "IBM (Technology, $221B) reports 2026-10-21 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 136.68,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -27.03,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 1.57,
+      "signal_day_low": 135.85,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "NTNX",
+      "rank": 27,
+      "score": 56.1,
+      "rsi2": 2.84,
+      "dist_200dma_pct": 29.89,
+      "signal_close": 66.95,
+      "mr_target": 70.76,
+      "mr_stop": 61.29,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "paper_track": false,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "META",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "META ($1877B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "TSLA",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "TSLA ($1431B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "LRCX",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "LRCX (Technology, $347B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "SAP",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "SAP (Technology, $276B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "TXN",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "TXN (Technology, $255B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "IBM",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "IBM (Technology, $221B) reports 2026-10-21 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 66.95,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 1,
+      "ret_5d_pct": -10.29,
+      "down_gaps_5d": 3,
+      "vol_ratio_5d_20d": 1.17,
+      "signal_day_low": 66.31,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "TWLO",
+      "rank": 30,
+      "score": 51.1,
+      "rsi2": 4.79,
+      "dist_200dma_pct": 33.56,
+      "signal_close": 244.34,
+      "mr_target": 270.62,
+      "mr_stop": 202.43,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 0,
+      "paper_track": false,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "META",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "META ($1877B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "TSLA",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "TSLA ($1431B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "LRCX",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "LRCX (Technology, $347B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "SAP",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "SAP (Technology, $276B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "TXN",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "TXN (Technology, $255B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "IBM",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "IBM (Technology, $221B) reports 2026-10-21 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 244.34,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 1,
+      "ret_5d_pct": -15.59,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.42,
+      "signal_day_low": 236.85,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "INTC",
+      "rank": 31,
+      "score": 51.0,
+      "rsi2": 2.16,
+      "dist_200dma_pct": 6.16,
+      "signal_close": 89.76,
+      "mr_target": 97.48,
+      "mr_stop": 76.2,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 3,
+      "paper_track": false,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "META",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "META ($1877B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "TSLA",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "TSLA ($1431B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "LRCX",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "LRCX (Technology, $347B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "SAP",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "SAP (Technology, $276B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "TXN",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "TXN (Technology, $255B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "IBM",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "IBM (Technology, $221B) reports 2026-10-21 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 89.76,
+      "since_signal_pct": 0.01,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -14.26,
+      "down_gaps_5d": 3,
+      "vol_ratio_5d_20d": 1.0,
+      "signal_day_low": 89.19,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "RAL",
+      "rank": 34,
+      "score": 47.2,
+      "rsi2": 2.7,
+      "dist_200dma_pct": 15.44,
+      "signal_close": 66.58,
+      "mr_target": 70.05,
+      "mr_stop": 60.57,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "paper_track": false,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "META",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "META ($1877B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "TSLA",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "TSLA ($1431B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "LRCX",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "LRCX (Technology, $347B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "SAP",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "SAP (Technology, $276B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "TXN",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "TXN (Technology, $255B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "IBM",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "IBM (Technology, $221B) reports 2026-10-21 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 66.58,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -9.04,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.99,
+      "signal_day_low": 66.02,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "CSCO",
+      "rank": 36,
+      "score": 46.9,
+      "rsi2": 2.63,
+      "dist_200dma_pct": 8.63,
+      "signal_close": 107.38,
+      "mr_target": 112.25,
+      "mr_stop": 99.79,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 0,
+      "paper_track": false,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "META",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "META ($1877B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "TSLA",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "TSLA ($1431B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "LRCX",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "LRCX (Technology, $347B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "SAP",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "SAP (Technology, $276B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "TXN",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "TXN (Technology, $255B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "IBM",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "IBM (Technology, $221B) reports 2026-10-21 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 107.38,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -9.3,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.88,
+      "signal_day_low": 107.14,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "FRO",
+      "rank": 37,
+      "score": 42.3,
+      "rsi2": 8.6,
+      "dist_200dma_pct": 50.92,
+      "signal_close": 52.47,
+      "mr_target": 55.9,
+      "mr_stop": 46.5,
+      "signal": "\ud83d\udfe1",
+      "listing_age_runs": 2,
+      "freq_60d": 0,
+      "paper_track": false,
+      "sector": "Energy",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "META",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "META ($1877B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "TSLA",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "TSLA ($1431B) reports 2026-10-21 AMC"
+        }
+      ],
+      "armed": false,
+      "latest_close": 52.47,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -6.47,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.28,
+      "signal_day_low": 52.38,
+      "quiet_warning": false,
+      "next_own_earnings": null
+    }
+  ],
+  "macro_calendar": [],
+  "prior_run_review": {
+    "source": "snapback:2026-10-15",
+    "n": 18,
+    "pct_positive": 0.0,
+    "avg_pct": -4.41,
+    "median_pct": -4.86,
+    "best": [
+      {
+        "ticker": "FRO",
+        "since_pct": -0.15
+      },
+      {
+        "ticker": "MFG",
+        "since_pct": -0.34
+      },
+      {
+        "ticker": "TSM",
+        "since_pct": -2.38
+      }
+    ],
+    "worst": [
+      {
+        "ticker": "MXL",
+        "since_pct": -8.81
+      },
+      {
+        "ticker": "P",
+        "since_pct": -7.0
+      },
+      {
+        "ticker": "NET",
+        "since_pct": -6.4
+      }
+    ],
+    "armed_subset": {
+      "n": 1,
+      "pct_positive": 0.0,
+      "avg_pct": -2.53,
+      "median_pct": -2.53
+    }
+  },
+  "errors": []
+}

@@ -374,6 +374,11 @@
     "sector": "Healthcare",
     "ts": 1785456073
   },
+  "EXLS": {
+    "industry": "Information Technology Services",
+    "sector": "Technology",
+    "ts": 1792195324
+  },
   "EXPE": {
     "industry": "Travel Services",
     "sector": "Consumer Cyclical",
@@ -1037,7 +1042,7 @@
   "TMO": {
     "industry": "Diagnostics & Research",
     "sector": "Healthcare",
-    "ts": 1789603289
+    "ts": 1792195324
   },
   "TNGX": {
     "industry": "Biotechnology",

@@ -1,4 +1,9 @@
 {
+  "A": {
+    "industry": "Diagnostics & Research",
+    "sector": "Healthcare",
+    "ts": 1792195414
+  },
   "AA": {
     "industry": "Aluminum",
     "sector": "Basic Materials",
@@ -87,7 +92,7 @@
   "AMRX": {
     "industry": "Drug Manufacturers - Specialty & Generic",
     "sector": "Healthcare",
-    "ts": 1787184231
+    "ts": 1792195414
   },
   "AMX": {
     "industry": "Telecom Services",
@@ -313,6 +318,11 @@
     "industry": "Medical Distribution",
     "sector": "Healthcare",
     "ts": 1791504225
+  },
+  "CAKE": {
+    "industry": "Restaurants",
+    "sector": "Consumer Cyclical",
+    "ts": 1792195414
   },
   "CARR": {
     "industry": "Building Products & Equipment",
@@ -1422,7 +1432,7 @@
   "RNG": {
     "industry": "Software - Application",
     "sector": "Technology",
-    "ts": 1789603360
+    "ts": 1792195414
   },
   "ROIV": {
     "industry": "Biotechnology",
@@ -1497,7 +1507,7 @@
   "SJM": {
     "industry": "Packaged Foods",
     "sector": "Consumer Defensive",
-    "ts": 1788480144
+    "ts": 1792195414
   },
   "SKM": {
     "industry": "Telecom Services",
@@ -1522,7 +1532,7 @@
   "SN": {
     "industry": "Furnishings, Fixtures & Appliances",
     "sector": "Consumer Cyclical",
-    "ts": 1788998573
+    "ts": 1792195414
   },
   "SNDR": {
     "industry": "Trucking",
@@ -1758,6 +1768,11 @@
     "industry": "Food Distribution",
     "sector": "Consumer Defensive",
     "ts": 1787011455
+  },
+  "V": {
+    "industry": "Credit Services",
+    "sector": "Financial Services",
+    "ts": 1792195414
   },
   "VAL": {
     "industry": "Oil & Gas Drilling",
