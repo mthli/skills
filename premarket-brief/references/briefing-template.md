@@ -479,7 +479,18 @@ This is the section that can do harm if written lazily, so frame it honestly:
   − SPY at +0.51 and +1.09pp; 10-15 named the ≥ +0.5 cell pre-open from
   it and hit. Write the weight cell from the epicenter's index weight.
   The count stays a separate claim: both sessions missed it by one
-  sector.
+  sector. **3rd instance (10-16), written as a conditional:** XLK −3.02
+  put RSP − SPY at +0.69pp.
+  **The count has no pre-open forecaster (10-15 watch, 10-16; promoted
+  on 2nd instance).** Five straight sessions missed the count cell
+  (10-12 8 · 10-13 5 · 10-14 3 · 10-15 8 · 10-16 6 green), and on 10-16
+  the base rate and the premarket board (9 of 11 green) both said ≥ 8.
+  Over the same five sessions the weight cell hit four times and the
+  fifth through its written conditional. So the ① hypothesis names a
+  weight band and leaves the count open: list the three count cells
+  under that band as the day's possible shapes, and grade the
+  hypothesis on the weight alone. The nine-cell exam still grades the
+  count at the close.
 - **A fired line is not re-litigated by a green premarket (08-10, 08-11,
   08-12, 08-13; 1-for-4).** Once a close-graded exit or trim has fired, the
   next morning's bounce above that line is a *better fill*, not a reprieve: XE
