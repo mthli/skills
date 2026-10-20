@@ -27,7 +27,7 @@
   "ACN": {
     "industry": "Information Technology Services",
     "sector": "Technology",
-    "ts": 1789689700
+    "ts": 1792454559
   },
   "ADP": {
     "industry": "Software - Application",
@@ -329,6 +329,11 @@
     "sector": "Technology",
     "ts": 1779285358
   },
+  "DOCS": {
+    "industry": "Health Information Services",
+    "sector": "Healthcare",
+    "ts": 1792454559
+  },
   "DOCU": {
     "industry": "Software - Application",
     "sector": "Technology",
@@ -482,7 +487,7 @@
   "HNGE": {
     "industry": "Health Information Services",
     "sector": "Healthcare",
-    "ts": 1785508599
+    "ts": 1792454559
   },
   "HPE": {
     "industry": "Communication Equipment",
@@ -672,7 +677,7 @@
   "MSFT": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1789776078
+    "ts": 1792454559
   },
   "MSTR": {
     "industry": "Software - Application",
