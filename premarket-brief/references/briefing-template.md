@@ -491,6 +491,18 @@ This is the section that can do harm if written lazily, so frame it honestly:
   under that band as the day's possible shapes, and grade the
   hypothesis on the weight alone. The nine-cell exam still grades the
   count at the close.
+  **The 10-year is the weight gauge's second owner (10-07 watch, 10-19;
+  promoted on 2nd instance).** Bond proxies and small caps carry more
+  weight in the equal-weight index than in SPY, so a rising 10-year pulls
+  RSP − SPY down and a falling one lifts it: 10-07 −0.57pp on a 24-year
+  intraday high, 10-19 −0.74pp on +3.8bp (XLU −2.01, XLRE −1.16) while
+  XLK − SPY stopped at +0.94, under the +1.0 the brief's mirror
+  conditional needed. Write the weight cell as a conditional on both
+  owners, the epicenter's index weight and the 10-year's branch: one
+  owner past its line with the other modal or agreeing sets the cell
+  (10-16: XLK −3.02 on a flat 10-year → +0.69pp); owners on opposite
+  sides or both modal → ±0.5. The 10-year's 09:00 print is a claim (10-02), so the
+  conditional keys on its close, never its print.
 - **A fired line is not re-litigated by a green premarket (08-10, 08-11,
   08-12, 08-13; 1-for-4).** Once a close-graded exit or trim has fired, the
   next morning's bounce above that line is a *better fill*, not a reprieve: XE
