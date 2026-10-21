@@ -77,7 +77,7 @@
   "ADM": {
     "industry": "Farm Products",
     "sector": "Consumer Defensive",
-    "ts": 1789689809
+    "ts": 1792541543
   },
   "ADP": {
     "industry": "Software - Application",
@@ -2148,6 +2148,11 @@
     "industry": "Insurance - Life",
     "sector": "Financial Services",
     "ts": 1790899470
+  },
+  "META": {
+    "industry": "Internet Content & Information",
+    "sector": "Communication Services",
+    "ts": 1792541543
   },
   "MFC": {
     "industry": "Insurance - Life",

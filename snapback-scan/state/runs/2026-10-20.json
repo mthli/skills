@@ -1,0 +1,174 @@
+{
+  "as_of": "2026-10-20T20:12:41.825450-04:00",
+  "today": "2026-10-20",
+  "spark_window": [
+    "2026-10-21",
+    "2026-10-22",
+    "2026-10-23"
+  ],
+  "macro_note": "",
+  "regime": {
+    "snapshot": "20261020",
+    "state": "CAUTION",
+    "score": 2,
+    "vix": 17.3,
+    "spy_vs_200_pct": 6.4,
+    "flags": "Credit weakening: HYG/LQD -0.5%/20d while stocks hold ; Defensive rotation: deepening, defensives +6.9pp over offensives / 20d, +7.8pp more than 5 sessions ago"
+  },
+  "mr_run": {
+    "run_id": "20261020",
+    "run_date": "2026-10-20",
+    "data_asof": "2026-10-20",
+    "stale_days": 0,
+    "rows_in_run": 13,
+    "kegs_after_filter": 2
+  },
+  "tape_freshness": {
+    "expected": "2026-10-20",
+    "asof": "2026-10-20",
+    "repaired": [
+      "MUFG",
+      "SMFG"
+    ],
+    "missing": []
+  },
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "SMFG",
+      "rank": 4,
+      "score": 42.5,
+      "rsi2": 1.73,
+      "dist_200dma_pct": 4.22,
+      "signal_close": 24.2,
+      "mr_target": 24.57,
+      "mr_stop": 22.95,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "paper_track": false,
+      "sector": "Financial Services",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "META",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "META ($1797B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "TSLA",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "TSLA ($1454B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "AXP",
+          "date": "2026-10-23",
+          "slot": "BMO",
+          "detail": "AXP (Financial Services, $214B) reports 2026-10-23 BMO"
+        }
+      ],
+      "armed": true,
+      "latest_close": 24.2,
+      "since_signal_pct": 0.02,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -3.99,
+      "down_gaps_5d": 3,
+      "vol_ratio_5d_20d": 0.99,
+      "signal_day_low": 23.86,
+      "quiet_warning": true
+    },
+    {
+      "ticker": "MUFG",
+      "rank": 5,
+      "score": 40.2,
+      "rsi2": 1.95,
+      "dist_200dma_pct": 7.47,
+      "signal_close": 21.46,
+      "mr_target": 21.75,
+      "mr_stop": 20.32,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 3,
+      "paper_track": false,
+      "sector": "Financial Services",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "META",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "META ($1797B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "TSLA",
+          "date": "2026-10-21",
+          "slot": "AMC",
+          "detail": "TSLA ($1454B) reports 2026-10-21 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "AXP",
+          "date": "2026-10-23",
+          "slot": "BMO",
+          "detail": "AXP (Financial Services, $214B) reports 2026-10-23 BMO"
+        }
+      ],
+      "armed": true,
+      "latest_close": 21.46,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -4.2,
+      "down_gaps_5d": 3,
+      "vol_ratio_5d_20d": 0.97,
+      "signal_day_low": 21.11,
+      "quiet_warning": false
+    }
+  ],
+  "macro_calendar": [],
+  "prior_run_review": {
+    "source": "snapback:2026-10-19",
+    "n": 2,
+    "pct_positive": 100.0,
+    "avg_pct": 3.19,
+    "median_pct": 3.19,
+    "best": [
+      {
+        "ticker": "IBRX",
+        "since_pct": 4.15
+      },
+      {
+        "ticker": "PBF",
+        "since_pct": 2.22
+      }
+    ],
+    "worst": [
+      {
+        "ticker": "PBF",
+        "since_pct": 2.22
+      },
+      {
+        "ticker": "IBRX",
+        "since_pct": 4.15
+      }
+    ],
+    "armed_subset": {
+      "n": 1,
+      "pct_positive": 100.0,
+      "avg_pct": 4.15,
+      "median_pct": 4.15
+    }
+  },
+  "errors": []
+}

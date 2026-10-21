@@ -412,7 +412,7 @@
   "CNQ": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1789689770
+    "ts": 1792541349
   },
   "COGT": {
     "industry": "Biotechnology",
@@ -494,10 +494,20 @@
     "sector": "Energy",
     "ts": 1790899417
   },
+  "CVI": {
+    "industry": "Oil & Gas Refining & Marketing",
+    "sector": "Energy",
+    "ts": 1792541348
+  },
   "CVS": {
     "industry": "Healthcare Plans",
     "sector": "Healthcare",
     "ts": 1784333103
+  },
+  "CVX": {
+    "industry": "Oil & Gas Integrated",
+    "sector": "Energy",
+    "ts": 1792541348
   },
   "CX": {
     "industry": "Building Materials",
@@ -867,7 +877,7 @@
   "HPQ": {
     "industry": "Computer Hardware",
     "sector": "Technology",
-    "ts": 1788307378
+    "ts": 1792541348
   },
   "HR": {
     "industry": "REIT - Healthcare Facilities",
@@ -1012,7 +1022,7 @@
   "LAUR": {
     "industry": "Education & Training Services",
     "sector": "Consumer Defensive",
-    "ts": 1785589357
+    "ts": 1792541348
   },
   "LBRT": {
     "industry": "Oil & Gas Equipment & Services",
@@ -1102,7 +1112,7 @@
   "MFC": {
     "industry": "Insurance - Life",
     "sector": "Financial Services",
-    "ts": 1789689770
+    "ts": 1792541348
   },
   "MFG": {
     "industry": "Banks - Regional",
@@ -1252,7 +1262,7 @@
   "NTRA": {
     "industry": "Diagnostics & Research",
     "sector": "Healthcare",
-    "ts": 1789171337
+    "ts": 1792541348
   },
   "NTRS": {
     "industry": "Asset Management",
@@ -1442,12 +1452,12 @@
   "ROKU": {
     "industry": "Entertainment",
     "sector": "Communication Services",
-    "ts": 1789689770
+    "ts": 1792541348
   },
   "RPRX": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1788220950
+    "ts": 1792541349
   },
   "RRX": {
     "industry": "Specialty Industrial Machinery",
@@ -1607,7 +1617,7 @@
   "SWK": {
     "industry": "Tools & Accessories",
     "sector": "Industrials",
-    "ts": 1787789008
+    "ts": 1792541348
   },
   "SYRE": {
     "industry": "Biotechnology",
@@ -1652,7 +1662,7 @@
   "TGTX": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1789689770
+    "ts": 1792541349
   },
   "THC": {
     "industry": "Medical Care Facilities",
@@ -1742,7 +1752,7 @@
   "UGP": {
     "industry": "Oil & Gas Refining & Marketing",
     "sector": "Energy",
-    "ts": 1789689770
+    "ts": 1792541348
   },
   "UNH": {
     "industry": "Healthcare Plans",
@@ -1752,7 +1762,7 @@
   "UNM": {
     "industry": "Insurance - Life",
     "sector": "Financial Services",
-    "ts": 1787875355
+    "ts": 1792541349
   },
   "UNP": {
     "industry": "Railroads",
@@ -1927,7 +1937,7 @@
   "ZETA": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1789689770
+    "ts": 1792541348
   },
   "ZION": {
     "industry": "Banks - Regional",

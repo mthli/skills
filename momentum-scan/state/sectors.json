@@ -724,6 +724,11 @@
     "sector": "Technology",
     "ts": 1778771325
   },
+  "NOW": {
+    "industry": "Software - Application",
+    "sector": "Technology",
+    "ts": 1792541121
+  },
   "NTAP": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
@@ -1182,7 +1187,7 @@
   "WDAY": {
     "industry": "Software - Application",
     "sector": "Technology",
-    "ts": 1789516889
+    "ts": 1792541121
   },
   "WDC": {
     "industry": "Computer Hardware",
