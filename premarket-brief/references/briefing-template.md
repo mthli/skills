@@ -373,7 +373,13 @@ This is the section that can do harm if written lazily, so frame it honestly:
   cell (09-22, 09-30; promoted on 2nd instance):** with the named peers
   within ±1% at the close, an own-guidance gap keeps 30–70% — ONON 66%
   (09-22), HPE 56% with ANET +0.36 / CSCO +0.65 (09-30). Aligned = floor,
-  against = two-sided, flat = modal. **The floor is a *guidance* rule
+  against = two-sided. **Narrowed (10-16, 10-20; promoted on 2nd row):
+  the flat cell has no expected keep.** It went 4-for-8 after its
+  promotion and missed on both sides: three regionals faded under 30%
+  on 10-16 (CFG / MTB inverted, RF 24%), and GM kept 102% of a −6.7%
+  guidance gap on 10-20 with F / STLA flat and the index green. So a
+  flat peer group means two-sided: grade the keep, never presume a
+  band. **The floor is a *guidance* rule
   (09-30, 10-01; promoted on 2nd session):** non-earnings own-news gaps,
   whether a contract (BA +2.3 → −0.9, CEG +3.0 → 65%, RKLB +3.8 → 30%) or a
   product (HOOD +5.5 → −3.2, GOOGL +2.0 → −1.7), went 0-for-5 over 70% kept,
