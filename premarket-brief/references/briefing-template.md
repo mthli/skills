@@ -509,6 +509,18 @@ This is the section that can do harm if written lazily, so frame it honestly:
   (10-16: XLK −3.02 on a flat 10-year → +0.69pp); owners on opposite
   sides or both modal → ±0.5. The 10-year's 09:00 print is a claim (10-02), so the
   conditional keys on its close, never its print.
+  **The tech owner is asymmetric (10-20, 10-21; promoted on 2nd row).**
+  The two-owner conditional went 0-for-2 after its promotion: both owners
+  modal mapped ±0.5 and the close printed +0.81pp (10-20); both agreeing
+  on cap-led mapped ≤ −0.5 and it printed −0.19pp (10-21). Read by XLK −
+  SPY's sign at the close, the record splits. XLK under SPY set RSP − SPY
+  ≥ +0.5 four sessions out of four (−1.90 → +0.51, −0.94 → +1.09, −1.91
+  → +0.69, −0.62 → +0.81), at sizes under the conditional's −1.0 line.
+  XLK over SPY set ≤ −0.5 once in two (+0.94 → −0.74, +1.13 → −0.19). So
+  a sold epicenter names the ≥ +0.5 cell for the hypothesis; a bid
+  epicenter names only the alternative, and the hypothesis stays at ±0.5.
+  The 10-year votes inside that frame. Name its branch in the grade, but
+  it doesn't move the hypothesis on its own.
 - **A fired line is not re-litigated by a green premarket (08-10, 08-11,
   08-12, 08-13; 1-for-4).** Once a close-graded exit or trim has fired, the
   next morning's bounce above that line is a *better fill*, not a reprieve: XE
