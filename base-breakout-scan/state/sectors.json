@@ -397,7 +397,7 @@
   "CNC": {
     "industry": "Healthcare Plans",
     "sector": "Healthcare",
-    "ts": 1789776146
+    "ts": 1792627421
   },
   "CNH": {
     "industry": "Farm & Heavy Construction Machinery",
@@ -537,7 +537,7 @@
   "DBX": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1789171337
+    "ts": 1792627421
   },
   "DD": {
     "industry": "Specialty Chemicals",
@@ -862,7 +862,7 @@
   "HALO": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1789603360
+    "ts": 1792627421
   },
   "HNGE": {
     "industry": "Health Information Services",
@@ -1388,6 +1388,11 @@
     "industry": "Aerospace & Defense",
     "sector": "Industrials",
     "ts": 1778771445
+  },
+  "PLTR": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1792627421
   },
   "PM": {
     "industry": "Tobacco",

@@ -774,6 +774,11 @@
     "sector": "Consumer Defensive",
     "ts": 1788825775
   },
+  "CLMT": {
+    "industry": "Specialty Chemicals",
+    "sector": "Basic Materials",
+    "ts": 1792627495
+  },
   "CLS": {
     "industry": "Electronic Components",
     "sector": "Technology",
@@ -1157,7 +1162,7 @@
   "DXCM": {
     "industry": "Medical Devices",
     "sector": "Healthcare",
-    "ts": 1788825775
+    "ts": 1792627495
   },
   "EA": {
     "industry": "Electronic Gaming & Multimedia",

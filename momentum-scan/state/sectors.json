@@ -534,6 +534,11 @@
     "sector": "Technology",
     "ts": 1778771325
   },
+  "IOVA": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1792627327
+  },
   "IQV": {
     "industry": "Diagnostics & Research",
     "sector": "Healthcare",
@@ -652,7 +657,7 @@
   "MPC": {
     "industry": "Oil & Gas Refining & Marketing",
     "sector": "Energy",
-    "ts": 1790035272
+    "ts": 1792627327
   },
   "MRK": {
     "industry": "Drug Manufacturers - General",
@@ -743,6 +748,11 @@
     "industry": "Diagnostics & Research",
     "sector": "Healthcare",
     "ts": 1791417724
+  },
+  "NTSK": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1792627328
   },
   "NUE": {
     "industry": "Steel",
