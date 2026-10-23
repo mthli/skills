@@ -217,7 +217,7 @@
   "AME": {
     "industry": "Specialty Industrial Machinery",
     "sector": "Industrials",
-    "ts": 1788221000
+    "ts": 1792713896
   },
   "AMGN": {
     "industry": "Drug Manufacturers - General",
@@ -312,7 +312,7 @@
   "ARMK": {
     "industry": "Specialty Business Services",
     "sector": "Industrials",
-    "ts": 1788220998
+    "ts": 1792713896
   },
   "AROC": {
     "industry": "Oil & Gas Equipment & Services",
@@ -2264,6 +2264,11 @@
     "sector": "Financial Services",
     "ts": 1790380977
   },
+  "MSFT": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1792713896
+  },
   "MSI": {
     "industry": "Communication Equipment",
     "sector": "Technology",
@@ -3282,7 +3287,7 @@
   "TEVA": {
     "industry": "Drug Manufacturers - Specialty & Generic",
     "sector": "Healthcare",
-    "ts": 1788220999
+    "ts": 1792713896
   },
   "TEX": {
     "industry": "Farm & Heavy Construction Machinery",

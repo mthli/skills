@@ -547,7 +547,7 @@
   "DDOG": {
     "industry": "Software - Application",
     "sector": "Technology",
-    "ts": 1790121751
+    "ts": 1792713821
   },
   "DE": {
     "industry": "Farm & Heavy Construction Machinery",
@@ -717,7 +717,7 @@
   "EXPD": {
     "industry": "Integrated Freight & Logistics",
     "sector": "Industrials",
-    "ts": 1790035435
+    "ts": 1792713821
   },
   "F": {
     "industry": "Auto Manufacturers",
@@ -1062,7 +1062,7 @@
   "LTH": {
     "industry": "Leisure",
     "sector": "Consumer Cyclical",
-    "ts": 1787357018
+    "ts": 1792713821
   },
   "LUV": {
     "industry": "Airlines",
@@ -1162,7 +1162,7 @@
   "MRK": {
     "industry": "Drug Manufacturers - General",
     "sector": "Healthcare",
-    "ts": 1790121751
+    "ts": 1792713821
   },
   "MRVL": {
     "industry": "Semiconductors",
@@ -1662,7 +1662,7 @@
   "TGT": {
     "industry": "Discount Stores",
     "sector": "Consumer Defensive",
-    "ts": 1789689770
+    "ts": 1792713821
   },
   "TGTX": {
     "industry": "Biotechnology",
