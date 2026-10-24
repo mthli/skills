@@ -819,6 +819,11 @@
     "sector": "Healthcare",
     "ts": 1787270632
   },
+  "GLBE": {
+    "industry": "Internet Retail",
+    "sector": "Consumer Cyclical",
+    "ts": 1792800554
+  },
   "GLNG": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
@@ -1092,7 +1097,7 @@
   "MAC": {
     "industry": "REIT - Retail",
     "sector": "Real Estate",
-    "ts": 1784851353
+    "ts": 1792800554
   },
   "MAR": {
     "industry": "Lodging",
@@ -1434,6 +1439,11 @@
     "sector": "Technology",
     "ts": 1791849821
   },
+  "RBRK": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1792800554
+  },
   "RELY": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
@@ -1683,6 +1693,11 @@
     "industry": "Tools & Accessories",
     "sector": "Industrials",
     "ts": 1783728124
+  },
+  "TMO": {
+    "industry": "Diagnostics & Research",
+    "sector": "Healthcare",
+    "ts": 1792800554
   },
   "TRGP": {
     "industry": "Oil & Gas Midstream",

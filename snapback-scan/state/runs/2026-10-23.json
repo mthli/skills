@@ -1,0 +1,415 @@
+{
+  "as_of": "2026-10-23T20:12:49.444586-04:00",
+  "today": "2026-10-23",
+  "spark_window": [
+    "2026-10-26",
+    "2026-10-27",
+    "2026-10-28"
+  ],
+  "macro_note": "ForexFactory covers the current week only \u2014 macro sparks beyond Sunday not visible",
+  "regime": {
+    "snapshot": "20261023",
+    "state": "CAUTION",
+    "score": 1,
+    "vix": 19.5,
+    "spy_vs_200_pct": 5.0,
+    "flags": "Credit weakening: HYG/LQD -1.6%/20d while stocks hold ; Defensive rotation: deepening, defensives +10.4pp over offensives / 20d, +4.7pp more than 5 sessions ago"
+  },
+  "mr_run": {
+    "run_id": "20261023",
+    "run_date": "2026-10-23",
+    "data_asof": "2026-10-23",
+    "stale_days": 0,
+    "rows_in_run": 20,
+    "kegs_after_filter": 6
+  },
+  "tape_freshness": {
+    "expected": "2026-10-23",
+    "asof": "2026-10-23",
+    "repaired": [
+      "CAKE",
+      "CORT",
+      "META",
+      "MPC",
+      "PBF",
+      "TEVA"
+    ],
+    "missing": []
+  },
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "CORT",
+      "rank": 1,
+      "score": 69.8,
+      "rsi2": 2.48,
+      "dist_200dma_pct": 16.71,
+      "signal_close": 85.84,
+      "mr_target": 107.63,
+      "mr_stop": 70.05,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 1,
+      "freq_60d": 2,
+      "paper_track": false,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "NVS",
+          "date": "2026-10-27",
+          "slot": "BMO",
+          "detail": "NVS (Healthcare, $298B) reports 2026-10-27 BMO"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "GOOG",
+          "date": "2026-10-28",
+          "slot": "AMC",
+          "detail": "GOOG ($3965B) reports 2026-10-28 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "GOOGL",
+          "date": "2026-10-28",
+          "slot": "AMC",
+          "detail": "GOOGL ($3965B) reports 2026-10-28 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "MSFT",
+          "date": "2026-10-28",
+          "slot": "AMC",
+          "detail": "MSFT ($3870B) reports 2026-10-28 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 85.84,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -22.08,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.77,
+      "signal_day_low": 84.13,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "TEVA",
+      "rank": 2,
+      "score": 53.7,
+      "rsi2": 1.75,
+      "dist_200dma_pct": 14.59,
+      "signal_close": 39.39,
+      "mr_target": 40.48,
+      "mr_stop": 36.58,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 2,
+      "freq_60d": 0,
+      "paper_track": false,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "NVS",
+          "date": "2026-10-27",
+          "slot": "BMO",
+          "detail": "NVS (Healthcare, $298B) reports 2026-10-27 BMO"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "GOOG",
+          "date": "2026-10-28",
+          "slot": "AMC",
+          "detail": "GOOG ($3965B) reports 2026-10-28 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "GOOGL",
+          "date": "2026-10-28",
+          "slot": "AMC",
+          "detail": "GOOGL ($3965B) reports 2026-10-28 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "MSFT",
+          "date": "2026-10-28",
+          "slot": "AMC",
+          "detail": "MSFT ($3870B) reports 2026-10-28 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 39.39,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -5.08,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.67,
+      "signal_day_low": 39.1,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "CAKE",
+      "rank": 3,
+      "score": 51.2,
+      "rsi2": 3.26,
+      "dist_200dma_pct": 38.81,
+      "signal_close": 108.39,
+      "mr_target": 113.57,
+      "mr_stop": 99.41,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "paper_track": false,
+      "sector": "Consumer Cyclical",
+      "sparks": [
+        {
+          "type": "own_earnings",
+          "symbol": "CAKE",
+          "date": "2026-10-27",
+          "slot": "AMC",
+          "detail": "CAKE reports 2026-10-27 AMC (eps est $0.95) \u2014 a coin flip, NOT a verdict: earnings-gap rule says zero directional trust"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "GOOG",
+          "date": "2026-10-28",
+          "slot": "AMC",
+          "detail": "GOOG ($3965B) reports 2026-10-28 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "GOOGL",
+          "date": "2026-10-28",
+          "slot": "AMC",
+          "detail": "GOOGL ($3965B) reports 2026-10-28 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "MSFT",
+          "date": "2026-10-28",
+          "slot": "AMC",
+          "detail": "MSFT ($3870B) reports 2026-10-28 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 108.39,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -5.68,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 0.89,
+      "signal_day_low": 107.02,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "MPC",
+      "rank": 4,
+      "score": 42.7,
+      "rsi2": 3.93,
+      "dist_200dma_pct": 61.62,
+      "signal_close": 457.03,
+      "mr_target": 466.6,
+      "mr_stop": 415.44,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 0,
+      "paper_track": false,
+      "sector": "Energy",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "GOOG",
+          "date": "2026-10-28",
+          "slot": "AMC",
+          "detail": "GOOG ($3965B) reports 2026-10-28 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "GOOGL",
+          "date": "2026-10-28",
+          "slot": "AMC",
+          "detail": "GOOGL ($3965B) reports 2026-10-28 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "MSFT",
+          "date": "2026-10-28",
+          "slot": "AMC",
+          "detail": "MSFT ($3870B) reports 2026-10-28 AMC"
+        }
+      ],
+      "armed": false,
+      "latest_close": 457.03,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -4.4,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 1.08,
+      "signal_day_low": 454.19,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-11-03"
+    },
+    {
+      "ticker": "PBF",
+      "rank": 5,
+      "score": 41.8,
+      "rsi2": 4.79,
+      "dist_200dma_pct": 45.8,
+      "signal_close": 76.2,
+      "mr_target": 80.25,
+      "mr_stop": 64.39,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 0,
+      "paper_track": false,
+      "sector": "Energy",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "GOOG",
+          "date": "2026-10-28",
+          "slot": "AMC",
+          "detail": "GOOG ($3965B) reports 2026-10-28 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "GOOGL",
+          "date": "2026-10-28",
+          "slot": "AMC",
+          "detail": "GOOGL ($3965B) reports 2026-10-28 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "MSFT",
+          "date": "2026-10-28",
+          "slot": "AMC",
+          "detail": "MSFT ($3870B) reports 2026-10-28 AMC"
+        }
+      ],
+      "armed": false,
+      "latest_close": 76.2,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -9.84,
+      "down_gaps_5d": 0,
+      "vol_ratio_5d_20d": 0.92,
+      "signal_day_low": 75.64,
+      "quiet_warning": false,
+      "next_own_earnings": "2026-10-29"
+    },
+    {
+      "ticker": "META",
+      "rank": 7,
+      "score": 40.7,
+      "rsi2": 2.72,
+      "dist_200dma_pct": 1.68,
+      "signal_close": 642.26,
+      "mr_target": 677.66,
+      "mr_stop": 579.05,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "paper_track": false,
+      "sector": "Communication Services",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "VZ",
+          "date": "2026-10-26",
+          "slot": "BMO",
+          "detail": "VZ (Communication Services, $188B) reports 2026-10-26 BMO"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "GOOG",
+          "date": "2026-10-28",
+          "slot": "AMC",
+          "detail": "GOOG (Communication Services, $3965B) reports 2026-10-28 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "GOOGL",
+          "date": "2026-10-28",
+          "slot": "AMC",
+          "detail": "GOOGL (Communication Services, $3965B) reports 2026-10-28 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "MSFT",
+          "date": "2026-10-28",
+          "slot": "AMC",
+          "detail": "MSFT ($3870B) reports 2026-10-28 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "TMUS",
+          "date": "2026-10-28",
+          "slot": "AMC",
+          "detail": "TMUS (Communication Services, $170B) reports 2026-10-28 AMC"
+        }
+      ],
+      "armed": true,
+      "latest_close": 642.26,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -9.46,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 1.32,
+      "signal_day_low": 633.27,
+      "quiet_warning": false
+    }
+  ],
+  "macro_calendar": [],
+  "prior_run_review": {
+    "source": "snapback:2026-10-22",
+    "n": 6,
+    "pct_positive": 33.3,
+    "avg_pct": -0.73,
+    "median_pct": -0.9,
+    "best": [
+      {
+        "ticker": "AME",
+        "since_pct": 0.5
+      },
+      {
+        "ticker": "CLMT",
+        "since_pct": 0.04
+      },
+      {
+        "ticker": "DXCM",
+        "since_pct": -0.51
+      }
+    ],
+    "worst": [
+      {
+        "ticker": "MUFG",
+        "since_pct": -1.68
+      },
+      {
+        "ticker": "MFG",
+        "since_pct": -1.44
+      },
+      {
+        "ticker": "SMFG",
+        "since_pct": -1.29
+      }
+    ],
+    "armed_subset": {
+      "n": 5,
+      "pct_positive": 20.0,
+      "avg_pct": -0.88,
+      "median_pct": -1.29
+    }
+  },
+  "errors": []
+}
