@@ -379,7 +379,13 @@ This is the section that can do harm if written lazily, so frame it honestly:
   on 10-16 (CFG / MTB inverted, RF 24%), and GM kept 102% of a −6.7%
   guidance gap on 10-20 with F / STLA flat and the index green. So a
   flat peer group means two-sided: grade the keep, never presume a
-  band. **The floor is a *guidance* rule
+  band. **Narrowed (10-21, 10-23; promoted on 2nd row): in the aligned
+  cell the line is ≥ 70% kept, not > 100%.** Over 10-21 to 10-23 the
+  aligned cell kept more than its gap 8 times in 15, and ≥ 70% 12 times
+  in 15. DECK's −8.4% outlook cut kept 58% with its footwear peers all
+  down 2.7–4.4%. Frame the aligned premarket print as the likely floor,
+  but grade the cell at ≥ 70% and write > 100% as a lean, never a
+  forecast. **The floor is a *guidance* rule
   (09-30, 10-01; promoted on 2nd session):** non-earnings own-news gaps,
   whether a contract (BA +2.3 → −0.9, CEG +3.0 → 65%, RKLB +3.8 → 30%) or a
   product (HOOD +5.5 → −3.2, GOOGL +2.0 → −1.7), went 0-for-5 over 70% kept,
@@ -408,7 +414,10 @@ This is the section that can do harm if written lazily, so frame it honestly:
   forward as a read on the driver, not the name: the next brief's hypothesis
   for that group leans against the driver until a close says otherwise.
   **3rd instance (09-14): XLE sold a +1% Brent close (gap +1.26 → −0.94) and
-  Brent was −5% the next morning; the rule is 3-for-3.**
+  Brent was −5% the next morning; the rule is 3-for-3.** **4th test (10-23)
+  broke it:** XLE closed −0.87 on a +4.0% Brent close (10-22) and WTI
+  settled +3.8% the next session. At 3-for-4 the inversion leans the next
+  brief against the driver; it doesn't forecast the driver's close.
   **Corollary (09-11, 09-14; promoted on 2nd instance): the peer group has to
   be named pre-open with 2–3 tickers.** "software / AI-infra" (09-11) was two
   groups — software closed green, AI-infra faded, and ORCL traded with the
