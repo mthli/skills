@@ -747,7 +747,7 @@
   "CHYM": {
     "industry": "Software - Application",
     "sector": "Technology",
-    "ts": 1788307441
+    "ts": 1793059494
   },
   "CI": {
     "industry": "Healthcare Plans",
@@ -1527,7 +1527,7 @@
   "GGB": {
     "industry": "Steel",
     "sector": "Basic Materials",
-    "ts": 1790380977
+    "ts": 1793059494
   },
   "GH": {
     "industry": "Diagnostics & Research",
@@ -2237,7 +2237,7 @@
   "MRK": {
     "industry": "Drug Manufacturers - General",
     "sector": "Healthcare",
-    "ts": 1789171379
+    "ts": 1793059494
   },
   "MRNA": {
     "industry": "Biotechnology",
@@ -2652,12 +2652,12 @@
   "PBR": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
-    "ts": 1780659418
+    "ts": 1793059495
   },
   "PBR-A": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
-    "ts": 1779848102
+    "ts": 1793059495
   },
   "PCAR": {
     "industry": "Farm & Heavy Construction Machinery",
@@ -3767,7 +3767,7 @@
   "XYZ": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1788307442
+    "ts": 1793059495
   },
   "YOU": {
     "industry": "Software - Application",

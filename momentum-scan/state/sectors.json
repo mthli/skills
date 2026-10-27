@@ -272,7 +272,7 @@
   "CVI": {
     "industry": "Oil & Gas Refining & Marketing",
     "sector": "Energy",
-    "ts": 1789689700
+    "ts": 1793059326
   },
   "CVS": {
     "industry": "Healthcare Plans",
@@ -864,6 +864,11 @@
     "sector": "Technology",
     "ts": 1784332986
   },
+  "RBRK": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1793059326
+  },
   "RCRUY": {
     "industry": "Internet Content & Information",
     "sector": "Communication Services",
@@ -982,7 +987,7 @@
   "SSL": {
     "industry": "Specialty Chemicals",
     "sector": "Basic Materials",
-    "ts": 1790294468
+    "ts": 1793059326
   },
   "ST": {
     "industry": "Scientific & Technical Instruments",
@@ -1083,6 +1088,11 @@
     "industry": "Semiconductors",
     "sector": "Technology",
     "ts": 1780452266
+  },
+  "TSLA": {
+    "industry": "Auto Manufacturers",
+    "sector": "Consumer Cyclical",
+    "ts": 1793059326
   },
   "TTEK": {
     "industry": "Engineering & Construction",

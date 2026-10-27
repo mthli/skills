@@ -1,0 +1,431 @@
+{
+  "as_of": "2026-10-26T20:05:05.475037-04:00",
+  "today": "2026-10-26",
+  "spark_window": [
+    "2026-10-27",
+    "2026-10-28",
+    "2026-10-29"
+  ],
+  "macro_note": "",
+  "regime": {
+    "snapshot": "20261026",
+    "state": "CAUTION",
+    "score": 3,
+    "vix": 18.4,
+    "spy_vs_200_pct": 5.6,
+    "flags": "Credit weakening: HYG/LQD -1.9%/20d while stocks hold ; Defensive rotation: deepening, defensives +8.7pp over offensives / 20d, +2.4pp more than 5 sessions ago"
+  },
+  "mr_run": {
+    "run_id": "20261026",
+    "run_date": "2026-10-26",
+    "data_asof": "2026-10-26",
+    "stale_days": 0,
+    "rows_in_run": 12,
+    "kegs_after_filter": 3
+  },
+  "tape_freshness": {
+    "expected": "2026-10-26",
+    "asof": "2026-10-26",
+    "repaired": [
+      "PBR",
+      "PBR-A",
+      "UGP"
+    ],
+    "missing": []
+  },
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "UGP",
+      "rank": 1,
+      "score": 74.8,
+      "rsi2": 1.35,
+      "dist_200dma_pct": 13.85,
+      "signal_close": 6.56,
+      "mr_target": 7.6,
+      "mr_stop": 5.73,
+      "signal": "\ud83d\udd35",
+      "listing_age_runs": 1,
+      "freq_60d": 2,
+      "paper_track": true,
+      "sector": "Energy",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "GOOG",
+          "date": "2026-10-28",
+          "slot": "AMC",
+          "detail": "GOOG ($3916B) reports 2026-10-28 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "GOOGL",
+          "date": "2026-10-28",
+          "slot": "AMC",
+          "detail": "GOOGL ($3916B) reports 2026-10-28 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "MSFT",
+          "date": "2026-10-28",
+          "slot": "AMC",
+          "detail": "MSFT ($3895B) reports 2026-10-28 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-28",
+          "detail": "Federal Funds Rate 2026-10-28 14:00 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-28",
+          "detail": "FOMC Statement 2026-10-28 14:00 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-28",
+          "detail": "FOMC Press Conference 2026-10-28 14:30 ET"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AMZN",
+          "date": "2026-10-29",
+          "slot": "AMC",
+          "detail": "AMZN ($2675B) reports 2026-10-29 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "LLY",
+          "date": "2026-10-29",
+          "slot": "BMO",
+          "detail": "LLY ($1199B) reports 2026-10-29 BMO"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "SHEL",
+          "date": "2026-10-29",
+          "slot": "BMO",
+          "detail": "SHEL (Energy, $298B) reports 2026-10-29 BMO"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "TTE",
+          "date": "2026-10-29",
+          "slot": "BMO",
+          "detail": "TTE (Energy, $213B) reports 2026-10-29 BMO"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-29",
+          "detail": "Advance GDP q/q 2026-10-29 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-29",
+          "detail": "Core PCE Price Index m/m 2026-10-29 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 6.56,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -15.57,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.88,
+      "signal_day_low": 6.18,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "PBR-A",
+      "rank": 2,
+      "score": 47.7,
+      "rsi2": 8.4,
+      "dist_200dma_pct": 19.53,
+      "signal_close": 19.91,
+      "mr_target": 22.48,
+      "mr_stop": 17.67,
+      "signal": "\ud83d\udfe1",
+      "listing_age_runs": 1,
+      "freq_60d": 0,
+      "paper_track": false,
+      "sector": "Energy",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "GOOG",
+          "date": "2026-10-28",
+          "slot": "AMC",
+          "detail": "GOOG ($3916B) reports 2026-10-28 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "GOOGL",
+          "date": "2026-10-28",
+          "slot": "AMC",
+          "detail": "GOOGL ($3916B) reports 2026-10-28 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "MSFT",
+          "date": "2026-10-28",
+          "slot": "AMC",
+          "detail": "MSFT ($3895B) reports 2026-10-28 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-28",
+          "detail": "Federal Funds Rate 2026-10-28 14:00 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-28",
+          "detail": "FOMC Statement 2026-10-28 14:00 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-28",
+          "detail": "FOMC Press Conference 2026-10-28 14:30 ET"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AMZN",
+          "date": "2026-10-29",
+          "slot": "AMC",
+          "detail": "AMZN ($2675B) reports 2026-10-29 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "LLY",
+          "date": "2026-10-29",
+          "slot": "BMO",
+          "detail": "LLY ($1199B) reports 2026-10-29 BMO"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "SHEL",
+          "date": "2026-10-29",
+          "slot": "BMO",
+          "detail": "SHEL (Energy, $298B) reports 2026-10-29 BMO"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "TTE",
+          "date": "2026-10-29",
+          "slot": "BMO",
+          "detail": "TTE (Energy, $213B) reports 2026-10-29 BMO"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-29",
+          "detail": "Advance GDP q/q 2026-10-29 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-29",
+          "detail": "Core PCE Price Index m/m 2026-10-29 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 19.91,
+      "since_signal_pct": -0.03,
+      "ignited": false,
+      "down_streak": 1,
+      "ret_5d_pct": -13.31,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.96,
+      "signal_day_low": 18.77,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "PBR",
+      "rank": 3,
+      "score": 47.0,
+      "rsi2": 7.3,
+      "dist_200dma_pct": 21.92,
+      "signal_close": 22.48,
+      "mr_target": 25.12,
+      "mr_stop": 20.01,
+      "signal": "\ud83d\udfe1",
+      "listing_age_runs": 1,
+      "freq_60d": 0,
+      "paper_track": false,
+      "sector": "Energy",
+      "sparks": [
+        {
+          "type": "marketwide_verdict",
+          "symbol": "GOOG",
+          "date": "2026-10-28",
+          "slot": "AMC",
+          "detail": "GOOG ($3916B) reports 2026-10-28 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "GOOGL",
+          "date": "2026-10-28",
+          "slot": "AMC",
+          "detail": "GOOGL ($3916B) reports 2026-10-28 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "MSFT",
+          "date": "2026-10-28",
+          "slot": "AMC",
+          "detail": "MSFT ($3895B) reports 2026-10-28 AMC"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-28",
+          "detail": "Federal Funds Rate 2026-10-28 14:00 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-28",
+          "detail": "FOMC Statement 2026-10-28 14:00 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-28",
+          "detail": "FOMC Press Conference 2026-10-28 14:30 ET"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AMZN",
+          "date": "2026-10-29",
+          "slot": "AMC",
+          "detail": "AMZN ($2675B) reports 2026-10-29 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "LLY",
+          "date": "2026-10-29",
+          "slot": "BMO",
+          "detail": "LLY ($1199B) reports 2026-10-29 BMO"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "SHEL",
+          "date": "2026-10-29",
+          "slot": "BMO",
+          "detail": "SHEL (Energy, $298B) reports 2026-10-29 BMO"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "TTE",
+          "date": "2026-10-29",
+          "slot": "BMO",
+          "detail": "TTE (Energy, $213B) reports 2026-10-29 BMO"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-29",
+          "detail": "Advance GDP q/q 2026-10-29 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-10-29",
+          "detail": "Core PCE Price Index m/m 2026-10-29 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 22.48,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 1,
+      "ret_5d_pct": -12.05,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.78,
+      "signal_day_low": 21.35,
+      "quiet_warning": false
+    }
+  ],
+  "macro_calendar": [
+    {
+      "date": "2026-10-28",
+      "time_et": "14:00",
+      "title": "Federal Funds Rate"
+    },
+    {
+      "date": "2026-10-28",
+      "time_et": "14:00",
+      "title": "FOMC Statement"
+    },
+    {
+      "date": "2026-10-28",
+      "time_et": "14:30",
+      "title": "FOMC Press Conference"
+    },
+    {
+      "date": "2026-10-29",
+      "time_et": "08:30",
+      "title": "Advance GDP q/q"
+    },
+    {
+      "date": "2026-10-29",
+      "time_et": "08:30",
+      "title": "Core PCE Price Index m/m"
+    }
+  ],
+  "prior_run_review": {
+    "source": "snapback:2026-10-23",
+    "n": 6,
+    "pct_positive": 83.3,
+    "avg_pct": 1.9,
+    "median_pct": 1.54,
+    "best": [
+      {
+        "ticker": "PBF",
+        "since_pct": 5.7
+      },
+      {
+        "ticker": "MPC",
+        "since_pct": 2.97
+      },
+      {
+        "ticker": "CAKE",
+        "since_pct": 1.58
+      }
+    ],
+    "worst": [
+      {
+        "ticker": "META",
+        "since_pct": -1.84
+      },
+      {
+        "ticker": "TEVA",
+        "since_pct": 1.47
+      },
+      {
+        "ticker": "CORT",
+        "since_pct": 1.5
+      }
+    ],
+    "armed_subset": {
+      "n": 4,
+      "pct_positive": 75.0,
+      "avg_pct": 0.68,
+      "median_pct": 1.48
+    }
+  },
+  "errors": []
+}

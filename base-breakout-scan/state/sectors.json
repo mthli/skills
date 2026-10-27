@@ -197,7 +197,7 @@
   "BAX": {
     "industry": "Medical Instruments & Supplies",
     "sector": "Healthcare",
-    "ts": 1787616281
+    "ts": 1793059419
   },
   "BAYRY": {
     "industry": "Drug Manufacturers - General",
@@ -382,7 +382,7 @@
   "CM": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1785801774
+    "ts": 1793059419
   },
   "CMBT": {
     "industry": "Oil & Gas Midstream",
@@ -607,7 +607,7 @@
   "DT": {
     "industry": "Software - Application",
     "sector": "Technology",
-    "ts": 1789689770
+    "ts": 1793059419
   },
   "DXCM": {
     "industry": "Medical Devices",
@@ -859,6 +859,11 @@
     "sector": "Consumer Cyclical",
     "ts": 1781747722
   },
+  "HAFN": {
+    "industry": "Marine Shipping",
+    "sector": "Industrials",
+    "ts": 1793059419
+  },
   "HAL": {
     "industry": "Oil & Gas Equipment & Services",
     "sector": "Energy",
@@ -932,7 +937,7 @@
   "ILMN": {
     "industry": "Diagnostics & Research",
     "sector": "Healthcare",
-    "ts": 1788566553
+    "ts": 1793059419
   },
   "IMVT": {
     "industry": "Biotechnology",
@@ -1008,6 +1013,11 @@
     "industry": "Scientific & Technical Instruments",
     "sector": "Technology",
     "ts": 1781568197
+  },
+  "KMI": {
+    "industry": "Oil & Gas Midstream",
+    "sector": "Energy",
+    "ts": 1793059419
   },
   "KMX": {
     "industry": "Auto & Truck Dealerships",
@@ -1317,7 +1327,7 @@
   "OKTA": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1785888158
+    "ts": 1793059419
   },
   "ORKA": {
     "industry": "Biotechnology",
@@ -1547,7 +1557,7 @@
   "SM": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1788220951
+    "ts": 1793059419
   },
   "SMFG": {
     "industry": "Banks - Diversified",
