@@ -42,7 +42,7 @@
   "ABNB": {
     "industry": "Travel Services",
     "sector": "Consumer Cyclical",
-    "ts": 1788220998
+    "ts": 1793145919
   },
   "ABVX": {
     "industry": "Biotechnology",
@@ -1222,7 +1222,7 @@
   "ELV": {
     "industry": "Healthcare Plans",
     "sector": "Healthcare",
-    "ts": 1790294570
+    "ts": 1793145919
   },
   "EMBJ": {
     "industry": "Aerospace & Defense",
@@ -2287,7 +2287,7 @@
   "MTCH": {
     "industry": "Internet Content & Information",
     "sector": "Communication Services",
-    "ts": 1790294570
+    "ts": 1793145919
   },
   "MTDR": {
     "industry": "Oil & Gas E&P",
@@ -2472,7 +2472,7 @@
   "NWS": {
     "industry": "Entertainment",
     "sector": "Communication Services",
-    "ts": 1788307444
+    "ts": 1793145919
   },
   "NWSA": {
     "industry": "Entertainment",
@@ -2847,7 +2847,7 @@
   "RELY": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1788998617
+    "ts": 1793145919
   },
   "REYN": {
     "industry": "Packaging & Containers",
@@ -3054,6 +3054,11 @@
     "sector": "Energy",
     "ts": 1787789077
   },
+  "SHOP": {
+    "industry": "Software - Application",
+    "sector": "Technology",
+    "ts": 1793145919
+  },
   "SHW": {
     "industry": "Specialty Chemicals",
     "sector": "Basic Materials",
@@ -3147,7 +3152,7 @@
   "SOLV": {
     "industry": "Medical Instruments & Supplies",
     "sector": "Healthcare",
-    "ts": 1789171379
+    "ts": 1793145919
   },
   "SON": {
     "industry": "Packaging & Containers",
@@ -3534,6 +3539,11 @@
     "sector": "Basic Materials",
     "ts": 1780944732
   },
+  "VEEV": {
+    "industry": "Health Information Services",
+    "sector": "Healthcare",
+    "ts": 1793145919
+  },
   "VG": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
@@ -3562,7 +3572,7 @@
   "VLO": {
     "industry": "Oil & Gas Refining & Marketing",
     "sector": "Energy",
-    "ts": 1790294570
+    "ts": 1793145919
   },
   "VLY": {
     "industry": "Banks - Regional",

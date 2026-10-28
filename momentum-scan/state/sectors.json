@@ -234,6 +234,11 @@
     "sector": "Financial Services",
     "ts": 1786406504
   },
+  "CRL": {
+    "industry": "Diagnostics & Research",
+    "sector": "Healthcare",
+    "ts": 1793145735
+  },
   "CRM": {
     "industry": "Software - Application",
     "sector": "Technology",
@@ -379,6 +384,11 @@
     "sector": "Healthcare",
     "ts": 1785456073
   },
+  "ESTC": {
+    "industry": "Software - Application",
+    "sector": "Technology",
+    "ts": 1793145735
+  },
   "EXLS": {
     "industry": "Information Technology Services",
     "sector": "Technology",
@@ -508,6 +518,11 @@
     "industry": "REIT - Hotel & Motel",
     "sector": "Real Estate",
     "ts": 1781225150
+  },
+  "HTFL": {
+    "industry": "Health Information Services",
+    "sector": "Healthcare",
+    "ts": 1793145735
   },
   "HUM": {
     "industry": "Healthcare Plans",
