@@ -436,6 +436,16 @@ This is the section that can do harm if written lazily, so frame it honestly:
 - **Premarket single-stock prints are thin.** Weight the futures gap, Europe,
   and sector ETFs over individual moves; respect the gappers' volume floor,
   and treat pre-8:00 ET thin prints as noise.
+- **"No driver found" is a claim about the feeds, not the tape (10-26,
+  10-28; promoted on 2nd verified instance).** TSLA's Barclays upgrade was
+  dated 10-26 but surfaced a session late (the gap kept 210%), and 10-28's
+  KOSPI +6.3% was SK Hynix's record quarter (+11%), filed "not found".
+  Before filing any gap driverless, check the name's own broker news and
+  rating changes with a one-session lag, and for a country index its
+  megacap constituents' prints (KOSPI = Samsung / SK Hynix). If nothing
+  turns up, write "no driver in the feeds ⚠️", never "no driver", and keep
+  the rules that key on driverless gaps (the snapback and its gap-up mirror
+  below) two-sided until the driver question is closed.
 - **No-fresh-driver gap-down = snapback candidate (06-12, 07-09, 08-03).** On
   a confirmed risk-on tape, a premarket-red name or group with no
   identifiable owning trigger (rate shock, rejected print, unwind vacuum) is
