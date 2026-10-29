@@ -82,7 +82,7 @@
   "ADP": {
     "industry": "Software - Application",
     "sector": "Technology",
-    "ts": 1788998617
+    "ts": 1793232357
   },
   "AEE": {
     "industry": "Utilities - Regulated Electric",
@@ -387,7 +387,7 @@
   "AVTR": {
     "industry": "Medical Instruments & Supplies",
     "sector": "Healthcare",
-    "ts": 1788307441
+    "ts": 1793232357
   },
   "AWK": {
     "industry": "Utilities - Regulated Water",
@@ -417,7 +417,7 @@
   "BALL": {
     "industry": "Packaging & Containers",
     "sector": "Consumer Cyclical",
-    "ts": 1788307445
+    "ts": 1793232358
   },
   "BAM": {
     "industry": "Asset Management",
@@ -752,7 +752,7 @@
   "CI": {
     "industry": "Healthcare Plans",
     "sector": "Healthcare",
-    "ts": 1785589366
+    "ts": 1793232357
   },
   "CIEN": {
     "industry": "Communication Equipment",
@@ -987,7 +987,7 @@
   "CVS": {
     "industry": "Healthcare Plans",
     "sector": "Healthcare",
-    "ts": 1789171380
+    "ts": 1793232357
   },
   "CVX": {
     "industry": "Oil & Gas Integrated",
@@ -1574,6 +1574,11 @@
     "sector": "Healthcare",
     "ts": 1789171379
   },
+  "GME": {
+    "industry": "Specialty Retail",
+    "sector": "Consumer Cyclical",
+    "ts": 1793232357
+  },
   "GOOG": {
     "industry": "Internet Content & Information",
     "sector": "Communication Services",
@@ -1737,7 +1742,7 @@
   "HUM": {
     "industry": "Healthcare Plans",
     "sector": "Healthcare",
-    "ts": 1789689809
+    "ts": 1793232357
   },
   "HUT": {
     "industry": "Capital Markets",
@@ -2477,7 +2482,7 @@
   "NWSA": {
     "industry": "Entertainment",
     "sector": "Communication Services",
-    "ts": 1788998618
+    "ts": 1793232357
   },
   "NXPI": {
     "industry": "Semiconductors",
@@ -2542,7 +2547,7 @@
   "OMC": {
     "industry": "Advertising Agencies",
     "sector": "Communication Services",
-    "ts": 1788307441
+    "ts": 1793232357
   },
   "OMF": {
     "industry": "Credit Services",
@@ -2912,7 +2917,7 @@
   "ROKU": {
     "industry": "Entertainment",
     "sector": "Communication Services",
-    "ts": 1789085008
+    "ts": 1793232357
   },
   "ROST": {
     "industry": "Apparel Retail",
@@ -3477,7 +3482,12 @@
   "UGP": {
     "industry": "Oil & Gas Refining & Marketing",
     "sector": "Energy",
-    "ts": 1790640180
+    "ts": 1793232357
+  },
+  "UL": {
+    "industry": "Household & Personal Products",
+    "sector": "Consumer Defensive",
+    "ts": 1793232358
   },
   "UMC": {
     "industry": "Semiconductors",
@@ -3708,6 +3718,11 @@
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
     "ts": 1789689809
+  },
+  "WMG": {
+    "industry": "Entertainment",
+    "sector": "Communication Services",
+    "ts": 1793232357
   },
   "WMT": {
     "industry": "Discount Stores",

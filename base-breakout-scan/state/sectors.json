@@ -272,7 +272,7 @@
   "BNS": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1790640140
+    "ts": 1793232267
   },
   "BNY": {
     "industry": "Banks - Diversified",
@@ -407,7 +407,7 @@
   "CNI": {
     "industry": "Railroads",
     "sector": "Industrials",
-    "ts": 1785801774
+    "ts": 1793232267
   },
   "CNQ": {
     "industry": "Oil & Gas E&P",
@@ -1059,6 +1059,11 @@
     "sector": "Healthcare",
     "ts": 1790380940
   },
+  "LNG": {
+    "industry": "Oil & Gas Midstream",
+    "sector": "Energy",
+    "ts": 1793232267
+  },
   "LNTH": {
     "industry": "Drug Manufacturers - Specialty & Generic",
     "sector": "Healthcare",
@@ -1458,6 +1463,11 @@
     "industry": "Software - Infrastructure",
     "sector": "Technology",
     "ts": 1788566554
+  },
+  "RGEN": {
+    "industry": "Medical Instruments & Supplies",
+    "sector": "Healthcare",
+    "ts": 1793232267
   },
   "RIO": {
     "industry": "Other Industrial Metals & Mining",
