@@ -391,7 +391,13 @@ This is the section that can do harm if written lazily, so frame it honestly:
   product (HOOD +5.5 → −3.2, GOOGL +2.0 → −1.7), went 0-for-5 over 70% kept,
   three inverted. Frame them two-sided with no expected keep and the
   premarket print as the day's high-water mark; the floor framing belongs to
-  own-guidance and clinical-readout gaps. **A gap onto a deal price is
+  own-guidance and clinical-readout gaps. **The high-water mark is the
+  gap-up side (10-26, 10-29; promoted on 2nd verified instance):** the
+  0-for-5 were all gap-ups, while non-earnings gap-downs kept 235% (META's
+  share sale) and 119% (MRVL on a reported bid for Lumentum), both with
+  their group red. Frame a non-earnings gap-down two-sided with a floor
+  lean when its group sells with it, and grade the keep; never call its
+  premarket print the day's low. **A gap onto a deal price is
   capped by it (SMMT 09-29, SYNA 10-02; promoted on 2nd instance):** SMMT
   opened over AstraZeneca's 18.36 and kept 27%; SYNA's +14.6% kept 96% with
   its high 1% under ON's $123 cash price. The deal price is the day's
