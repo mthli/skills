@@ -224,6 +224,11 @@
     "sector": "Real Estate",
     "ts": 1782786282
   },
+  "CON": {
+    "industry": "Medical Care Facilities",
+    "sector": "Healthcare",
+    "ts": 1793318553
+  },
   "CORT": {
     "industry": "Biotechnology",
     "sector": "Healthcare",

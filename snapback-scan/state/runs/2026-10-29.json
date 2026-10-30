@@ -1,0 +1,342 @@
+{
+  "as_of": "2026-10-29T20:06:13.548972-04:00",
+  "today": "2026-10-29",
+  "spark_window": [
+    "2026-10-30",
+    "2026-11-02",
+    "2026-11-03"
+  ],
+  "macro_note": "ForexFactory covers the current week only \u2014 macro sparks beyond Sunday not visible",
+  "regime": {
+    "snapshot": "20261029",
+    "state": "RISK-ON",
+    "score": 4,
+    "vix": 17.2,
+    "spy_vs_200_pct": 6.0,
+    "flags": "Credit weakening: HYG/LQD -1.3%/20d while stocks hold"
+  },
+  "mr_run": {
+    "run_id": "20261029",
+    "run_date": "2026-10-29",
+    "data_asof": "2026-10-29",
+    "stale_days": 0,
+    "rows_in_run": 20,
+    "kegs_after_filter": 4
+  },
+  "tape_freshness": {
+    "expected": "2026-10-29",
+    "asof": "2026-10-29",
+    "repaired": [
+      "DT",
+      "FTNT",
+      "IOVA",
+      "TEAM"
+    ],
+    "missing": []
+  },
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "FTNT",
+      "rank": 2,
+      "score": 62.0,
+      "rsi2": 3.18,
+      "dist_200dma_pct": 8.58,
+      "signal_close": 139.08,
+      "mr_target": 172.3,
+      "mr_stop": 112.87,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 1,
+      "paper_track": false,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "AAPL",
+          "date": "2026-11-02",
+          "slot": "AMC",
+          "detail": "AAPL (Technology, $5018B) reports 2026-11-02 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "PLTR",
+          "date": "2026-11-02",
+          "slot": "AMC",
+          "detail": "PLTR (Technology, $473B) reports 2026-11-02 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "AMD",
+          "date": "2026-11-03",
+          "slot": "AMC",
+          "detail": "AMD (Technology, $944B) reports 2026-11-03 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "ANET",
+          "date": "2026-11-03",
+          "slot": "AMC",
+          "detail": "ANET (Technology, $235B) reports 2026-11-03 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "SHOP",
+          "date": "2026-11-03",
+          "slot": "BMO",
+          "detail": "SHOP (Technology, $217B) reports 2026-11-03 BMO"
+        }
+      ],
+      "armed": true,
+      "latest_close": 139.08,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 2,
+      "ret_5d_pct": -19.6,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 1.3,
+      "signal_day_low": 127.4,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "IOVA",
+      "rank": 3,
+      "score": 60.0,
+      "rsi2": 5.72,
+      "dist_200dma_pct": 64.48,
+      "signal_close": 9.55,
+      "mr_target": 13.36,
+      "mr_stop": 6.54,
+      "signal": "\ud83d\udfe1",
+      "listing_age_runs": 1,
+      "freq_60d": 0,
+      "paper_track": false,
+      "sector": "Healthcare",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "ABBV",
+          "date": "2026-10-30",
+          "slot": "BMO",
+          "detail": "ABBV (Healthcare, $505B) reports 2026-10-30 BMO"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "AZN",
+          "date": "2026-10-30",
+          "slot": "BMO",
+          "detail": "AZN (Healthcare, $265B) reports 2026-10-30 BMO"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AAPL",
+          "date": "2026-11-02",
+          "slot": "AMC",
+          "detail": "AAPL ($5018B) reports 2026-11-02 AMC"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "AMD",
+          "date": "2026-11-03",
+          "slot": "AMC",
+          "detail": "AMD ($944B) reports 2026-11-03 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "AMGN",
+          "date": "2026-11-03",
+          "slot": "AMC",
+          "detail": "AMGN (Healthcare, $244B) reports 2026-11-03 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "PFE",
+          "date": "2026-11-03",
+          "slot": "BMO",
+          "detail": "PFE (Healthcare, $168B) reports 2026-11-03 BMO"
+        }
+      ],
+      "armed": true,
+      "latest_close": 9.55,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 1,
+      "ret_5d_pct": -32.46,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.73,
+      "signal_day_low": 9.35,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "TEAM",
+      "rank": 4,
+      "score": 49.2,
+      "rsi2": 4.29,
+      "dist_200dma_pct": 73.72,
+      "signal_close": 204.1,
+      "mr_target": 218.93,
+      "mr_stop": 179.3,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 0,
+      "paper_track": false,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "AAPL",
+          "date": "2026-11-02",
+          "slot": "AMC",
+          "detail": "AAPL (Technology, $5018B) reports 2026-11-02 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "PLTR",
+          "date": "2026-11-02",
+          "slot": "AMC",
+          "detail": "PLTR (Technology, $473B) reports 2026-11-02 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "AMD",
+          "date": "2026-11-03",
+          "slot": "AMC",
+          "detail": "AMD (Technology, $944B) reports 2026-11-03 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "ANET",
+          "date": "2026-11-03",
+          "slot": "AMC",
+          "detail": "ANET (Technology, $235B) reports 2026-11-03 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "SHOP",
+          "date": "2026-11-03",
+          "slot": "BMO",
+          "detail": "SHOP (Technology, $217B) reports 2026-11-03 BMO"
+        }
+      ],
+      "armed": true,
+      "latest_close": 204.1,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 1,
+      "ret_5d_pct": -8.54,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.88,
+      "signal_day_low": 200.05,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "DT",
+      "rank": 5,
+      "score": 47.3,
+      "rsi2": 3.7,
+      "dist_200dma_pct": 37.29,
+      "signal_close": 60.96,
+      "mr_target": 63.15,
+      "mr_stop": 55.23,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 1,
+      "freq_60d": 0,
+      "paper_track": false,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "AAPL",
+          "date": "2026-11-02",
+          "slot": "AMC",
+          "detail": "AAPL (Technology, $5018B) reports 2026-11-02 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "PLTR",
+          "date": "2026-11-02",
+          "slot": "AMC",
+          "detail": "PLTR (Technology, $473B) reports 2026-11-02 AMC"
+        },
+        {
+          "type": "own_earnings",
+          "symbol": "DT",
+          "date": "2026-11-03",
+          "slot": "BMO",
+          "detail": "DT reports 2026-11-03 BMO (eps est $0.28) \u2014 a coin flip, NOT a verdict: earnings-gap rule says zero directional trust"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "AMD",
+          "date": "2026-11-03",
+          "slot": "AMC",
+          "detail": "AMD (Technology, $944B) reports 2026-11-03 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "ANET",
+          "date": "2026-11-03",
+          "slot": "AMC",
+          "detail": "ANET (Technology, $235B) reports 2026-11-03 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "SHOP",
+          "date": "2026-11-03",
+          "slot": "BMO",
+          "detail": "SHOP (Technology, $217B) reports 2026-11-03 BMO"
+        }
+      ],
+      "armed": true,
+      "latest_close": 60.96,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -3.8,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.97,
+      "signal_day_low": 60.37,
+      "quiet_warning": true
+    }
+  ],
+  "macro_calendar": [],
+  "prior_run_review": {
+    "source": "snapback:2026-10-28",
+    "n": 2,
+    "pct_positive": 100.0,
+    "avg_pct": 2.16,
+    "median_pct": 2.16,
+    "best": [
+      {
+        "ticker": "GME",
+        "since_pct": 2.87
+      },
+      {
+        "ticker": "MTCH",
+        "since_pct": 1.44
+      }
+    ],
+    "worst": [
+      {
+        "ticker": "MTCH",
+        "since_pct": 1.44
+      },
+      {
+        "ticker": "GME",
+        "since_pct": 2.87
+      }
+    ],
+    "armed_subset": {
+      "n": 2,
+      "pct_positive": 100.0,
+      "avg_pct": 2.16,
+      "median_pct": 2.16
+    }
+  },
+  "errors": []
+}

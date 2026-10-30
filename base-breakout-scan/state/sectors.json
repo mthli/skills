@@ -567,7 +567,7 @@
   "DGX": {
     "industry": "Diagnostics & Research",
     "sector": "Healthcare",
-    "ts": 1790726539
+    "ts": 1793318669
   },
   "DINO": {
     "industry": "Oil & Gas Refining & Marketing",
@@ -622,7 +622,7 @@
   "EBAY": {
     "industry": "Internet Retail",
     "sector": "Consumer Cyclical",
-    "ts": 1783987440
+    "ts": 1793318669
   },
   "EBC": {
     "industry": "Banks - Regional",
@@ -1067,7 +1067,7 @@
   "LNTH": {
     "industry": "Drug Manufacturers - Specialty & Generic",
     "sector": "Healthcare",
-    "ts": 1780860673
+    "ts": 1793318669
   },
   "LQDA": {
     "industry": "Drug Manufacturers - Specialty & Generic",
@@ -1357,7 +1357,7 @@
   "OXY": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1789084961
+    "ts": 1793318669
   },
   "PAA": {
     "industry": "Oil & Gas Midstream",
@@ -1884,6 +1884,11 @@
     "sector": "Financial Services",
     "ts": 1788220950
   },
+  "VRNS": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1793318669
+  },
   "VSXY": {
     "industry": "Apparel Retail",
     "sector": "Consumer Cyclical",
@@ -1893,6 +1898,11 @@
     "industry": "Drug Manufacturers - Specialty & Generic",
     "sector": "Healthcare",
     "ts": 1791590634
+  },
+  "W": {
+    "industry": "Internet Retail",
+    "sector": "Consumer Cyclical",
+    "ts": 1793318669
   },
   "WBD": {
     "industry": "Entertainment",

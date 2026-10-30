@@ -447,7 +447,7 @@
   "BBVA": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1789689809
+    "ts": 1793318762
   },
   "BBY": {
     "industry": "Specialty Retail",
@@ -587,7 +587,7 @@
   "BUD": {
     "industry": "Beverages - Brewers",
     "sector": "Consumer Defensive",
-    "ts": 1789085009
+    "ts": 1793318762
   },
   "BVN": {
     "industry": "Other Precious Metals & Mining",
@@ -667,7 +667,7 @@
   "CBOE": {
     "industry": "Financial Data & Stock Exchanges",
     "sector": "Financial Services",
-    "ts": 1789171381
+    "ts": 1793318762
   },
   "CBSH": {
     "industry": "Banks - Regional",
@@ -712,7 +712,7 @@
   "CF": {
     "industry": "Agricultural Inputs",
     "sector": "Basic Materials",
-    "ts": 1790121795
+    "ts": 1793318762
   },
   "CFG": {
     "industry": "Banks - Regional",
@@ -1042,7 +1042,7 @@
   "DBX": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1790121795
+    "ts": 1793318762
   },
   "DD": {
     "industry": "Specialty Chemicals",
@@ -1072,7 +1072,7 @@
   "DEO": {
     "industry": "Beverages - Wineries & Distilleries",
     "sector": "Consumer Defensive",
-    "ts": 1788220999
+    "ts": 1793318762
   },
   "DFTX": {
     "industry": "Biotechnology",
@@ -1707,7 +1707,7 @@
   "HPQ": {
     "industry": "Computer Hardware",
     "sector": "Technology",
-    "ts": 1790380977
+    "ts": 1793318762
   },
   "HR": {
     "industry": "REIT - Healthcare Facilities",
@@ -1827,7 +1827,7 @@
   "IOT": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1788480190
+    "ts": 1793318762
   },
   "IOVA": {
     "industry": "Biotechnology",
@@ -3277,7 +3277,7 @@
   "TEAM": {
     "industry": "Software - Application",
     "sector": "Technology",
-    "ts": 1790726577
+    "ts": 1793318762
   },
   "TECH": {
     "industry": "Biotechnology",
