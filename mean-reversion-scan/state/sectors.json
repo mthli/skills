@@ -427,7 +427,7 @@
   "BAX": {
     "industry": "Medical Instruments & Supplies",
     "sector": "Healthcare",
-    "ts": 1789689809
+    "ts": 1793405108
   },
   "BAYRY": {
     "industry": "Drug Manufacturers - General",
@@ -437,7 +437,7 @@
   "BB": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1787184309
+    "ts": 1793405108
   },
   "BBIO": {
     "industry": "Biotechnology",
@@ -497,7 +497,7 @@
   "BGC": {
     "industry": "Capital Markets",
     "sector": "Financial Services",
-    "ts": 1790726578
+    "ts": 1793405108
   },
   "BHP": {
     "industry": "Other Industrial Metals & Mining",
@@ -1303,6 +1303,11 @@
     "industry": "Specialty Chemicals",
     "sector": "Basic Materials",
     "ts": 1787184311
+  },
+  "ESTC": {
+    "industry": "Software - Application",
+    "sector": "Technology",
+    "ts": 1793405108
   },
   "ET": {
     "industry": "Oil & Gas Midstream",
@@ -2337,7 +2342,7 @@
   "NAVN": {
     "industry": "Software - Application",
     "sector": "Technology",
-    "ts": 1790294570
+    "ts": 1793405108
   },
   "NBIS": {
     "industry": "Internet Content & Information",
@@ -3817,7 +3822,7 @@
   "ZETA": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1790726577
+    "ts": 1793405108
   },
   "ZGN": {
     "industry": "Apparel Manufacturing",
@@ -3833,6 +3838,11 @@
     "industry": "Software - Application",
     "sector": "Technology",
     "ts": 1787702742
+  },
+  "ZS": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1793405108
   },
   "ZTO": {
     "industry": "Integrated Freight & Logistics",

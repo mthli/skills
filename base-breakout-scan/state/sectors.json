@@ -319,6 +319,11 @@
     "sector": "Healthcare",
     "ts": 1791504225
   },
+  "CAI": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1793405035
+  },
   "CAKE": {
     "industry": "Restaurants",
     "sector": "Consumer Cyclical",
@@ -552,7 +557,7 @@
   "DE": {
     "industry": "Farm & Heavy Construction Machinery",
     "sector": "Industrials",
-    "ts": 1790640140
+    "ts": 1793405035
   },
   "DELL": {
     "industry": "Computer Hardware",
@@ -1177,7 +1182,7 @@
   "MPC": {
     "industry": "Oil & Gas Refining & Marketing",
     "sector": "Energy",
-    "ts": 1790640140
+    "ts": 1793405035
   },
   "MRK": {
     "industry": "Drug Manufacturers - General",
@@ -1543,6 +1548,11 @@
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
     "ts": 1790899417
+  },
+  "SHOP": {
+    "industry": "Software - Application",
+    "sector": "Technology",
+    "ts": 1793405035
   },
   "SIRI": {
     "industry": "Entertainment",

@@ -77,7 +77,7 @@
   "APA": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1789516889
+    "ts": 1793404940
   },
   "APGE": {
     "industry": "Biotechnology",
@@ -163,6 +163,11 @@
     "industry": "Biotechnology",
     "sector": "Healthcare",
     "ts": 1787184138
+  },
+  "BOX": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1793404940
   },
   "BRKR": {
     "industry": "Medical Devices",
@@ -422,7 +427,7 @@
   "FRO": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
-    "ts": 1790294468
+    "ts": 1793404940
   },
   "FROG": {
     "industry": "Software - Application",
@@ -443,6 +448,11 @@
     "industry": "Capital Markets",
     "sector": "Financial Services",
     "ts": 1788825682
+  },
+  "GDDY": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1793404940
   },
   "GFS": {
     "industry": "Semiconductors",
@@ -498,6 +508,11 @@
     "industry": "Biotechnology",
     "sector": "Healthcare",
     "ts": 1791417724
+  },
+  "HAS": {
+    "industry": "Leisure",
+    "sector": "Consumer Cyclical",
+    "ts": 1793404940
   },
   "HNGE": {
     "industry": "Health Information Services",
@@ -918,6 +933,11 @@
     "industry": "Entertainment",
     "sector": "Communication Services",
     "ts": 1788912099
+  },
+  "RRC": {
+    "industry": "Oil & Gas E&P",
+    "sector": "Energy",
+    "ts": 1793404940
   },
   "RTX": {
     "industry": "Aerospace & Defense",
