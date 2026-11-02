@@ -349,7 +349,15 @@ This is the section that can do harm if written lazily, so frame it honestly:
   the >100% floor framing applies to gaps under ~15% (107–230% on the six
   that size); the edge is soft on the low side — treat the cap as **~18%,
   not 20%** (LULU −19.4% kept 90% 09-04, TTAN −17.7% kept 169% 09-09, COO
-  −18.3% kept 80% 09-10; promoted on 3rd instance). **Scope (09-18, 09-22;
+  −18.3% kept 80% 09-10; promoted on 3rd instance). **Aligned cell
+  (10-29, 10-30; promoted on 2nd session): the range band is retired
+  where the peers sell with the gap.** Five ≥ 18% earnings gaps whose
+  peer group closed the same way kept 79–143% (NOW 143, FTNT 79, IOVA
+  115; INTC 110 with AMD / QCOM / ARM −10 to −11, RDDT 126). Grade a
+  ≥ 18% earnings gap by its peer cell like any other: aligned → the
+  ≥ 70% line; flat or against → two-sided. The 45–75% band survives
+  only as the default for a gap whose peers weren't named (GTLB and
+  SNOW, the cases behind the cap, never were). **Scope (09-18, 09-22;
   promoted on 2nd instance): the ≥ 18% range-class cap is an earnings-gap
   rule — a clinical-readout gap is floor-class at any size** (XENE −23.2%
   kept 132%, VKTX +27.7% kept 128%, both closing at or near the extreme):
