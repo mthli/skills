@@ -100,6 +100,10 @@ Interpret verdicts strictly:
 
 ## Dependencies (inbound / outbound)
 
+### Inbound
+
+### Outbound
+
 ## Invariants and gotchas
 
 ## Confirmed bugs / technical debt
@@ -113,8 +117,9 @@ If the decisions file does not exist yet, write `decision history (not yet creat
 of the `See` line. Keep the bare `>` line so `Verified` renders as its own paragraph.
 
 Omit `Confirmed bugs / technical debt` when none are confirmed. Omit `To verify` when no external
-or failed-check residual remains. Preserve the other headings so maps stay comparable.
+or failed-check residual remains. Preserve the other headings so maps stay comparable; keep both
+`### Inbound` and `### Outbound`, writing `None.` under a side with no dependencies.
 
-The `##` sections above are fixed. Below them, mark sub-topics with nested headings (`###`, then
+The headings above are fixed. Below them, mark other sub-topics with nested headings (`###`, then
 `####` where a sub-topic needs its own parts), never with standalone bold paragraph labels. Do not
 number sub-topic headings; their order already shows any sequence.
