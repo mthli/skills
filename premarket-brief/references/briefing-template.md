@@ -197,7 +197,13 @@ This is the section that can do harm if written lazily, so frame it honestly:
   09-23's +3 to +5.5pp own bid as "beta"; as spreads the witness read beta
   (−0.75 / −0.54 / +0.41) beside a modal CIBR − XLK on 09-24 and all ≤ −1pp
   (−3.70 / −4.69 / −10.86) beside a −2.97pp bottom on 09-25 — the witness
-  and the sleeve's spread agreeing at two altitudes both days. **A rates verdict's destination is a group question, never a
+  and the sleeve's spread agreeing at two altitudes both days. **A premarket
+  witness spread is a number, not a cell (10-30, 11-02; promoted on 2nd
+  row).** 10-30's memory and cyber premarket spreads read unwind / rotation
+  and closed beta; 11-02's memory and AI-cloud spreads read beta and closed
+  unwind, all ≤ −1pp: 4 of 6 premarket cells wrong, both directions. List
+  the premarket spreads as numbers in ③ and name the cell only at the close
+  (08-06). **A rates verdict's destination is a group question, never a
   duration presumption (09-16 watch, 09-17, 09-18; promoted on 2nd mapped
   use).** 09-10's rates day landed on tech; 09-16's landed on financials with
   tech flat. Write the rates leg as a spread between a named duration group
