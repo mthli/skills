@@ -649,6 +649,11 @@
     "sector": "Healthcare",
     "ts": 1785509849
   },
+  "ELF": {
+    "industry": "Household & Personal Products",
+    "sector": "Consumer Defensive",
+    "ts": 1793664126
+  },
   "ELV": {
     "industry": "Healthcare Plans",
     "sector": "Healthcare",
@@ -1467,7 +1472,7 @@
   "RELY": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1788566554
+    "ts": 1793664126
   },
   "RGEN": {
     "industry": "Medical Instruments & Supplies",
@@ -1512,7 +1517,7 @@
   "RVTY": {
     "industry": "Diagnostics & Research",
     "sector": "Healthcare",
-    "ts": 1790985735
+    "ts": 1793664126
   },
   "RY": {
     "industry": "Banks - Diversified",
@@ -1827,7 +1832,7 @@
   "USFD": {
     "industry": "Food Distribution",
     "sector": "Consumer Defensive",
-    "ts": 1787011455
+    "ts": 1793664126
   },
   "V": {
     "industry": "Credit Services",
@@ -1892,7 +1897,7 @@
   "VOYA": {
     "industry": "Financial Conglomerates",
     "sector": "Financial Services",
-    "ts": 1788220950
+    "ts": 1793664126
   },
   "VRNS": {
     "industry": "Software - Infrastructure",

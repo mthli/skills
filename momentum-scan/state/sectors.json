@@ -72,7 +72,7 @@
   "ANF": {
     "industry": "Apparel Retail",
     "sector": "Consumer Cyclical",
-    "ts": 1790899328
+    "ts": 1793664071
   },
   "APA": {
     "industry": "Oil & Gas E&P",
@@ -463,6 +463,11 @@
     "industry": "Diagnostics & Research",
     "sector": "Healthcare",
     "ts": 1783728075
+  },
+  "GILD": {
+    "industry": "Drug Manufacturers - General",
+    "sector": "Healthcare",
+    "ts": 1793664071
   },
   "GKOS": {
     "industry": "Medical Devices",

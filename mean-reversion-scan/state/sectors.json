@@ -547,7 +547,7 @@
   "BP": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
-    "ts": 1790121795
+    "ts": 1793664173
   },
   "BRK-B": {
     "industry": "Insurance - Diversified",
@@ -697,7 +697,7 @@
   "CDW": {
     "industry": "Information Technology Services",
     "sector": "Technology",
-    "ts": 1790380977
+    "ts": 1793664173
   },
   "CE": {
     "industry": "Chemicals",
@@ -792,7 +792,7 @@
   "CMBT": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
-    "ts": 1790380977
+    "ts": 1793664173
   },
   "CMC": {
     "industry": "Metal Fabrication",
@@ -903,6 +903,11 @@
     "industry": "Semiconductors",
     "sector": "Technology",
     "ts": 1787616367
+  },
+  "CRL": {
+    "industry": "Diagnostics & Research",
+    "sector": "Healthcare",
+    "ts": 1793664172
   },
   "CRM": {
     "industry": "Software - Application",
@@ -1187,7 +1192,7 @@
   "EC": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
-    "ts": 1790380977
+    "ts": 1793664173
   },
   "ECL": {
     "industry": "Specialty Chemicals",
@@ -1627,7 +1632,7 @@
   "GTLB": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1790640180
+    "ts": 1793664172
   },
   "GTX": {
     "industry": "Auto Parts",
@@ -1817,7 +1822,7 @@
   "INGM": {
     "industry": "Information Technology Services",
     "sector": "Technology",
-    "ts": 1789085009
+    "ts": 1793664173
   },
   "INTC": {
     "industry": "Semiconductors",
@@ -1842,7 +1847,7 @@
   "IQV": {
     "industry": "Diagnostics & Research",
     "sector": "Healthcare",
-    "ts": 1790985775
+    "ts": 1793664173
   },
   "IRDM": {
     "industry": "Telecom Services",
@@ -1957,7 +1962,7 @@
   "KMI": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
-    "ts": 1787357093
+    "ts": 1793664173
   },
   "KMX": {
     "industry": "Auto & Truck Dealerships",
@@ -2322,7 +2327,7 @@
   "MU": {
     "industry": "Semiconductors",
     "sector": "Technology",
-    "ts": 1789516999
+    "ts": 1793664172
   },
   "MUFG": {
     "industry": "Banks - Diversified",
@@ -2442,12 +2447,17 @@
   "NTRA": {
     "industry": "Diagnostics & Research",
     "sector": "Healthcare",
-    "ts": 1788307441
+    "ts": 1793664172
   },
   "NTRS": {
     "industry": "Asset Management",
     "sector": "Financial Services",
     "ts": 1790899470
+  },
+  "NTSK": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1793664172
   },
   "NUE": {
     "industry": "Steel",
@@ -2622,7 +2632,7 @@
   "PAGP": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
-    "ts": 1789689809
+    "ts": 1793664173
   },
   "PANW": {
     "industry": "Software - Infrastructure",
@@ -2912,7 +2922,7 @@
   "RNG": {
     "industry": "Software - Application",
     "sector": "Technology",
-    "ts": 1790812980
+    "ts": 1793664172
   },
   "ROIV": {
     "industry": "Biotechnology",
@@ -2967,7 +2977,7 @@
   "RVTY": {
     "industry": "Diagnostics & Research",
     "sector": "Healthcare",
-    "ts": 1789085008
+    "ts": 1793664172
   },
   "RY": {
     "industry": "Banks - Diversified",
@@ -2982,7 +2992,7 @@
   "S": {
     "industry": "Software - Infrastructure",
     "sector": "Technology",
-    "ts": 1790640180
+    "ts": 1793664172
   },
   "SAIL": {
     "industry": "Software - Infrastructure",
@@ -3057,7 +3067,7 @@
   "SHC": {
     "industry": "Diagnostics & Research",
     "sector": "Healthcare",
-    "ts": 1790294570
+    "ts": 1793664173
   },
   "SHEL": {
     "industry": "Oil & Gas Integrated",
@@ -3097,7 +3107,7 @@
   "SLB": {
     "industry": "Oil & Gas Equipment & Services",
     "sector": "Energy",
-    "ts": 1789171380
+    "ts": 1793664173
   },
   "SLM": {
     "industry": "Credit Services",
@@ -3192,7 +3202,7 @@
   "SSL": {
     "industry": "Specialty Chemicals",
     "sector": "Basic Materials",
-    "ts": 1790121795
+    "ts": 1793664172
   },
   "SSRM": {
     "industry": "Gold",
@@ -3440,9 +3450,9 @@
     "ts": 1792109526
   },
   "TXG": {
-    "industry": "Health Information Services",
+    "industry": "Medical Devices",
     "sector": "Healthcare",
-    "ts": 1788307440
+    "ts": 1793664172
   },
   "TXN": {
     "industry": "Semiconductors",
@@ -3562,7 +3572,7 @@
   "VG": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
-    "ts": 1789776186
+    "ts": 1793664173
   },
   "VIAV": {
     "industry": "Communication Equipment",
