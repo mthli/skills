@@ -100,9 +100,11 @@ are met.
    from available project source. Missing external source alone is not a reason to escalate.
 5. If no documented claim changed, do not edit the map.
 6. Otherwise, patch only the affected statements and sections. Preserve the previous full
-   `Verified` line and add or replace this line immediately after it:
+   `Verified` line and add or replace a `Maintained` line after it, separated by a bare `>` line:
 
    ```markdown
+   > Verified: YYYY-MM-DD (verification summary)
+   >
    > Maintained: YYYY-MM-DD (targeted verification: <bounded change summary>)
    ```
 
@@ -146,9 +148,9 @@ Apply verdicts as follows:
 - `isBug: true`: add one impact-oriented item under `Confirmed bugs / technical debt`.
 
 Add or replace `> Verified: YYYY-MM-DD (verification summary)` only after the full verification
-pass, and remove a stale `> Maintained:` line. Keep genuinely open design or intent questions under
-`Open questions`. Do not claim full verification if assignments failed; state the residual
-explicitly.
+pass, and remove a stale `> Maintained:` line together with the bare `>` line above it. Keep
+genuinely open design or intent questions under `Open questions`. Do not claim full verification if
+assignments failed; state the residual explicitly.
 
 Use the `Edit` tool for patches. Match the existing text exactly, punctuation included, when
 replacing it. For large section rewrites, anchor on unique headings; if a match is ambiguous, widen

@@ -125,6 +125,7 @@ For an uncompressed snapshot, use this shape:
 # <Module display name> Decisions
 
 > Snapshot of current consensus. Evolution: `git log --grep="MODULE: <id>"`
+>
 > Last distilled: <YYYY-MM-DD> (HEAD = <short-sha>)
 
 ## Active
