@@ -384,6 +384,11 @@
     "sector": "Industrials",
     "ts": 1787097732
   },
+  "EPAM": {
+    "industry": "Information Technology Services",
+    "sector": "Technology",
+    "ts": 1793750503
+  },
   "EQNR": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
@@ -398,6 +403,11 @@
     "industry": "Software - Application",
     "sector": "Technology",
     "ts": 1793145735
+  },
+  "EXEL": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1793750503
   },
   "EXLS": {
     "industry": "Information Technology Services",
@@ -1198,6 +1208,11 @@
     "industry": "Health Information Services",
     "sector": "Healthcare",
     "ts": 1791286226
+  },
+  "VFC": {
+    "industry": "Apparel Manufacturing",
+    "sector": "Consumer Cyclical",
+    "ts": 1793750503
   },
   "VIK": {
     "industry": "Travel Services",

@@ -1,0 +1,359 @@
+{
+  "as_of": "2026-11-03T19:03:20.945546-05:00",
+  "today": "2026-11-03",
+  "spark_window": [
+    "2026-11-03 (AMC only)",
+    "2026-11-04",
+    "2026-11-05",
+    "2026-11-06"
+  ],
+  "macro_note": "",
+  "regime": {
+    "snapshot": "20261103",
+    "state": "CAUTION",
+    "score": 2,
+    "vix": 20.8,
+    "spy_vs_200_pct": 3.8,
+    "flags": "Credit weakening: HYG/LQD -1.9%/20d while stocks hold ; Defensive rotation: deepening, defensives +13.7pp over offensives / 20d, +6.0pp more than 5 sessions ago"
+  },
+  "mr_run": {
+    "run_id": "20261103",
+    "run_date": "2026-11-03",
+    "data_asof": "2026-11-03",
+    "stale_days": 0,
+    "rows_in_run": 34,
+    "kegs_after_filter": 3
+  },
+  "tape_freshness": {
+    "expected": "2026-11-03",
+    "asof": "2026-11-03",
+    "repaired": [],
+    "missing": []
+  },
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [
+    {
+      "ticker": "SAIL",
+      "rank": 10,
+      "score": 56.8,
+      "rsi2": 2.51,
+      "dist_200dma_pct": 18.15,
+      "signal_close": 18.99,
+      "mr_target": 20.7,
+      "mr_stop": 16.02,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 2,
+      "paper_track": false,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "AMD",
+          "date": "2026-11-03",
+          "slot": "AMC",
+          "detail": "AMD (Technology, $762B) reports 2026-11-03 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "ANET",
+          "date": "2026-11-03",
+          "slot": "AMC",
+          "detail": "ANET (Technology, $207B) reports 2026-11-03 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "ARM",
+          "date": "2026-11-04",
+          "slot": "AMC",
+          "detail": "ARM (Technology, $209B) reports 2026-11-04 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "QCOM",
+          "date": "2026-11-04",
+          "slot": "AMC",
+          "detail": "QCOM (Technology, $170B) reports 2026-11-04 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "SONY",
+          "date": "2026-11-05",
+          "slot": "BMO",
+          "detail": "SONY (Technology, $150B) reports 2026-11-05 BMO"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "BRK.A",
+          "date": "2026-11-06",
+          "slot": "?",
+          "detail": "BRK.A ($1199B) reports 2026-11-06 ?"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "BRK.B",
+          "date": "2026-11-06",
+          "slot": "?",
+          "detail": "BRK.B ($1199B) reports 2026-11-06 ?"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-11-06",
+          "detail": "Non-Farm Employment Change 2026-11-06 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-11-06",
+          "detail": "Unemployment Rate 2026-11-06 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 18.99,
+      "since_signal_pct": -0.0,
+      "ignited": false,
+      "down_streak": 5,
+      "ret_5d_pct": -15.19,
+      "down_gaps_5d": 2,
+      "vol_ratio_5d_20d": 0.78,
+      "signal_day_low": 18.71,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "NTSK",
+      "rank": 11,
+      "score": 50.0,
+      "rsi2": 4.67,
+      "dist_200dma_pct": 64.85,
+      "signal_close": 21.84,
+      "mr_target": 24.17,
+      "mr_stop": 17.59,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "paper_track": false,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "AMD",
+          "date": "2026-11-03",
+          "slot": "AMC",
+          "detail": "AMD (Technology, $762B) reports 2026-11-03 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "ANET",
+          "date": "2026-11-03",
+          "slot": "AMC",
+          "detail": "ANET (Technology, $207B) reports 2026-11-03 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "ARM",
+          "date": "2026-11-04",
+          "slot": "AMC",
+          "detail": "ARM (Technology, $209B) reports 2026-11-04 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "QCOM",
+          "date": "2026-11-04",
+          "slot": "AMC",
+          "detail": "QCOM (Technology, $170B) reports 2026-11-04 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "SONY",
+          "date": "2026-11-05",
+          "slot": "BMO",
+          "detail": "SONY (Technology, $150B) reports 2026-11-05 BMO"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "BRK.A",
+          "date": "2026-11-06",
+          "slot": "?",
+          "detail": "BRK.A ($1199B) reports 2026-11-06 ?"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "BRK.B",
+          "date": "2026-11-06",
+          "slot": "?",
+          "detail": "BRK.B ($1199B) reports 2026-11-06 ?"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-11-06",
+          "detail": "Non-Farm Employment Change 2026-11-06 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-11-06",
+          "detail": "Unemployment Rate 2026-11-06 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 21.84,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 4,
+      "ret_5d_pct": -16.48,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.77,
+      "signal_day_low": 21.42,
+      "quiet_warning": false
+    },
+    {
+      "ticker": "S",
+      "rank": 12,
+      "score": 43.4,
+      "rsi2": 4.55,
+      "dist_200dma_pct": 30.43,
+      "signal_close": 23.11,
+      "mr_target": 24.54,
+      "mr_stop": 19.69,
+      "signal": "\ud83d\udfe2",
+      "listing_age_runs": 2,
+      "freq_60d": 1,
+      "paper_track": false,
+      "sector": "Technology",
+      "sparks": [
+        {
+          "type": "sector_verdict",
+          "symbol": "AMD",
+          "date": "2026-11-03",
+          "slot": "AMC",
+          "detail": "AMD (Technology, $762B) reports 2026-11-03 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "ANET",
+          "date": "2026-11-03",
+          "slot": "AMC",
+          "detail": "ANET (Technology, $207B) reports 2026-11-03 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "ARM",
+          "date": "2026-11-04",
+          "slot": "AMC",
+          "detail": "ARM (Technology, $209B) reports 2026-11-04 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "QCOM",
+          "date": "2026-11-04",
+          "slot": "AMC",
+          "detail": "QCOM (Technology, $170B) reports 2026-11-04 AMC"
+        },
+        {
+          "type": "sector_verdict",
+          "symbol": "SONY",
+          "date": "2026-11-05",
+          "slot": "BMO",
+          "detail": "SONY (Technology, $150B) reports 2026-11-05 BMO"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "BRK.A",
+          "date": "2026-11-06",
+          "slot": "?",
+          "detail": "BRK.A ($1199B) reports 2026-11-06 ?"
+        },
+        {
+          "type": "marketwide_verdict",
+          "symbol": "BRK.B",
+          "date": "2026-11-06",
+          "slot": "?",
+          "detail": "BRK.B ($1199B) reports 2026-11-06 ?"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-11-06",
+          "detail": "Non-Farm Employment Change 2026-11-06 08:30 ET"
+        },
+        {
+          "type": "macro",
+          "symbol": null,
+          "date": "2026-11-06",
+          "detail": "Unemployment Rate 2026-11-06 08:30 ET"
+        }
+      ],
+      "armed": true,
+      "latest_close": 23.11,
+      "since_signal_pct": 0.0,
+      "ignited": false,
+      "down_streak": 3,
+      "ret_5d_pct": -9.9,
+      "down_gaps_5d": 1,
+      "vol_ratio_5d_20d": 0.76,
+      "signal_day_low": 22.96,
+      "quiet_warning": false
+    }
+  ],
+  "macro_calendar": [
+    {
+      "date": "2026-11-06",
+      "time_et": "08:30",
+      "title": "Non-Farm Employment Change"
+    },
+    {
+      "date": "2026-11-06",
+      "time_et": "08:30",
+      "title": "Unemployment Rate"
+    }
+  ],
+  "prior_run_review": {
+    "source": "snapback:2026-11-02",
+    "n": 20,
+    "pct_positive": 80.0,
+    "avg_pct": 1.97,
+    "median_pct": 2.33,
+    "best": [
+      {
+        "ticker": "TXG",
+        "since_pct": 5.94
+      },
+      {
+        "ticker": "ILMN",
+        "since_pct": 5.13
+      },
+      {
+        "ticker": "DELL",
+        "since_pct": 3.98
+      }
+    ],
+    "worst": [
+      {
+        "ticker": "NAVN",
+        "since_pct": -2.29
+      },
+      {
+        "ticker": "PLTR",
+        "since_pct": -1.65
+      },
+      {
+        "ticker": "SAIL",
+        "since_pct": -1.04
+      }
+    ],
+    "armed_subset": {
+      "n": 20,
+      "pct_positive": 80.0,
+      "avg_pct": 1.97,
+      "median_pct": 2.33
+    }
+  },
+  "errors": []
+}

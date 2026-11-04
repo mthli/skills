@@ -27,7 +27,7 @@
   "AAPL": {
     "industry": "Consumer Electronics",
     "sector": "Technology",
-    "ts": 1785510645
+    "ts": 1793750593
   },
   "ABBV": {
     "industry": "Drug Manufacturers - General",
@@ -257,7 +257,7 @@
   "ANF": {
     "industry": "Apparel Retail",
     "sector": "Consumer Cyclical",
-    "ts": 1789603405
+    "ts": 1793750593
   },
   "AON": {
     "industry": "Insurance Brokers",
@@ -947,7 +947,7 @@
   "CSX": {
     "industry": "Railroads",
     "sector": "Industrials",
-    "ts": 1788220998
+    "ts": 1793750593
   },
   "CTAS": {
     "industry": "Specialty Business Services",
@@ -1162,7 +1162,7 @@
   "DVN": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1790899470
+    "ts": 1793750593
   },
   "DXCM": {
     "industry": "Medical Devices",
@@ -1817,7 +1817,7 @@
   "ING": {
     "industry": "Banks - Diversified",
     "sector": "Financial Services",
-    "ts": 1790899470
+    "ts": 1793750593
   },
   "INGM": {
     "industry": "Information Technology Services",
@@ -1957,7 +1957,7 @@
   "KMB": {
     "industry": "Household & Personal Products",
     "sector": "Consumer Defensive",
-    "ts": 1788307442
+    "ts": 1793750593
   },
   "KMI": {
     "industry": "Oil & Gas Midstream",
@@ -2307,7 +2307,7 @@
   "MTDR": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1787702742
+    "ts": 1793750593
   },
   "MTG": {
     "industry": "Insurance - Specialty",
@@ -2337,7 +2337,7 @@
   "MUR": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1790121795
+    "ts": 1793750593
   },
   "MXL": {
     "industry": "Semiconductors",
@@ -2607,7 +2607,7 @@
   "OVV": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1788998617
+    "ts": 1793750593
   },
   "OXY": {
     "industry": "Oil & Gas E&P",
@@ -2777,7 +2777,7 @@
   "PR": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1790121795
+    "ts": 1793750593
   },
   "PRM": {
     "industry": "Specialty Chemicals",
@@ -3117,7 +3117,7 @@
   "SM": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1790121795
+    "ts": 1793750593
   },
   "SMCI": {
     "industry": "Computer Hardware",
@@ -3397,7 +3397,7 @@
   "TS": {
     "industry": "Oil & Gas Equipment & Services",
     "sector": "Energy",
-    "ts": 1786061003
+    "ts": 1793750593
   },
   "TSEM": {
     "industry": "Semiconductors",
@@ -3612,7 +3612,7 @@
   "VNOM": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
-    "ts": 1782950590
+    "ts": 1793750593
   },
   "VOD": {
     "industry": "Telecom Services",
