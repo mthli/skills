@@ -100,13 +100,19 @@ are met.
    from available project source. Missing external source alone is not a reason to escalate.
 5. If no documented claim changed, do not edit the map.
 6. Otherwise, patch only the affected statements and sections. Preserve the previous full
-   `Verified` line and add or replace a `Maintained` line after it, separated by a bare `>` line:
+   `Verified` line and keep exactly one `Maintained` line after it, separated by a bare `>` line:
 
    ```markdown
    > Verified: YYYY-MM-DD (verification summary)
    >
-   > Maintained: YYYY-MM-DD (targeted verification: <bounded change summary>)
+   > Maintained: YYYY-MM-DD (targeted verification only since the full mapping: <areas changed since then, this change last>)
    ```
+
+   Rewrite the whole line on each refresh; never append to it. Keep it to one sentence of about
+   250 characters at most, naming the areas changed since `Verified` as they stand now, not each
+   step that led there, and leaving out changes that later ones undid: the commits and the
+   decision file hold the history. If the areas no longer fit in that sentence, the map rests on
+   an unverified baseline; escalate to full mapping (step 4).
 
 7. Keep evidence out of the map, run the validation steps below, and report which mapped claims
    changed. Do not commit or push unless the user explicitly asks.
