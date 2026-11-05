@@ -34,6 +34,11 @@
     "sector": "Technology",
     "ts": 1785974488
   },
+  "ADT": {
+    "industry": "Security & Protection Services",
+    "sector": "Industrials",
+    "ts": 1793836854
+  },
   "ALAB": {
     "industry": "Semiconductors",
     "sector": "Technology",
@@ -494,6 +499,11 @@
     "sector": "Healthcare",
     "ts": 1791286226
   },
+  "GME": {
+    "industry": "Specialty Retail",
+    "sector": "Consumer Cyclical",
+    "ts": 1793836854
+  },
   "GPC": {
     "industry": "Auto Parts",
     "sector": "Consumer Cyclical",
@@ -633,6 +643,11 @@
     "industry": "Biotechnology",
     "sector": "Healthcare",
     "ts": 1781136113
+  },
+  "LFST": {
+    "industry": "Medical Care Facilities",
+    "sector": "Healthcare",
+    "ts": 1793836854
   },
   "LGN": {
     "industry": "Engineering & Construction",
@@ -888,6 +903,11 @@
     "industry": "Oil & Gas Refining & Marketing",
     "sector": "Energy",
     "ts": 1791286226
+  },
+  "PTC": {
+    "industry": "Software - Application",
+    "sector": "Technology",
+    "ts": 1793836854
   },
   "PTRN": {
     "industry": "Software - Application",

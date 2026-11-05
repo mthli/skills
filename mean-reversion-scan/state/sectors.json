@@ -267,7 +267,7 @@
   "APA": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1790899470
+    "ts": 1793836921
   },
   "APD": {
     "industry": "Specialty Chemicals",
@@ -292,7 +292,7 @@
   "AR": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1785589365
+    "ts": 1793836922
   },
   "ARCC": {
     "industry": "Asset Management",
@@ -774,6 +774,11 @@
     "sector": "Consumer Defensive",
     "ts": 1788825775
   },
+  "CLF": {
+    "industry": "Steel",
+    "sector": "Basic Materials",
+    "ts": 1793836921
+  },
   "CLMT": {
     "industry": "Specialty Chemicals",
     "sector": "Basic Materials",
@@ -837,7 +842,7 @@
   "CNQ": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1790121795
+    "ts": 1793836921
   },
   "COF": {
     "industry": "Credit Services",
@@ -867,7 +872,7 @@
   "COP": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1790121795
+    "ts": 1793836922
   },
   "CORT": {
     "industry": "Biotechnology",
@@ -982,7 +987,7 @@
   "CVE": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
-    "ts": 1790294570
+    "ts": 1793836921
   },
   "CVI": {
     "industry": "Oil & Gas Refining & Marketing",
@@ -997,7 +1002,7 @@
   "CVX": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
-    "ts": 1790121795
+    "ts": 1793836922
   },
   "CWEN": {
     "industry": "Utilities - Renewable",
@@ -1262,7 +1267,7 @@
   "EOG": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1790121795
+    "ts": 1793836921
   },
   "EPD": {
     "industry": "Oil & Gas Midstream",
@@ -1282,7 +1287,7 @@
   "EQNR": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
-    "ts": 1790121795
+    "ts": 1793836921
   },
   "EQR": {
     "industry": "REIT - Residential",
@@ -1317,7 +1322,7 @@
   "ET": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
-    "ts": 1789603405
+    "ts": 1793836922
   },
   "ETN": {
     "industry": "Specialty Industrial Machinery",
@@ -2242,12 +2247,12 @@
   "MPC": {
     "industry": "Oil & Gas Refining & Marketing",
     "sector": "Energy",
-    "ts": 1790294570
+    "ts": 1793836921
   },
   "MPLX": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
-    "ts": 1789603405
+    "ts": 1793836922
   },
   "MRK": {
     "industry": "Drug Manufacturers - General",
@@ -2552,7 +2557,7 @@
   "OKE": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
-    "ts": 1790812980
+    "ts": 1793836922
   },
   "OKTA": {
     "industry": "Software - Infrastructure",
@@ -2612,7 +2617,7 @@
   "OXY": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1790121795
+    "ts": 1793836922
   },
   "OZK": {
     "industry": "Banks - Regional",
@@ -2807,7 +2812,7 @@
   "PSX": {
     "industry": "Oil & Gas Refining & Marketing",
     "sector": "Energy",
-    "ts": 1790380977
+    "ts": 1793836921
   },
   "PTCT": {
     "industry": "Biotechnology",
@@ -2947,7 +2952,7 @@
   "RRC": {
     "industry": "Oil & Gas E&P",
     "sector": "Energy",
-    "ts": 1789517000
+    "ts": 1793836921
   },
   "RRX": {
     "industry": "Specialty Industrial Machinery",
@@ -3072,7 +3077,7 @@
   "SHEL": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
-    "ts": 1787789077
+    "ts": 1793836922
   },
   "SHOP": {
     "industry": "Software - Application",
@@ -3222,7 +3227,7 @@
   "STLD": {
     "industry": "Steel",
     "sector": "Basic Materials",
-    "ts": 1790812981
+    "ts": 1793836922
   },
   "STM": {
     "industry": "Semiconductors",
@@ -3242,7 +3247,7 @@
   "SU": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
-    "ts": 1785974601
+    "ts": 1793836922
   },
   "SW": {
     "industry": "Packaging & Containers",
@@ -3257,7 +3262,7 @@
   "SWKS": {
     "industry": "Semiconductors",
     "sector": "Technology",
-    "ts": 1790985775
+    "ts": 1793836922
   },
   "SYF": {
     "industry": "Credit Services",
@@ -3422,7 +3427,7 @@
   "TTE": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
-    "ts": 1790812980
+    "ts": 1793836922
   },
   "TTEK": {
     "industry": "Engineering & Construction",
@@ -3637,7 +3642,7 @@
   "VSAT": {
     "industry": "Communication Equipment",
     "sector": "Technology",
-    "ts": 1790726577
+    "ts": 1793836922
   },
   "VSH": {
     "industry": "Semiconductors",
@@ -3792,7 +3797,7 @@
   "XOM": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
-    "ts": 1790121796
+    "ts": 1793836922
   },
   "XP": {
     "industry": "Capital Markets",

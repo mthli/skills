@@ -1689,6 +1689,11 @@
     "sector": "Technology",
     "ts": 1791849821
   },
+  "TECH": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1793836895
+  },
   "TECK": {
     "industry": "Copper",
     "sector": "Basic Materials",
