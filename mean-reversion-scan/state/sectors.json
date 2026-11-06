@@ -632,7 +632,7 @@
   "CAI": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1790899470
+    "ts": 1793923306
   },
   "CAKE": {
     "industry": "Restaurants",
@@ -1097,7 +1097,7 @@
   "DINO": {
     "industry": "Oil & Gas Refining & Marketing",
     "sector": "Energy",
-    "ts": 1790294570
+    "ts": 1793923306
   },
   "DKS": {
     "industry": "Specialty Retail",
@@ -1128,6 +1128,11 @@
     "industry": "Software - Infrastructure",
     "sector": "Technology",
     "ts": 1790812980
+  },
+  "DOCU": {
+    "industry": "Software - Application",
+    "sector": "Technology",
+    "ts": 1793923306
   },
   "DOV": {
     "industry": "Specialty Industrial Machinery",
@@ -1362,7 +1367,7 @@
   "EXPD": {
     "industry": "Integrated Freight & Logistics",
     "sector": "Industrials",
-    "ts": 1788480190
+    "ts": 1793923306
   },
   "EXPE": {
     "industry": "Travel Services",
@@ -1547,7 +1552,7 @@
   "GH": {
     "industry": "Diagnostics & Research",
     "sector": "Healthcare",
-    "ts": 1784592170
+    "ts": 1793923306
   },
   "GILD": {
     "industry": "Drug Manufacturers - General",
@@ -1802,7 +1807,7 @@
   "IFF": {
     "industry": "Specialty Chemicals",
     "sector": "Basic Materials",
-    "ts": 1790899470
+    "ts": 1793923306
   },
   "ILMN": {
     "industry": "Diagnostics & Research",
@@ -2052,7 +2057,7 @@
   "LNG": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
-    "ts": 1788998617
+    "ts": 1793923306
   },
   "LNT": {
     "industry": "Utilities - Regulated Electric",
@@ -2467,7 +2472,7 @@
   "NUE": {
     "industry": "Steel",
     "sector": "Basic Materials",
-    "ts": 1790812980
+    "ts": 1793923306
   },
   "NVDA": {
     "industry": "Semiconductors",
@@ -2632,7 +2637,7 @@
   "PAA": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
-    "ts": 1789776186
+    "ts": 1793923306
   },
   "PAGP": {
     "industry": "Oil & Gas Midstream",
@@ -3377,7 +3382,7 @@
   "TRGP": {
     "industry": "Oil & Gas Midstream",
     "sector": "Energy",
-    "ts": 1789517000
+    "ts": 1793923306
   },
   "TROW": {
     "industry": "Asset Management",
@@ -3497,7 +3502,7 @@
   "UGI": {
     "industry": "Utilities - Regulated Gas",
     "sector": "Utilities",
-    "ts": 1790121795
+    "ts": 1793923306
   },
   "UGP": {
     "industry": "Oil & Gas Refining & Marketing",
