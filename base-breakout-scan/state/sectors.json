@@ -17,7 +17,7 @@
   "ABBV": {
     "industry": "Drug Manufacturers - General",
     "sector": "Healthcare",
-    "ts": 1791331429
+    "ts": 1794009693
   },
   "ABEV": {
     "industry": "Beverages - Brewers",
@@ -639,6 +639,11 @@
     "sector": "Energy",
     "ts": 1791286265
   },
+  "EHC": {
+    "industry": "Medical Care Facilities",
+    "sector": "Healthcare",
+    "ts": 1794009693
+  },
   "EIX": {
     "industry": "Utilities - Regulated Electric",
     "sector": "Utilities",
@@ -1044,6 +1049,11 @@
     "sector": "Consumer Defensive",
     "ts": 1789516957
   },
+  "KOD": {
+    "industry": "Biotechnology",
+    "sector": "Healthcare",
+    "ts": 1794009693
+  },
   "LAUR": {
     "industry": "Education & Training Services",
     "sector": "Consumer Defensive",
@@ -1053,6 +1063,11 @@
     "industry": "Oil & Gas Equipment & Services",
     "sector": "Energy",
     "ts": 1779157116
+  },
+  "LFST": {
+    "industry": "Medical Care Facilities",
+    "sector": "Healthcare",
+    "ts": 1794009693
   },
   "LINE": {
     "industry": "REIT - Industrial",
