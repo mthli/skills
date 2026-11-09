@@ -485,7 +485,13 @@ This is the section that can do harm if written lazily, so frame it honestly:
   **Record 8-for-11 by 10-12 (breaks: GFS 110% 10-08, META 247% and SPCX
   40% 10-12, all under CAUTION).** The framing stands, but the rule now
   fails about one time in four. Keep a driverless gap-up two-sided and
-  never write an expected keep for it.
+  never write an expected keep for it. **Record 9-for-20 by 11-06:** the
+  session after the 11-05 rout, six of nine bounce names kept over 70%
+  (XE 227 · TSLA 192 · SPCX 169 · AMD 131 · MU 116 · TSM 88%) while ③
+  called the book's prints "the day's high-water mark". That phrase is an
+  expected keep: it belongs to non-earnings own-news gap-ups (LRCX's high
+  held under its premarket print the same day), never to a driverless
+  one.
 - **Gap-is-half-the-move symmetry (unwind 07-01; risk-on 06-29, 07-30,
   08-04).** In a crowded unwind the premarket gap ≈ half the closing damage;
   on a corroborated catalyst-owned risk-on morning the gap ≈ half the day's
@@ -560,6 +566,15 @@ This is the section that can do harm if written lazily, so frame it honestly:
   epicenter names only the alternative, and the hypothesis stays at ±0.5.
   The 10-year votes inside that frame. Name its branch in the grade, but
   it doesn't move the hypothesis on its own.
+  **On the bid side the 10-year's close names the alternative (11-03
+  watch, 11-06; promoted on 2nd row).** All three bid-tech sessions that
+  printed ≤ −0.5 had the 10-year closing up (10-19 +3.8bp → −0.74, 11-03
+  +5.8bp → −0.63, 11-06 +2.2bp → −0.69); 10-21's −2.1bp printed −0.19.
+  The converse (a 10-year up on a bid-tech day that still printed ±0.5)
+  is unchecked on record. So when XLK closes over SPY, write: ±0.5 if the
+  10-year closes flat or down, ≤ −0.5 if it closes up. It keys on the
+  close, never the 09:00 print (10-02), and it never touches the sold
+  side, where XLK under SPY names ≥ +0.5 on its own.
 - **A fired line is not re-litigated by a green premarket (08-10, 08-11,
   08-12, 08-13; 1-for-4).** Once a close-graded exit or trim has fired, the
   next morning's bounce above that line is a *better fill*, not a reprieve: XE
