@@ -457,7 +457,7 @@
   "CRBG": {
     "industry": "Asset Management",
     "sector": "Financial Services",
-    "ts": 1791590634
+    "ts": 1794268948
   },
   "CRNX": {
     "industry": "Biotechnology",
@@ -667,7 +667,7 @@
   "EMBJ": {
     "industry": "Aerospace & Defense",
     "sector": "Industrials",
-    "ts": 1787357018
+    "ts": 1794268948
   },
   "EMR": {
     "industry": "Specialty Industrial Machinery",
@@ -687,7 +687,7 @@
   "EQH": {
     "industry": "Asset Management",
     "sector": "Financial Services",
-    "ts": 1791331429
+    "ts": 1794268948
   },
   "EQNR": {
     "industry": "Oil & Gas Integrated",
@@ -1254,6 +1254,11 @@
     "sector": "Energy",
     "ts": 1779157116
   },
+  "NAVN": {
+    "industry": "Software - Application",
+    "sector": "Technology",
+    "ts": 1794268949
+  },
   "NBIS": {
     "industry": "Internet Content & Information",
     "sector": "Communication Services",
@@ -1684,6 +1689,11 @@
     "sector": "Industrials",
     "ts": 1792541348
   },
+  "SWKS": {
+    "industry": "Semiconductors",
+    "sector": "Technology",
+    "ts": 1794268948
+  },
   "SYRE": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
@@ -1767,7 +1777,7 @@
   "TRV": {
     "industry": "Insurance - Property & Casualty",
     "sector": "Financial Services",
-    "ts": 1791504225
+    "ts": 1794268948
   },
   "TS": {
     "industry": "Oil & Gas Equipment & Services",
@@ -1843,6 +1853,11 @@
     "industry": "Railroads",
     "sector": "Industrials",
     "ts": 1787270632
+  },
+  "URBN": {
+    "industry": "Apparel Retail",
+    "sector": "Consumer Cyclical",
+    "ts": 1794268948
   },
   "USB": {
     "industry": "Banks - Regional",

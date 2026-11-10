@@ -544,6 +544,11 @@
     "sector": "Financial Services",
     "ts": 1789516999
   },
+  "BOX": {
+    "industry": "Software - Infrastructure",
+    "sector": "Technology",
+    "ts": 1794269004
+  },
   "BP": {
     "industry": "Oil & Gas Integrated",
     "sector": "Energy",
@@ -1662,7 +1667,7 @@
   "HALO": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1790899470
+    "ts": 1794269004
   },
   "HAS": {
     "industry": "Leisure",
@@ -2757,7 +2762,7 @@
   "PM": {
     "industry": "Tobacco",
     "sector": "Consumer Defensive",
-    "ts": 1788825775
+    "ts": 1794269004
   },
   "PNC": {
     "industry": "Banks - Regional",
