@@ -374,6 +374,11 @@
     "sector": "Consumer Cyclical",
     "ts": 1778771326
   },
+  "EL": {
+    "industry": "Household & Personal Products",
+    "sector": "Consumer Defensive",
+    "ts": 1794355242
+  },
   "ELF": {
     "industry": "Household & Personal Products",
     "sector": "Consumer Defensive",
@@ -1132,7 +1137,7 @@
   "TGTX": {
     "industry": "Biotechnology",
     "sector": "Healthcare",
-    "ts": 1785456073
+    "ts": 1794355242
   },
   "THC": {
     "industry": "Medical Care Facilities",
@@ -1278,6 +1283,11 @@
     "industry": "Apparel Retail",
     "sector": "Consumer Cyclical",
     "ts": 1784764900
+  },
+  "VTRS": {
+    "industry": "Drug Manufacturers - Specialty & Generic",
+    "sector": "Healthcare",
+    "ts": 1794355242
   },
   "W": {
     "industry": "Internet Retail",
