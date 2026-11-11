@@ -101,6 +101,13 @@ are met.
 4. Escalate to full mapping if the affected claims span most sections, reveal an undocumented
    subsystem boundary, depend on an unverified baseline, or the internal impact cannot be checked
    from available project source. Missing external source alone is not a reason to escalate.
+   The whole map also rests on an unverified baseline once more than half of its lines were
+   written after its full verification. Check this before patching: find the last commit that
+   changed the `Verified` line (`git log --follow -1 --format=%h -G'^> Verified:' -- <map>`), count
+   the lines added since then (`git diff --numstat <commit> -- <map>`; if the map has moved, pass
+   its old path too, with `-M`), and escalate if those lines plus the ones this change will add
+   exceed half the map's current lines. Removed lines do not count, so a split, which mostly
+   removes lines from its parent, does not use up the parent's margin.
 5. If no documented claim changed, do not edit the map.
 6. Otherwise, patch only the affected statements and sections. Preserve the previous full
    `Verified` line and keep exactly one `Maintained` line after it, separated by a bare `>` line:
@@ -108,14 +115,14 @@ are met.
    ```markdown
    > Verified: YYYY-MM-DD (verification summary)
    >
-   > Maintained: YYYY-MM-DD (targeted verification only since the full mapping: <areas changed since then, this change last>)
+   > Maintained: YYYY-MM-DD (targeted verification only since the full mapping; latest change: <areas this change touched>)
    ```
 
-   Rewrite the whole line on each refresh; never append to it. Keep it to one sentence of about
-   250 characters at most, naming the areas changed since `Verified` as they stand now, not each
-   step that led there, and leaving out changes that later ones undid: the commits and the
-   decision file hold the history. If the areas no longer fit in that sentence, the map rests on
-   an unverified baseline; escalate to full mapping (step 4).
+   Replace the line on each refresh; never append to it. Describe only this change: earlier
+   refreshes stay in the map's Git history, which step 4 already reads. Keep the line to one
+   sentence of about 250 characters at most (about half that in CJK text), leaving out commit
+   hashes, verification methods and pointers to earlier rounds. The line's length never decides
+   escalation; step 4 does.
 
 7. Keep evidence out of the map, run the validation steps below, and report which mapped claims
    changed. Do not commit or push unless the user explicitly asks.

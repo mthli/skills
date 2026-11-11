@@ -95,8 +95,8 @@ instead of condensing facts away.
   child acts on, keep one invariant that states the duty and names the child map.
 - On the `See` line, say that the snapshot still holds the decisions on the moved parts from before
   the split, naming the children.
-- Keep the `Verified` line. Rewrite the `Maintained` line under the targeted-refresh rules, with
-  the split as the last area changed.
+- Keep the `Verified` line. Replace the `Maintained` line under the targeted-refresh rules, with
+  the split as the latest change.
 
 ## Repoint references and the registry
 
