@@ -157,6 +157,26 @@ Apply these rules:
 - For an existing destination, prepare a minimal diff and avoid rewriting unchanged entries.
 - Flag conflicts between manual annotations and newly distilled content.
 
+## Modules split out of another
+
+A module split out of another keeps its earlier decisions in the parent's snapshot. Those blocks
+carry the parent's `MODULE` tag, so mining the child never finds them, and an entry moved into the
+child would come back to the parent on its next distill. The child's map lists them on its `See`
+line.
+
+- Before drafting a child's snapshot, read the `See` line of `.claude/maps/<id>.md` when the map
+  exists. If it lists decisions from before a split, add a preamble line after `Last distilled`,
+  separated by a bare `>` line, and do not copy those decisions:
+
+  ```markdown
+  > Decisions on <child> made before it was split from <parent> keep their `<parent>` tags and live in `.claude/decisions/<parent>.md`: D2, D4 and D6–D8.
+  ```
+
+- When distilling a parent, search `.claude/maps/` and `.claude/decisions/` for split-off modules
+  that list its decisions. Report under the review warnings any listed ID this distill supersedes,
+  and any new decision tagged with the parent that concerns a child's area, which is likely
+  mis-tagged. Do not edit the children's files from this skill.
+
 ## Compress oversized snapshots
 
 When a snapshot grows past roughly 30 full-detail active entries, or is otherwise too long to serve
