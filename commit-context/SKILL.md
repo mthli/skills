@@ -158,6 +158,7 @@ Append the following sections after a `---` separator:
 # Decisions
 
 ## Decision 1
+
 - MODULE: <exact ID from .claude/MODULES.md>
 - WHY: <one-line motivation>
 - ALTERNATIVES: <considered approaches separated by " / ">
@@ -190,7 +191,8 @@ Apply these section rules:
 - Keep `# Conversation Log` concise and chronological. Include intent and turning points, not
   every exchange. Redact any credential that appeared in the conversation.
 - Omit `# Decisions` under the skip conditions above. Never leave it empty or write `n/a`.
-- Use one level-two Decision heading per module.
+- Use one level-two Decision heading per module, numbered from 1. Put a blank line after each
+  heading and between consecutive Decision blocks.
 - Keep Decision field names uppercase with the exact `- KEY: ` prefix. A value may span lines,
   but the next field must start with `- KEY: ` on its own line.
 - Use exact registry IDs; never invent an ID inside the message.
