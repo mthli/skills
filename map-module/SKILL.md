@@ -27,8 +27,9 @@ report contracts and final map template. Read `references/split.md` before split
 - If a targeted assessment proves that all mapped claims remain accurate, leave the map unchanged
   and report that no refresh was needed.
 - Use **split** only when the user asks to divide a module and its map into narrower modules, for
-  example because the map no longer fits in one Read. Follow `references/split.md` instead of the
-  phases below: a split moves verified facts rather than researching them again.
+  example because the map no longer fits in one Read; Phase 4 suggests a split when a map nears
+  that limit. Follow `references/split.md` instead of the phases below: a split moves verified
+  facts rather than researching them again.
 
 ## Load context progressively
 
@@ -187,8 +188,17 @@ the anchor rather than guessing.
    - contains no source `path:line` citations;
    - separates facts, confirmed bugs, open questions, and external residuals;
    - pairs to the same module id under `.claude/decisions/`.
-4. Run `git diff --check` and inspect the focused diff for the map and registry.
-5. Do not commit or push unless the user explicitly asks. Mention confirmed risks that belong in
+4. Whenever this run wrote the map, check that it still fits in one Read with room for a full
+   refresh. Estimate its tokens from its size in bytes (`wc -c`): divide by 2.8 for a lower bound
+   and by 2.3 for an upper bound, since maps dense with backticked names have fewer bytes per token
+   than prose. Compare them with Read's token cap: Claude Code's default is 25,000, and a truncation
+   notice states the cap in effect. If the upper bound passes about 80% of the cap, leaving less
+   than the 20–25% a full refresh adds, report the estimate against the cap and suggest condensing
+   the map or running `/map-module split`. Do not condense or split in this run unless the user asks. Do not use the
+   exact measurement in `references/split.md` here: its truncated Read pulls up to a whole cap of
+   text into context.
+5. Run `git diff --check` and inspect the focused diff for the map and registry.
+6. Do not commit or push unless the user explicitly asks. Mention confirmed risks that belong in
    a future Decision block.
 
 ## Failure handling
