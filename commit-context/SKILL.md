@@ -291,7 +291,7 @@ fallback.
    differences, with the new commit's abbreviated hash. Leave the file unchanged when the commit
    failed or `# Token Usage` was omitted, so the next commit's figures also cover this one's work.
 
-6. Report the new commit hash and any remaining changes.
+7. Report the new commit hash and any remaining changes.
 
 Never amend, force-push, push, or modify previous commits unless the user explicitly requests it.
 If the conversation context is short or unclear, lean on the diff to write the message but still
