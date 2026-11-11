@@ -172,6 +172,7 @@ Append the following sections after a `---` separator:
 
 # Token Usage
 
+- Since: <abbreviated hash of the previous commit counted in this session, or "session start">
 - Input tokens: <inputTokens>
 - Output tokens: <outputTokens>
 - Cache read tokens: <cacheReadTokens>
@@ -203,9 +204,13 @@ Apply these section rules:
   the harness gives one. Trailers are the last lines, separated from the preceding section by a
   blank line.
 
-## Retrieve current session token usage
+## Retrieve token usage since the previous commit
 
 Treat token usage as optional metadata. Do not block the commit when it is unavailable.
+
+Report what this commit's work used: the session's usage since the previous commit this skill made
+in the same session, not the session's running total, which would count early work again in every
+later commit of a session that commits several times.
 
 Use [`ccusage`](https://github.com/ryoppippi/ccusage). Its default `session` command aggregates
 every session under the same project path, so always query the current session by ID.
@@ -227,7 +232,31 @@ string and JSON transforms yourself between steps.
    `totalTokens`, and `totalCost`, plus an `entries` array whose items have `inputTokens`,
    `outputTokens`, `cacheCreationTokens`, `cacheReadTokens`, and `model`. Sum the four token
    fields across `entries`; take `totalTokens` and `totalCost` from the top level (fall back to
-   the sums for `totalTokens`); collect the sorted unique `model` values.
+   the sums for `totalTokens`); note the latest entry `timestamp`. These are the session's running
+   totals. Entries carry no usable per-entry cost, so the cost since the previous commit can only
+   come from subtracting running totals.
+4. Read the baseline file with the `Read` tool: `commit-context-usage.json` in the session
+   scratchpad directory named in the system prompt, or `/tmp/commit-context-<SESSION_UUID>.json`
+   when none is listed. It holds the running totals recorded at the previous commit:
+
+   ```json
+   {
+     "sessionId": "<SESSION_UUID>",
+     "commit": "<abbreviated hash>",
+     "lastEntry": "<latest entry timestamp>",
+     "inputTokens": 0,
+     "outputTokens": 0,
+     "cacheReadTokens": 0,
+     "cacheCreationTokens": 0,
+     "totalTokens": 0,
+     "totalCost": 0
+   }
+   ```
+
+5. If the file exists, its `sessionId` matches the UUID, and no running total is below its
+   baseline, report each figure as the running total minus the baseline, `Since` as the baseline's
+   `commit`, and `Models used` as the sorted unique `model` values of entries later than
+   `lastEntry`. Otherwise report the running totals, `Since: session start`, and every model.
 
 Omit `# Token Usage` if the variable is unset, `ccusage` fails, the JSON is empty, or `sessionId`
 does not match the UUID. Never report totals for the newest or whole-project session as a
@@ -256,6 +285,11 @@ fallback.
    git log -1 --stat
    git status --short
    ```
+
+6. If the commit succeeded and its message has `# Token Usage`, replace the baseline file with the
+   `Write` tool: the running totals and latest entry timestamp from the query, not the reported
+   differences, with the new commit's abbreviated hash. Leave the file unchanged when the commit
+   failed or `# Token Usage` was omitted, so the next commit's figures also cover this one's work.
 
 6. Report the new commit hash and any remaining changes.
 
