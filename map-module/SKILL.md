@@ -1,13 +1,13 @@
 ---
 name: map-module
 description: >
-  Create, fully refresh, or incrementally maintain a source-verified subsystem architecture map
-  under `.claude/maps/`. Use when the user says "/map-module", "map this module", "map the
-  <subsystem> architecture", asks to document how a subsystem works today, or when project
-  instructions (the Knowledge Loop Conventions in CLAUDE.md) require a targeted refresh after
-  implementation changes invalidate mapped facts. Do not use for ad hoc code explanation, a
-  single-file question, or changes that leave the existing map accurate. Authorizes bounded,
-  read-only Explore subagents for research and verification.
+  Create, fully refresh, incrementally maintain, or split a source-verified subsystem architecture
+  map under `.claude/maps/`. Use when the user says "/map-module", "map this module", "map the
+  <subsystem> architecture", "split this map", asks to document how a subsystem works today, or
+  when project instructions (the Knowledge Loop Conventions in CLAUDE.md) require a targeted
+  refresh after implementation changes invalidate mapped facts. Do not use for ad hoc code
+  explanation, a single-file question, or changes that leave the existing map accurate. Authorizes
+  bounded, read-only Explore subagents for research and verification.
 ---
 
 # Map Module
@@ -16,7 +16,7 @@ Produce a "how it works today" snapshot. Keep decision history in the paired
 `.claude/decisions/<module-id>.md`; do not turn the map into a design proposal or changelog.
 
 Read `references/report-contracts.md` before dispatching research or verification tasks. Use its
-report contracts and final map template.
+report contracts and final map template. Read `references/split.md` before splitting a module.
 
 ## Choose the mode
 
@@ -26,6 +26,9 @@ report contracts and final map template.
   change and only a limited set of mapped claims may have changed.
 - If a targeted assessment proves that all mapped claims remain accurate, leave the map unchanged
   and report that no refresh was needed.
+- Use **split** only when the user asks to divide a module and its map into narrower modules, for
+  example because the map no longer fits in one Read. Follow `references/split.md` instead of the
+  phases below: a split moves verified facts rather than researching them again.
 
 ## Load context progressively
 
