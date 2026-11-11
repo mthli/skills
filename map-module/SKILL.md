@@ -188,15 +188,11 @@ the anchor rather than guessing.
    - contains no source `path:line` citations;
    - separates facts, confirmed bugs, open questions, and external residuals;
    - pairs to the same module id under `.claude/decisions/`.
-4. Whenever this run wrote the map, check that it still fits in one Read with room for a full
-   refresh. Estimate its tokens from its size in bytes (`wc -c`): divide by 2.8 for a lower bound
-   and by 2.3 for an upper bound, since maps dense with backticked names have fewer bytes per token
-   than prose. Compare them with Read's token cap: Claude Code's default is 25,000, and a truncation
-   notice states the cap in effect. If the upper bound passes about 80% of the cap, leaving less
-   than the 20–25% a full refresh adds, report the estimate against the cap and suggest condensing
-   the map or running `/map-module split`. Do not condense or split in this run unless the user asks. Do not use the
-   exact measurement in `references/split.md` here: its truncated Read pulls up to a whole cap of
-   text into context.
+4. If this run wrote the map, estimate its tokens as its byte count (`wc -c`) ÷ 2.3, the densest
+   maps' ratio, so the estimate errs high. Above about 80% of Read's token cap (25,000 by default; a
+   truncation notice shows the cap in effect), the next full refresh may not fit: report the
+   estimate and suggest condensing or `/map-module split`, without doing either unless asked. Skip
+   the exact measurement in `references/split.md`, which pulls a whole cap of text into context.
 5. Run `git diff --check` and inspect the focused diff for the map and registry.
 6. Do not commit or push unless the user explicitly asks. Mention confirmed risks that belong in
    a future Decision block.
