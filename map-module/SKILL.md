@@ -188,11 +188,10 @@ the anchor rather than guessing.
    - contains no source `path:line` citations;
    - separates facts, confirmed bugs, open questions, and external residuals;
    - pairs to the same module id under `.claude/decisions/`.
-4. If this run wrote the map, estimate its tokens as its byte count (`wc -c`) ÷ 2.3, the densest
-   maps' ratio, so the estimate errs high. Above about 80% of Read's token cap (25,000 by default; a
-   truncation notice shows the cap in effect), the next full refresh may not fit: report the
-   estimate and suggest condensing or `/map-module split`, without doing either unless asked. Skip
-   the exact measurement in `references/split.md`, which pulls a whole cap of text into context.
+4. If this run wrote the map, estimate its tokens by dividing its byte count (`wc -c`) by 2.3. If
+   the estimate exceeds about 80% of Read's token cap (25,000 by default; a truncation notice shows
+   the cap in effect), report it and suggest condensing or `/map-module split`, without doing either
+   unless asked. Do not use the exact measurement in `references/split.md`.
 5. Run `git diff --check` and inspect the focused diff for the map and registry.
 6. Do not commit or push unless the user explicitly asks. Mention confirmed risks that belong in
    a future Decision block.
