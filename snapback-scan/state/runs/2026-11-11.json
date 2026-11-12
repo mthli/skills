@@ -1,0 +1,72 @@
+{
+  "as_of": "2026-11-11T19:02:06.235820-05:00",
+  "today": "2026-11-11",
+  "spark_window": [
+    "2026-11-11 (AMC only)",
+    "2026-11-12",
+    "2026-11-13",
+    "2026-11-16"
+  ],
+  "macro_note": "ForexFactory covers the current week only \u2014 macro sparks beyond Sunday not visible",
+  "regime": {
+    "snapshot": "20261111",
+    "state": "RISK-ON",
+    "score": 3,
+    "vix": 17.5,
+    "spy_vs_200_pct": 4.3,
+    "flags": "Credit weakening: HYG/LQD -0.6%/20d while stocks hold"
+  },
+  "mr_run": {
+    "run_id": "20261111",
+    "run_date": "2026-11-11",
+    "data_asof": "2026-11-11",
+    "stale_days": 0,
+    "rows_in_run": 4,
+    "kegs_after_filter": 0
+  },
+  "tape_freshness": null,
+  "params": {
+    "min_score": 40.0,
+    "max_age_runs": 2,
+    "chase_threshold_pct": 7.0,
+    "panic_ret5d_pct": -4.0
+  },
+  "kegs": [],
+  "macro_calendar": [],
+  "prior_run_review": {
+    "source": "mr:20261110",
+    "n": 13,
+    "pct_positive": 84.6,
+    "avg_pct": 1.17,
+    "median_pct": 1.41,
+    "best": [
+      {
+        "ticker": "EAT",
+        "since_pct": 2.86
+      },
+      {
+        "ticker": "TEAM",
+        "since_pct": 2.58
+      },
+      {
+        "ticker": "DBX",
+        "since_pct": 2.35
+      }
+    ],
+    "worst": [
+      {
+        "ticker": "HALO",
+        "since_pct": -1.26
+      },
+      {
+        "ticker": "ZS",
+        "since_pct": -0.58
+      },
+      {
+        "ticker": "CAI",
+        "since_pct": 0.25
+      }
+    ]
+  },
+  "errors": []
+}

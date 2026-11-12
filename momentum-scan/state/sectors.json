@@ -492,7 +492,7 @@
   "GKOS": {
     "industry": "Medical Devices",
     "sector": "Healthcare",
-    "ts": 1787616144
+    "ts": 1794441653
   },
   "GLW": {
     "industry": "Electronic Components",
@@ -1253,6 +1253,11 @@
     "industry": "REIT - Office",
     "sector": "Real Estate",
     "ts": 1783728075
+  },
+  "VNT": {
+    "industry": "Scientific & Technical Instruments",
+    "sector": "Technology",
+    "ts": 1794441654
   },
   "VOYA": {
     "industry": "Financial Conglomerates",

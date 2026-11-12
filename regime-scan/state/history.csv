@@ -103,3 +103,4 @@ run_id,run_date,state,score,n_bull,n_bear,n_flags,spy_vs_200_pct,ma200_slope_pct
 20261106,2026-11-07T00:00:25.125715+00:00,RISK-OFF (internals),-3,2,5,3,1.1,1.11,63.0,58.0,7.4,1.0,25.6,32.0,1.04,-2.0,12.8,Credit weakening: HYG/LQD -2.0%/20d while stocks hold ; Vol-curve inversion: VIX above VIX3M (1.04) ; VIX 5-day spike +32%
 20261109,2026-11-10T00:00:33.010493+00:00,RISK-ON,1,4,3,1,3.4,1.09,71.0,66.0,7.1,5.0,19.9,-5.8,0.96,-1.7,10.4,Credit weakening: HYG/LQD -1.7%/20d while stocks hold
 20261110,2026-11-11T00:00:22.449046+00:00,RISK-ON,2,5,3,1,3.0,1.07,71.0,65.0,7.4,5.0,19.5,-6.6,0.94,-1.2,11.4,Credit weakening: HYG/LQD -1.2%/20d while stocks hold
+20261111,2026-11-12T00:00:27.769090+00:00,RISK-ON,3,5,2,1,4.3,1.06,73.0,66.0,6.3,6.0,17.5,5.3,0.91,-0.6,7.3,Credit weakening: HYG/LQD -0.6%/20d while stocks hold
