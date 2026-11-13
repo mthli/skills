@@ -207,7 +207,7 @@
   "AMCR": {
     "industry": "Packaging & Containers",
     "sector": "Consumer Cyclical",
-    "ts": 1787011540
+    "ts": 1794528100
   },
   "AMD": {
     "industry": "Semiconductors",
@@ -227,7 +227,7 @@
   "AMH": {
     "industry": "REIT - Residential",
     "sector": "Real Estate",
-    "ts": 1788221000
+    "ts": 1794528100
   },
   "AMKR": {
     "industry": "Semiconductor Equipment & Materials",
@@ -1622,7 +1622,7 @@
   "GPN": {
     "industry": "Specialty Business Services",
     "sector": "Industrials",
-    "ts": 1790899470
+    "ts": 1794528100
   },
   "GS": {
     "industry": "Capital Markets",
@@ -1742,7 +1742,7 @@
   "HRB": {
     "industry": "Personal Services",
     "sector": "Consumer Cyclical",
-    "ts": 1788220998
+    "ts": 1794528100
   },
   "HRL": {
     "industry": "Packaged Foods",
@@ -2392,7 +2392,7 @@
   "NEM": {
     "industry": "Gold",
     "sector": "Basic Materials",
-    "ts": 1790726577
+    "ts": 1794528100
   },
   "NET": {
     "industry": "Software - Infrastructure",
@@ -2557,7 +2557,7 @@
   "OHI": {
     "industry": "REIT - Healthcare Facilities",
     "sector": "Real Estate",
-    "ts": 1785801823
+    "ts": 1794528100
   },
   "OII": {
     "industry": "Oil & Gas Equipment & Services",
@@ -2772,7 +2772,7 @@
   "PNFP": {
     "industry": "Banks - Regional",
     "sector": "Financial Services",
-    "ts": 1788307441
+    "ts": 1794528100
   },
   "PNW": {
     "industry": "Utilities - Regulated Electric",
@@ -2839,6 +2839,11 @@
     "sector": "Technology",
     "ts": 1791417890
   },
+  "QGEN": {
+    "industry": "Diagnostics & Research",
+    "sector": "Healthcare",
+    "ts": 1794528100
+  },
   "QRVO": {
     "industry": "Semiconductors",
     "sector": "Technology",
@@ -2847,7 +2852,7 @@
   "QSR": {
     "industry": "Restaurants",
     "sector": "Consumer Cyclical",
-    "ts": 1788220999
+    "ts": 1794528100
   },
   "RAL": {
     "industry": "Electronic Components",
@@ -3262,7 +3267,7 @@
   "SW": {
     "industry": "Packaging & Containers",
     "sector": "Consumer Cyclical",
-    "ts": 1790899471
+    "ts": 1794528100
   },
   "SWK": {
     "industry": "Tools & Accessories",
