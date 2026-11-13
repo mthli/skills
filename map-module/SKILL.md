@@ -1,7 +1,7 @@
 ---
 name: map-module
 description: |
-  Create, fully refresh, or incrementally maintain a source-verified subsystem architecture map under `.codex/maps/`. Use when the user explicitly invokes `$map-module`, asks to map or document a subsystem's current architecture, or project instructions require targeted maintenance after implementation changes invalidate mapped facts. Do not use for ad hoc code explanation, a single-file question, or changes that leave the existing map accurate. Authorizes bounded, read-only explorer subagents for research and verification.
+  Create, fully refresh, incrementally maintain, or split a source-verified subsystem architecture map under `.codex/maps/`. Use when the user explicitly invokes `$map-module`, asks to map or document a subsystem's current architecture or split an oversized map, or project instructions require targeted maintenance after implementation changes invalidate mapped facts. Do not use for ad hoc code explanation, a single-file question, or changes that leave the existing map accurate. Authorizes bounded, read-only explorer subagents for research and verification.
 ---
 
 # Map Module
@@ -10,7 +10,7 @@ Produce a “how it works today” snapshot. Keep decision history in the paired
 `.codex/decisions/<module-id>.md`; do not turn the map into a design proposal or changelog.
 
 Read `references/report-contracts.md` before dispatching research or verification tasks. Use its
-report contracts and final map template.
+report contracts and final map template. Read `references/split.md` before splitting a module.
 
 ## Choose the mode
 
@@ -20,6 +20,9 @@ report contracts and final map template.
   change and only a limited set of mapped claims may have changed.
 - If a targeted assessment proves that all mapped claims remain accurate, leave the map unchanged
   and report that no refresh was needed.
+- Use **split** only when the user asks to divide a module and its map into narrower modules, for
+  example because the map is too large to read conveniently. Follow `references/split.md` instead
+  of the phases below: a split moves verified facts rather than researching them again.
 
 ## Load context progressively
 
@@ -91,13 +94,29 @@ are met.
 4. Escalate to full mapping if the affected claims span most sections, reveal an undocumented
    subsystem boundary, depend on an unverified baseline, or the internal impact cannot be checked
    from available project source. Missing external source alone is not a reason to escalate.
+   The whole map also rests on an unverified baseline once more than half of its lines were
+   written after its full verification. Before patching, find the last commit that changed the
+   `Verified` line (`git log --follow -1 --format=%h -G'^> Verified:' -- <map>`) and count the
+   lines added since then (`git diff --numstat <commit> -- <map>`; for a rename, include its old
+   path and use `-M`). Include staged and unstaged changes plus the planned additions, counting
+   each only once. Escalate if the added lines exceed half the map's current lines. Removed lines
+   do not count, so a split mostly removing parent content does not consume that margin. If the
+   baseline cannot be established from Git or a full verification in the current task, do not
+   assume zero drift; use full mapping or report that the baseline is unresolved.
 5. If no documented claim changed, do not edit the map.
 6. Otherwise, patch only the affected statements and sections. Preserve the previous full
-   `Verified` line and add or replace this line immediately after it:
+   `Verified` line and keep exactly one `Maintained` line after it, separated by a bare `>` line:
 
    ```markdown
-   > Maintained: YYYY-MM-DD (targeted verification: <bounded change summary>)
+   > Verified: YYYY-MM-DD (verification summary)
+   >
+   > Maintained: YYYY-MM-DD (targeted verification only since the full mapping; latest change: <areas this change touched>)
    ```
+
+   Replace the line on each refresh; never append to it. Describe only this change: earlier
+   refreshes stay in Git history. Keep the line to one sentence of about 250 characters at most
+   (about half that in CJK text), leaving out commit hashes, verification methods and pointers to
+   earlier rounds. The line's length never decides escalation; step 4 does.
 
 7. Keep evidence out of the map, run the validation steps below, and report which mapped claims
    changed. Do not commit or push unless the user explicitly asks.
@@ -138,9 +157,9 @@ Apply verdicts as follows:
 - `isBug: true`: add one impact-oriented item under `Confirmed bugs / technical debt`.
 
 Add or replace `> Verified: YYYY-MM-DD (verification summary)` only after the full verification
-pass, and remove a stale `> Maintained:` line. Keep genuinely open design or intent questions under
-`Open questions`. Do not claim full verification if assignments failed; state the residual
-explicitly.
+pass, and remove a stale `> Maintained:` line together with the bare `>` line above it. Keep
+genuinely open design or intent questions under `Open questions`. Do not claim full verification
+if assignments failed; state the residual explicitly.
 
 Use `apply_patch` for edits. Match punctuation exactly when replacing existing text. For large
 section rewrites, anchor on unique headings and fail on ambiguous matches.
@@ -160,8 +179,15 @@ section rewrites, anchor on unique headings and fail on ambiguous matches.
    - contains no source `path:line` citations;
    - separates facts, confirmed bugs, open questions, and external residuals;
    - pairs to the same module id under `.codex/decisions/`.
-4. Run `git diff --check` and inspect the focused diff for the map and registry.
-5. Do not commit or push unless the user explicitly asks. Mention confirmed risks that belong in
+4. If this run wrote the map, measure its bytes (`wc -c`) and estimate tokens as bytes / 2.3,
+   labeling that estimate as approximate. Compare with the output budget available for a single
+   file read (for example, the active shell tool's `max_output_tokens`), not the model's entire
+   context window. If it exceeds about 80% of that budget, report the size and suggest condensing
+   or `$map-module split`, without doing either unless asked. If no budget is exposed, report the
+   size without claiming a fixed limit. Continue reading required files in focused ranges when
+   needed; do not provoke truncation to measure tokens.
+5. Run `git diff --check` and inspect the focused diff for the map and registry.
+6. Do not commit or push unless the user explicitly asks. Mention confirmed risks that belong in
    a future Decision block.
 
 ## Failure handling

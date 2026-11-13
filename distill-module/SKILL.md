@@ -84,7 +84,10 @@ Use the latest decision in a cluster for `What`, `Why`, `Tradeoffs`, and `Watch 
 Assign stable IDs:
 
 - Reuse matching `D<n>` IDs from an existing snapshot.
-- Treat IDs in both `Constraint index (compressed active decisions)` and `Active (full detail)` as current decisions when resolving `SUPERSEDES` and reusing IDs.
+- Treat IDs in both `Constraint index (compressed active decisions)` and `Active (full detail)` as
+  current decisions when resolving `SUPERSEDES` and reusing IDs. Also recognize the earlier
+  headings `Constraint index (compressed decisions)` and `Active`; do not rename them as part
+  of a minimal diff.
 - Never renumber an existing ID.
 - For a new snapshot, order clusters by their earliest contributing commit and assign `D1`, `D2`, and so on.
 - For new clusters in an existing snapshot, continue after the highest assigned ID.
@@ -97,6 +100,7 @@ For an uncompressed snapshot, use this shape:
 # <Module display name> Decisions
 
 > Snapshot of current consensus. Evolution: `git log --grep="MODULE: <id>"`
+>
 > Last distilled: <YYYY-MM-DD> (HEAD = <short-sha>)
 
 ## Active
@@ -125,6 +129,26 @@ Apply these rules:
 - Preserve non-conflicting manual annotations.
 - For an existing destination, prepare a minimal diff and avoid rewriting unchanged entries.
 - Flag conflicts between manual annotations and newly distilled content.
+
+## Modules split out of another
+
+A module split out of another keeps its earlier decisions in the parent's snapshot. Those blocks
+carry the parent's `MODULE` tag, so mining the child never finds them, and an entry moved into the
+child would come back to the parent on its next distill. The child's map lists them on its `See`
+line.
+
+- Before drafting a child's snapshot, read the `See` line of `.codex/maps/<id>.md` when the map
+  exists. If it lists decisions from before a split, add a preamble line after `Last distilled`,
+  separated by a bare `>` line, and do not copy those decisions:
+
+  ```markdown
+  > Decisions on <child> made before it was split from <parent> keep their `<parent>` tags and live in `.codex/decisions/<parent>.md`: D2, D4 and D6–D8.
+  ```
+
+- When distilling a parent, search `.codex/maps/` and `.codex/decisions/` for split-off modules
+  that list its decisions. Report under the review warnings any listed ID this distill supersedes,
+  and any new decision tagged with the parent that concerns a child's area, which is likely
+  mis-tagged. Do not edit the children's files from this skill.
 
 ## Compress oversized snapshots
 
@@ -161,7 +185,8 @@ After writing:
 
 1. Show the destination path.
 2. Summarize what changed and repeat any accepted warnings.
-3. Tell the user to review the file and commit it when ready, optionally with `$commit-context`.
+3. Tell the user to review the file and commit it when ready, optionally with `$commit-context`,
+   whose own Decision block is then tagged with the module being distilled.
 4. If the root `AGENTS.md` or `AGENTS.override.md` does not direct Codex to read relevant module
    maps and decisions, mention that `$commit-context` will propose the canonical knowledge-loop
    rules when the snapshot is staged for commit. Do not edit instruction files from this skill.
