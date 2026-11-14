@@ -7,6 +7,9 @@ Usage: python3 grade.py <eval_name> <run_dir>
 
 Prints a JSON object {checks: {name: {passed, evidence}}} to stdout.
 Judgment-based assertions (report content) are graded separately by the grader.
+
+The fixtures are held-out: keep their scenarios, identifiers and numbers out of SKILL.md
+and references/, or the with-skill arm is reading the answer key.
 """
 import filecmp
 import json

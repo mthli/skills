@@ -1,0 +1,4 @@
+interface:
+  display_name: "Fable Mind"
+  short_description: "Fable reasoning discipline, judgment, and verification"
+  default_prompt: "Use $fable-mind to approach this task with Fable-grade reasoning, judgment, and verification."
